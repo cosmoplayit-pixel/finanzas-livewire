@@ -2,7 +2,7 @@
 
 <div class="p-6 space-y-4" :title="__('Dashboard')">
 
-    {{-- HEADER (RESPONSIVE) --}}
+    {{-- HEADER (RESPONSIVE PARA MOBILE) --}}
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 class="text-2xl font-semibold">Usuarios</h1>
 

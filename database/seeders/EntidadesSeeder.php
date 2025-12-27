@@ -5,17 +5,17 @@ namespace Database\Seeders;
 use App\Models\Empresa;
 use App\Models\Entidad;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class EntidadesSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::statement('PRAGMA foreign_keys = OFF;');
-        DB::table('entidades')->delete();
-        DB::statement("DELETE FROM sqlite_sequence WHERE name='entidades'");
-        DB::statement('PRAGMA foreign_keys = ON;');
+        // Compatible con MySQL / MariaDB
+        Schema::disableForeignKeyConstraints();
+        Entidad::truncate(); // limpia la tabla y resetea IDs
+        Schema::enableForeignKeyConstraints();
 
         $empresas = Empresa::query()->orderBy('id')->get();
 
@@ -29,8 +29,8 @@ class EntidadesSeeder extends Seeder
 
         foreach ($empresas as $emp) {
             for ($i = 1; $i <= 5; $i++) {
-                $nombre = $plantillaNombres[$i - 1]; // ✅ repetible entre empresas
-                $sigla = 'E' . $emp->id . '-' . str_pad((string) $i, 2, '0', STR_PAD_LEFT); // ✅ única por empresa
+                $nombre = $plantillaNombres[$i - 1];
+                $sigla = 'E' . $emp->id . '-' . str_pad((string) $i, 2, '0', STR_PAD_LEFT);
 
                 Entidad::create([
                     'empresa_id' => $emp->id,

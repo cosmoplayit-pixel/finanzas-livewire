@@ -5,17 +5,17 @@ namespace Database\Seeders;
 use App\Models\Entidad;
 use App\Models\Proyecto;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class ProyectosSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::statement('PRAGMA foreign_keys = OFF;');
-        DB::table('proyectos')->delete();
-        DB::statement("DELETE FROM sqlite_sequence WHERE name='proyectos'");
-        DB::statement('PRAGMA foreign_keys = ON;');
+        // Compatible con MySQL / MariaDB
+        Schema::disableForeignKeyConstraints();
+        Proyecto::truncate(); // limpia la tabla y resetea IDs
+        Schema::enableForeignKeyConstraints();
 
         $entidades = Entidad::query()->orderBy('id')->get();
 

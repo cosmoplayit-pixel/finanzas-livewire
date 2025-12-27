@@ -4,16 +4,15 @@ namespace Database\Seeders;
 
 use App\Models\Empresa;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class EmpresaSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::statement('PRAGMA foreign_keys = OFF;');
-        DB::table('empresas')->delete();
-        DB::statement("DELETE FROM sqlite_sequence WHERE name='empresas'");
-        DB::statement('PRAGMA foreign_keys = ON;');
+        Schema::disableForeignKeyConstraints();
+        Empresa::truncate(); // limpia y resetea IDs en MySQL/MariaDB
+        Schema::enableForeignKeyConstraints();
 
         $empresas = [
             [

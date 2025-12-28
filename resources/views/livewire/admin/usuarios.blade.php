@@ -1,6 +1,6 @@
 @section('title', 'Usuarios')
 
-<div class="p-6 space-y-4" :title="__('Dashboard')">
+<div class="p-0 md:p-6 space-y-4" :title="__('Dashboard')">
 
     {{-- HEADER (RESPONSIVE PARA MOBILE) --}}
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -26,11 +26,7 @@
     {{-- FILTROS (RESPONSIVE) --}}
     <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
         <input type="search" wire:model.live="search" placeholder="Buscar Nombre o Correo"
-            class="w-full border rounded px-3 py-2
-                   bg-white text-gray-900 border-gray-300
-                   dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
-                   focus:outline-none focus:ring-2 focus:ring-offset-0
-                   focus:ring-gray-300 dark:focus:ring-neutral-600" />
+            class="w-full sm:w-md border rounded px-3 py-2" />
 
         <div class="flex flex-col sm:flex-row gap-3 lg:ml-auto w-full lg:w-auto">
             <select wire:model.live="status"
@@ -131,7 +127,7 @@
     </div>
 
     {{-- DESKTOP: TABLA (hidden en mobile) --}}
-    <div class="hidden md:block overflow-x-auto border rounded dark:border-neutral-800">
+    <div class="hidden md:block overflow-x-auto border rounded">
         <table class="min-w-full text-sm">
             <thead class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200">
                 <tr class="text-left">
@@ -183,7 +179,7 @@
 
             <tbody>
                 @foreach ($users as $u)
-                    <tr class="border-t dark:border-neutral-800">
+                    <tr class="border-t">
                         <td class="p-3">{{ $u->id }}</td>
                         <td class="p-3">{{ $u->name }}</td>
                         <td class="p-3">{{ $u->email }}</td>

@@ -23,27 +23,40 @@
         </div>
     @endif
 
-    {{-- FILTROS (RESPONSIVE) --}}
-    <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+    {{-- FILTROS (MISMA LÍNEA EN TABLET Y DESKTOP) --}}
+    <div class="flex flex-col gap-3 md:flex-row md:items-center">
+        {{-- Buscar --}}
         <input type="search" wire:model.live="search" placeholder="Buscar Nombre o Correo"
-            class="w-full sm:w-md border rounded px-3 py-2" />
+            class="w-full md:w-72 lg:w-md
+               border rounded px-3 py-2
+               bg-white text-gray-900 border-gray-300
+               dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
+               placeholder:text-gray-400 dark:placeholder:text-neutral-500
+               focus:outline-none focus:ring-2 focus:ring-offset-0
+               focus:ring-gray-300 dark:focus:ring-neutral-600"
+            autocomplete="off" />
 
-        <div class="flex flex-col sm:flex-row gap-3 lg:ml-auto w-full lg:w-auto">
+        {{-- Selects --}}
+        <div class="flex flex-col sm:flex-row gap-3 md:ml-auto w-full md:w-auto">
             <select wire:model.live="status"
-                class="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900
-                       border-gray-300 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
-                       focus:outline-none focus:ring-2 focus:ring-offset-0
-                       focus:ring-gray-300 dark:focus:ring-neutral-600">
+                class="w-full sm:w-auto
+                   border rounded px-3 py-2
+                   bg-white text-gray-900 border-gray-300
+                   dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
+                   focus:outline-none focus:ring-2 focus:ring-offset-0
+                   focus:ring-gray-300 dark:focus:ring-neutral-600">
                 <option value="all">Todos</option>
                 <option value="active">Activos</option>
                 <option value="inactive">Inactivos</option>
             </select>
 
             <select wire:model.live="perPage"
-                class="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900
-                       border-gray-300 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
-                       focus:outline-none focus:ring-2 focus:ring-offset-0
-                       focus:ring-gray-300 dark:focus:ring-neutral-600">
+                class="w-full sm:w-auto
+                   border rounded px-3 py-2
+                   bg-white text-gray-900 border-gray-300
+                   dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
+                   focus:outline-none focus:ring-2 focus:ring-offset-0
+                   focus:ring-gray-300 dark:focus:ring-neutral-600">
                 <option value="10">10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
@@ -126,9 +139,14 @@
         @endforelse
     </div>
 
-    {{-- DESKTOP: TABLA (hidden en mobile) --}}
-    <div class="hidden md:block overflow-x-auto border rounded">
-        <table class="min-w-full text-sm">
+    {{-- TABLET + DESKTOP: TABLA (visible desde md) --}}
+    <div
+        class="hidden md:block
+           overflow-x-auto overflow-y-hidden
+           border rounded
+           bg-white dark:bg-neutral-950
+           [scrollbar-gutter:stable]">
+        <table class="w-full text-sm">
             <thead class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200">
                 <tr class="text-left">
                     <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('id')">
@@ -145,13 +163,16 @@
                         @endif
                     </th>
 
-                    <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('email')">
+                    {{-- Email: oculto en tablet, visible desde lg --}}
+                    <th class="p-3 cursor-pointer select-none whitespace-nowrap hidden lg:table-cell"
+                        wire:click="sortBy('email')">
                         Email
                         @if ($sortField === 'email')
                             {{ $sortDirection === 'asc' ? '▲' : '▼' }}
                         @endif
                     </th>
 
+                    {{-- Empresa: visible en tablet (más angosta por truncado en td) --}}
                     <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('empresa_id')">
                         Empresa
                         @if ($sortField === 'empresa_id')
@@ -159,7 +180,9 @@
                         @endif
                     </th>
 
-                    <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('role')">
+                    {{-- Rol: oculto en tablet, visible desde lg --}}
+                    <th class="p-3 cursor-pointer select-none whitespace-nowrap hidden lg:table-cell"
+                        wire:click="sortBy('role')">
                         Rol
                         @if ($sortField === 'role')
                             {{ $sortDirection === 'asc' ? '▲' : '▼' }}
@@ -173,77 +196,99 @@
                         @endif
                     </th>
 
-                    <th class="p-3 w-56 whitespace-nowrap">Acciones</th>
+                    {{-- Acciones: importante, siempre visible --}}
+                    <th class="p-3 whitespace-nowrap w-40 lg:w-56">Acciones</th>
                 </tr>
             </thead>
 
-            <tbody>
+            <tbody class="divide-y divide-gray-200 dark:divide-neutral-800">
                 @foreach ($users as $u)
-                    <tr class="border-t">
-                        <td class="p-3">{{ $u->id }}</td>
-                        <td class="p-3">{{ $u->name }}</td>
-                        <td class="p-3">{{ $u->email }}</td>
+                    <tr class="hover:bg-gray-50 dark:hover:bg-neutral-900">
+                        <td class="p-3 whitespace-nowrap">{{ $u->id }}</td>
 
+                        {{-- Nombre: truncado en tablet --}}
                         <td class="p-3">
-                            <span class="truncate block max-w-[260px]"
+                            <span class="block max-w-[220px] lg:max-w-none truncate" title="{{ $u->name }}">
+                                {{ $u->name }}
+                            </span>
+                        </td>
+
+                        {{-- Email: oculto en tablet, visible desde lg --}}
+                        <td class="p-3 hidden lg:table-cell">
+                            <span class="block max-w-[260px] truncate" title="{{ $u->email }}">
+                                {{ $u->email }}
+                            </span>
+                        </td>
+
+                        {{-- Empresa: truncado para tablet --}}
+                        <td class="p-3">
+                            <span class="block max-w-[180px] lg:max-w-[260px] truncate"
                                 title="{{ $u->empresa?->nombre ?? 'Admin global' }}">
                                 {{ $u->empresa?->nombre ?? '—' }}
                             </span>
                         </td>
 
-                        <td class="p-3">{{ $u->getRoleNames()->first() ?? '-' }}</td>
+                        {{-- Rol: oculto en tablet, visible desde lg --}}
+                        <td class="p-3 hidden lg:table-cell">
+                            {{ $u->getRoleNames()->first() ?? '-' }}
+                        </td>
 
-                        <td class="p-3">
+                        <td class="p-3 whitespace-nowrap">
                             @if ($u->active)
                                 <span
                                     class="px-2 py-1 rounded text-xs
-                                    bg-green-100 text-green-800
-                                    dark:bg-green-500/20 dark:text-green-200">
+                                       bg-green-100 text-green-800
+                                       dark:bg-green-500/20 dark:text-green-200">
                                     Activo
                                 </span>
                             @else
                                 <span
                                     class="px-2 py-1 rounded text-xs
-                                    bg-red-100 text-red-800
-                                    dark:bg-red-500/20 dark:text-red-200">
+                                       bg-red-100 text-red-800
+                                       dark:bg-red-500/20 dark:text-red-200">
                                     Inactivo
                                 </span>
                             @endif
                         </td>
 
-                        <td class="p-3 space-x-2 whitespace-nowrap">
-                            <button wire:click="openEdit({{ $u->id }})"
-                                class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
+                        <td class="p-3 whitespace-nowrap">
+                            <div class="flex items-center gap-2">
+                                <button wire:click="openEdit({{ $u->id }})"
+                                    class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
                                        dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                Editar
-                            </button>
+                                    Editar
+                                </button>
 
-                            @if (auth()->id() !== $u->id)
-                                <button type="button"
-                                    wire:click="$dispatch('swal:toggle-active', {
+                                @if (auth()->id() !== $u->id)
+                                    <button type="button"
+                                        wire:click="$dispatch('swal:toggle-active', {
                                         id: {{ $u->id }},
                                         active: {{ $u->active ? 'true' : 'false' }},
                                         name: @js($u->name)
                                     })"
-                                    class="px-3 py-1 rounded text-sm font-medium
+                                        class="px-3 py-1 rounded text-sm font-medium
                                     {{ $u->active
                                         ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                                         : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-                                    {{ $u->active ? 'Desactivar' : 'Activar' }}
-                                </button>
-                            @endif
+                                        {{ $u->active ? 'Desactivar' : 'Activar' }}
+                                    </button>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @endforeach
 
                 @if ($users->count() === 0)
                     <tr>
-                        <td class="p-3" colspan="7">Sin resultados.</td>
+                        <td class="p-3 text-center text-gray-500 dark:text-neutral-400" colspan="7">
+                            Sin resultados.
+                        </td>
                     </tr>
                 @endif
             </tbody>
         </table>
     </div>
+
 
     {{-- PAGINACION --}}
     <div>

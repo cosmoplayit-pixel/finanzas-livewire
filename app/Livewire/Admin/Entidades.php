@@ -5,6 +5,7 @@ namespace App\Livewire\Admin;
 use App\Models\Empresa;
 use App\Models\Entidad;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -16,12 +17,19 @@ class Entidades extends Component
     public int $perPage = 10;
     public string $status = 'all'; // all | active | inactive
 
-    // ✅ MULTI-EMPRESA (opcional para Admin)
+    // Filtro de listado (solo Admin)
     public string $empresaFilter = 'all'; // all | {empresa_id}
 
     // Modal
     public bool $openModal = false;
     public ?int $entidadId = null;
+
+    /**
+     * Empresa seleccionada en el modal:
+     * - Admin: se usa para crear y también para reasignar en edición
+     * - No Admin: no se muestra (la empresa se fuerza por backend)
+     */
+    public string $empresa_id_form = '';
 
     // Form
     public string $nombre = '';
@@ -40,18 +48,33 @@ class Entidades extends Component
 
     protected function rules(): array
     {
+        $isAdmin = auth()->user()->hasRole('Administrador');
+
+        // Empresa usada para validar unique (por empresa)
+        $empresaIdForUnique = $this->resolveEmpresaIdForUnique();
+
         return [
+            // ✅ Admin debe seleccionar empresa (en create y edit)
+            'empresa_id_form' => [
+                Rule::requiredIf(fn() => $isAdmin),
+                Rule::exists('empresas', 'id'),
+            ],
+
             'nombre' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('entidades', 'nombre')->ignore($this->entidadId),
+                Rule::unique('entidades', 'nombre')
+                    ->where(fn($q) => $q->where('empresa_id', $empresaIdForUnique))
+                    ->ignore($this->entidadId),
             ],
             'sigla' => [
                 'nullable',
                 'string',
                 'max:50',
-                Rule::unique('entidades', 'sigla')->ignore($this->entidadId),
+                Rule::unique('entidades', 'sigla')
+                    ->where(fn($q) => $q->where('empresa_id', $empresaIdForUnique))
+                    ->ignore($this->entidadId),
             ],
             'email' => ['nullable', 'email', 'max:255'],
             'telefono' => ['nullable', 'string', 'max:60'],
@@ -64,16 +87,17 @@ class Entidades extends Component
     {
         $this->resetPage();
     }
+
     public function updatingStatus(): void
     {
         $this->resetPage();
     }
+
     public function updatingPerPage(): void
     {
         $this->resetPage();
     }
 
-    // ✅ si el Admin cambia empresaFilter, resetea página
     public function updatingEmpresaFilter(): void
     {
         $this->resetPage();
@@ -81,18 +105,36 @@ class Entidades extends Component
 
     public function openCreate(): void
     {
+        $this->resetValidation();
+        $this->resetErrorBag();
         $this->resetForm();
+
+        // Si Admin ya filtró por empresa, por defecto usar esa empresa en el modal.
+        if (auth()->user()->hasRole('Administrador')) {
+            $this->empresa_id_form =
+                $this->empresaFilter !== 'all' && $this->empresaFilter !== ''
+                    ? (string) $this->empresaFilter
+                    : '';
+        }
+
         $this->openModal = true;
     }
 
     public function openEdit(int $id): void
     {
+        $this->resetValidation();
+        $this->resetErrorBag();
+
         $e = Entidad::findOrFail($id);
 
-        // ✅ Seguridad multi-empresa
+        // Seguridad multi-empresa
         $this->authorizeEmpresaEntidad($e);
 
         $this->entidadId = $e->id;
+
+        // ✅ En edición, Admin podrá cambiar esta empresa desde el modal
+        $this->empresa_id_form = (string) $e->empresa_id;
+
         $this->nombre = $e->nombre ?? '';
         $this->sigla = $e->sigla ?? '';
         $this->email = $e->email ?? '';
@@ -105,36 +147,72 @@ class Entidades extends Component
 
     public function save(): void
     {
+        // ✅ Normalizar ANTES de validar, sin asignar null a propiedades string
+        $nombreNormalized = trim($this->nombre);
+
+        $siglaNormalized = trim($this->sigla);
+        $siglaNormalized = $siglaNormalized === '' ? null : strtoupper($siglaNormalized);
+
+        // Reflejar nombre (siempre string)
+        $this->nombre = $nombreNormalized;
+
+        // Reflejar sigla SOLO si no es null (para que no choque con tipo string)
+        // Si está vacío, dejamos $this->sigla como '' y manejamos null en $data
+        if ($siglaNormalized !== null) {
+            $this->sigla = $siglaNormalized;
+        }
+
+        // Validar (rules() usará resolveEmpresaIdForUnique() y $this->sigla ya normalizada si aplica)
         $data = $this->validate();
 
-        // Normalización
-        $data['nombre'] = trim($data['nombre']);
-        $data['sigla'] = $data['sigla'] ? strtoupper(trim($data['sigla'])) : null;
+        // ✅ Forzar valores finales (los que realmente se guardan)
+        $data['nombre'] = $nombreNormalized;
+        $data['sigla'] = $siglaNormalized;
 
-        // ✅ MULTI-EMPRESA: forzar empresa_id
-        $empresaId = $this->resolveEmpresaIdForWrite();
+        // ✅ Convertir opcionales vacíos a NULL
+        $data['email'] = trim($data['email'] ?? '') === '' ? null : trim($data['email']);
+        $data['telefono'] = trim($data['telefono'] ?? '') === '' ? null : trim($data['telefono']);
+        $data['direccion'] =
+            trim($data['direccion'] ?? '') === '' ? null : trim($data['direccion']);
+        $data['observaciones'] =
+            trim($data['observaciones'] ?? '') === '' ? null : trim($data['observaciones']);
 
         // Update
         if ($this->entidadId) {
             $e = Entidad::findOrFail($this->entidadId);
             $this->authorizeEmpresaEntidad($e);
 
-            // No admin: nunca permitir cambiar empresa_id (aunque no venga en form)
-            $data['empresa_id'] = $e->empresa_id;
+            if (auth()->user()->hasRole('Administrador')) {
+                $newEmpresaId = (int) $this->empresa_id_form;
+
+                if ($newEmpresaId <= 0) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'empresa_id_form' => 'Seleccione una empresa válida.',
+                    ]);
+                }
+
+                $data['empresa_id'] = $newEmpresaId;
+            } else {
+                $data['empresa_id'] = (int) $e->empresa_id;
+            }
+
+            unset($data['empresa_id_form']);
 
             $e->update($data);
 
             session()->flash('success', 'Entidad actualizada correctamente.');
+            $this->closeModal();
+            return;
         }
+
         // Create
-        else {
-            $data['empresa_id'] = $empresaId;
+        $empresaId = $this->resolveEmpresaIdForCreate();
+        $data['empresa_id'] = $empresaId;
+        unset($data['empresa_id_form']);
 
-            Entidad::create($data);
+        Entidad::create($data);
 
-            session()->flash('success', 'Entidad creada correctamente.');
-        }
-
+        session()->flash('success', 'Entidad creada correctamente.');
         $this->closeModal();
     }
 
@@ -142,7 +220,6 @@ class Entidades extends Component
     {
         $e = Entidad::findOrFail($id);
 
-        // ✅ Seguridad multi-empresa
         $this->authorizeEmpresaEntidad($e);
 
         $e->active = !$e->active;
@@ -162,6 +239,8 @@ class Entidades extends Component
     {
         $this->entidadId = null;
 
+        $this->empresa_id_form = '';
+
         $this->nombre = '';
         $this->sigla = '';
         $this->email = '';
@@ -172,7 +251,6 @@ class Entidades extends Component
 
     public function sortBy(string $field): void
     {
-        // 🔒 whitelist para evitar inyección por orderBy
         $allowedSorts = ['id', 'nombre', 'sigla', 'email', 'active'];
         if (!in_array($field, $allowedSorts, true)) {
             $field = 'id';
@@ -192,11 +270,10 @@ class Entidades extends Component
     {
         $q = Entidad::query();
 
-        // ✅ MULTI-EMPRESA: scoping listado
+        // Multi-empresa: scoping listado
         if (!auth()->user()->hasRole('Administrador')) {
             $q->where('empresa_id', auth()->user()->empresa_id);
         } else {
-            // Admin puede filtrar por empresa si lo deseas
             if ($this->empresaFilter !== 'all' && $this->empresaFilter !== '') {
                 $q->where('empresa_id', (int) $this->empresaFilter);
             }
@@ -217,7 +294,6 @@ class Entidades extends Component
 
         $entidades = $q->orderBy($this->sortField, $this->sortDirection)->paginate($this->perPage);
 
-        // ✅ Para dropdown de filtro de empresa (solo Admin lo usará en Blade)
         $empresas = Empresa::query()
             ->where('active', true)
             ->orderBy('nombre')
@@ -227,11 +303,25 @@ class Entidades extends Component
     }
 
     /**
-     * Devuelve empresa_id válido para escritura.
-     * - No Admin: la empresa del usuario
-     * - Admin: empresaFilter si está seleccionado; si no, usa empresa del usuario (si tiene) o null (y se valida en UI)
+     * Empresa usada para el unique (nombre/sigla).
+     * - Admin: empresa_id_form (si no hay, 0 -> fallará required/exists)
+     * - No admin: empresa del usuario
      */
-    private function resolveEmpresaIdForWrite(): int
+    private function resolveEmpresaIdForUnique(): int
+    {
+        $user = auth()->user();
+
+        if ($user->hasRole('Administrador')) {
+            return (int) ($this->empresa_id_form ?: 0);
+        }
+
+        return (int) $user->empresa_id;
+    }
+
+    /**
+     * Empresa para crear (sin abortar con pantalla). Si falta, genera error de validación.
+     */
+    private function resolveEmpresaIdForCreate(): int
     {
         $user = auth()->user();
 
@@ -239,18 +329,15 @@ class Entidades extends Component
             return (int) $user->empresa_id;
         }
 
-        // Admin: si eligió una empresa en filtro, escribir en esa
-        if ($this->empresaFilter !== 'all' && $this->empresaFilter !== '') {
-            return (int) $this->empresaFilter;
+        $empresaId = (int) $this->empresa_id_form;
+
+        if ($empresaId > 0) {
+            return $empresaId;
         }
 
-        // Si admin tiene empresa asociada, usarla; si no, forzar una por UX (aquí asumimos que debe elegir)
-        if (!empty($user->empresa_id)) {
-            return (int) $user->empresa_id;
-        }
-
-        // En este escenario, mejor forzar selección en UI o lanzar error
-        abort(422, 'Seleccione una empresa para crear entidades.');
+        throw ValidationException::withMessages([
+            'empresa_id_form' => 'Seleccione una empresa para crear entidades.',
+        ]);
     }
 
     /**

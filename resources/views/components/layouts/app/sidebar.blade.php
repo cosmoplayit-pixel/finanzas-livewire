@@ -8,11 +8,7 @@
 <body class="min-h-screen bg-white dark:bg-zinc-800">
     <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
-
-
         <x-app-logo />
-
-
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('Plataforma')" class="grid">
                 @hasanyrole('Administrador')
@@ -23,13 +19,15 @@
                         wire:navigate>
                         {{ __('Usuarios') }}
                     </flux:navlist.item>
-                @endhasanyrole
 
-                @hasanyrole('Administrador|Manager')
+
                     <flux:navlist.item icon="folder" :href="route('empresas')" :current="request()->routeIs('empresas')"
                         wire:navigate>
                         {{ __('Empresas') }}
                     </flux:navlist.item>
+                @endhasanyrole
+
+                @hasanyrole('Administrador|Manager')
                     <flux:navlist.item icon="pencil" :href="route('entidades')" :current="request()->routeIs('entidades')"
                         wire:navigate>
                         {{ __('Entidades') }}
@@ -182,26 +180,35 @@
     });
 </script>
 <script>
-    function confirmToggle(id, isActive) {
-        Swal.fire({
-            title: isActive ? '¿Desactivar entidad?' : '¿Activar entidad?',
-            text: isActive ?
-                'La entidad quedará inactiva en el sistema.' : 'La entidad volverá a estar disponible.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: isActive ? '#d33' : '#16a34a',
-            cancelButtonColor: '#6b7280',
-            confirmButtonText: isActive ? 'Sí, desactivar' : 'Sí, activar',
-            cancelButtonText: 'Cancelar',
-            reverseButtons: true,
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Livewire.dispatch('toggleEntidad', {
-                    id: id
-                });
-            }
+    document.addEventListener('livewire:init', () => {
+
+        Livewire.on('swal:toggle-active-entidad', ({
+            id,
+            active,
+            name
+        }) => {
+
+            Swal.fire({
+                title: active ? '¿Desactivar entidad?' : '¿Activar entidad?',
+                text: `Entidad: ${name}`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: active ? '#dc2626' : '#16a34a',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Livewire.dispatch('toggleEntidad', {
+                        id: id
+                    });
+                }
+            });
+
         });
-    }
+
+    });
 </script>
 <script>
     document.addEventListener('livewire:init', () => {

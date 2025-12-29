@@ -7,6 +7,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\Attributes\On;
+use Illuminate\Validation\ValidationException;
 
 class Empresas extends Component
 {
@@ -122,19 +123,86 @@ class Empresas extends Component
      ========================= */
     public function save(): void
     {
-        $data = $this->validate();
+        // Normalización
+        $this->nombre = trim((string) $this->nombre);
+        $this->nit = $this->nit !== null ? trim((string) $this->nit) : null;
+        $this->email = $this->email !== null ? strtolower(trim((string) $this->email)) : null;
 
+        // UPDATE
         if ($this->empresaId) {
+            $data = $this->validate(
+                [
+                    'nombre' => [
+                        'required',
+                        'string',
+                        'max:255',
+                        Rule::unique('empresas', 'nombre')->ignore($this->empresaId),
+                    ],
+                    'nit' => ['nullable', 'string', 'max:50'],
+                    'email' => ['nullable', 'email', 'max:255'],
+                ],
+                [
+                    'nombre.required' => 'El nombre es obligatorio.',
+                    'nombre.unique' => 'Ya existe una empresa con ese nombre.',
+                    'email.email' => 'El email no tiene un formato válido.',
+                ],
+            );
+
             $emp = Empresa::findOrFail($this->empresaId);
             $emp->update($data);
 
             session()->flash('success', 'Empresa actualizada correctamente.');
-        } else {
-            Empresa::create($data);
-
-            session()->flash('success', 'Empresa creada correctamente.');
+            $this->closeModal();
+            return;
         }
 
+        // CREATE (sin unique para poder reactivar)
+        $data = $this->validate(
+            [
+                'nombre' => ['required', 'string', 'max:255'],
+                'nit' => ['nullable', 'string', 'max:50'],
+                'email' => ['nullable', 'email', 'max:255'],
+            ],
+            [
+                'nombre.required' => 'El nombre es obligatorio.',
+                'email.email' => 'El email no tiene un formato válido.',
+            ],
+        );
+
+        // Buscar por nombre (exacto). Si quieres, luego lo hacemos case-insensitive.
+        $existing = Empresa::where('nombre', $data['nombre'])->first();
+
+        if ($existing) {
+            // OJO: asegura que tu columna sea "active" (boolean/tinyint)
+            // Si se llama diferente (estado, is_active), cámbialo aquí.
+            if ((int) $existing->active === 0) {
+                $existing->update([
+                    'nit' => $data['nit'],
+                    'email' => $data['email'],
+                    'active' => 1,
+                ]);
+
+                session()->flash(
+                    'success',
+                    'La empresa estaba inactiva y fue reactivada correctamente.',
+                );
+                $this->closeModal();
+                return;
+            }
+
+            throw ValidationException::withMessages([
+                'nombre' => 'Ya existe una empresa activa con ese nombre.',
+            ]);
+        }
+
+        Empresa::create([
+            'nombre' => $data['nombre'],
+            'nit' => $data['nit'],
+            'email' => $data['email'],
+            'active' => 1,
+        ]);
+
+        session()->flash('success', 'Empresa creada correctamente.');
         $this->closeModal();
     }
 

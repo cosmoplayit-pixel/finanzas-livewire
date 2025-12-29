@@ -47,7 +47,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->name('usuarios');
 
     // Admin/Manager: Empresas
-    Route::middleware(['role:Administrador|Manager'])
+    Route::middleware(['role:Administrador'])
         ->get('/empresas', Empresas::class)
         ->name('empresas');
 

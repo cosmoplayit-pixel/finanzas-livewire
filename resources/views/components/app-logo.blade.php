@@ -7,17 +7,28 @@
         </div>
 
         <div class="grid text-start text-sm min-w-0">
-            <span class="mb-0.5 truncate leading-tight font-semibold">Finanzas</span>
+            <span class="mb-0.5 truncate leading-tight font-semibold">
+                @role('Administrador')
+                    Finanzas
+                    @elserole('Manager')
+                    {{ auth()->user()->empresa->nombre ?? 'Empresa' }}
+                @else
+                    Finanzas
+                @endrole
+            </span>
+
         </div>
     </div>
 
     <!-- Derecha -->
     <div wire:ignore>
         <button type="button" x-data
-            @click.prevent.stop="$flux.appearance = ($flux.appearance === 'dark' ? 'light' : 'dark')" class="flex items-center justify-center size-9 rounded-md
+            @click.prevent.stop="$flux.appearance = ($flux.appearance === 'dark' ? 'light' : 'dark')"
+            class="flex items-center justify-center size-9 rounded-md
                border border-gray-300 hover:bg-gray-100
                dark:border-neutral-700 dark:hover:bg-neutral-800
-               transition" aria-label="Cambiar tema">
+               transition"
+            aria-label="Cambiar tema">
             <!-- Sol (cuando estás en oscuro) -->
             <svg x-show="$flux.appearance === 'dark'" xmlns="http://www.w3.org/2000/svg" class="size-5 text-neutral-200"
                 fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -27,6 +27,7 @@ class User extends Authenticatable
         'password',
         'empresa_id', // ✅ MULTI-EMPRESA
         'active',
+        'is_root',
     ];
 
     /**
@@ -50,6 +51,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'active' => 'boolean',
+        'is_root' => 'boolean',
     ];
 
     /**

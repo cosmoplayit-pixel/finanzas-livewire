@@ -51,6 +51,7 @@ class RolesAndUsersSeeder extends Seeder
                 'password' => Hash::make('Password123!'),
                 'empresa_id' => null,
                 'active' => true,
+                'is_root' => true,
             ],
         );
         $admin->syncRoles(['Administrador']);
@@ -65,6 +66,7 @@ class RolesAndUsersSeeder extends Seeder
                     'password' => Hash::make('Password123!'),
                     'empresa_id' => $emp->id,
                     'active' => true,
+                    'is_root' => false,
                 ],
             );
 

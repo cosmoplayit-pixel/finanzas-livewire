@@ -4,11 +4,14 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Fortify;
 
 class FortifyServiceProvider extends ServiceProvider
@@ -28,6 +31,7 @@ class FortifyServiceProvider extends ServiceProvider
     {
         $this->configureActions();
         $this->configureViews();
+        $this->configureAuthentication(); // ✅ valida active en login
         $this->configureRateLimiting();
     }
 
@@ -55,6 +59,32 @@ class FortifyServiceProvider extends ServiceProvider
     }
 
     /**
+     * Configure Fortify authentication.
+     * - Valida credenciales
+     * - Bloquea usuarios con active = false
+     */
+    private function configureAuthentication(): void
+    {
+        Fortify::authenticateUsing(function (Request $request) {
+            $user = User::where('email', $request->input('email'))->first();
+
+            // Si no existe el usuario o password incorrecto, Fortify manejará el error genérico
+            if (!$user || !Hash::check($request->input('password'), $user->password)) {
+                return null;
+            }
+
+            // ✅ Bloqueo por estado
+            if (!(bool) $user->active) {
+                throw ValidationException::withMessages([
+                    Fortify::username() => 'Su cuenta se encuentra desactivada. Contacte al administrador.',
+                ]);
+            }
+
+            return $user;
+        });
+    }
+
+    /**
      * Configure rate limiting.
      */
     private function configureRateLimiting(): void
@@ -64,7 +94,9 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())) . '|' . $request->ip());
+            $throttleKey = Str::transliterate(
+                Str::lower($request->input(Fortify::username())) . '|' . $request->ip(),
+            );
 
             return Limit::perMinute(5)->by($throttleKey);
         });

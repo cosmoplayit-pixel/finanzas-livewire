@@ -29,12 +29,7 @@
         <input type="search" wire:model.live="search" placeholder="Buscar Nombre o Correo"
             class="w-full md:w-72 lg:w-md
                border rounded px-3 py-2
-               bg-white text-gray-900 border-gray-300
-               dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
-               placeholder:text-gray-400 dark:placeholder:text-neutral-500
-               focus:outline-none focus:ring-2 focus:ring-offset-0
-               focus:ring-gray-300 dark:focus:ring-neutral-600"
-            autocomplete="off" />
+             " autocomplete="off" />
 
         {{-- Selects --}}
         <div class="flex flex-col sm:flex-row gap-3 md:ml-auto w-full md:w-auto">
@@ -144,10 +139,13 @@
         class="hidden md:block
            overflow-x-auto overflow-y-hidden
            border rounded
-           bg-white dark:bg-neutral-950
-           [scrollbar-gutter:stable]">
+           bg-white dark:bg-neutral-800">
         <table class="w-full text-sm">
-            <thead class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200">
+            {{-- ================= THEAD ================= --}}
+            <thead
+                class="bg-gray-50 text-gray-700
+                   dark:bg-neutral-900 dark:text-neutral-200
+                   border-b border-gray-200 dark:border-neutral-200">
                 <tr class="text-left">
                     <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('id')">
                         ID
@@ -172,7 +170,7 @@
                         @endif
                     </th>
 
-                    {{-- Empresa: visible en tablet (más angosta por truncado en td) --}}
+                    {{-- Empresa --}}
                     <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('empresa_id')">
                         Empresa
                         @if ($sortField === 'empresa_id')
@@ -196,31 +194,34 @@
                         @endif
                     </th>
 
-                    {{-- Acciones: importante, siempre visible --}}
-                    <th class="p-3 whitespace-nowrap w-40 lg:w-56">Acciones</th>
+                    {{-- Acciones --}}
+                    <th class="p-3 whitespace-nowrap w-40 lg:w-56">
+                        Acciones
+                    </th>
                 </tr>
             </thead>
 
-            <tbody class="divide-y divide-gray-200 dark:divide-neutral-800">
+            {{-- ================= TBODY ================= --}}
+            <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
                 @foreach ($users as $u)
-                    <tr class="hover:bg-gray-50 dark:hover:bg-neutral-900">
+                    <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
                         <td class="p-3 whitespace-nowrap">{{ $u->id }}</td>
 
-                        {{-- Nombre: truncado en tablet --}}
+                        {{-- Nombre --}}
                         <td class="p-3">
                             <span class="block max-w-[220px] lg:max-w-none truncate" title="{{ $u->name }}">
                                 {{ $u->name }}
                             </span>
                         </td>
 
-                        {{-- Email: oculto en tablet, visible desde lg --}}
+                        {{-- Email --}}
                         <td class="p-3 hidden lg:table-cell">
                             <span class="block max-w-[260px] truncate" title="{{ $u->email }}">
                                 {{ $u->email }}
                             </span>
                         </td>
 
-                        {{-- Empresa: truncado para tablet --}}
+                        {{-- Empresa --}}
                         <td class="p-3">
                             <span class="block max-w-[180px] lg:max-w-[260px] truncate"
                                 title="{{ $u->empresa?->nombre ?? 'Admin global' }}">
@@ -228,51 +229,66 @@
                             </span>
                         </td>
 
-                        {{-- Rol: oculto en tablet, visible desde lg --}}
+                        {{-- Rol --}}
                         <td class="p-3 hidden lg:table-cell">
                             {{ $u->getRoleNames()->first() ?? '-' }}
                         </td>
 
+                        {{-- Estado --}}
                         <td class="p-3 whitespace-nowrap">
                             @if ($u->active)
                                 <span
                                     class="px-2 py-1 rounded text-xs
-                                       bg-green-100 text-green-800
-                                       dark:bg-green-500/20 dark:text-green-200">
+                                         bg-green-100 text-green-800
+                                         dark:bg-green-500/20 dark:text-green-200">
                                     Activo
                                 </span>
                             @else
                                 <span
                                     class="px-2 py-1 rounded text-xs
-                                       bg-red-100 text-red-800
-                                       dark:bg-red-500/20 dark:text-red-200">
+                                         bg-red-100 text-red-800
+                                         dark:bg-red-500/20 dark:text-red-200">
                                     Inactivo
                                 </span>
                             @endif
                         </td>
 
+                        {{-- Acciones --}}
                         <td class="p-3 whitespace-nowrap">
                             <div class="flex items-center gap-2">
                                 <button wire:click="openEdit({{ $u->id }})"
-                                    class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
+                                    class="px-3 py-1 cursor-pointer rounded border border-gray-300
+                                       hover:bg-gray-50
                                        dark:border-neutral-700 dark:hover:bg-neutral-800">
                                     Editar
                                 </button>
 
                                 @if (auth()->id() !== $u->id)
-                                    <button type="button"
-                                        wire:click="$dispatch('swal:toggle-active', {
-                                        id: {{ $u->id }},
-                                        active: {{ $u->active ? 'true' : 'false' }},
-                                        name: @js($u->name)
-                                    })"
-                                        class="px-3 py-1 rounded text-sm font-medium
-                                    {{ $u->active
-                                        ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
-                                        : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-                                        {{ $u->active ? 'Desactivar' : 'Activar' }}
-                                    </button>
+                                    @if (!$u->is_root)
+                                        <button type="button"
+                                            wire:click="$dispatch('swal:toggle-active', {
+                id: {{ $u->id }},
+                active: {{ $u->active ? 'true' : 'false' }},
+                name: @js($u->name)
+            })"
+                                            class="px-3 py-1 cursor-pointer rounded text-sm font-medium
+                {{ $u->active
+                    ? 'bg-red-600 text-white hover:bg-red-700
+                                       dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                    : 'bg-green-600 text-white hover:bg-green-700
+                                       dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+                                            {{ $u->active ? 'Desactivar' : 'Activar' }}
+                                        </button>
+                                    @else
+                                        <span
+                                            class="px-3 py-1 rounded text-xs font-medium
+            bg-gray-200 text-gray-700
+            dark:bg-neutral-800 dark:text-neutral-300">
+                                            Admin principal
+                                        </span>
+                                    @endif
                                 @endif
+
                             </div>
                         </td>
                     </tr>
@@ -280,7 +296,7 @@
 
                 @if ($users->count() === 0)
                     <tr>
-                        <td class="p-3 text-center text-gray-500 dark:text-neutral-400" colspan="7">
+                        <td colspan="7" class="p-4 text-center text-gray-500 dark:text-neutral-400">
                             Sin resultados.
                         </td>
                     </tr>
@@ -288,7 +304,6 @@
             </tbody>
         </table>
     </div>
-
 
     {{-- PAGINACION --}}
     <div>
@@ -398,34 +413,34 @@
                             @enderror
                         </div>
 
-                        {{-- Empresa --}}
-                        <div>
-                            <label class="block text-sm mb-1">Empresa</label>
-                            <select wire:model="empresa_id" :disabled="isAdmin"
-                                class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700
-                                   disabled:opacity-60 disabled:cursor-not-allowed">
-                                <option value="">
-                                    <span x-text="isAdmin ? 'Admin global (sin empresa)' : '-- Seleccione --'"></span>
-                                </option>
-                                @foreach ($empresas as $emp)
-                                    <option value="{{ $emp->id }}">{{ $emp->nombre }}</option>
-                                @endforeach
-                            </select>
+                        {{-- Empresa (OCULTAR si es Administrador) --}}
+                        @if ($role !== 'Administrador')
+                            <div>
+                                <label class="block text-sm mb-1">Empresa</label>
+                                <select wire:model.live="empresa_id"
+                                    class="w-full rounded border px-3 py-2
+                                       bg-white dark:bg-neutral-900
+                                       border-gray-300 dark:border-neutral-700
+                                       text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2
+                                       focus:ring-gray-300 dark:focus:ring-neutral-700">
+                                    <option value="">-- Seleccione --</option>
+                                    @foreach ($empresas as $emp)
+                                        <option value="{{ $emp->id }}">{{ $emp->nombre }}</option>
+                                    @endforeach
+                                </select>
 
-                            @error('empresa_id')
-                                <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                            @enderror
+                                @error('empresa_id')
+                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                                @enderror
 
-                            <p class="text-xs text-gray-500 dark:text-neutral-400 mt-1">
-                                Para rol Administrador, la empresa se deja vacía (Admin global). Para otros roles, es
-                                obligatorio.
-                            </p>
-                        </div>
+                                <p class="text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                                    Para roles distintos de Administrador, la empresa es obligatoria.
+                                </p>
+                            </div>
+
+                        @endif
+
 
                         {{-- Password --}}
                         <div class="pt-3 border-t border-gray-200 dark:border-neutral-800">

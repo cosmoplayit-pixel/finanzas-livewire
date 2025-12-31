@@ -10,8 +10,12 @@ return new class extends Migration {
         Schema::create('proyectos', function (Blueprint $table) {
             $table->id();
 
+            // Relación con entidad (sí existe previamente)
             $table->foreignId('entidad_id')->constrained('entidades')->cascadeOnDelete();
 
+            // =========================
+            // Datos del proyecto
+            // =========================
             $table->string('nombre', 255);
             $table->string('codigo', 100)->nullable();
             $table->decimal('monto', 12, 2)->default(0);
@@ -20,10 +24,18 @@ return new class extends Migration {
             $table->date('fecha_inicio')->nullable();
             $table->date('fecha_fin')->nullable();
 
+            // Estado
             $table->boolean('active')->default(true);
+
+            // =========================
+            // Multi-empresa (UNIFICADO)
+            // =========================
+            // Sin FK por orden de migraciones (evita errno 150)
+            $table->unsignedBigInteger('empresa_id')->nullable()->index();
+
             $table->timestamps();
 
-            // ✅ NO unique global aquí; se hará por empresa luego
+            // Índices
             $table->index('active');
             $table->index('entidad_id');
         });

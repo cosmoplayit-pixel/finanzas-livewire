@@ -10,28 +10,47 @@ return new class extends Migration {
      */
     public function up(): void
     {
+        /*
+        |--------------------------------------------------------------------------
+        | USERS
+        |--------------------------------------------------------------------------
+        */
         Schema::create('users', function (Blueprint $table) {
             $table->id();
 
+            // Datos básicos
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
 
-            // Estado + Administrador raíz
+            // Estado y jerarquía
             $table->boolean('active')->default(true);
             $table->boolean('is_root')->default(false);
+
+            // Relación con empresa (SIN foreign key aquí)
+            $table->unsignedBigInteger('empresa_id')->nullable()->index();
 
             $table->rememberToken();
             $table->timestamps();
         });
 
+        /*
+        |--------------------------------------------------------------------------
+        | PASSWORD RESET TOKENS
+        |--------------------------------------------------------------------------
+        */
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
+        /*
+        |--------------------------------------------------------------------------
+        | SESSIONS
+        |--------------------------------------------------------------------------
+        */
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();

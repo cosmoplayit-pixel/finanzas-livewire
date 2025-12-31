@@ -8,13 +8,7 @@
 
         <div class="grid text-start text-sm min-w-0">
             <span class="mb-0.5 truncate leading-tight font-semibold">
-                @role('Administrador')
-                    Finanzas
-                    @elserole('Manager')
-                    {{ auth()->user()->empresa->nombre ?? 'Empresa' }}
-                @else
-                    Finanzas
-                @endrole
+                {{ auth()->user()->empresa?->nombre ?? 'Finanzas' }}
             </span>
 
         </div>

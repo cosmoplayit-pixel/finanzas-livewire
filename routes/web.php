@@ -4,24 +4,35 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 
+use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\Usuarios;
+use App\Livewire\Admin\Roles;
 use App\Livewire\Admin\Empresas;
 use App\Livewire\Admin\Entidades;
 use App\Livewire\Admin\Proyectos;
 
 Route::get('/', fn() => redirect()->route('login'))->name('home');
 
-// Dashboard / Panel (✅ agrega middleware 'active')
-Route::view('panel', 'dashboard')
+/**
+ * Dashboard / Panel
+ * ✅ auth + verified + active
+ *
+ * Recomendado: que el panel sea un componente Livewire (Dashboard::class),
+ * para poder aplicar lógica por rol/empresa.
+ */
+Route::get('panel', Dashboard::class)
     ->middleware(['auth', 'verified', 'active'])
     ->name('dashboard');
 
 /**
- * Rutas protegidas (✅ auth + active a todo el bloque)
+ * Rutas protegidas
+ * ✅ auth + active a todo el bloque
  * - active expulsa al usuario desactivado en su siguiente request.
  */
 Route::middleware(['auth', 'active'])->group(function () {
+    // =======================
     // Ajustes de Perfil (Volt)
+    // =======================
     Route::redirect('ajustes', 'ajustes/perfil');
 
     Volt::route('ajustes/perfil', 'settings.profile')->name('profile.edit');
@@ -41,23 +52,38 @@ Route::middleware(['auth', 'active'])->group(function () {
         )
         ->name('two-factor.show');
 
-    // Admin: Usuarios (role ya incluye auth por el grupo, no hace falta repetirlo)
-    Route::middleware(['role:Administrador'])
+    // =======================
+    // USUARIOS
+    // =======================
+    Route::middleware(['permission:users.view'])
         ->get('/usuarios', Usuarios::class)
         ->name('usuarios');
 
-    // Admin/Manager: Empresas
-    Route::middleware(['role:Administrador'])
+    // =======================
+    // ADMIN: ROLES
+    // =======================
+    Route::middleware(['permission:roles.view'])
+        ->get('/admin/roles', Roles::class)
+        ->name('admin.roles');
+
+    // =======================
+    // EMPRESAS
+    // =======================
+    Route::middleware(['permission:empresas.view'])
         ->get('/empresas', Empresas::class)
         ->name('empresas');
 
-    // Admin/Manager: Entidades
-    Route::middleware(['role:Administrador|Manager'])
+    // =======================
+    // ENTIDADES
+    // =======================
+    Route::middleware(['permission:entidades.view'])
         ->get('/entidades', Entidades::class)
         ->name('entidades');
 
-    // Admin/Manager: Proyectos
-    Route::middleware(['role:Administrador|Manager'])
+    // =======================
+    // PROYECTOS
+    // =======================
+    Route::middleware(['permission:proyectos.view'])
         ->get('/proyectos', Proyectos::class)
         ->name('proyectos');
 });

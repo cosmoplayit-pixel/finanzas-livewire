@@ -33,7 +33,7 @@ class Proyectos extends Component
     public $monto = 0;
     public string $descripcion = '';
     public ?string $fecha_inicio = null; // yyyy-mm-dd
-    public ?string $fecha_fin = null;    // yyyy-mm-dd
+    public ?string $fecha_fin = null; // yyyy-mm-dd
 
     protected $listeners = [
         'doToggleActiveProyecto' => 'toggleActive',
@@ -44,16 +44,20 @@ class Proyectos extends Component
         return [
             'entidad_id' => ['required', 'integer', 'exists:entidades,id'],
             'nombre' => [
-                'required', 'string', 'max:255',
+                'required',
+                'string',
+                'max:255',
                 Rule::unique('proyectos', 'nombre')
                     ->ignore($this->proyectoId)
-                    ->where(fn ($q) => $q->where('entidad_id', $this->entidad_id)),
+                    ->where(fn($q) => $q->where('entidad_id', $this->entidad_id)),
             ],
             'codigo' => [
-                'nullable', 'string', 'max:80',
+                'nullable',
+                'string',
+                'max:80',
                 Rule::unique('proyectos', 'codigo')
                     ->ignore($this->proyectoId)
-                    ->where(fn ($q) => $q->where('entidad_id', $this->entidad_id)),
+                    ->where(fn($q) => $q->where('entidad_id', $this->entidad_id)),
             ],
             'monto' => ['required', 'numeric', 'min:0'],
             'descripcion' => ['nullable', 'string', 'max:5000'],
@@ -62,15 +66,38 @@ class Proyectos extends Component
         ];
     }
 
-    public function updatingSearch(): void { $this->resetPage(); }
-    public function updatingStatus(): void { $this->resetPage(); }
-    public function updatingEntidadFilter(): void { $this->resetPage(); }
-    public function updatingPerPage(): void { $this->resetPage(); }
+    public function updatingSearch(): void
+    {
+        $this->resetPage();
+    }
+    public function updatingStatus(): void
+    {
+        $this->resetPage();
+    }
+    public function updatingEntidadFilter(): void
+    {
+        $this->resetPage();
+    }
+    public function updatingPerPage(): void
+    {
+        $this->resetPage();
+    }
 
     public function sortBy(string $field): void
     {
-        $allowedSorts = ['id', 'nombre', 'codigo', 'monto','active', 'entidad_id', 'fecha_inicio', 'fecha_fin'];
-        if (!in_array($field, $allowedSorts, true)) return;
+        $allowedSorts = [
+            'id',
+            'nombre',
+            'codigo',
+            'monto',
+            'active',
+            'entidad_id',
+            'fecha_inicio',
+            'fecha_fin',
+        ];
+        if (!in_array($field, $allowedSorts, true)) {
+            return;
+        }
 
         if ($this->sortField === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
@@ -112,12 +139,14 @@ class Proyectos extends Component
         $data['codigo'] = $data['codigo'] ? strtoupper(trim($data['codigo'])) : null;
         $data['monto'] = number_format((float) $data['monto'], 2, '.', '');
 
-        Proyecto::updateOrCreate(
-            ['id' => $this->proyectoId],
-            $data
-        );
+        Proyecto::updateOrCreate(['id' => $this->proyectoId], $data);
 
-        session()->flash('success', $this->proyectoId ? 'Proyecto actualizado correctamente.' : 'Proyecto creado correctamente.');
+        session()->flash(
+            'success',
+            $this->proyectoId
+                ? 'Proyecto actualizado correctamente.'
+                : 'Proyecto creado correctamente.',
+        );
 
         $this->closeModal();
     }
@@ -152,31 +181,47 @@ class Proyectos extends Component
 
     public function render()
     {
+        $user = auth()->user();
+
+        // 🔹 ENTIDADES VISIBLES SEGÚN EMPRESA
         $entidades = Entidad::query()
+            ->when(
+                !$user->hasRole('Administrador'),
+                fn($q) => $q->where('empresa_id', $user->empresa_id),
+            )
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'sigla']);
 
-        $q = Proyecto::query()
-            ->with(['entidad:id,nombre,sigla']);
+        // 🔹 PROYECTOS
+        $q = Proyecto::query()->with(['entidad:id,nombre,sigla']);
 
-        if ($this->search !== '') {
-            $s = trim($this->search);
-            $q->where(function ($qq) use ($s) {
-                $qq->where('nombre', 'like', "%{$s}%")
-                   ->orWhere('codigo', 'like', "%{$s}%");
+        // 🔐 FILTRO POR EMPRESA (NO ADMIN)
+        if (!$user->hasRole('Administrador')) {
+            $q->whereHas('entidad', function ($qq) use ($user) {
+                $qq->where('empresa_id', $user->empresa_id);
             });
         }
 
+        // 🔍 BÚSQUEDA
+        if ($this->search !== '') {
+            $s = trim($this->search);
+            $q->where(function ($qq) use ($s) {
+                $qq->where('nombre', 'like', "%{$s}%")->orWhere('codigo', 'like', "%{$s}%");
+            });
+        }
+
+        // 🔘 ESTADO
         if ($this->status !== 'all') {
             $q->where('active', $this->status === 'active');
         }
 
+        // 🏷️ FILTRO POR ENTIDAD
         if ($this->entidadFilter !== 'all' && $this->entidadFilter !== '') {
             $q->where('entidad_id', (int) $this->entidadFilter);
         }
 
-        $proyectos = $q->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
+        // ↕️ ORDEN + PAGINACIÓN
+        $proyectos = $q->orderBy($this->sortField, $this->sortDirection)->paginate($this->perPage);
 
         return view('livewire.admin.proyectos', compact('proyectos', 'entidades'));
     }

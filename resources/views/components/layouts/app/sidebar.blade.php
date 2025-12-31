@@ -11,35 +11,63 @@
         <x-app-logo />
         <flux:navlist variant="outline">
             <flux:navlist.group :heading="__('Plataforma')" class="grid">
-                @hasanyrole('Administrador')
-                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
-                        wire:navigate>{{ __('Panel de Control') }}</flux:navlist.item>
 
+                {{-- PANEL DE CONTROL (todos los roles autorizados) --}}
+                @can('dashboard.view')
+                    <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
+                        wire:navigate>
+                        {{ __('Panel de Control') }}
+                    </flux:navlist.item>
+                @endcan
+
+
+
+                {{-- USUARIOS (solo Administrador) --}}
+                @can('users.view')
                     <flux:navlist.item icon="users" :href="route('usuarios')" :current="request()->routeIs('usuarios')"
                         wire:navigate>
                         {{ __('Usuarios') }}
                     </flux:navlist.item>
+                @endcan
 
 
+                {{-- ROLES (solo Administrador) --}}
+                @can('roles.view')
+                    <flux:navlist.item icon="key" :href="route('admin.roles')"
+                        :current="request()->routeIs('admin.roles')" wire:navigate>
+                        {{ __('Roles') }}
+                    </flux:navlist.item>
+                @endcan
+
+
+                {{-- EMPRESAS (solo Administrador) --}}
+                @can('empresas.view')
                     <flux:navlist.item icon="folder" :href="route('empresas')" :current="request()->routeIs('empresas')"
                         wire:navigate>
                         {{ __('Empresas') }}
                     </flux:navlist.item>
-                @endhasanyrole
+                @endcan
 
-                @hasanyrole('Administrador|Manager')
+
+                {{-- ENTIDADES (Manager + Visualizador) --}}
+                @can('entidades.view')
                     <flux:navlist.item icon="pencil" :href="route('entidades')" :current="request()->routeIs('entidades')"
                         wire:navigate>
                         {{ __('Entidades') }}
                     </flux:navlist.item>
-                    <flux:navlist.item icon="folder" :href="route('proyectos')" :current="request()->routeIs('proyectos')"
-                        wire:navigate>
+                @endcan
+
+
+                {{-- PROYECTOS (Manager + Visualizador) --}}
+                @can('proyectos.view')
+                    <flux:navlist.item icon="folder" :href="route('proyectos')"
+                        :current="request()->routeIs('proyectos')" wire:navigate>
                         {{ __('Proyectos') }}
                     </flux:navlist.item>
-                @endhasanyrole
-
+                @endcan
 
             </flux:navlist.group>
+
 
         </flux:navlist>
 

@@ -10,6 +10,7 @@ return new class extends Migration {
         Schema::create('entidades', function (Blueprint $table) {
             $table->id();
 
+            // Datos principales
             $table->string('nombre', 255);
             $table->string('sigla', 50)->nullable();
 
@@ -18,11 +19,15 @@ return new class extends Migration {
             $table->text('direccion')->nullable();
             $table->text('observaciones')->nullable();
 
+            // Estado
             $table->boolean('active')->default(true);
+
+            // Multi-empresa (UNIFICADO, sin FK por orden de migraciones)
+            $table->unsignedBigInteger('empresa_id')->nullable()->index();
 
             $table->timestamps();
 
-            // ✅ NO unique global aquí (porque se repetirá por empresa)
+            // Índices
             $table->index('active');
         });
     }

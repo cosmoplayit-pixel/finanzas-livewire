@@ -3,13 +3,19 @@
 <div class="p-0 md:p-6 space-y-4" :title="__('Dashboard')">
 
     {{-- HEADER (RESPONSIVE PARA MOBILE) --}}
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 class="text-2xl font-semibold">Empresas</h1>
+    @can('empresas.create')
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h1 class="text-2xl font-semibold">Empresas</h1>
 
-        <button wire:click="openCreate" class="w-full sm:w-auto px-4 py-2 rounded bg-black text-white hover:opacity-90">
-            Nueva Empresa
-        </button>
-    </div>
+            <button wire:click="openCreate" class="w-full sm:w-auto px-4 py-2 rounded bg-black text-white hover:opacity-90">
+                Nueva Empresa
+            </button>
+        </div>
+    @else
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h1 class="text-2xl font-semibold">Empresas</h1>
+        </div>
+    @endcan
 
     {{-- ALERTAS (LIGHT/DARK) --}}
     @if (session('success'))
@@ -64,7 +70,6 @@
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                         <div class="font-semibold truncate">{{ $u->nombre }}</div>
-                        <div class="text-sm text-gray-600 dark:text-neutral-300 truncate">{{ $u->email }}</div>
                     </div>
 
                     <div class="shrink-0">
@@ -89,30 +94,39 @@
                     </div>
 
                     <div class="flex justify-between gap-3">
-                        <span class="text-gray-500 dark:text-neutral-400">NIT</span>
+                        <span class="text-gray-500 dark:text-neutral-400">Nit</span>
                         <span class="font-medium">{{ $u->nit ?? '—' }}</span>
+                    </div>
+
+                    <div class="flex justify-between gap-3">
+                        <span class="text-gray-500 dark:text-neutral-400">Email</span>
+                        <span class="font-medium">{{ $u->email ?? '—' }}</span>
                     </div>
                 </div>
 
-                <div class="mt-4 flex flex-col gap-2">
-                    <button wire:click="openEdit({{ $u->id }})"
-                        class="w-full px-3 py-2 rounded border border-gray-300 hover:bg-gray-50
+                <div class="mt-4 flex  gap-2">
+                    @can('empresas.update')
+                        <button wire:click="openEdit({{ $u->id }})"
+                            class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
                                dark:border-neutral-700 dark:hover:bg-neutral-800">
-                        Editar
-                    </button>
+                            Editar
+                        </button>
+                    @endcan
 
-                    <button type="button"
-                        wire:click="$dispatch('swal:toggle-active-empresa', {
+                    @can('empresas.toggle')
+                        <button type="button"
+                            wire:click="$dispatch('swal:toggle-active-empresa', {
                             id: {{ $u->id }},
                             active: {{ $u->active ? 'true' : 'false' }},
                             name: @js($u->nombre)
                         })"
-                        class="w-full px-3 py-2 rounded text-sm font-medium
+                            class="w-full px-3 py-1 rounded text-sm font-medium
                         {{ $u->active
                             ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                             : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-                        {{ $u->active ? 'Desactivar' : 'Activar' }}
-                    </button>
+                            {{ $u->active ? 'Desactivar' : 'Activar' }}
+                        </button>
+                    @endcan
                 </div>
             </div>
         @empty
@@ -228,25 +242,29 @@
                         {{-- Acciones --}}
                         <td class="p-3 whitespace-nowrap">
                             <div class="flex items-center gap-2">
-                                <button wire:click="openEdit({{ $e->id }})"
-                                    class="px-3 py-1 cursor-pointer rounded border border-gray-300
+                                @can('empresas.update')
+                                    <button wire:click="openEdit({{ $e->id }})"
+                                        class="px-3 py-1 cursor-pointer rounded border border-gray-300
                                        hover:bg-gray-50
                                        dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                    Editar
-                                </button>
+                                        Editar
+                                    </button>
+                                @endcan
 
-                                <button type="button"
-                                    wire:click="$dispatch('swal:toggle-active-empresa', {
+                                @can('empresas.toggle')
+                                    <button type="button"
+                                        wire:click="$dispatch('swal:toggle-active-empresa', {
                                         id: {{ $e->id }},
                                         active: {{ $e->active ? 'true' : 'false' }},
                                         name: @js($e->nombre)
                                     })"
-                                    class="px-3 py-1 cursor-pointer rounded text-sm font-medium
+                                        class="px-3 py-1 cursor-pointer rounded text-sm font-medium
                                     {{ $e->active
                                         ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                                         : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-                                    {{ $e->active ? 'Desactivar' : 'Activar' }}
-                                </button>
+                                        {{ $e->active ? 'Desactivar' : 'Activar' }}
+                                    </button>
+                                @endcan
                             </div>
                         </td>
                     </tr>
@@ -382,12 +400,14 @@
                             Cancelar
                         </button>
 
-                        <button wire:click="save"
-                            class="w-1/2 px-4 py-2 rounded
+                        @canany(['empresas.create', 'empresas.update'])
+                            <button wire:click="save"
+                                class="w-1/2 px-4 py-2 rounded
                                bg-gray-900 text-white hover:opacity-90
                                dark:bg-white dark:text-black">
-                            {{ $empresaId ? 'Actualizar' : 'Guardar' }}
-                        </button>
+                                {{ $empresaId ? 'Actualizar' : 'Guardar' }}
+                            </button>
+                        @endcanany
                     </div>
 
                 </div>

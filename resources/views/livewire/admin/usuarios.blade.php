@@ -30,10 +30,7 @@
         <div class="flex flex-col gap-3 md:flex-row md:items-center">
             {{-- Buscar --}}
             <input type="search" wire:model.live="search" placeholder="Buscar Nombre o Correo"
-                class="w-full md:w-72 lg:w-md
-                   border rounded px-3 py-2
-                 "
-                autocomplete="off" />
+                class="w-full md:w-72 lg:w-md border rounded px-3 py-2" autocomplete="off" />
 
             {{-- Selects --}}
             <div class="flex flex-col sm:flex-row gap-3 md:ml-auto w-full md:w-auto">
@@ -66,6 +63,10 @@
         {{-- MOBILE: CARDS (md:hidden) --}}
         <div class="space-y-3 md:hidden">
             @forelse ($users as $u)
+                @php
+                    $isRoot = (bool) ($u->is_root ?? false);
+                @endphp
+
                 <div class="border rounded-lg p-4 bg-white dark:bg-neutral-900 dark:border-neutral-800">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
@@ -110,31 +111,43 @@
 
                     {{-- Acciones --}}
                     @canany(['users.update', 'users.toggle'])
-                        <div class="mt-4 flex  gap-2">
-                            @can('users.update')
-                                <button wire:click="openEdit({{ $u->id }})"
-                                    class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                           dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                    Editar
-                                </button>
-                            @endcan
+                        <div class="mt-4">
+                            @if ($isRoot)
+                                {{-- SOLO UNA VEZ --}}
+                                <span
+                                    class="block w-full px-3 py-1 rounded text-center text-xs font-medium
+                                           bg-gray-200 text-gray-700
+                                           dark:bg-neutral-800 dark:text-neutral-300">
+                                    Admin principal
+                                </span>
+                            @else
+                                <div class="flex gap-2">
+                                    @can('users.update')
+                                        <button wire:click="openEdit({{ $u->id }})"
+                                            class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
+                                                   dark:border-neutral-700 dark:hover:bg-neutral-800">
+                                            Editar
+                                        </button>
+                                    @endcan
 
-                            @can('users.toggle')
-                                @if (auth()->id() !== $u->id)
-                                    <button type="button"
-                                        wire:click="$dispatch('swal:toggle-active', {
-                                            id: {{ $u->id }},
-                                            active: {{ $u->active ? 'true' : 'false' }},
-                                            name: @js($u->name)
-                                        })"
-                                        class="w-full px-3 py-1 rounded text-sm font-medium
-                                        {{ $u->active
-                                            ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
-                                            : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-                                        {{ $u->active ? 'Desactivar' : 'Activar' }}
-                                    </button>
-                                @endif
-                            @endcan
+                                    @can('users.toggle')
+                                        @if (auth()->id() !== $u->id)
+                                            <button type="button"
+                                                wire:click="$dispatch('swal:toggle-active', {
+                                                    id: {{ $u->id }},
+                                                    active: {{ $u->active ? 'true' : 'false' }},
+                                                    name: @js($u->name)
+                                                })"
+                                                class="w-full px-3 py-1 rounded text-sm font-medium
+                                                {{ $u->active
+                                                    ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                                                    : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+                                                {{ $u->active ? 'Desactivar' : 'Activar' }}
+                                            </button>
+                                        @endif
+                                    @endcan
+                                </div>
+                            @endif
                         </div>
                     @endcanany
                 </div>
@@ -146,17 +159,11 @@
         </div>
 
         {{-- TABLET + DESKTOP: TABLA (visible desde md) --}}
-        <div
-            class="hidden md:block
-               overflow-x-auto overflow-y-hidden
-               border rounded
-               bg-white dark:bg-neutral-800">
+        <div class="hidden md:block overflow-x-auto overflow-y-hidden border rounded bg-white dark:bg-neutral-800">
             <table class="w-full text-sm">
                 {{-- ================= THEAD ================= --}}
                 <thead
-                    class="bg-gray-50 text-gray-700
-                       dark:bg-neutral-900 dark:text-neutral-200
-                       border-b border-gray-200 dark:border-neutral-200">
+                    class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-200">
                     <tr class="text-left">
                         <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('id')">
                             ID
@@ -217,6 +224,10 @@
                 {{-- ================= TBODY ================= --}}
                 <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
                     @foreach ($users as $u)
+                        @php
+                            $isRoot = (bool) ($u->is_root ?? false);
+                        @endphp
+
                         <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
                             <td class="p-3 whitespace-nowrap">{{ $u->id }}</td>
 
@@ -251,16 +262,12 @@
                             <td class="p-3 whitespace-nowrap">
                                 @if ($u->active)
                                     <span
-                                        class="px-2 py-1 rounded text-xs
-                                             bg-green-100 text-green-800
-                                             dark:bg-green-500/20 dark:text-green-200">
+                                        class="px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200">
                                         Activo
                                     </span>
                                 @else
                                     <span
-                                        class="px-2 py-1 rounded text-xs
-                                             bg-red-100 text-red-800
-                                             dark:bg-red-500/20 dark:text-red-200">
+                                        class="px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200">
                                         Inactivo
                                     </span>
                                 @endif
@@ -269,19 +276,27 @@
                             {{-- Acciones --}}
                             @canany(['users.update', 'users.toggle'])
                                 <td class="p-3 whitespace-nowrap">
-                                    <div class="flex items-center gap-2">
-                                        @can('users.update')
-                                            <button wire:click="openEdit({{ $u->id }})"
-                                                class="px-3 py-1 cursor-pointer rounded border border-gray-300
-                                                   hover:bg-gray-50
-                                                   dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                                Editar
-                                            </button>
-                                        @endcan
+                                    @if ($isRoot)
+                                        {{-- SOLO UNA VEZ --}}
+                                        <span
+                                            class="inline-flex px-3 py-1 rounded text-xs font-medium
+                                                   bg-gray-200 text-gray-700
+                                                   dark:bg-neutral-800 dark:text-neutral-300">
+                                            Admin principal
+                                        </span>
+                                    @else
+                                        <div class="flex items-center gap-2">
+                                            @can('users.update')
+                                                <button wire:click="openEdit({{ $u->id }})"
+                                                    class="px-3 py-1 cursor-pointer rounded border border-gray-300
+                                                           hover:bg-gray-50
+                                                           dark:border-neutral-700 dark:hover:bg-neutral-800">
+                                                    Editar
+                                                </button>
+                                            @endcan
 
-                                        @can('users.toggle')
-                                            @if (auth()->id() !== $u->id)
-                                                @if (!$u->is_root)
+                                            @can('users.toggle')
+                                                @if (auth()->id() !== $u->id)
                                                     <button type="button"
                                                         wire:click="$dispatch('swal:toggle-active', {
                                                             id: {{ $u->id }},
@@ -290,23 +305,14 @@
                                                         })"
                                                         class="px-3 py-1 cursor-pointer rounded text-sm font-medium
                                                         {{ $u->active
-                                                            ? 'bg-red-600 text-white hover:bg-red-700
-                                                                                                                                                                                                                                                                   dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
-                                                            : 'bg-green-600 text-white hover:bg-green-700
-                                                                                                                                                                                                                                                                   dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+                                                            ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                                                            : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
                                                         {{ $u->active ? 'Desactivar' : 'Activar' }}
                                                     </button>
-                                                @else
-                                                    <span
-                                                        class="px-3 py-1 rounded text-xs font-medium
-                                                        bg-gray-200 text-gray-700
-                                                        dark:bg-neutral-800 dark:text-neutral-300">
-                                                        Admin principal
-                                                    </span>
                                                 @endif
-                                            @endif
-                                        @endcan
-                                    </div>
+                                            @endcan
+                                        </div>
+                                    @endif
                                 </td>
                             @endcanany
                         </tr>
@@ -333,7 +339,6 @@
         @if ($openModal)
             @canany(['users.create', 'users.update'])
                 <div wire:key="usuarios-modal" class="fixed inset-0 z-50">
-
                     {{-- Backdrop --}}
                     <div class="absolute inset-0 bg-black/50 dark:bg-black/70" wire:click="closeModal"></div>
 
@@ -352,20 +357,19 @@
                             overflow-hidden
                             shadow-xl
                         ">
-
                             {{-- Header (sticky) --}}
                             <div
                                 class="sticky top-0 z-10 px-5 py-4 flex justify-between items-center
-                                   bg-gray-50 dark:bg-neutral-900
-                                   border-b border-gray-200 dark:border-neutral-800">
+                                        bg-gray-50 dark:bg-neutral-900
+                                        border-b border-gray-200 dark:border-neutral-800">
                                 <h2 class="text-lg font-semibold text-gray-900 dark:text-neutral-100">
                                     {{ $userId ? 'Editar Usuario' : 'Nuevo Usuario' }}
                                 </h2>
 
                                 <button type="button" wire:click="closeModal"
                                     class="inline-flex items-center justify-center size-9 rounded-md
-                                       text-gray-500 hover:text-gray-900 hover:bg-gray-100
-                                       dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800">
+                                           text-gray-500 hover:text-gray-900 hover:bg-gray-100
+                                           dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800">
                                     ✕
                                 </button>
                             </div>
@@ -497,20 +501,20 @@
                             {{-- Footer (sticky) --}}
                             <div
                                 class="sticky bottom-0 z-10 px-5 py-4 flex gap-2
-                                   bg-gray-50 dark:bg-neutral-900
-                                   border-t border-gray-200 dark:border-neutral-800">
+                                        bg-gray-50 dark:bg-neutral-900
+                                        border-t border-gray-200 dark:border-neutral-800">
                                 <button wire:click="closeModal"
                                     class="w-1/2 px-4 py-2 rounded border
-                                       border-gray-300 dark:border-neutral-700
-                                       text-gray-700 dark:text-neutral-200
-                                       hover:bg-gray-100 dark:hover:bg-neutral-800">
+                                           border-gray-300 dark:border-neutral-700
+                                           text-gray-700 dark:text-neutral-200
+                                           hover:bg-gray-100 dark:hover:bg-neutral-800">
                                     Cancelar
                                 </button>
 
                                 <button wire:click="save"
                                     class="w-1/2 px-4 py-2 rounded
-                                       bg-gray-900 text-white hover:opacity-90
-                                       dark:bg-white dark:text-black">
+                                           bg-gray-900 text-white hover:opacity-90
+                                           dark:bg-white dark:text-black">
                                     {{ $userId ? 'Actualizar' : 'Guardar' }}
                                 </button>
                             </div>

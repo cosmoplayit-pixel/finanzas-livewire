@@ -37,44 +37,50 @@ class RolesAndUsersSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
-        | PERMISOS (según tus 5 módulos)
+        | PERMISOS
         |--------------------------------------------------------------------------
         */
         $permissions = [
             // Panel
             'dashboard.view',
 
-            // Usuarios (Admin)
+            // Usuarios
             'users.view',
             'users.create',
             'users.update',
             'users.toggle',
             'users.assign_role',
 
-            // Empresas (Admin)
+            // Empresas
             'empresas.view',
             'empresas.create',
             'empresas.update',
             'empresas.toggle',
 
-            // Roles (Admin)
+            // Roles
             'roles.view',
             'roles.create',
             'roles.update',
             'roles.toggle',
             'roles.assign_permissions',
 
-            // Entidades (Manager opera / Visualizador ve)
+            // Entidades
             'entidades.view',
             'entidades.create',
             'entidades.update',
             'entidades.toggle',
 
-            // Proyectos (Manager opera / Visualizador ve)
+            // Proyectos
             'proyectos.view',
             'proyectos.create',
             'proyectos.update',
             'proyectos.toggle',
+
+            // Bancos
+            'bancos.view',
+            'bancos.create',
+            'bancos.update',
+            'bancos.toggle',
         ];
 
         foreach ($permissions as $p) {
@@ -86,14 +92,13 @@ class RolesAndUsersSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
-        | ROLES BASE (protegidos)
+        | ROLES BASE
         |--------------------------------------------------------------------------
         */
         $adminRole = Role::firstOrCreate(
             ['name' => 'Administrador', 'guard_name' => 'web'],
             [
-                'description' =>
-                    'Administra Usuarios, Empresas y Roles. No ve Entidades ni Proyectos.',
+                'description' => 'Administra todo el sistema: Usuarios, Empresas, Roles y Bancos.',
                 'is_system' => true,
                 'active' => true,
             ],
@@ -102,7 +107,7 @@ class RolesAndUsersSeeder extends Seeder
         $managerRole = Role::firstOrCreate(
             ['name' => 'Empresa_Manager', 'guard_name' => 'web'],
             [
-                'description' => 'Gestiona Entidades y Proyectos de su empresa.',
+                'description' => 'Gestiona Entidades, Proyectos y Bancos de su empresa.',
                 'is_system' => true,
                 'active' => true,
             ],
@@ -111,7 +116,7 @@ class RolesAndUsersSeeder extends Seeder
         $viewerRole = Role::firstOrCreate(
             ['name' => 'Empresa_Visualizador', 'guard_name' => 'web'],
             [
-                'description' => 'Solo lectura de Entidades y Proyectos de su empresa.',
+                'description' => 'Solo lectura de Entidades, Proyectos y Bancos.',
                 'is_system' => true,
                 'active' => true,
             ],
@@ -119,11 +124,11 @@ class RolesAndUsersSeeder extends Seeder
 
         /*
         |--------------------------------------------------------------------------
-        | ASIGNACIÓN DE PERMISOS POR ROL (Opción A)
+        | ASIGNACIÓN DE PERMISOS POR ROL
         |--------------------------------------------------------------------------
         */
 
-        // Administrador: Panel + Usuarios + Empresas + Roles ✅
+        // Administrador: TODO
         $adminRole->syncPermissions([
             'dashboard.view',
 
@@ -138,7 +143,6 @@ class RolesAndUsersSeeder extends Seeder
             'empresas.update',
             'empresas.toggle',
 
-            // Roles ✅ NUEVO
             'roles.view',
             'roles.create',
             'roles.update',
@@ -146,7 +150,7 @@ class RolesAndUsersSeeder extends Seeder
             'roles.assign_permissions',
         ]);
 
-        // Empresa_Manager: Panel + Entidades + Proyectos (full)
+        // Empresa_Manager: Entidades + Proyectos + Bancos
         $managerRole->syncPermissions([
             'dashboard.view',
 
@@ -159,10 +163,21 @@ class RolesAndUsersSeeder extends Seeder
             'proyectos.create',
             'proyectos.update',
             'proyectos.toggle',
+
+            // Bancos
+            'bancos.view',
+            'bancos.create',
+            'bancos.update',
+            'bancos.toggle',
         ]);
 
-        // Empresa_Visualizador: Panel + Entidades/Proyectos (solo view)
-        $viewerRole->syncPermissions(['dashboard.view', 'entidades.view', 'proyectos.view']);
+        // Empresa_Visualizador: solo view
+        $viewerRole->syncPermissions([
+            'dashboard.view',
+            'entidades.view',
+            'proyectos.view',
+            'bancos.view',
+        ]);
 
         /*
         |--------------------------------------------------------------------------
@@ -170,7 +185,7 @@ class RolesAndUsersSeeder extends Seeder
         |--------------------------------------------------------------------------
         */
 
-        // Admin global (empresa_id NULL)
+        // Admin global
         $admin = User::firstOrCreate(
             ['email' => 'admin@demo.com'],
             [
@@ -183,9 +198,8 @@ class RolesAndUsersSeeder extends Seeder
         );
         $admin->syncRoles(['Administrador']);
 
-        // Un manager por empresa
-        $empresas = Empresa::query()->orderBy('id')->get();
-        foreach ($empresas as $emp) {
+        // Managers por empresa
+        foreach (Empresa::orderBy('id')->get() as $emp) {
             $u = User::firstOrCreate(
                 ['email' => "manager{$emp->id}@demo.com"],
                 [
@@ -200,11 +214,10 @@ class RolesAndUsersSeeder extends Seeder
             $u->syncRoles(['Empresa_Manager']);
         }
 
-        // Un visualizador por empresa
-        $visualizador = Empresa::query()->orderBy('id')->get();
-        foreach ($visualizador as $emp) {
+        // Visualizadores por empresa
+        foreach (Empresa::orderBy('id')->get() as $emp) {
             $u = User::firstOrCreate(
-                ['email' => "vizualizador{$emp->id}@demo.com"],
+                ['email' => "visualizador{$emp->id}@demo.com"],
                 [
                     'name' => "Visualizador {$emp->nombre}",
                     'password' => Hash::make('Password123!'),

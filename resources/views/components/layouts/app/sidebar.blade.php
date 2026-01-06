@@ -9,68 +9,126 @@
     <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900">
         <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
         <x-app-logo />
-        <flux:navlist variant="outline">
-            <flux:navlist.group :heading="__('Plataforma')" class="grid">
 
-                {{-- PANEL DE CONTROL (todos los roles autorizados) --}}
-                @can('dashboard.view')
+        <flux:navlist variant="outline">
+
+            {{-- ================= DASHBOARD ================= --}}
+            @can('dashboard.view')
+                <flux:navlist.group :heading="__('Dashboard')" class="grid">
                     <flux:navlist.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
                         wire:navigate>
                         {{ __('Panel de Control') }}
                     </flux:navlist.item>
-                @endcan
+                </flux:navlist.group>
+            @endcan
 
 
+            {{-- ================= PLATAFORMA ================= --}}
+            @canany(['users.view', 'roles.view', 'empresas.view'])
+                <flux:navlist.group :heading="__('Plataforma')" class="grid">
 
-                {{-- USUARIOS (solo Administrador) --}}
-                @can('users.view')
-                    <flux:navlist.item icon="users" :href="route('usuarios')" :current="request()->routeIs('usuarios')"
-                        wire:navigate>
-                        {{ __('Usuarios') }}
-                    </flux:navlist.item>
-                @endcan
+                    {{-- Usuarios --}}
+                    @can('users.view')
+                        <flux:navlist.item icon="users" :href="route('usuarios')" :current="request()->routeIs('usuarios')"
+                            wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Usuarios') }}</span>
+                                @isset($navCounts['usuarios'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['usuarios'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
+
+                    {{-- Roles --}}
+                    @can('roles.view')
+                        <flux:navlist.item icon="shield-check" :href="route('admin.roles')"
+                            :current="request()->routeIs('admin.roles')" wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Roles') }}</span>
+                                @isset($navCounts['roles'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['roles'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
+
+                    {{-- Empresas --}}
+                    @can('empresas.view')
+                        <flux:navlist.item icon="building-office" :href="route('empresas')"
+                            :current="request()->routeIs('empresas')" wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Empresas') }}</span>
+                                @isset($navCounts['empresas'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['empresas'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
+
+                </flux:navlist.group>
+            @endcanany
 
 
-                {{-- ROLES (solo Administrador) --}}
-                @can('roles.view')
-                    <flux:navlist.item icon="key" :href="route('admin.roles')"
-                        :current="request()->routeIs('admin.roles')" wire:navigate>
-                        {{ __('Roles') }}
-                    </flux:navlist.item>
-                @endcan
+            {{-- ================= GESTIÓN FINANCIERA ================= --}}
+            @canany(['entidades.view', 'proyectos.view', 'bancos.view'])
+                <flux:navlist.group :heading="__('Gestión Financiera')" class="grid">
 
+                    {{-- Entidades --}}
+                    @can('entidades.view')
+                        <flux:navlist.item icon="building-office" :href="route('entidades')"
+                            :current="request()->routeIs('entidades')" wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Entidades') }}</span>
+                                @isset($navCounts['entidades'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['entidades'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
 
-                {{-- EMPRESAS (solo Administrador) --}}
-                @can('empresas.view')
-                    <flux:navlist.item icon="folder" :href="route('empresas')" :current="request()->routeIs('empresas')"
-                        wire:navigate>
-                        {{ __('Empresas') }}
-                    </flux:navlist.item>
-                @endcan
+                    {{-- Proyectos --}}
+                    @can('proyectos.view')
+                        <flux:navlist.item icon="folder" :href="route('proyectos')"
+                            :current="request()->routeIs('proyectos')" wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Proyectos') }}</span>
+                                @isset($navCounts['proyectos'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['proyectos'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
 
+                    {{-- Bancos --}}
+                    @can('bancos.view')
+                        <flux:navlist.item icon="banknotes" :href="route('bancos')" :current="request()->routeIs('bancos')"
+                            wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Bancos') }}</span>
+                                @isset($navCounts['bancos'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['bancos'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
 
-                {{-- ENTIDADES (Manager + Visualizador) --}}
-                @can('entidades.view')
-                    <flux:navlist.item icon="pencil" :href="route('entidades')" :current="request()->routeIs('entidades')"
-                        wire:navigate>
-                        {{ __('Entidades') }}
-                    </flux:navlist.item>
-                @endcan
-
-
-                {{-- PROYECTOS (Manager + Visualizador) --}}
-                @can('proyectos.view')
-                    <flux:navlist.item icon="folder" :href="route('proyectos')"
-                        :current="request()->routeIs('proyectos')" wire:navigate>
-                        {{ __('Proyectos') }}
-                    </flux:navlist.item>
-                @endcan
-
-            </flux:navlist.group>
-
+                </flux:navlist.group>
+            @endcanany
 
         </flux:navlist>
-
         <flux:spacer />
 
         <!-- Desktop User Menu -->
@@ -175,27 +233,28 @@
 
 <script>
     document.addEventListener('livewire:init', () => {
+
+        /* =========================================================
+         * SWEETALERT CONFIRMS (Livewire)
+         * Recomendación: mantener todos los listeners aquí.
+         * ========================================================= */
+
+        // ===================== USUARIOS =====================
         Livewire.on('swal:toggle-active', ({
             id,
             active,
             name
         }) => {
-
             Swal.fire({
                 title: active ? '¿Desactivar usuario?' : '¿Activar usuario?',
-                text: active ?
-                    `El usuario "${name}" no podrá ingresar al sistema.` :
-                    `El usuario "${name}" podrá volver a ingresar al sistema.`,
+                text: '¿Seguro que desea ' + (active ? 'desactivar' : 'activar') +
+                    ` el usuario "${name}"?`,
                 icon: 'warning',
                 showCancelButton: true,
-
                 confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
                 cancelButtonText: 'Cancelar',
-
-                /* 🎨 COLORES */
-                confirmButtonColor: active ? '#dc2626' : '#16a34a', // rojo / verde
-                cancelButtonColor: '#6b7280', // gris
-
+                confirmButtonColor: active ? '#dc2626' : '#16a34a',
+                cancelButtonColor: '#6b7280',
                 reverseButtons: true,
             }).then((result) => {
                 if (result.isConfirmed) {
@@ -205,20 +264,16 @@
                 }
             });
         });
-    });
-</script>
-<script>
-    document.addEventListener('livewire:init', () => {
 
-        Livewire.on('swal:toggle-active-entidad', ({
+        // ===================== ROLES =====================
+        Livewire.on('swal:toggle-active-rol', ({
             id,
             active,
             name
         }) => {
-
             Swal.fire({
-                title: active ? '¿Desactivar entidad?' : '¿Activar entidad?',
-                text: `Entidad: ${name}`,
+                title: active ? '¿Desactivar rol?' : '¿Activar rol?',
+                text: `¿Seguro que deseas ${active ? 'desactivar' : 'activar'}: "${name}"?`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: active ? '#dc2626' : '#16a34a',
@@ -228,58 +283,22 @@
                 reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    Livewire.dispatch('toggleEntidad', {
-                        id: id
-                    });
-                }
-            });
-
-        });
-
-    });
-</script>
-<script>
-    document.addEventListener('livewire:init', () => {
-        Livewire.on('swal:toggle-active-proyecto', ({
-            id,
-            active,
-            name
-        }) => {
-            Swal.fire({
-                title: active ? '¿Desactivar proyecto?' : '¿Activar proyecto?',
-                text: active ?
-                    `El proyecto "${name}" quedará inactivo.` :
-                    `El proyecto "${name}" volverá a estar disponible.`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: active ? '#dc2626' : '#16a34a',
-                cancelButtonColor: '#6b7280',
-                reverseButtons: false,
-                reverseButtons: true,
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Livewire.dispatch('doToggleActiveProyecto', {
+                    Livewire.dispatch('doToggleActiveRol', {
                         id
                     });
                 }
             });
         });
-    });
-</script>
-<script>
-    document.addEventListener('livewire:init', () => {
 
+        // ===================== EMPRESAS =====================
         Livewire.on('swal:toggle-active-empresa', ({
             id,
             active,
             name
         }) => {
-
             Swal.fire({
                 title: active ? '¿Desactivar empresa?' : '¿Activar empresa?',
-                text: `Empresa: ${name}`,
+                text: `¿Seguro que desea ${active ? 'desactivar' : 'activar'} la empresa "${name}"?`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: active ? '#dc2626' : '#16a34a',
@@ -294,7 +313,82 @@
                     });
                 }
             });
+        });
 
+        // ===================== ENTIDADES =====================
+        Livewire.on('swal:toggle-active-entidad', ({
+            id,
+            active,
+            name
+        }) => {
+            Swal.fire({
+                title: active ? '¿Desactivar entidad?' : '¿Activar entidad?',
+                text: `¿Seguro que desea ${active ? 'desactivar' : 'activar'} la entidad "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: active ? '#dc2626' : '#16a34a',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Livewire.dispatch('toggleEntidad', {
+                        id
+                    });
+                }
+            });
+        });
+
+        // ===================== PROYECTOS =====================
+        Livewire.on('swal:toggle-active-proyecto', ({
+            id,
+            active,
+            name
+        }) => {
+            Swal.fire({
+                title: active ? '¿Desactivar proyecto?' : '¿Activar proyecto?',
+                text: '¿Seguro que desea ' + (active ? 'desactivar' : 'activar') +
+                    ` el proyecto "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: active ? '#dc2626' : '#16a34a',
+                cancelButtonColor: '#6b7280',
+                reverseButtons: true, // ✅ corregido (antes estaba duplicado)
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Livewire.dispatch('doToggleActiveProyecto', {
+                        id
+                    });
+                }
+            });
+        });
+
+        // ===================== BANCOS =====================
+        Livewire.on('swal:toggle-active-banco', ({
+            id,
+            active,
+            name
+        }) => {
+            Swal.fire({
+                title: active ? '¿Desactivar banco?' : '¿Activar banco?',
+                text: `¿Seguro que deseas ${active ? 'desactivar' : 'activar'}: "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: active ? '#dc2626' : '#16a34a',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Livewire.dispatch('doToggleActiveBanco', {
+                        id
+                    });
+                }
+            });
         });
 
     });

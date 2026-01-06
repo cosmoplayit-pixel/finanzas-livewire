@@ -10,15 +10,13 @@ use App\Livewire\Admin\Roles;
 use App\Livewire\Admin\Empresas;
 use App\Livewire\Admin\Entidades;
 use App\Livewire\Admin\Proyectos;
+use App\Livewire\Admin\Bancos;
 
 Route::get('/', fn() => redirect()->route('login'))->name('home');
 
 /**
  * Dashboard / Panel
  * ✅ auth + verified + active
- *
- * Recomendado: que el panel sea un componente Livewire (Dashboard::class),
- * para poder aplicar lógica por rol/empresa.
  */
 Route::get('panel', Dashboard::class)
     ->middleware(['auth', 'verified', 'active'])
@@ -26,8 +24,7 @@ Route::get('panel', Dashboard::class)
 
 /**
  * Rutas protegidas
- * ✅ auth + active a todo el bloque
- * - active expulsa al usuario desactivado en su siguiente request.
+ * ✅ auth + active
  */
 Route::middleware(['auth', 'active'])->group(function () {
     // =======================
@@ -60,7 +57,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->name('usuarios');
 
     // =======================
-    // ADMIN: ROLES
+    // ROLES
     // =======================
     Route::middleware(['permission:roles.view'])
         ->get('/admin/roles', Roles::class)
@@ -86,4 +83,11 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware(['permission:proyectos.view'])
         ->get('/proyectos', Proyectos::class)
         ->name('proyectos');
+
+    // =======================
+    // BANCOS
+    // =======================
+    Route::middleware(['permission:bancos.view'])
+        ->get('/bancos', Bancos::class)
+        ->name('bancos');
 });

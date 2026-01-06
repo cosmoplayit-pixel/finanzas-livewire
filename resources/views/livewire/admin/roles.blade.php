@@ -111,8 +111,13 @@
                             Permisos
                         </button>
 
-                        <button type="button" wire:click="toggleActive({{ $r->id }})"
-                            class="w-full px-3 py-1 rounded text-sm font-medium
+                        <button type="button"
+                            wire:click="$dispatch('swal:toggle-active-rol', {
+                                id: {{ $r->id }},
+                                active: @js($r->active),
+                                name: @js($r->name)
+                            })"
+                            class="px-3 py-1 cursor-pointer rounded text-sm font-medium
                             {{ $r->active
                                 ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                                 : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
@@ -224,13 +229,19 @@
                                         Permisos
                                     </button>
 
-                                    <button wire:click="toggleActive({{ $r->id }})"
-                                        class="px-3 py-1 rounded text-sm font-medium
-                                        {{ $r->active
-                                            ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
-                                            : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+                                    <button type="button"
+                                        wire:click="$dispatch('swal:toggle-active-rol', {
+                                        id: {{ $r->id }},
+                                        active: @js($r->active),
+                                        name: @js($r->name)
+                                    })"
+                                        class="px-3 py-1 cursor-pointer rounded text-sm font-medium
+                                    {{ $r->active
+                                        ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                                        : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
                                         {{ $r->active ? 'Desactivar' : 'Activar' }}
                                     </button>
+
                                 </div>
                             @else
                                 <span
@@ -588,7 +599,4 @@
             </div>
         </div>
     @endif
-
-
-
 </div>

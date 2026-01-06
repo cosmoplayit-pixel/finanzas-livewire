@@ -2,21 +2,24 @@
 
 namespace App\Livewire\Admin;
 
-use App\Models\Role;
+use App\Models\Role; // <- Tu modelo (debe extender/usar Spatie internamente si corresponde)
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\PermissionRegistrar;
 
 class Roles extends Component
 {
     use WithPagination;
 
+    // Filtros
     public string $search = '';
     public string $status = 'all'; // all | active | inactive
     public string $type = 'all'; // all | system | custom
     public int $perPage = 10;
 
+    // Ordenamiento
     public string $sortField = 'id';
     public string $sortDirection = 'desc';
 
@@ -33,13 +36,12 @@ class Roles extends Component
     public ?int $permsRoleId = null;
     public array $permissionsSelected = [];
 
-    /**
-     * IMPORTANTÍSIMO:
-     * Antes lo estabas creando como variable local en render() y enviándolo a la vista,
-     * pero tus métodos selectAllGroup/clearAllGroup usan $this->permissionsGrouped,
-     * que no existía. Por eso "no hacía nada".
-     */
+    // Agrupado de permisos (debe ser propiedad para que Livewire lo mantenga)
     public array $permissionsGrouped = [];
+
+    protected $listeners = [
+        'doToggleActiveRol' => 'toggleActive',
+    ];
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -110,7 +112,6 @@ class Roles extends Component
 
     /**
      * Construye y guarda el agrupado en una PROPIEDAD del componente.
-     * Así los botones pueden usarlo en requests posteriores.
      */
     private function loadPermissionsGrouped(): void
     {
@@ -186,6 +187,9 @@ class Roles extends Component
                 'active' => (bool) $data['active'],
             ]);
 
+            // Reset cache Spatie
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
             session()->flash('success', 'Rol actualizado correctamente.');
         } else {
             Role::create([
@@ -196,24 +200,52 @@ class Roles extends Component
                 'active' => (bool) $data['active'],
             ]);
 
+            // Reset cache Spatie
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
             session()->flash('success', 'Rol creado correctamente.');
         }
 
         $this->closeModal();
     }
 
+    /**
+     * Toggle Active (SIN tocar permisos)
+     * Importante: esto solo cambia active; el bloqueo de acceso se hace con middleware.
+     */
     public function toggleActive(int $id): void
     {
         $this->assertAdmin();
 
-        $role = Role::findOrFail($id);
+        $role = Role::query()->findOrFail($id);
 
+        // No permitir desactivar roles del sistema (si aplica en tu negocio)
         if ($role->is_system) {
-            abort(403, 'No se puede desactivar un rol del sistema.');
+            session()->flash('error', 'No se puede desactivar un rol del sistema.');
+            return;
+        }
+
+        // Proteger Administrador: no desactivar el último Administrador activo
+        if ($role->name === 'Administrador') {
+            $activeAdminRoles = Role::query()
+                ->where('name', 'Administrador')
+                ->where('active', true)
+                ->count();
+
+            if ($role->active && $activeAdminRoles <= 1) {
+                session()->flash(
+                    'error',
+                    'No puedes desactivar el último rol Administrador activo.',
+                );
+                return;
+            }
         }
 
         $role->active = !$role->active;
         $role->save();
+
+        // Reset cache Spatie
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         session()->flash('success', $role->active ? 'Rol activado.' : 'Rol desactivado.');
     }
@@ -228,7 +260,6 @@ class Roles extends Component
             abort(403, 'No se pueden editar permisos de roles del sistema.');
         }
 
-        // Asegurar que el agrupado exista (por si se limpió por algún motivo)
         if (empty($this->permissionsGrouped)) {
             $this->loadPermissionsGrouped();
         }
@@ -268,6 +299,9 @@ class Roles extends Component
             ->toArray();
 
         $role->syncPermissions($valid);
+
+        // Reset cache Spatie
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         session()->flash('success', 'Permisos actualizados correctamente.');
         $this->closePermissions();
@@ -315,7 +349,6 @@ class Roles extends Component
     {
         $this->assertAdmin();
 
-        // Si por alguna razón no está hidratado, lo cargamos
         if (empty($this->permissionsGrouped)) {
             $this->loadPermissionsGrouped();
         }
@@ -345,7 +378,6 @@ class Roles extends Component
 
         return view('livewire.admin.roles', [
             'roles' => $roles,
-            // ahora sale desde la propiedad del componente (array puro)
             'permissionsGrouped' => $this->permissionsGrouped,
         ]);
     }

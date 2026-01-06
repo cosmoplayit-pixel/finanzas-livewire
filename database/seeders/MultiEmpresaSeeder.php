@@ -13,6 +13,7 @@ class MultiEmpresaSeeder extends Seeder
             RolesAndUsersSeeder::class,
             EntidadesSeeder::class,
             ProyectosSeeder::class,
+            BancosSeeder::class,
         ]);
     }
 }

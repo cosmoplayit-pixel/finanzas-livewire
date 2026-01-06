@@ -33,16 +33,17 @@ class Usuarios extends Component
     // ✅ MULTI-EMPRESA
     public ?int $empresa_id = null;
 
+    // Orden
     public string $sortField = 'id';
     public string $sortDirection = 'asc';
 
     /**
-     * ✅ Root Admin (SIN columna en BD):
-     * Define en .env: ROOT_ADMIN_EMAIL=admin@tuapp.com
+     * Root Admin por .env (sin columna en BD)
+     * .env: ROOT_ADMIN_EMAIL=admin@tuapp.com
      */
     private function rootAdminEmail(): ?string
     {
-        $email = env('ROOT_ADMIN_EMAIL'); // rápido y directo para desarrollo
+        $email = env('ROOT_ADMIN_EMAIL');
         return is_string($email) && trim($email) !== '' ? trim($email) : null;
     }
 
@@ -52,6 +53,15 @@ class Usuarios extends Component
         return $rootEmail !== null && strtolower($u->email) === strtolower($rootEmail);
     }
 
+    private function currentUserIsRoot(): bool
+    {
+        $me = auth()->user();
+        return $me instanceof User ? $this->isRootUser($me) : false;
+    }
+
+    /**
+     * ✅ Reglas
+     */
     protected function rules(): array
     {
         $roleNames = Role::query()->pluck('name')->toArray();
@@ -107,10 +117,11 @@ class Usuarios extends Component
     public function openEdit(int $id): void
     {
         $this->resetForm();
+
         $u = User::query()->with('roles')->findOrFail($id);
 
-        // 🔒 Bloquear edición del Root Admin (opcional pero recomendado)
-        if ($this->isRootUser($u) && auth()->user()?->email !== $u->email) {
+        // 🔒 Root Admin: no se puede editar por terceros
+        if ($this->isRootUser($u) && !$this->currentUserIsRoot()) {
             session()->flash('error', 'No puedes editar al Administrador principal del sistema.');
             return;
         }
@@ -123,7 +134,7 @@ class Usuarios extends Component
         // ✅ MULTI-EMPRESA: cargar empresa actual
         $this->empresa_id = $u->empresa_id;
 
-        // ✅ Si el rol del usuario editado es Admin, empresa debe ser null (defensivo)
+        // ✅ Defensivo
         if ($this->role === 'Administrador') {
             $this->empresa_id = null;
         }
@@ -144,8 +155,8 @@ class Usuarios extends Component
         if ($this->userId) {
             $u = User::query()->with('roles')->findOrFail($this->userId);
 
-            // 🔒 Root Admin: no permitir cambios (rol/email/estado) por terceros
-            if ($this->isRootUser($u) && auth()->user()?->email !== $u->email) {
+            // 🔒 Root Admin: bloquear modificación por terceros
+            if ($this->isRootUser($u) && !$this->currentUserIsRoot()) {
                 session()->flash(
                     'error',
                     'No puedes modificar al Administrador principal del sistema.',
@@ -172,13 +183,11 @@ class Usuarios extends Component
                 }
             }
 
-            // 2) Guardar datos
+            // 2) Guardar datos básicos
             $u->name = $data['name'];
 
-            // 🔒 Root Admin: opcionalmente bloquear cambio de email incluso para sí mismo
-            // Si quieres permitirle cambiarlo, elimina este if.
+            // 🔒 Root Admin: mantener email estable (recomendado)
             if ($this->isRootUser($u)) {
-                // Mantener el email del root estable
                 $data['email'] = $u->email;
             }
             $u->email = $data['email'];
@@ -191,9 +200,9 @@ class Usuarios extends Component
 
             $u->save();
 
-            // 🔒 Root Admin: asegurar que siempre sea Administrador
+            // 3) Roles
             if ($this->isRootUser($u)) {
-                $u->syncRoles(['Administrador']);
+                $u->syncRoles(['Administrador']); // root siempre admin
             } else {
                 $u->syncRoles([$data['role']]);
             }
@@ -278,6 +287,7 @@ class Usuarios extends Component
             'password_confirmation',
             'empresa_id',
         ]);
+
         $this->resetValidation();
     }
 
@@ -296,7 +306,7 @@ class Usuarios extends Component
     public function render()
     {
         // 🔒 Campos permitidos para ordenar
-        $allowedSorts = ['id', 'name', 'email', 'active', 'role'];
+        $allowedSorts = ['id', 'name', 'email', 'active', 'role', 'empresa_id'];
         if (!in_array($this->sortField, $allowedSorts, true)) {
             $this->sortField = 'id';
         }
@@ -332,7 +342,7 @@ class Usuarios extends Component
             )
             ->paginate($this->perPage);
 
-        $roles = Role::query()->orderBy('name')->pluck('name');
+        $roles = Role::query()->where('active', true)->orderBy('name')->pluck('name');
 
         $empresas = Empresa::query()
             ->where('active', true)

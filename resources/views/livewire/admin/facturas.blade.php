@@ -338,10 +338,7 @@
                                 </div>
                             </td>
 
-                            {{-- =========================
-                            ESTADO (2 etiquetas)
-                        ========================== --}}
-
+                            {{-- ESTADO (2 etiquetas) --}}
                             <td class="p-2 whitespace-nowrap">
                                 @php
                                     $cerrada = \App\Services\FacturaFinance::estaCerrada($f);
@@ -424,7 +421,6 @@
                                 </div>
                             </td>
 
-
                             {{-- Acciones --}}
                             @can('facturas.pay')
                                 <td class="p-2 whitespace-nowrap align-top">
@@ -439,7 +435,7 @@
                             @endcan
                         </tr>
 
-                        {{-- ✅ DETALLE EXPANDIBLE: SOLO pagos (cada pago en una fila) --}}
+                        {{--  DETALLE EXPANDIBLE: SOLO pagos (cada pago en una fila) --}}
                         @php
                             // Columnas principales:
                             // ID, Proyecto, Factura, Estado, Pagos = 5
@@ -449,54 +445,49 @@
 
                         <tr x-show="open" x-cloak
                             class="bg-gray-100/60 dark:bg-neutral-900/40 border-b border-gray-200 dark:border-neutral-200">
-                            <td class="pl-20 py-2" colspan="{{ $colspan }}">
+                            <td class="px-5 py-2" colspan="{{ $colspan }}">
                                 <div class="space-y-3 text-sm">
 
                                     {{-- Pagos en filas --}}
                                     <div
                                         class="border rounded bg-white dark:bg-neutral-900 dark:border-neutral-800 overflow-hidden">
-                                        <table class="w-full text-sm">
+                                        <table class="w-full table-fixed text-sm">
                                             <thead
                                                 class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-800">
                                                 <tr class="text-left">
-                                                    <th class="p-2 w-[150px] whitespace-nowrap">Fecha</th>
-                                                    <th class="p-2 w-[110px] whitespace-nowrap">Tipo</th>
-                                                    <th class="p-2 w-[130px] whitespace-nowrap text-right">Monto</th>
-                                                    <th class="p-2 w-[140px] whitespace-nowrap">Método</th>
-                                                    <th class="p-2 whitespace-nowrap">Destino</th>
-                                                    <th class="p-2 w-[140px] whitespace-nowrap">Operación</th>
+
+                                                    {{-- # --}}
+                                                    <th class="p-2 w-[5%] text-center whitespace-nowrap">#</th>
+
+                                                    {{-- Destino --}}
+                                                    <th class="p-2 w-[30%] whitespace-nowrap">Destino de Banco</th>
+
+                                                    {{-- Fecha --}}
+                                                    <th class="p-2 w-[20%] whitespace-nowrap">Fecha de Pago</th>
+
+                                                    {{-- Método --}}
+                                                    <th class="p-2 w-[15%] whitespace-nowrap">Método de Pago</th>
+
+                                                    {{-- Monto --}}
+                                                    <th class="p-2 w-[15%] whitespace-nowrap text-right">Monto Pagado
+                                                    </th>
+
+                                                    {{-- Tipo --}}
+                                                    <th class="p-2 w-[15%] whitespace-nowrap text-center">Tipo de Pago
+                                                    </th>
                                                 </tr>
                                             </thead>
 
                                             <tbody class="divide-y divide-gray-200 dark:divide-neutral-800">
                                                 @forelse(($f->pagos ?? collect()) as $pg)
                                                     <tr class="text-gray-700 dark:text-neutral-200">
-                                                        <td class="p-2 whitespace-nowrap">
-                                                            {{ $pg->fecha_pago ? $pg->fecha_pago->format('Y-m-d H:i') : '—' }}
+
+                                                        {{-- Numeración --}}
+                                                        <td class="p-2 text-center font-mono text-xs">
+                                                            {{ $loop->iteration }}
                                                         </td>
 
-                                                        <td class="p-2 whitespace-nowrap">
-                                                            @if ($pg->tipo === 'normal')
-                                                                <span
-                                                                    class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
-                                                                    Normal
-                                                                </span>
-                                                            @else
-                                                                <span
-                                                                    class="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200">
-                                                                    Retención
-                                                                </span>
-                                                            @endif
-                                                        </td>
-
-                                                        <td class="p-2 whitespace-nowrap text-right font-semibold">
-                                                            Bs {{ number_format((float) $pg->monto, 2, ',', '.') }}
-                                                        </td>
-
-                                                        <td class="p-2 whitespace-nowrap">
-                                                            {{ $pg->metodo_pago ?? '—' }}
-                                                        </td>
-
+                                                        {{-- Destino --}}
                                                         <td class="p-2 min-w-0">
                                                             <div class="truncate">
                                                                 {{ $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? '—') }}
@@ -534,9 +525,36 @@
                                                             @endif
                                                         </td>
 
+                                                        {{-- Fecha --}}
                                                         <td class="p-2 whitespace-nowrap">
-                                                            {{ $pg->nro_operacion ?? '—' }}
+                                                            {{ $pg->fecha_pago ? $pg->fecha_pago->format('Y-m-d H:i') : '—' }}
                                                         </td>
+
+                                                        {{-- Método --}}
+                                                        <td class="p-2 whitespace-nowrap">
+                                                            {{ $pg->metodo_pago ?? '—' }}
+                                                        </td>
+
+                                                        {{-- Monto --}}
+                                                        <td class="p-2 whitespace-nowrap text-right font-semibold">
+                                                            Bs {{ number_format((float) $pg->monto, 2, ',', '.') }}
+                                                        </td>
+
+                                                        {{-- Tipo --}}
+                                                        <td class="p-2 whitespace-nowrap text-center">
+                                                            @if ($pg->tipo === 'normal')
+                                                                <span
+                                                                    class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
+                                                                    Pago Normal
+                                                                </span>
+                                                            @else
+                                                                <span
+                                                                    class="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200">
+                                                                    Pago de Retención
+                                                                </span>
+                                                            @endif
+                                                        </td>
+
                                                     </tr>
                                                 @empty
                                                     <tr>
@@ -553,6 +571,7 @@
                                 </div>
                             </td>
                         </tr>
+
                     </tbody>
                 @endforeach
 

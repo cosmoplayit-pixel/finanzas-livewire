@@ -11,6 +11,7 @@ use App\Livewire\Admin\Empresas;
 use App\Livewire\Admin\Entidades;
 use App\Livewire\Admin\Proyectos;
 use App\Livewire\Admin\Bancos;
+use App\Livewire\Admin\Facturas;
 
 Route::get('/', fn() => redirect()->route('login'))->name('home');
 
@@ -83,6 +84,13 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware(['permission:proyectos.view'])
         ->get('/proyectos', Proyectos::class)
         ->name('proyectos');
+
+    // =======================
+    // FACTURAS
+    // =======================
+    Route::middleware(['permission:facturas.view'])
+        ->get('/facturas', Facturas::class)
+        ->name('facturas');
 
     // =======================
     // BANCOS

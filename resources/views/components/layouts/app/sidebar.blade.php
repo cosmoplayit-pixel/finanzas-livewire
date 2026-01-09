@@ -125,6 +125,23 @@
                         </flux:navlist.item>
                     @endcan
 
+                    {{-- Facturas --}}
+                    @can('facturas.view')
+                        <flux:navlist.item icon="document-text" :href="route('facturas')"
+                            :current="request()->routeIs('facturas')" wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Facturas') }}</span>
+
+                                @isset($navCounts['facturas'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['facturas'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
+
+
                 </flux:navlist.group>
             @endcanany
 

@@ -31,6 +31,11 @@ class Proyectos extends Component
     public string $nombre = '';
     public string $codigo = '';
     public $monto = 0;
+
+    // ✅ NUEVO: Retención (%)
+    // Se almacena como decimal (ej: 7.50 => 7.50%)
+    public $retencion = 0;
+
     public string $descripcion = '';
     public ?string $fecha_inicio = null; // yyyy-mm-dd
     public ?string $fecha_fin = null; // yyyy-mm-dd
@@ -60,6 +65,10 @@ class Proyectos extends Component
                     ->where(fn($q) => $q->where('entidad_id', $this->entidad_id)),
             ],
             'monto' => ['required', 'numeric', 'min:0'],
+
+            // ✅ NUEVO: Retención (%)
+            'retencion' => ['required', 'numeric', 'min:0', 'max:100'],
+
             'descripcion' => ['nullable', 'string', 'max:5000'],
             'fecha_inicio' => ['nullable', 'date'],
             'fecha_fin' => ['nullable', 'date', 'after_or_equal:fecha_inicio'],
@@ -70,14 +79,17 @@ class Proyectos extends Component
     {
         $this->resetPage();
     }
+
     public function updatingStatus(): void
     {
         $this->resetPage();
     }
+
     public function updatingEntidadFilter(): void
     {
         $this->resetPage();
     }
+
     public function updatingPerPage(): void
     {
         $this->resetPage();
@@ -90,11 +102,13 @@ class Proyectos extends Component
             'nombre',
             'codigo',
             'monto',
+            'retencion', // ✅ NUEVO
             'active',
             'entidad_id',
             'fecha_inicio',
             'fecha_fin',
         ];
+
         if (!in_array($field, $allowedSorts, true)) {
             return;
         }
@@ -124,6 +138,10 @@ class Proyectos extends Component
         $this->nombre = $p->nombre ?? '';
         $this->codigo = $p->codigo ?? '';
         $this->monto = $p->monto ?? 0;
+
+        // ✅ NUEVO
+        $this->retencion = $p->retencion ?? 0;
+
         $this->descripcion = $p->descripcion ?? '';
         $this->fecha_inicio = $p->fecha_inicio?->format('Y-m-d');
         $this->fecha_fin = $p->fecha_fin?->format('Y-m-d');
@@ -135,9 +153,13 @@ class Proyectos extends Component
     {
         $data = $this->validate();
 
+        // Normalización
         $data['nombre'] = trim($data['nombre']);
         $data['codigo'] = $data['codigo'] ? strtoupper(trim($data['codigo'])) : null;
+
+        // Decimales consistentes
         $data['monto'] = number_format((float) $data['monto'], 2, '.', '');
+        $data['retencion'] = number_format((float) $data['retencion'], 2, '.', '');
 
         Proyecto::updateOrCreate(['id' => $this->proyectoId], $data);
 
@@ -174,6 +196,10 @@ class Proyectos extends Component
         $this->nombre = '';
         $this->codigo = '';
         $this->monto = 0;
+
+        // ✅ NUEVO
+        $this->retencion = 0;
+
         $this->descripcion = '';
         $this->fecha_inicio = null;
         $this->fecha_fin = null;

@@ -81,6 +81,13 @@ class RolesAndUsersSeeder extends Seeder
             'bancos.create',
             'bancos.update',
             'bancos.toggle',
+
+            // FACTURAS
+            'facturas.view',
+            'facturas.create',
+            'facturas.update',
+            'facturas.toggle',
+            'facturas.pay', // registrar pagos
         ];
 
         foreach ($permissions as $p) {
@@ -98,7 +105,7 @@ class RolesAndUsersSeeder extends Seeder
         $adminRole = Role::firstOrCreate(
             ['name' => 'Administrador', 'guard_name' => 'web'],
             [
-                'description' => 'Administra todo el sistema: Usuarios, Empresas, Roles y Bancos.',
+                'description' => 'Administra todo el sistema.',
                 'is_system' => true,
                 'active' => true,
             ],
@@ -107,7 +114,7 @@ class RolesAndUsersSeeder extends Seeder
         $managerRole = Role::firstOrCreate(
             ['name' => 'Empresa_Manager', 'guard_name' => 'web'],
             [
-                'description' => 'Gestiona Entidades, Proyectos y Bancos de su empresa.',
+                'description' => 'Gestiona Entidades, Proyectos, Facturas y Bancos de su empresa.',
                 'is_system' => true,
                 'active' => true,
             ],
@@ -116,7 +123,7 @@ class RolesAndUsersSeeder extends Seeder
         $viewerRole = Role::firstOrCreate(
             ['name' => 'Empresa_Visualizador', 'guard_name' => 'web'],
             [
-                'description' => 'Solo lectura de Entidades, Proyectos y Bancos.',
+                'description' => 'Solo lectura de Entidades, Proyectos, Facturas y Bancos.',
                 'is_system' => true,
                 'active' => true,
             ],
@@ -148,9 +155,30 @@ class RolesAndUsersSeeder extends Seeder
             'roles.update',
             'roles.toggle',
             'roles.assign_permissions',
+
+            'entidades.view',
+            'entidades.create',
+            'entidades.update',
+            'entidades.toggle',
+
+            'proyectos.view',
+            'proyectos.create',
+            'proyectos.update',
+            'proyectos.toggle',
+
+            'bancos.view',
+            'bancos.create',
+            'bancos.update',
+            'bancos.toggle',
+
+            'facturas.view',
+            'facturas.create',
+            'facturas.update',
+            'facturas.toggle',
+            'facturas.pay',
         ]);
 
-        // Empresa_Manager: Entidades + Proyectos + Bancos
+        // Empresa_Manager
         $managerRole->syncPermissions([
             'dashboard.view',
 
@@ -164,19 +192,25 @@ class RolesAndUsersSeeder extends Seeder
             'proyectos.update',
             'proyectos.toggle',
 
-            // Bancos
             'bancos.view',
             'bancos.create',
             'bancos.update',
             'bancos.toggle',
+
+            'facturas.view',
+            'facturas.create',
+            'facturas.update',
+            'facturas.pay',
         ]);
 
-        // Empresa_Visualizador: solo view
+        // Empresa_Visualizador
         $viewerRole->syncPermissions([
             'dashboard.view',
+
             'entidades.view',
             'proyectos.view',
             'bancos.view',
+            'facturas.view',
         ]);
 
         /*

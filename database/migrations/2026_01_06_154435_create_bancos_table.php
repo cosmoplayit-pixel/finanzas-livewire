@@ -13,10 +13,11 @@ return new class extends Migration {
             $table->foreignId('empresa_id')->constrained('empresas')->cascadeOnDelete();
 
             $table->string('nombre', 150);
+            $table->string('titular', 150)->nullable();
             $table->string('numero_cuenta', 50);
             $table->enum('moneda', ['BOB', 'USD']);
+            $table->enum('tipo_cuenta', ['AHORRO', 'CORRIENTE'])->nullable();
             $table->boolean('active')->default(true);
-
             $table->timestamps();
 
             // Reglas de integridad

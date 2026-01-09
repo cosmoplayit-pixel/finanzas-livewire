@@ -23,6 +23,7 @@ return new class extends Migration {
             $table->text('descripcion')->nullable();
             $table->date('fecha_inicio')->nullable();
             $table->date('fecha_fin')->nullable();
+            $table->decimal('retencion', 5, 2)->default(0);
 
             // Estado
             $table->boolean('active')->default(true);

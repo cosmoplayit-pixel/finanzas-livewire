@@ -30,13 +30,24 @@ class BancosSeeder extends Seeder
                 Banco::create([
                     'empresa_id' => $empresa->id,
                     'nombre' => $banco['nombre'],
+
+                    // Nuevo: titular de la cuenta
+                    'titular' =>
+                        $empresa->razon_social ?? ($empresa->nombre ?? 'TITULAR NO DEFINIDO'),
+
+                    // Número de cuenta ficticio pero consistente
                     'numero_cuenta' => sprintf(
                         '%02d-%s-%03d',
                         $contador,
                         $banco['moneda'],
                         $empresa->id,
                     ),
+
                     'moneda' => $banco['moneda'],
+
+                    // Nuevo: tipo de cuenta
+                    'tipo_cuenta' => collect(['AHORRO', 'CORRIENTE'])->random(),
+
                     'active' => true,
                 ]);
 

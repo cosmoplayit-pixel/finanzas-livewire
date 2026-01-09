@@ -7,8 +7,23 @@
         <h1 class="text-2xl font-semibold">Entidades</h1>
 
         @can('entidades.create')
-            <button wire:click="openCreate" class="w-full sm:w-auto px-4 py-2 rounded bg-black text-white hover:opacity-90">
-                Nueva Entidad
+            <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
+                class="w-full sm:w-auto px-4 py-2 rounded
+                       bg-black text-white
+                       hover:bg-gray-800 hover:text-white
+                       transition-colors duration-150
+                       cursor-pointer
+                       disabled:opacity-50 disabled:cursor-not-allowed">
+
+                {{-- Texto normal --}}
+                <span wire:loading.remove wire:target="openCreate">
+                    Nueva Entidad
+                </span>
+
+                {{-- Texto loading --}}
+                <span wire:loading wire:target="openCreate">
+                    Abriendo…
+                </span>
             </button>
         @endcan
     </div>
@@ -33,6 +48,7 @@
 
         {{-- Selects derecha --}}
         <div class="flex flex-col sm:flex-row gap-3 md:ml-auto w-full md:w-auto">
+            {{-- Estado --}}
             <select wire:model.live="status"
                 class="w-full sm:w-auto
                     border rounded px-3 py-2
@@ -45,6 +61,7 @@
                 <option value="inactive">Inactivos</option>
             </select>
 
+            {{-- PerPage --}}
             <select wire:model.live="perPage"
                 class="w-full sm:w-auto
                     border rounded px-3 py-2
@@ -66,6 +83,9 @@
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
                         <div class="font-semibold truncate">{{ $e->nombre }}</div>
+                        <div class="text-xs text-gray-500 dark:text-neutral-400 truncate mt-1">
+                            {{ $e->sigla ?? '—' }}
+                        </div>
                     </div>
 
                     <div class="shrink-0">
@@ -90,21 +110,19 @@
                     </div>
 
                     <div class="flex justify-between gap-3">
-                        <span class="font-medium">Sigla:</span> {{ $e->sigla ?? '—' }}
+                        <span class="font-medium">Email:</span>
+                        <span class="truncate">{{ $e->email ?? '—' }}</span>
                     </div>
 
                     <div class="flex justify-between gap-3">
-                        <span class="font-medium">Email:</span> {{ $e->email ?? '—' }}
-                    </div>
-
-                    <div class="flex justify-between gap-3">
-                        <span class="font-medium">Teléfono:</span> {{ $e->telefono ?? '—' }}
+                        <span class="font-medium">Teléfono:</span>
+                        <span class="truncate">{{ $e->telefono ?? '—' }}</span>
                     </div>
                 </div>
 
                 {{-- Acciones --}}
                 @canany(['entidades.update', 'entidades.toggle'])
-                    <div class="mt-4 flex  gap-2">
+                    <div class="mt-4 flex gap-2">
                         @can('entidades.update')
                             <button wire:click="openEdit({{ $e->id }})"
                                 class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
@@ -137,34 +155,31 @@
         @endforelse
     </div>
 
-    {{-- ==========================================
-        TABLET + DESKTOP: TABLA
-    =========================================== --}}
-    <div
-        class="hidden md:block
-               overflow-x-auto overflow-y-hidden
-               border rounded
-               bg-white dark:bg-neutral-800">
-        <table class="w-full text-sm">
+    {{-- TABLET + DESKTOP: TABLA (plantilla tipo Proyectos) --}}
+    <div class="hidden md:block border rounded bg-white dark:bg-neutral-800 overflow-hidden">
+        <table class="w-full table-fixed text-sm">
 
             <thead
                 class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-200">
                 <tr class="text-left">
-                    <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('id')">
+
+                    <th class="w-[70px] text-center p-2 cursor-pointer select-none whitespace-nowrap"
+                        wire:click="sortBy('id')">
                         ID
                         @if ($sortField === 'id')
                             {{ $sortDirection === 'asc' ? '▲' : '▼' }}
                         @endif
                     </th>
 
-                    <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('nombre')">
+                    <th class="w-[300px] text-center p-2 cursor-pointer select-none whitespace-nowrap"
+                        wire:click="sortBy('nombre')">
                         Nombre
                         @if ($sortField === 'nombre')
                             {{ $sortDirection === 'asc' ? '▲' : '▼' }}
                         @endif
                     </th>
 
-                    <th class="p-3 cursor-pointer select-none whitespace-nowrap hidden lg:table-cell"
+                    <th class="hidden lg:table-cell w-[110px] p-2 cursor-pointer select-none whitespace-nowrap"
                         wire:click="sortBy('sigla')">
                         Sigla
                         @if ($sortField === 'sigla')
@@ -172,8 +187,8 @@
                         @endif
                     </th>
 
-                    {{-- Email: oculto en tablet, visible desde lg --}}
-                    <th class="p-3 cursor-pointer select-none whitespace-nowrap hidden lg:table-cell"
+
+                    <th class="hidden lg:table-cell w-[250px] p-2 cursor-pointer select-none whitespace-nowrap"
                         wire:click="sortBy('email')">
                         Email
                         @if ($sortField === 'email')
@@ -181,11 +196,26 @@
                         @endif
                     </th>
 
-                    <th class="p-3 whitespace-nowrap">
+
+                    <th class="w-[120px] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
+                        wire:click="sortBy('telefono')">
                         Teléfono
+                        @if ($sortField === 'telefono')
+                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                        @endif
                     </th>
 
-                    <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('active')">
+                    <th class="w-[280px] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
+                        wire:click="sortBy('direccion')">
+                        Dirección
+                        @if ($sortField === 'direccion')
+                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                        @endif
+                    </th>
+
+
+                    <th class="text-center w-[95px] p-2 cursor-pointer select-none whitespace-nowrap"
+                        wire:click="sortBy('active')">
                         Estado
                         @if ($sortField === 'active')
                             {{ $sortDirection === 'asc' ? '▲' : '▼' }}
@@ -193,35 +223,69 @@
                     </th>
 
                     @canany(['entidades.update', 'entidades.toggle'])
-                        <th class="p-3 whitespace-nowrap w-40 lg:w-56">
+                        <th class="w-[120px] p-2 whitespace-nowrap text-center">
                             Acciones
                         </th>
                     @endcanany
                 </tr>
             </thead>
 
-            <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
-                @foreach ($entidades as $e)
-                    <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
-                        <td class="p-3 whitespace-nowrap">{{ $e->id }}</td>
+            @foreach ($entidades as $e)
+                <tbody x-data="{ open: false }" class="divide-y divide-gray-200 dark:divide-neutral-200">
 
-                        <td class="p-3">
-                            <span class="truncate block max-w-[320px]" title="{{ $e->nombre }}">
+                    <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
+
+                        {{-- ID + Toggle detalle (solo <2xl) --}}
+                        <td class="p-1 whitespace-nowrap text-center" x-data="{ showToggle: !window.matchMedia('(min-width: 1536px)').matches }" x-init="const mq = window.matchMedia('(min-width: 1536px)');
+                        const handler = e => showToggle = !e.matches;
+                        mq.addEventListener('change', handler);">
+                            <button type="button" x-show="showToggle" x-cloak
+                                class="w-5 h-5 inline-flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800
+                                       dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white transition cursor-pointer"
+                                @click.stop="open = !open" :aria-expanded="open">
+                                <span x-show="!open">+</span>
+                                <span x-show="open">−</span>
+                            </button>
+
+                            <span class="ml-1">{{ $e->id }}</span>
+                        </td>
+
+                        {{-- Nombre --}}
+                        <td class="p-2 min-w-0">
+                            <span class="block truncate max-w-full" title="{{ $e->nombre }}">
                                 {{ $e->nombre }}
                             </span>
                         </td>
 
-                        <td class="p-3 whitespace-nowrap hidden lg:table-cell">{{ $e->sigla ?? '-' }}</td>
+                        <td class="p-2 whitespace-nowrap hidden lg:table-cell">
+                            <span class="block truncate max-w-full" title="{{ $e->sigla ?? '-' }}">
+                                {{ $e->sigla ?? '-' }}
+                            </span>
+                        </td>
 
-                        <td class="p-3 hidden lg:table-cell">
-                            <span class="truncate block max-w-[260px]" title="{{ $e->email ?? '-' }}">
+                        <td class="p-2 whitespace-nowrap hidden lg:table-cell">
+                            <span class="block truncate max-w-full" title="{{ $e->email ?? '-' }}">
                                 {{ $e->email ?? '-' }}
                             </span>
                         </td>
 
-                        <td class="p-3 whitespace-nowrap">{{ $e->telefono ?? '-' }}</td>
 
-                        <td class="p-3 whitespace-nowrap">
+                        {{-- Teléfono (2xl) --}}
+                        <td class="p-2 whitespace-nowrap hidden 2xl:table-cell">
+                            <span class="block truncate max-w-full" title="{{ $e->telefono ?? '-' }}">
+                                {{ $e->telefono ?? '-' }}
+                            </span>
+                        </td>
+
+                        <td class="p-2 whitespace-nowrap hidden 2xl:table-cell">
+                            <span class="block truncate max-w-full" title="{{ $e->direccion ?? '-' }}">
+                                {{ $e->direccion ?? '-' }}
+                            </span>
+                        </td>
+
+
+                        {{-- Estado --}}
+                        <td class="text-center p-2 whitespace-nowrap">
                             @if ($e->active)
                                 <span
                                     class="px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200">
@@ -235,45 +299,110 @@
                             @endif
                         </td>
 
+                        {{-- Acciones (íconos como Proyectos) --}}
                         @canany(['entidades.update', 'entidades.toggle'])
-                            <td class="p-3 whitespace-nowrap">
-                                <div class="flex items-center gap-2">
+                            <td class="p-2 whitespace-nowrap">
+                                <div class="flex items-center justify-center gap-2">
+
                                     @can('entidades.update')
-                                        <button wire:click="openEdit({{ $e->id }})"
-                                            class="px-3 py-1 cursor-pointer rounded border border-gray-300 hover:bg-gray-50
-                                                   dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                            Editar
+                                        <button wire:click="openEdit({{ $e->id }})" title="Editar entidad"
+                                            class="cursor-pointer rounded dark:border-neutral-700 dark:hover:bg-neutral-800">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                            </svg>
                                         </button>
                                     @endcan
 
                                     @can('entidades.toggle')
                                         <button type="button"
+                                            title="{{ $e->active ? 'Desactivar entidad' : 'Activar entidad' }}"
                                             wire:click="$dispatch('swal:toggle-active-entidad', {
                                                 id: {{ $e->id }},
                                                 active: @js($e->active),
                                                 name: @js($e->nombre)
                                             })"
-                                            class="px-3 py-1 cursor-pointer rounded text-sm font-medium
+                                            class="cursor-pointer inline-flex items-center justify-center size-8 rounded
                                             {{ $e->active
                                                 ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                                                 : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-                                            {{ $e->active ? 'Desactivar' : 'Activar' }}
+
+                                            @if ($e->active)
+                                                {{-- Heroicon: eye-slash (Desactivar) --}}
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                    stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M3 3l18 18M10.584 10.584A2.25 2.25 0 0012 14.25 2.25 2.25 0 0014.25 12c0-.5-.167-.96-.45-1.33M9.88 5.09 A9.715 9.715 0 0112 4.5c4.478 0 8.268 2.943 9.543 7.5 a9.66 9.66 0 01-2.486 3.95M6.18 6.18 C4.634 7.436 3.55 9.135 3 12 c1.275 4.557 5.065 7.5 9.543 7.5 1.79 0 3.487-.469 4.993-1.29" />
+                                                </svg>
+                                            @else
+                                                {{-- Heroicon: eye (Activar) --}}
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                    stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M2.036 12.322a1.012 1.012 0 010-.639 C3.423 7.51 7.36 4.5 12 4.5 c4.638 0 8.573 3.007 9.963 7.178 .07.207.07.431 0 .639 C20.577 16.49 16.64 19.5 12 19.5 c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                            @endif
                                         </button>
                                     @endcan
                                 </div>
                             </td>
                         @endcanany
-                    </tr>
-                @endforeach
 
-                @if ($entidades->count() === 0)
+                    </tr>
+
+                    {{-- ✅ Detalle expandible SOLO cuando NO es 2xl y con 4 columnas --}}
+                    @php
+                        $colspan =
+                            5 +
+                            (auth()->user()->can('entidades.update') || auth()->user()->can('entidades.toggle')
+                                ? 1
+                                : 0);
+                    @endphp
+
+
+                    <tr x-show="open" x-cloak
+                        class="2xl:hidden bg-gray-100/60 dark:bg-neutral-900/40 border-b border-gray-200 dark:border-neutral-200">
+                        <td class="pl-20 py-1.5" colspan="{{ $colspan }}">
+                            <div class="grid grid-cols-2 md:grid-cols-2 gap-1 text-sm">
+
+                                <div class="space-y-1">
+                                    <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">
+                                        Teléfono
+                                    </span>
+                                    <span class="block truncate">
+                                        {{ $e->telefono ?? '-' }}
+                                    </span>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">
+                                        Dirección
+                                    </span>
+                                    <span class="block truncate" title="{{ $e->direccion ?? '-' }}">
+                                        {{ $e->direccion ?? '-' }}
+                                    </span>
+                                </div>
+
+                            </div>
+                        </td>
+                    </tr>
+
+                </tbody>
+            @endforeach
+
+            @if ($entidades->count() === 0)
+                <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
                     <tr>
-                        <td class="p-4 text-center text-gray-500 dark:text-neutral-400" colspan="6">
+                        <td class="p-4 text-center text-gray-500 dark:text-neutral-400" colspan="7">
                             Sin resultados.
                         </td>
                     </tr>
-                @endif
-            </tbody>
+                </tbody>
+            @endif
+
         </table>
     </div>
 
@@ -327,7 +456,7 @@
                             {{-- Nombre --}}
                             <div>
                                 <label class="block text-sm mb-1">Nombre</label>
-                                <input wire:model="nombre"
+                                <input wire:model="nombre" autocomplete="off"
                                     class="w-full rounded border px-3 py-2
                                        bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700
@@ -343,7 +472,7 @@
                             {{-- Sigla --}}
                             <div>
                                 <label class="block text-sm mb-1">Sigla</label>
-                                <input wire:model="sigla"
+                                <input wire:model="sigla" autocomplete="off"
                                     class="w-full rounded border px-3 py-2
                                        bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700
@@ -359,7 +488,7 @@
                             {{-- Email --}}
                             <div>
                                 <label class="block text-sm mb-1">Email</label>
-                                <input wire:model="email" type="email"
+                                <input wire:model="email" type="email" autocomplete="off"
                                     class="w-full rounded border px-3 py-2
                                        bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700
@@ -375,7 +504,7 @@
                             {{-- Teléfono --}}
                             <div>
                                 <label class="block text-sm mb-1">Teléfono</label>
-                                <input wire:model="telefono"
+                                <input wire:model="telefono" autocomplete="off"
                                     class="w-full rounded border px-3 py-2
                                        bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700
@@ -439,6 +568,7 @@
                                 {{ $entidadId ? 'Actualizar' : 'Guardar' }}
                             </button>
                         </div>
+
                     </div>
                 </div>
             </div>

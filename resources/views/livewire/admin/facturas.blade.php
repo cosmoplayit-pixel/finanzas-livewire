@@ -354,18 +354,27 @@
                                     @if ($cerrada)
                                         <span
                                             class="px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200">
-                                            Cerrada
+                                            Completado
                                         </span>
                                     @else
                                         @if ($estadoPago === 'Pendiente')
                                             <span
                                                 class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200">
-                                                Pendiente
+                                                Pagos 0%
                                             </span>
                                         @elseif ($estadoPago === 'Parcial')
+                                            @php
+                                                $pct = \App\Services\FacturaFinance::porcentajePago($f);
+                                            @endphp
+
                                             <span
-                                                class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
-                                                Parcial
+                                                class="px-2 py-1 rounded text-xs font-semibold
+                                                {{ $pct == 100
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200'
+                                                    : ($pct > 0
+                                                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
+                                                        : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200') }}">
+                                                Pagos {{ $pct }}%
                                             </span>
                                         @else
                                             <span

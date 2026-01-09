@@ -161,4 +161,15 @@ class FacturaFinance
     {
         return max(0, round(self::pagadoNormal($factura) + self::pagadoRetencion($factura), 2));
     }
+    public static function porcentajePago(Factura $factura): float
+    {
+        $neto = self::neto($factura);
+        if ($neto <= 0) {
+            return 100;
+        }
+
+        $pagado = self::pagadoNormal($factura);
+
+        return min(100, round(($pagado / $neto) * 100, 0));
+    }
 }

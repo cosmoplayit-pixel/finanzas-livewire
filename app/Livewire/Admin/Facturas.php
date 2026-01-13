@@ -3,10 +3,12 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Banco;
+use App\Models\Entidad;
 use App\Models\Factura;
 use App\Models\FacturaPago;
 use App\Models\Proyecto;
 use App\Services\FacturaFinance;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -14,52 +16,44 @@ class Facturas extends Component
 {
     use WithPagination;
 
+    // Filtros / Tabla
     public string $search = '';
-    public int $perPage = 10;
-
+    public int $perPage = 5;
     public string $status = 'all'; // all | active | inactive
 
-    // =========================
     // Modal FACTURA (create)
-    // =========================
     public bool $openFacturaModal = false;
     public ?int $facturaEditId = null;
 
     // Form factura
+    public ?int $entidad_id = null;
     public $proyecto_id = '';
     public ?string $numero = null;
     public ?string $fecha_emision = null; // Y-m-d
     public $monto_facturado = 0;
 
-    // ✅ NUEVO: porcentaje de retención (solo para cálculo)
-    public $retencion_porcentaje = 0;
-
-    // ✅ Solo UI: monto calculado de retención (preview)
-    public $retencion_monto = 0;
-
-    // ✅ Solo UI: neto (preview)
-    public $monto_neto = 0;
+    // Retención (solo UI / cálculo)
+    public $retencion_porcentaje = 0; // % tomado del proyecto
+    public $retencion_monto = 0; // monto calculado
+    public $monto_neto = 0; // facturado - retención
 
     public ?string $observacion_factura = null;
 
-    // =========================
     // Modal PAGO
-    // =========================
     public bool $openPagoModal = false;
     public ?int $facturaId = null;
 
     // Form pago
     public string $tipo = 'normal'; // normal|retencion
-    public string $metodo_pago = 'transferencia';
+    public string $metodo_pago = 'transferencia'; // transferencia|efectivo|etc
     public ?int $banco_id = null;
     public $monto = 0;
 
     public ?string $nro_operacion = null;
     public ?string $observacion = null;
+    public ?string $fecha_pago = null; // datetime-local / date compatible
 
-    // =========================
     // Helpers
-    // =========================
     protected function isRoot(): bool
     {
         $u = auth()->user();
@@ -81,20 +75,18 @@ class Facturas extends Component
         $this->resetPage();
     }
 
-    // =========================
-    // FACTURAS: Create
-    // =========================
+    // FACTURAS: Crear
     public function openCreateFactura(): void
     {
         $this->facturaEditId = null;
         $this->openFacturaModal = true;
 
+        $this->entidad_id = null;
         $this->proyecto_id = '';
         $this->numero = null;
         $this->fecha_emision = now()->toDateString();
         $this->monto_facturado = 0;
 
-        // ✅
         $this->retencion_porcentaje = 0;
         $this->retencion_monto = 0;
         $this->monto_neto = 0;
@@ -107,8 +99,8 @@ class Facturas extends Component
         $this->openFacturaModal = false;
         $this->facturaEditId = null;
 
-        // (Opcional) limpiar form al cerrar
         $this->reset([
+            'entidad_id',
             'proyecto_id',
             'numero',
             'fecha_emision',
@@ -116,27 +108,33 @@ class Facturas extends Component
             'retencion_porcentaje',
             'observacion_factura',
         ]);
+
+        $this->retencion_monto = 0;
+        $this->monto_neto = 0;
     }
 
     public function saveFactura(): void
     {
-        // ✅ Validación (retención_porcentaje NO se valida como input,
-        // porque viene del proyecto y está bloqueado)
-        $rules = [
+        $this->validate([
+            'entidad_id' => 'required|exists:entidades,id',
             'proyecto_id' => 'required|exists:proyectos,id',
             'numero' => 'nullable|string|max:100',
             'fecha_emision' => 'nullable|date',
             'monto_facturado' => 'required|numeric|min:0.01',
             'observacion_factura' => 'nullable|string|max:2000',
-        ];
+        ]);
 
-        $this->validate($rules);
-
-        // ✅ Seguridad multi-empresa: validar que el proyecto pertenece a la empresa del usuario (si no es root)
         $proyecto = Proyecto::query()
-            ->select(['id', 'empresa_id', 'retencion']) // ✅ incluir retención del proyecto
+            ->select(['id', 'empresa_id', 'entidad_id', 'retencion'])
             ->findOrFail($this->proyecto_id);
 
+        // Coherencia Entidad -> Proyecto (evita manipulación del DOM)
+        if ((int) $proyecto->entidad_id !== (int) $this->entidad_id) {
+            $this->addError('proyecto_id', 'El proyecto no pertenece a la entidad seleccionada.');
+            return;
+        }
+
+        // Multi-empresa: proyecto debe ser de la empresa del usuario (si no es root)
         if (
             !$this->isRoot() &&
             $this->empresaId() &&
@@ -149,18 +147,14 @@ class Facturas extends Component
             return;
         }
 
-        // ✅ % retención desde el PROYECTO (fuente de verdad)
-        $porc = (float) ($proyecto->retencion ?? 0);
-
-        // ✅ Calcular monto de retención (si porcentaje es 0 => retención 0)
         $facturado = (float) $this->monto_facturado;
+        $porc = (float) ($proyecto->retencion ?? 0);
 
         $retencionMonto = 0.0;
         if ($porc > 0) {
             $retencionMonto = round($facturado * ($porc / 100), 2);
         }
 
-        // ✅ Evitar retención igual o mayor al monto
         if ($retencionMonto >= $facturado) {
             $this->addError(
                 'monto_facturado',
@@ -174,10 +168,7 @@ class Facturas extends Component
             'numero' => $this->numero,
             'fecha_emision' => $this->fecha_emision,
             'monto_facturado' => $facturado,
-
-            // ✅ Guardar retención como MONTO en la factura
-            'retencion' => $retencionMonto,
-
+            'retencion' => $retencionMonto, // se guarda como monto en la factura
             'observacion' => $this->observacion_factura,
             'active' => true,
         ]);
@@ -187,114 +178,21 @@ class Facturas extends Component
         $this->resetPage();
     }
 
-    // =========================
-    // PAGOS
-    // =========================
-    public function openPago(int $facturaId): void
+    // Entidad / Proyecto dependiente
+    public function updatedEntidadId($value): void
     {
-        $this->facturaId = $facturaId;
-        $this->openPagoModal = true;
-
-        // valores por defecto
-        $this->tipo = 'normal';
-        $this->metodo_pago = 'transferencia';
-        $this->banco_id = null;
-        $this->monto = 0;
-        $this->nro_operacion = null;
-        $this->observacion = null;
-    }
-
-    public function closePago(): void
-    {
-        $this->openPagoModal = false;
-        $this->facturaId = null;
-
-        // (Opcional) limpiar form pago
-        $this->reset(['tipo', 'metodo_pago', 'banco_id', 'monto', 'nro_operacion', 'observacion']);
-        $this->tipo = 'normal';
-        $this->metodo_pago = 'transferencia';
-        $this->monto = 0;
-    }
-
-    public function savePago(): void
-    {
-        $factura = Factura::with('proyecto')->findOrFail($this->facturaId);
-
-        // Seguridad multi-empresa (si no es root)
-        if (
-            !$this->isRoot() &&
-            $this->empresaId() &&
-            (int) $factura->proyecto?->empresa_id !== (int) $this->empresaId()
-        ) {
-            $this->addError(
-                'tipo',
-                'No tienes permiso para registrar pagos en facturas de otra empresa.',
-            );
+        if (!$value) {
+            $this->proyecto_id = '';
+            $this->retencion_porcentaje = 0;
+            $this->recalcularRetencionUI();
             return;
         }
 
-        // Validación base
-        $rules = [
-            'tipo' => 'required|in:normal,retencion',
-            'metodo_pago' => 'nullable|string|max:30',
-            'monto' => 'required|numeric|min:0.01',
-            'banco_id' => 'nullable|exists:bancos,id',
-            'nro_operacion' => 'nullable|string|max:80',
-            'observacion' => 'nullable|string|max:2000',
-        ];
-
-        // Si no es efectivo, exigir banco y nro operación
-        if ($this->metodo_pago !== 'efectivo') {
-            $rules['banco_id'] = 'required|exists:bancos,id';
-            $rules['nro_operacion'] = 'required|string|max:80';
-        }
-
-        $this->validate($rules);
-
-        // Regla: retención solo al final
-        if ($this->tipo === 'retencion' && !FacturaFinance::puedePagarRetencion($factura)) {
-            $this->addError(
-                'tipo',
-                'No puedes pagar la retención hasta completar el pago normal de la factura.',
-            );
-            return;
-        }
-
-        // Validación multi-empresa del banco destino (si no es root)
-        $banco = $this->banco_id ? Banco::find($this->banco_id) : null;
-        if (
-            $banco &&
-            !$this->isRoot() &&
-            $this->empresaId() &&
-            (int) $banco->empresa_id !== (int) $this->empresaId()
-        ) {
-            $this->addError('banco_id', 'No puedes usar un banco de otra empresa.');
-            return;
-        }
-
-        FacturaPago::create([
-            'factura_id' => $factura->id,
-            'banco_id' => $banco?->id,
-            'fecha_pago' => now(),
-
-            'tipo' => $this->tipo,
-            'monto' => $this->monto,
-            'metodo_pago' => $this->metodo_pago,
-            'nro_operacion' => $this->nro_operacion,
-            'observacion' => $this->observacion,
-
-            // Snapshot destino
-            'destino_banco_nombre_snapshot' => $banco?->nombre,
-            'destino_numero_cuenta_snapshot' => $banco?->numero_cuenta,
-            'destino_moneda_snapshot' => $banco?->moneda,
-            'destino_titular_snapshot' => $banco?->titular,
-            'destino_tipo_cuenta_snapshot' => $banco?->tipo_cuenta,
-        ]);
-
-        session()->flash('success', 'Pago registrado correctamente.');
-        $this->closePago();
-        $this->resetPage();
+        $this->proyecto_id = '';
+        $this->retencion_porcentaje = 0;
+        $this->recalcularRetencionUI();
     }
+
     public function updatedProyectoId($value): void
     {
         if (!$value) {
@@ -303,9 +201,8 @@ class Facturas extends Component
             return;
         }
 
-        // Cargar % de retención desde el proyecto seleccionado
         $proyecto = Proyecto::query()
-            ->select(['id', 'retencion', 'empresa_id'])
+            ->select(['id', 'retencion', 'empresa_id', 'entidad_id'])
             ->find($value);
 
         if (!$proyecto) {
@@ -314,7 +211,14 @@ class Facturas extends Component
             return;
         }
 
-        // Seguridad multi-empresa (si no es root)
+        if ($this->entidad_id && (int) $proyecto->entidad_id !== (int) $this->entidad_id) {
+            $this->retencion_porcentaje = 0;
+            $this->proyecto_id = '';
+            $this->recalcularRetencionUI();
+            $this->addError('proyecto_id', 'El proyecto no corresponde a la entidad seleccionada.');
+            return;
+        }
+
         if (
             !$this->isRoot() &&
             $this->empresaId() &&
@@ -323,7 +227,6 @@ class Facturas extends Component
             $this->retencion_porcentaje = 0;
             $this->proyecto_id = '';
             $this->recalcularRetencionUI();
-
             $this->addError(
                 'proyecto_id',
                 'No tienes permiso para usar proyectos de otra empresa.',
@@ -354,13 +257,221 @@ class Facturas extends Component
         $this->monto_neto = max(0, round($monto - $ret, 2));
     }
 
-    // =========================
+    // PAGOS
+    public function openPago(int $facturaId): void
+    {
+        $this->facturaId = $facturaId;
+        $this->openPagoModal = true;
+
+        $this->tipo = 'normal';
+        $this->metodo_pago = 'transferencia';
+        $this->banco_id = null;
+        $this->monto = 0;
+        $this->fecha_pago = now()->format('Y-m-d\TH:i');
+        $this->nro_operacion = null;
+        $this->observacion = null;
+    }
+
+    public function closePago(): void
+    {
+        $this->openPagoModal = false;
+        $this->facturaId = null;
+
+        $this->reset([
+            'tipo',
+            'metodo_pago',
+            'banco_id',
+            'monto',
+            'nro_operacion',
+            'observacion',
+            'fecha_pago',
+        ]);
+
+        $this->tipo = 'normal';
+        $this->metodo_pago = 'transferencia';
+        $this->monto = 0;
+    }
+
+    public function savePago(): void
+    {
+        $factura = Factura::with(['proyecto', 'pagos'])->findOrFail($this->facturaId);
+
+        if (
+            !$this->isRoot() &&
+            $this->empresaId() &&
+            (int) $factura->proyecto?->empresa_id !== (int) $this->empresaId()
+        ) {
+            $this->addError(
+                'tipo',
+                'No tienes permiso para registrar pagos en facturas de otra empresa.',
+            );
+            return;
+        }
+
+        $rules = [
+            'tipo' => 'required|in:normal,retencion',
+            'metodo_pago' => 'nullable|string|max:30',
+            'monto' => 'required|numeric|min:0.01',
+            'banco_id' => 'nullable|exists:bancos,id',
+            'nro_operacion' => 'nullable|string|max:80',
+            'observacion' => 'nullable|string|max:2000',
+            'fecha_pago' => 'required|date',
+        ];
+
+        if ($this->metodo_pago !== 'efectivo') {
+            $rules['banco_id'] = 'required|exists:bancos,id';
+            $rules['nro_operacion'] = 'required|string|max:80';
+        }
+
+        $this->validate($rules);
+
+        if ($this->tipo === 'retencion' && !FacturaFinance::puedePagarRetencion($factura)) {
+            $this->addError(
+                'tipo',
+                'No puedes pagar la retención hasta completar el pago normal de la factura.',
+            );
+            return;
+        }
+
+        $banco = $this->banco_id ? Banco::find($this->banco_id) : null;
+
+        if (
+            $banco &&
+            !$this->isRoot() &&
+            $this->empresaId() &&
+            (int) $banco->empresa_id !== (int) $this->empresaId()
+        ) {
+            $this->addError('banco_id', 'No puedes usar un banco de otra empresa.');
+            return;
+        }
+
+        $montoIngresado = round((float) $this->monto, 2);
+
+        $facturado = (float) $factura->monto_facturado;
+        $retTotal = (float) ($factura->retencion ?? 0);
+
+        $neto = max(0, round($facturado - $retTotal, 2));
+
+        $pagadoNormal = (float) $factura->pagos->where('tipo', 'normal')->sum('monto');
+        $pagadoRet = (float) $factura->pagos->where('tipo', 'retencion')->sum('monto');
+
+        $saldoNormal = max(0, round($neto - $pagadoNormal, 2));
+        $retPendiente = max(0, round($retTotal - $pagadoRet, 2));
+
+        if ($this->tipo === 'normal') {
+            if ($saldoNormal <= 0) {
+                $this->addError(
+                    'monto',
+                    'El pago normal ya está completo. No existe saldo normal pendiente.',
+                );
+                return;
+            }
+
+            if ($montoIngresado > $saldoNormal) {
+                $this->addError(
+                    'monto',
+                    'El monto excede el saldo normal pendiente. Máximo permitido: Bs ' .
+                        number_format($saldoNormal, 2, ',', '.'),
+                );
+                return;
+            }
+        } else {
+            if ($retPendiente <= 0) {
+                $this->addError('monto', 'No existe retención pendiente para pagar.');
+                return;
+            }
+
+            if ($montoIngresado > $retPendiente) {
+                $this->addError(
+                    'monto',
+                    'El monto excede la retención pendiente. Máximo permitido: Bs ' .
+                        number_format($retPendiente, 2, ',', '.'),
+                );
+                return;
+            }
+        }
+
+        FacturaPago::create([
+            'factura_id' => $factura->id,
+            'banco_id' => $banco?->id,
+            'fecha_pago' => $this->fecha_pago,
+            'tipo' => $this->tipo,
+            'monto' => $montoIngresado,
+            'metodo_pago' => $this->metodo_pago,
+            'nro_operacion' => $this->nro_operacion,
+            'observacion' => $this->observacion,
+
+            // Snapshot destino
+            'destino_banco_nombre_snapshot' => $banco?->nombre,
+            'destino_numero_cuenta_snapshot' => $banco?->numero_cuenta,
+            'destino_moneda_snapshot' => $banco?->moneda,
+            'destino_titular_snapshot' => $banco?->titular,
+            'destino_tipo_cuenta_snapshot' => $banco?->tipo_cuenta,
+        ]);
+
+        session()->flash('success', 'Pago registrado correctamente.');
+        $this->closePago();
+        $this->resetPage();
+    }
+
+    // ELIMINAR PAGO (SweetAlert)
+    public function confirmDeletePago(int $pagoId): void
+    {
+        if (!auth()->user()->can('facturas.pay')) {
+            abort(403);
+        }
+
+        $pago = FacturaPago::query()
+            ->with(['factura'])
+            ->findOrFail($pagoId);
+
+        $facturaLabel = $pago->factura
+            ? ($pago->factura->numero ?:
+            'Factura #' . $pago->factura->id)
+            : 'Factura —';
+
+        $montoLabel = 'Bs ' . number_format((float) ($pago->monto ?? 0), 2, ',', '.');
+
+        $info = "Se eliminará el pago de {$montoLabel} asociado a la Factura Nro. {$facturaLabel}. Esta acción no se puede deshacer.";
+
+        // Dispara SweetAlert en el frontend
+        $this->dispatch('swal:delete-pago', id: $pago->id, info: $info);
+    }
+
+    #[On('doDeletePago')]
+    public function doDeletePago(int $id): void
+    {
+        if (!auth()->user()->can('facturas.pay')) {
+            abort(403);
+        }
+
+        $pago = FacturaPago::query()
+            ->with(['factura.proyecto'])
+            ->findOrFail($id);
+
+        // Multi-empresa: el pago pertenece a una factura cuyo proyecto debe ser de la empresa del usuario (si no es root)
+        if (
+            !$this->isRoot() &&
+            $this->empresaId() &&
+            (int) ($pago->factura?->proyecto?->empresa_id ?? 0) !== (int) $this->empresaId()
+        ) {
+            abort(403);
+        }
+
+        $pago->delete();
+
+        session()->flash('success', 'Pago eliminado correctamente.');
+    }
+
     // Render
-    // =========================
     public function render()
     {
-        $query = Factura::query()
-            ->with(['proyecto.entidad'])
+        $facturasQuery = Factura::query()
+            ->with([
+                'proyecto.entidad',
+                'pagos' => fn($q) => $q->orderBy('fecha_pago', 'asc'),
+                'pagos.banco',
+            ])
             ->when(!$this->isRoot() && $this->empresaId(), function ($q) {
                 $empresaId = $this->empresaId();
                 $q->whereHas('proyecto', fn($qq) => $qq->where('empresa_id', $empresaId));
@@ -382,7 +493,7 @@ class Facturas extends Component
             )
             ->orderByDesc('id');
 
-        $facturas = $query->paginate($this->perPage);
+        $facturas = $facturasQuery->paginate($this->perPage);
 
         $bancos = Banco::query()
             ->where('active', true)
@@ -393,8 +504,7 @@ class Facturas extends Component
             ->orderBy('nombre')
             ->get();
 
-        $proyectos = Proyecto::query()
-            ->with('entidad:id,nombre')
+        $entidades = Entidad::query()
             ->where('active', true)
             ->when(
                 !$this->isRoot() && $this->empresaId(),
@@ -403,9 +513,20 @@ class Facturas extends Component
             ->orderBy('nombre')
             ->get();
 
+        $proyectos = Proyecto::query()
+            ->where('active', true)
+            ->when(
+                !$this->isRoot() && $this->empresaId(),
+                fn($q) => $q->where('empresa_id', $this->empresaId()),
+            )
+            ->when($this->entidad_id, fn($q) => $q->where('entidad_id', $this->entidad_id))
+            ->orderBy('nombre')
+            ->get();
+
         return view('livewire.admin.facturas', [
             'facturas' => $facturas,
             'bancos' => $bancos,
+            'entidades' => $entidades,
             'proyectos' => $proyectos,
         ]);
     }

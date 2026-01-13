@@ -408,5 +408,39 @@
             });
         });
 
+        // ===================== FACTURAS: ELIMINAR PAGO =====================
+        Livewire.on('swal:delete-pago', ({
+            id,
+            info
+        }) => {
+            Swal.fire({
+                title: '¿Eliminar pago?',
+                text: info ? info : 'Esta acción no se puede deshacer.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#6b7280',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Livewire.dispatch('doDeletePago', {
+                        id
+                    });
+                }
+            });
+        });
+        Livewire.on('scroll:restore', () => {
+            const y = window.__lw_scrollY ?? 0;
+            requestAnimationFrame(() => window.scrollTo({
+                top: y,
+                behavior: 'auto'
+            }));
+        });
+
+
+
+
     });
 </script>

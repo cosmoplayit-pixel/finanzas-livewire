@@ -78,6 +78,9 @@ class Facturas extends Component
     // FACTURAS: Crear
     public function openCreateFactura(): void
     {
+        $this->resetErrorBag();
+        $this->resetValidation();
+
         $this->facturaEditId = null;
         $this->openFacturaModal = true;
 
@@ -111,6 +114,9 @@ class Facturas extends Component
 
         $this->retencion_monto = 0;
         $this->monto_neto = 0;
+
+        $this->resetErrorBag();
+        $this->resetValidation();
     }
 
     public function saveFactura(): void
@@ -181,6 +187,9 @@ class Facturas extends Component
     // Entidad / Proyecto dependiente
     public function updatedEntidadId($value): void
     {
+        $this->resetErrorBag('entidad_id,proyecto_id');
+        $this->resetValidation('entidad_id', 'proyecto_id');
+
         if (!$value) {
             $this->proyecto_id = '';
             $this->retencion_porcentaje = 0;
@@ -195,6 +204,9 @@ class Facturas extends Component
 
     public function updatedProyectoId($value): void
     {
+        $this->resetErrorBag('entidad_id,proyecto_id');
+        $this->resetValidation('entidad_id', 'proyecto_id');
+
         if (!$value) {
             $this->retencion_porcentaje = 0;
             $this->recalcularRetencionUI();
@@ -260,6 +272,9 @@ class Facturas extends Component
     // PAGOS
     public function openPago(int $facturaId): void
     {
+        $this->resetErrorBag();
+        $this->resetValidation();
+
         $this->facturaId = $facturaId;
         $this->openPagoModal = true;
 
@@ -290,6 +305,9 @@ class Facturas extends Component
         $this->tipo = 'normal';
         $this->metodo_pago = 'transferencia';
         $this->monto = 0;
+
+        $this->resetErrorBag();
+        $this->resetValidation();
     }
 
     public function savePago(): void

@@ -896,7 +896,7 @@
                                                                 <div class="flex items-center justify-center">
                                                                     <button type="button"
                                                                         class="inline-flex items-center justify-center w-9 h-9 rounded border border-red-300 text-red-700
-                                                                    hover:bg-red-50 dark:border-red-700 dark:text-red-200 dark:hover:bg-red-500/10 transition cursor-pointer"
+                                                                        hover:bg-red-200 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500 transition cursor-pointer"
                                                                         title="Eliminar pago"
                                                                         wire:click="confirmDeletePago({{ $pg->id }})"
                                                                         wire:loading.attr="disabled"
@@ -947,7 +947,6 @@
         </div>
     </div>
 
-
     {{-- PAGINACIÓN --}}
     <div>
         {{ $facturas->links() }}
@@ -983,7 +982,7 @@
 
                         <button type="button" wire:click="closeFactura"
                             class="cursor-pointer inline-flex items-center justify-center size-9 rounded-md
-                               text-gray-500 hover:text-gray-900 hover:bg-gray-100
+                               text-gray-500 hover:text-gray-900 hover:bg-gray-200
                                dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800">
                             ✕
                         </button>
@@ -1000,7 +999,7 @@
                         <div>
                             <label class="block text-sm mb-1">Entidad</label>
                             <select wire:model.live="entidad_id"
-                                class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700
+                                class="cursor-pointer w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700
                                     text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700">
                                 <option value="">Seleccione...</option>
                                 @foreach ($entidades as $e)
@@ -1019,7 +1018,7 @@
                             <label class="block text-sm mb-1">Proyecto</label>
 
                             <select wire:model.live="proyecto_id" @disabled(!$entidad_id)
-                                class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700
+                                class="cursor-pointer w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700
                                     text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700 
                                     disabled:opacity-60 disabled:cursor-not-allowed">
                                 <option value="">
@@ -1146,21 +1145,27 @@
 
                     {{-- Footer (sticky) --}}
                     <div
-                        class="sticky bottom-0 px-5 py-4 flex justify-end gap-2
-                            bg-gray-50 dark:bg-neutral-900
-                            border-t border-gray-200 dark:border-neutral-800">
+                        class="sticky bottom-0 px-5 py-4 flex justify-end gap-2 bg-gray-50 dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-800">
                         <button wire:click="closeFactura"
-                            class="px-4 py-2 rounded border
-                               border-gray-300 dark:border-neutral-700
-                               text-gray-700 dark:text-neutral-200
-                               hover:bg-gray-100 dark:hover:bg-neutral-800">
+                            class="cursor-pointer px-4 py-2 rounded border border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-200 dark:hover:bg-neutral-800">
                             Cancelar
                         </button>
 
-                        <button wire:click="saveFactura"
-                            class="px-4 py-2 rounded bg-black text-white hover:opacity-90">
-                            Guardar
+                        <button wire:click="saveFactura" wire:loading.attr="disabled" wire:target="saveFactura"
+                            class="w-full sm:w-auto px-4 py-2 rounded bg-black text-white hover:bg-gray-800 hover:text-white transition-colors duration-150
+                            cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+
+                            {{-- Texto normal --}}
+                            <span wire:loading.remove wire:target="saveFactura">
+                                Guardar
+                            </span>
+
+                            {{-- Texto loading --}}
+                            <span wire:loading wire:target="saveFactura">
+                                Guardando…
+                            </span>
                         </button>
+
                     </div>
 
                 </div>
@@ -1197,8 +1202,8 @@
                         </h2>
 
                         <button type="button" wire:click="closePago"
-                            class="inline-flex items-center justify-center size-9 rounded-md
-                               text-gray-500 hover:text-gray-900 hover:bg-gray-100
+                            class="cursor-pointer inline-flex items-center justify-center size-9 rounded-md
+                               text-gray-500 hover:text-gray-900 hover:bg-gray-200
                                dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800">
                             ✕
                         </button>
@@ -1215,7 +1220,7 @@
                             <div>
                                 <label class="block text-sm mb-1">Tipo</label>
                                 <select wire:model="tipo"
-                                    class="w-full rounded border px-3 py-2
+                                    class="cursor-pointer w-full rounded border px-3 py-2
                                        bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700
                                        text-gray-900 dark:text-neutral-100
@@ -1233,7 +1238,7 @@
                             <div>
                                 <label class="block text-sm mb-1">Método de pago</label>
                                 <select wire:model="metodo_pago"
-                                    class="w-full rounded border px-3 py-2
+                                    class="cursor-pointer w-full rounded border px-3 py-2
                                        bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700
                                        text-gray-900 dark:text-neutral-100
@@ -1256,7 +1261,7 @@
                             <div>
                                 <label class="block text-sm mb-1">Fecha de pago</label>
                                 <input type="datetime-local" wire:model="fecha_pago"
-                                    class="w-full rounded border px-3 py-2
+                                    class="cursor-pointer w-full rounded border px-3 py-2
                                        bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700
                                        text-gray-900 dark:text-neutral-100
@@ -1272,7 +1277,7 @@
                         <div>
                             <label class="block text-sm mb-1">Banco destino</label>
                             <select wire:model="banco_id"
-                                class="w-full rounded border px-3 py-2
+                                class="cursor-pointer w-full rounded border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700
                                    text-gray-900 dark:text-neutral-100
@@ -1347,16 +1352,28 @@
                             bg-gray-50 dark:bg-neutral-900
                             border-t border-gray-200 dark:border-neutral-800">
                         <button wire:click="closePago"
-                            class="px-4 py-2 rounded border
+                            class="cursor-pointer px-4 py-2 rounded border
                                border-gray-300 dark:border-neutral-700
                                text-gray-700 dark:text-neutral-200
-                               hover:bg-gray-100 dark:hover:bg-neutral-800">
+                               hover:bg-gray-200 dark:hover:bg-neutral-800">
                             Cancelar
                         </button>
 
-                        <button wire:click="savePago" class="px-4 py-2 rounded bg-black text-white hover:opacity-90">
-                            Guardar pago
+                        <button wire:click="savePago" wire:loading.attr="disabled" wire:target="savePago"
+                            class="w-full sm:w-auto px-4 py-2 rounded bg-black text-white hover:bg-gray-800 hover:text-white transition-colors duration-150
+                            cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+
+                            {{-- Texto normal --}}
+                            <span wire:loading.remove wire:target="savePago">
+                                Guardar pago
+                            </span>
+
+                            {{-- Texto loading --}}
+                            <span wire:loading wire:target="savePago">
+                                Guardando…
+                            </span>
                         </button>
+
                     </div>
 
                 </div>

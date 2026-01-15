@@ -1,7 +1,7 @@
 {{-- resources/views/livewire/admin/facturas.blade.php --}}
 @section('title', 'Facturas')
 
-<div class="p-0 md:p-6 space-y-4" :title="__('Dashboard')">
+<div class="p-0 md:p-6 space-y-4">
 
     {{-- HEADER (RESPONSIVE) --}}
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -27,38 +27,155 @@
     </div>
 
     {{-- FILTROS --}}
-    <div class="flex flex-col gap-3 md:flex-row md:items-center">
-        {{-- Buscar --}}
-        <input type="search" wire:model.live="search" placeholder="Buscar por Factura, Proyecto o Entidad..."
-            class="w-full md:w-72 lg:w-md border rounded px-3 py-2" autocomplete="off" />
+    <div x-data="{ openFilters: false }" class="relative">
 
-        {{-- Selects derecha --}}
-        <div class="flex flex-col sm:flex-row gap-3 md:ml-auto w-full md:w-auto">
-            {{-- Estado --}}
-            <select wire:model.live="status"
-                class="w-full sm:w-auto border rounded px-3 py-2
-                       bg-white text-gray-900 border-gray-300
-                       dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
-                       focus:outline-none focus:ring-2 focus:ring-offset-0
-                       focus:ring-gray-300 dark:focus:ring-neutral-600">
-                <option value="all">Todos</option>
-                <option value="active">Activos</option>
-                <option value="inactive">Inactivos</option>
-            </select>
+        <div class="flex flex-col gap-3 md:flex-row md:items-center">
+            {{-- Buscar --}}
+            <input type="search" wire:model.live.debounce.300ms="search"
+                placeholder="Buscar por Factura, Proyecto o Entidad..."
+                class="w-full md:w-72 lg:w-md border rounded px-3 py-2" autocomplete="off" />
 
-            {{-- PerPage --}}
-            <select wire:model.live="perPage"
-                class="w-full sm:w-auto border rounded px-3 py-2
-                       bg-white text-gray-900 border-gray-300
-                       dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
-                       focus:outline-none focus:ring-2 focus:ring-offset-0
-                       focus:ring-gray-300 dark:focus:ring-neutral-600">
-                <option value="5">5</option>
-                <option value="10">10</option>
-                <option value="50">50</option>
-            </select>
+            {{-- Selects derecha --}}
+            <div class="flex flex-col sm:flex-row gap-3 md:ml-auto w-full md:w-auto">
+                {{-- PerPage --}}
+                <select wire:model.live="perPage"
+                    class="w-full sm:w-auto border rounded px-3 py-2
+                    bg-white text-gray-900 border-gray-300
+                    dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
+                    focus:outline-none focus:ring-2 focus:ring-offset-0
+                    focus:ring-gray-300 dark:focus:ring-neutral-600">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="50">50</option>
+                </select>
+
+                {{-- Botón Filtros --}}
+                <button type="button" @click.stop="openFilters = !openFilters"
+                    class="w-full sm:w-auto border rounded px-3 py-2
+                    bg-white text-gray-900 border-gray-300 hover:bg-gray-50
+                    dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800
+                    focus:outline-none focus:ring-2 focus:ring-offset-0
+                    focus:ring-gray-300 dark:focus:ring-neutral-600">
+                    Filtros
+                </button>
+            </div>
+        </div>
+
+        {{-- ✅ PANEL FLOTANTE --}}
+        <div x-show="openFilters" x-cloak @click.outside="openFilters = false"
+            @keydown.escape.window="openFilters = false"
+            class="absolute right-0 mt-3 w-full sm:w-[360px] z-50
+            rounded-xl border border-gray-200 bg-white shadow-xl
+            dark:border-neutral-700 dark:bg-neutral-900 overflow-hidden"
+            wire:ignore.self wire:key="facturas-panel-filtros">
+
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
+                <div class="font-semibold text-gray-800 dark:text-neutral-100">Filtros</div>
+
+
+            </div>
+
+            <div class="px-4 pb-4 space-y-4" x-data="{ secPago: true, secRet: true, secEstado: true }">
+
+                {{-- PAGO --}}
+                <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
+                    <button type="button" class="w-full flex items-center justify-between" @click="secPago = !secPago">
+                        <span class="font-semibold text-gray-800 dark:text-neutral-100">Pago</span>
+                        <span class="text-gray-400" x-text="secPago ? '▾' : '▸'"></span>
+                    </button>
+
+                    <div x-show="secPago" class="mt-3 space-y-2">
+
+                        <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
+                            <input type="checkbox" value="pendiente" wire:model.live="f_pago"
+                                class="rounded border-gray-300 dark:border-neutral-700" />
+                            Pendiente
+                        </label>
+
+
+                        <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
+                            <input type="checkbox" wire:key="chk-pago-parcial" @checked(in_array('parcial', $f_pago ?? [], true))
+                                wire:click="toggleFilter('pago','parcial')"
+                                class="rounded border-gray-300 dark:border-neutral-700" />
+                            Parcial
+                        </label>
+
+                        <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
+                            <input type="checkbox" wire:key="chk-pago-pagada-neto" @checked(in_array('pagada_neto', $f_pago ?? [], true))
+                                wire:click="toggleFilter('pago','pagada_neto')"
+                                class="rounded border-gray-300 dark:border-neutral-700" />
+                            Completado (Neto)
+                        </label>
+
+                    </div>
+                </div>
+
+                {{-- RETENCIÓN --}}
+                <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
+                    <button type="button" class="w-full flex items-center justify-between" @click="secRet = !secRet">
+                        <span class="font-semibold text-gray-800 dark:text-neutral-100">Retención</span>
+                        <span class="text-gray-400" x-text="secRet ? '▾' : '▸'"></span>
+                    </button>
+
+                    <div x-show="secRet" class="mt-3 space-y-2">
+
+                        <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
+                            <input type="checkbox" wire:key="chk-ret-sin" @checked(in_array('sin_retencion', $f_retencion ?? [], true))
+                                wire:click="toggleFilter('retencion','sin_retencion')"
+                                class="rounded border-gray-300 dark:border-neutral-700" />
+                            Sin retención
+                        </label>
+
+                        <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
+                            <input type="checkbox" wire:key="chk-ret-pendiente" @checked(in_array('retencion_pendiente', $f_retencion ?? [], true))
+                                wire:click="toggleFilter('retencion','retencion_pendiente')"
+                                class="rounded border-gray-300 dark:border-neutral-700" />
+                            Retención pendiente
+                        </label>
+
+                        <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
+                            <input type="checkbox" wire:key="chk-ret-pagada" @checked(in_array('retencion_pagada', $f_retencion ?? [], true))
+                                wire:click="toggleFilter('retencion','retencion_pagada')"
+                                class="rounded border-gray-300 dark:border-neutral-700" />
+                            Retención pagada
+                        </label>
+
+                    </div>
+                </div>
+
+                {{-- ESTADO GLOBAL --}}
+                <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
+                    <button type="button" class="w-full flex items-center justify-between"
+                        @click="secEstado = !secEstado">
+                        <span class="font-semibold text-gray-800 dark:text-neutral-100">Estado</span>
+                        <span class="text-gray-400" x-text="secEstado ? '▾' : '▸'"></span>
+                    </button>
+
+                    <div x-show="secEstado" class="mt-3 space-y-2">
+
+                        <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
+                            <input type="checkbox" wire:key="chk-cerr-abierta" @checked(in_array('abierta', $f_cerrada ?? [], true))
+                                wire:click="toggleFilter('cerrada','abierta')"
+                                class="rounded border-gray-300 dark:border-neutral-700" />
+                            Abiertas
+                        </label>
+
+                        <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
+                            <input type="checkbox" wire:key="chk-cerr-cerrada" @checked(in_array('cerrada', $f_cerrada ?? [], true))
+                                wire:click="toggleFilter('cerrada','cerrada')"
+                                class="rounded border-gray-300 dark:border-neutral-700" />
+                            Cerradas
+                        </label>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
+
+
 
     {{-- ALERTAS (LIGHT/DARK) --}}
     @if (session('success'))
@@ -384,7 +501,7 @@
     {{-- TABLET + DESKTOP: TABLA (COMPACTA) --}}
     <div class="hidden md:block border rounded bg-white dark:bg-neutral-800 overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="w-full table-fixed text-sm min-w-[980px]">
+            <table wire:key="facturas-table" class="w-full table-fixed text-sm min-w-[980px]">
                 <thead
                     class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-200">
                     <tr class="text-left">
@@ -433,7 +550,8 @@
 
                 @foreach ($facturas as $f)
                     <tbody x-data="{ open: false }" x-on:facturas:toggle-all.window="open = $event.detail.open"
-                        class="divide-y divide-gray-200 dark:divide-neutral-200">
+                        class="divide-y divide-gray-200 dark:divide-neutral-200"
+                        wire:key="factura-row-{{ $f->id }}">
 
                         <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900 text-gray-700 dark:text-neutral-200">
 

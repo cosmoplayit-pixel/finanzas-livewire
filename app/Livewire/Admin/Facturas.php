@@ -8,6 +8,7 @@ use App\Models\Factura;
 use App\Models\FacturaPago;
 use App\Models\Proyecto;
 use App\Services\FacturaFinance;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -16,16 +17,25 @@ class Facturas extends Component
 {
     use WithPagination;
 
-    // Filtros / Tabla
+    // ==========================================================
+    // Filtros facturas (multi-select)
+    // ==========================================================
+    public array $f_pago = []; // ['pendiente','parcial','pagada_neto']
+    public array $f_retencion = []; // ['sin_retencion','retencion_pendiente','retencion_pagada']
+    public array $f_cerrada = []; // ['abierta','cerrada']
+
+    // ==========================================================
+    // Filtros / Tabla (BUSCAR + CANTIDAD)
+    // ==========================================================
     public string $search = '';
     public int $perPage = 5;
-    public string $status = 'all'; // all | active | inactive
 
+    // ==========================================================
     // Modal FACTURA (create)
+    // ==========================================================
     public bool $openFacturaModal = false;
     public ?int $facturaEditId = null;
 
-    // Form factura
     public ?int $entidad_id = null;
     public $proyecto_id = '';
     public ?string $numero = null;
@@ -33,27 +43,30 @@ class Facturas extends Component
     public $monto_facturado = 0;
 
     // Retención (solo UI / cálculo)
-    public $retencion_porcentaje = 0; // % tomado del proyecto
-    public $retencion_monto = 0; // monto calculado
-    public $monto_neto = 0; // facturado - retención
+    public $retencion_porcentaje = 0;
+    public $retencion_monto = 0;
+    public $monto_neto = 0;
 
     public ?string $observacion_factura = null;
 
+    // ==========================================================
     // Modal PAGO
+    // ==========================================================
     public bool $openPagoModal = false;
     public ?int $facturaId = null;
 
-    // Form pago
     public string $tipo = 'normal'; // normal|retencion
-    public string $metodo_pago = 'transferencia'; // transferencia|efectivo|etc
+    public string $metodo_pago = 'transferencia';
     public ?int $banco_id = null;
     public $monto = 0;
 
     public ?string $nro_operacion = null;
     public ?string $observacion = null;
-    public ?string $fecha_pago = null; // datetime-local / date compatible
+    public ?string $fecha_pago = null;
 
+    // ==========================================================
     // Helpers
+    // ==========================================================
     protected function isRoot(): bool
     {
         $u = auth()->user();
@@ -65,17 +78,68 @@ class Facturas extends Component
         return auth()->user()?->empresa_id;
     }
 
+    // ==========================================================
+    // Reset paginación cuando cambian buscar / perPage
+    // ==========================================================
     public function updatingSearch(): void
     {
         $this->resetPage();
     }
 
-    public function updatingStatus(): void
+    public function updatingPerPage(): void
     {
         $this->resetPage();
     }
 
+    // ==========================================================
+    // Panel filtros: helpers + acciones
+    // ==========================================================
+    private function normalizeFilter(array $values): array
+    {
+        $values = array_map('strval', $values);
+        $values = array_values(array_filter($values, fn($v) => $v !== ''));
+        return array_values(array_unique($values));
+    }
+
+    public function toggleFilter(string $group, string $value): void
+    {
+        $map = [
+            'pago' => 'f_pago',
+            'retencion' => 'f_retencion',
+            'cerrada' => 'f_cerrada',
+        ];
+
+        if (!isset($map[$group])) {
+            return;
+        }
+
+        $prop = $map[$group];
+
+        $current = is_array($this->{$prop}) ? $this->{$prop} : [];
+        $current = $this->normalizeFilter($current);
+
+        if (in_array($value, $current, true)) {
+            $current = array_values(array_diff($current, [$value]));
+        } else {
+            $current[] = $value;
+        }
+
+        $this->{$prop} = $this->normalizeFilter($current);
+
+        $this->resetPage();
+    }
+
+    public function clearFilters(): void
+    {
+        $this->f_pago = [];
+        $this->f_retencion = [];
+        $this->f_cerrada = [];
+        $this->resetPage();
+    }
+
+    // ==========================================================
     // FACTURAS: Crear
+    // ==========================================================
     public function openCreateFactura(): void
     {
         $this->resetErrorBag();
@@ -134,13 +198,11 @@ class Facturas extends Component
             ->select(['id', 'empresa_id', 'entidad_id', 'retencion'])
             ->findOrFail($this->proyecto_id);
 
-        // Coherencia Entidad -> Proyecto (evita manipulación del DOM)
         if ((int) $proyecto->entidad_id !== (int) $this->entidad_id) {
             $this->addError('proyecto_id', 'El proyecto no pertenece a la entidad seleccionada.');
             return;
         }
 
-        // Multi-empresa: proyecto debe ser de la empresa del usuario (si no es root)
         if (
             !$this->isRoot() &&
             $this->empresaId() &&
@@ -174,7 +236,7 @@ class Facturas extends Component
             'numero' => $this->numero,
             'fecha_emision' => $this->fecha_emision,
             'monto_facturado' => $facturado,
-            'retencion' => $retencionMonto, // se guarda como monto en la factura
+            'retencion' => $retencionMonto,
             'observacion' => $this->observacion_factura,
             'active' => true,
         ]);
@@ -184,18 +246,13 @@ class Facturas extends Component
         $this->resetPage();
     }
 
-    // Entidad / Proyecto dependiente
+    // ==========================================================
+    // Entidad / Proyecto dependiente (retención UI)
+    // ==========================================================
     public function updatedEntidadId($value): void
     {
         $this->resetErrorBag('entidad_id,proyecto_id');
         $this->resetValidation('entidad_id', 'proyecto_id');
-
-        if (!$value) {
-            $this->proyecto_id = '';
-            $this->retencion_porcentaje = 0;
-            $this->recalcularRetencionUI();
-            return;
-        }
 
         $this->proyecto_id = '';
         $this->retencion_porcentaje = 0;
@@ -269,7 +326,9 @@ class Facturas extends Component
         $this->monto_neto = max(0, round($monto - $ret, 2));
     }
 
+    // ==========================================================
     // PAGOS
+    // ==========================================================
     public function openPago(int $facturaId): void
     {
         $this->resetErrorBag();
@@ -367,7 +426,6 @@ class Facturas extends Component
 
         $facturado = (float) $factura->monto_facturado;
         $retTotal = (float) ($factura->retencion ?? 0);
-
         $neto = max(0, round($facturado - $retTotal, 2));
 
         $pagadoNormal = (float) $factura->pagos->where('tipo', 'normal')->sum('monto');
@@ -384,7 +442,6 @@ class Facturas extends Component
                 );
                 return;
             }
-
             if ($montoIngresado > $saldoNormal) {
                 $this->addError(
                     'monto',
@@ -398,7 +455,6 @@ class Facturas extends Component
                 $this->addError('monto', 'No existe retención pendiente para pagar.');
                 return;
             }
-
             if ($montoIngresado > $retPendiente) {
                 $this->addError(
                     'monto',
@@ -419,7 +475,6 @@ class Facturas extends Component
             'nro_operacion' => $this->nro_operacion,
             'observacion' => $this->observacion,
 
-            // Snapshot destino
             'destino_banco_nombre_snapshot' => $banco?->nombre,
             'destino_numero_cuenta_snapshot' => $banco?->numero_cuenta,
             'destino_moneda_snapshot' => $banco?->moneda,
@@ -432,7 +487,9 @@ class Facturas extends Component
         $this->resetPage();
     }
 
+    // ==========================================================
     // ELIMINAR PAGO (SweetAlert)
+    // ==========================================================
     public function confirmDeletePago(int $pagoId): void
     {
         if (!auth()->user()->can('facturas.pay')) {
@@ -452,7 +509,6 @@ class Facturas extends Component
 
         $info = "Se eliminará el pago de {$montoLabel} asociado a la Factura Nro. {$facturaLabel}. Esta acción no se puede deshacer.";
 
-        // Dispara SweetAlert en el frontend
         $this->dispatch('swal:delete-pago', id: $pago->id, info: $info);
     }
 
@@ -467,7 +523,6 @@ class Facturas extends Component
             ->with(['factura.proyecto'])
             ->findOrFail($id);
 
-        // Multi-empresa: el pago pertenece a una factura cuyo proyecto debe ser de la empresa del usuario (si no es root)
         if (
             !$this->isRoot() &&
             $this->empresaId() &&
@@ -477,19 +532,41 @@ class Facturas extends Component
         }
 
         $pago->delete();
-
         session()->flash('success', 'Pago eliminado correctamente.');
     }
+    public function updatingF_pago(): void
+    {
+        $this->resetPage();
+    }
 
-    // Render
+    // ==========================================================
+    // RENDER (BUSCAR + PERPAGE + PENDIENTE)
+    // ==========================================================
     public function render()
     {
-        $facturasQuery = Factura::query()
-            ->with([
-                'proyecto.entidad',
-                'pagos' => fn($q) => $q->orderBy('fecha_pago', 'asc'),
-                'pagos.banco',
+        // 1) Base con subselects (pagado_normal / pagado_retencion)
+        $base = Factura::query()
+            ->select([
+                'facturas.id',
+                'facturas.proyecto_id',
+                'facturas.numero',
+                'facturas.fecha_emision',
+                'facturas.monto_facturado',
+                'facturas.retencion',
+                'facturas.active',
             ])
+            ->selectSub(function ($q) {
+                $q->from('factura_pagos')
+                    ->selectRaw('COALESCE(SUM(monto),0)')
+                    ->whereColumn('factura_pagos.factura_id', 'facturas.id')
+                    ->where('tipo', 'normal');
+            }, 'pagado_normal')
+            ->selectSub(function ($q) {
+                $q->from('factura_pagos')
+                    ->selectRaw('COALESCE(SUM(monto),0)')
+                    ->whereColumn('factura_pagos.factura_id', 'facturas.id')
+                    ->where('tipo', 'retencion');
+            }, 'pagado_retencion')
             ->when(!$this->isRoot() && $this->empresaId(), function ($q) {
                 $empresaId = $this->empresaId();
                 $q->whereHas('proyecto', fn($qq) => $qq->where('empresa_id', $empresaId));
@@ -504,20 +581,125 @@ class Facturas extends Component
                             fn($q3) => $q3->where('nombre', 'like', $s),
                         );
                 });
-            })
-            ->when(
-                $this->status !== 'all',
-                fn($q) => $q->where('active', $this->status === 'active'),
-            )
-            ->orderByDesc('id');
+            });
 
-        $facturas = $facturasQuery->paginate($this->perPage);
+        // 2) Subquery para filtrar por alias
+        $q = DB::query()->fromSub($base, 't');
 
+        $netoExpr = '(COALESCE(t.monto_facturado,0) - COALESCE(t.retencion,0))';
+        $saldoExpr = "GREATEST(0, ROUND({$netoExpr} - COALESCE(t.pagado_normal,0), 2))";
+        $retPendExpr =
+            'GREATEST(0, ROUND(COALESCE(t.retencion,0) - COALESCE(t.pagado_retencion,0), 2))';
+
+        // ======================================================
+        // ✅ FILTRO: PAGO (OR dentro del grupo)
+        // ======================================================
+        $fPago = $this->f_pago ?? [];
+        if (!empty($fPago)) {
+            $q->where(function ($w) use ($fPago, $netoExpr) {
+                foreach ($fPago as $estado) {
+                    // Pendiente: no pagó nada normal todavía
+                    if ($estado === 'pendiente') {
+                        $w->orWhereRaw("{$netoExpr} > 0 AND COALESCE(t.pagado_normal,0) <= 0");
+                    }
+
+                    // Parcial: pagó algo, pero no llega al neto
+                    if ($estado === 'parcial') {
+                        $w->orWhereRaw("{$netoExpr} > 0
+                        AND COALESCE(t.pagado_normal,0) > 0
+                        AND COALESCE(t.pagado_normal,0) < {$netoExpr}");
+                    }
+
+                    // Pagada (Neto): pagado_normal >= neto  (o neto <= 0 por seguridad)
+                    if ($estado === 'pagada_neto') {
+                        $w->orWhereRaw(
+                            "{$netoExpr} <= 0 OR COALESCE(t.pagado_normal,0) >= {$netoExpr}",
+                        );
+                    }
+                }
+            });
+        }
+
+        // ======================================================
+        // ✅ FILTRO: RETENCIÓN (OR dentro del grupo)
+        // ======================================================
+        $fRet = $this->f_retencion ?? [];
+        if (!empty($fRet)) {
+            $q->where(function ($w) use ($fRet, $retPendExpr) {
+                foreach ($fRet as $estado) {
+                    // Sin retención: retencion_total = 0
+                    if ($estado === 'sin_retencion') {
+                        $w->orWhereRaw('COALESCE(t.retencion,0) <= 0');
+                    }
+
+                    // Retención pendiente: retencion_total > 0 y aún queda por pagar
+                    if ($estado === 'retencion_pendiente') {
+                        $w->orWhereRaw("COALESCE(t.retencion,0) > 0 AND {$retPendExpr} > 0");
+                    }
+
+                    // Retención pagada: retencion_total > 0 y pendiente = 0
+                    if ($estado === 'retencion_pagada') {
+                        $w->orWhereRaw("COALESCE(t.retencion,0) > 0 AND {$retPendExpr} <= 0");
+                    }
+                }
+            });
+        }
+
+        // ======================================================
+        // ✅ FILTRO: ESTADO GLOBAL (OR dentro del grupo)
+        // ======================================================
+        $fEstado = $this->f_cerrada ?? [];
+        if (!empty($fEstado)) {
+            $q->where(function ($w) use ($fEstado, $saldoExpr, $retPendExpr) {
+                foreach ($fEstado as $estado) {
+                    // Cerrada: saldo normal = 0 y retención pendiente = 0
+                    if ($estado === 'cerrada') {
+                        $w->orWhereRaw("{$saldoExpr} <= 0 AND {$retPendExpr} <= 0");
+                    }
+
+                    // Abierta: saldo normal > 0 o retención pendiente > 0
+                    if ($estado === 'abierta') {
+                        $w->orWhereRaw("{$saldoExpr} > 0 OR {$retPendExpr} > 0");
+                    }
+                }
+            });
+        }
+
+        // 3) Paginar IDs y cargar modelos con relaciones
+        $idsPaginator = $q->select('t.id')->orderByDesc('t.id')->paginate($this->perPage);
+
+        // ✅ Si el filtro deja menos páginas y caes en una página inexistente, vuelve a la 1
+        if ($idsPaginator->isEmpty() && $idsPaginator->currentPage() > 1) {
+            $this->resetPage();
+            $idsPaginator = $q->select('t.id')->orderByDesc('t.id')->paginate($this->perPage);
+        }
+
+        $ids = $idsPaginator->getCollection()->pluck('id')->all();
+
+        $facturasModels = collect();
+        if (!empty($ids)) {
+            $rows = Factura::query()
+                ->with([
+                    'proyecto.entidad',
+                    'pagos' => fn($qq) => $qq->orderBy('fecha_pago', 'asc'),
+                    'pagos.banco',
+                ])
+                ->whereIn('id', $ids)
+                ->get()
+                ->keyBy('id');
+
+            // Mantener orden del paginador
+            $facturasModels = collect($ids)->map(fn($id) => $rows->get($id))->filter()->values();
+        }
+
+        $idsPaginator->setCollection($facturasModels);
+
+        // 4) Listas auxiliares para modales
         $bancos = Banco::query()
             ->where('active', true)
             ->when(
                 !$this->isRoot() && $this->empresaId(),
-                fn($q) => $q->where('empresa_id', $this->empresaId()),
+                fn($qq) => $qq->where('empresa_id', $this->empresaId()),
             )
             ->orderBy('nombre')
             ->get();
@@ -526,7 +708,7 @@ class Facturas extends Component
             ->where('active', true)
             ->when(
                 !$this->isRoot() && $this->empresaId(),
-                fn($q) => $q->where('empresa_id', $this->empresaId()),
+                fn($qq) => $qq->where('empresa_id', $this->empresaId()),
             )
             ->orderBy('nombre')
             ->get();
@@ -535,14 +717,14 @@ class Facturas extends Component
             ->where('active', true)
             ->when(
                 !$this->isRoot() && $this->empresaId(),
-                fn($q) => $q->where('empresa_id', $this->empresaId()),
+                fn($qq) => $qq->where('empresa_id', $this->empresaId()),
             )
-            ->when($this->entidad_id, fn($q) => $q->where('entidad_id', $this->entidad_id))
+            ->when($this->entidad_id, fn($qq) => $qq->where('entidad_id', $this->entidad_id))
             ->orderBy('nombre')
             ->get();
 
         return view('livewire.admin.facturas', [
-            'facturas' => $facturas,
+            'facturas' => $idsPaginator,
             'bancos' => $bancos,
             'entidades' => $entidades,
             'proyectos' => $proyectos,

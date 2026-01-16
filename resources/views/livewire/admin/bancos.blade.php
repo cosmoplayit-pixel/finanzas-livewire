@@ -123,8 +123,18 @@
                     </div>
 
                     <div class="flex justify-between gap-3">
+                        <span class="font-medium">Titular:</span>
+                        <span class="truncate">{{ $b->titular ?? '—' }}</span>
+                    </div>
+
+                    <div class="flex justify-between gap-3">
                         <span class="font-medium">Cuenta:</span>
                         <span class="truncate">{{ $b->numero_cuenta ?? '—' }}</span>
+                    </div>
+
+                    <div class="flex justify-between gap-3">
+                        <span class="font-medium">Monto:</span>
+                        <span class="truncate">{{ number_format((float) ($b->monto ?? 0), 2, ',', '.') }}</span>
                     </div>
 
                     <div class="flex justify-between gap-3">
@@ -139,7 +149,7 @@
                         @can('bancos.update')
                             <button wire:click="openEdit({{ $b->id }})"
                                 class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                       dark:border-neutral-700 dark:hover:bg-neutral-800">
+                                   dark:border-neutral-700 dark:hover:bg-neutral-800">
                                 Editar
                             </button>
                         @endcan
@@ -147,14 +157,14 @@
                         @can('bancos.toggle')
                             <button type="button"
                                 wire:click="$dispatch('swal:toggle-active-banco', {
-                                    id: {{ $b->id }},
-                                    active: @js($b->active),
-                                    name: @js($b->nombre)
-                                })"
+                                id: {{ $b->id }},
+                                active: @js($b->active),
+                                name: @js($b->nombre)
+                            })"
                                 class="w-full px-3 py-1 rounded text-sm font-medium
-                                {{ $b->active
-                                    ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
-                                    : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+                            {{ $b->active
+                                ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                                : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
                                 {{ $b->active ? 'Desactivar' : 'Activar' }}
                             </button>
                         @endcan
@@ -167,6 +177,7 @@
             </div>
         @endforelse
     </div>
+
     {{-- TABLET + DESKTOP: TABLA (sin ocultar columnas) --}}
     <div class="hidden md:block border rounded bg-white dark:bg-neutral-800 overflow-hidden">
         <table class="w-full table-fixed text-sm">
@@ -175,7 +186,7 @@
                 class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-200">
                 <tr class="text-left">
 
-                    <th class="w-[70Px] text-center p-2 cursor-pointer select-none whitespace-nowrap"
+                    <th class="w-[70px] text-center p-2 cursor-pointer select-none whitespace-nowrap"
                         wire:click="sortBy('id')">
                         ID
                         @if ($sortField === 'id')
@@ -191,7 +202,15 @@
                         @endif
                     </th>
 
-                    <th class="w-[100Px] p-2 cursor-pointer select-none whitespace-nowrap"
+                    <th class="w-[220px] p-2 cursor-pointer select-none whitespace-nowrap"
+                        wire:click="sortBy('titular')">
+                        Titular
+                        @if ($sortField === 'titular')
+                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                        @endif
+                    </th>
+
+                    <th class="w-[180px] p-2 cursor-pointer select-none whitespace-nowrap"
                         wire:click="sortBy('numero_cuenta')">
                         Nro. Cuenta
                         @if ($sortField === 'numero_cuenta')
@@ -199,15 +218,21 @@
                         @endif
                     </th>
 
-                    <th class="w-[100Px] p-2 cursor-pointer select-none whitespace-nowrap"
-                        wire:click="sortBy('moneda')">
+                    <th class="w-[130px] p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('monto')">
+                        Monto
+                        @if ($sortField === 'monto')
+                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                        @endif
+                    </th>
+
+                    <th class="w-[90px] p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('moneda')">
                         Moneda
                         @if ($sortField === 'moneda')
                             {{ $sortDirection === 'asc' ? '▲' : '▼' }}
                         @endif
                     </th>
 
-                    <th class="w-[100px] text-center p-2 cursor-pointer select-none whitespace-nowrap"
+                    <th class="w-[110px] text-center p-2 cursor-pointer select-none whitespace-nowrap"
                         wire:click="sortBy('active')">
                         Estado
                         @if ($sortField === 'active')
@@ -216,7 +241,7 @@
                     </th>
 
                     @canany(['bancos.update', 'bancos.toggle'])
-                        <th class="w-[100px] p-2 whitespace-nowrap text-center">
+                        <th class="w-[110px] p-2 whitespace-nowrap text-center">
                             Acciones
                         </th>
                     @endcanany
@@ -239,11 +264,23 @@
                             </span>
                         </td>
 
+                        {{-- Titular --}}
+                        <td class="p-2 min-w-0">
+                            <span class="block truncate max-w-full" title="{{ $b->titular ?? '-' }}">
+                                {{ $b->titular ?? '-' }}
+                            </span>
+                        </td>
+
                         {{-- Nro. Cuenta --}}
                         <td class="p-2 whitespace-nowrap">
                             <span class="block truncate max-w-full" title="{{ $b->numero_cuenta ?? '-' }}">
                                 {{ $b->numero_cuenta ?? '-' }}
                             </span>
+                        </td>
+
+                        {{-- Monto --}}
+                        <td class="p-2 whitespace-nowrap text-right tabular-nums">
+                            {{ number_format((float) ($b->monto ?? 0), 2, ',', '.') }}
                         </td>
 
                         {{-- Moneda --}}
@@ -293,16 +330,15 @@
                                         {{ $b->active
                                             ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                                             : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-
                                             @if ($b->active)
-                                                {{-- Heroicon: eye-slash --}}
+                                                {{-- eye-slash --}}
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                     stroke-width="1.5" stroke="currentColor" class="size-4">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         d="M3 3l18 18M10.584 10.584A2.25 2.25 0 0012 14.25 2.25 2.25 0 0014.25 12c0-.5-.167-.96-.45-1.33M9.88 5.09 A9.715 9.715 0 0112 4.5c4.478 0 8.268 2.943 9.543 7.5 a9.66 9.66 0 01-2.486 3.95M6.18 6.18 C4.634 7.436 3.55 9.135 3 12 c1.275 4.557 5.065 7.5 9.543 7.5 1.79 0 3.487-.469 4.993-1.29" />
                                                 </svg>
                                             @else
-                                                {{-- Heroicon: eye --}}
+                                                {{-- eye --}}
                                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                     stroke-width="1.5" stroke="currentColor" class="size-4">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -320,8 +356,13 @@
                     </tr>
                 @empty
                     <tr>
+                        @php
+                            $colspan =
+                                7 +
+                                (auth()->user()->can('bancos.update') || auth()->user()->can('bancos.toggle') ? 1 : 0);
+                        @endphp
                         <td class="p-4 text-center text-gray-500 dark:text-neutral-400"
-                            colspan="{{ 5 + (auth()->user()->can('bancos.update') || auth()->user()->can('bancos.toggle') ? 1 : 0) }}">
+                            colspan="{{ $colspan }}">
                             Sin resultados.
                         </td>
                     </tr>
@@ -330,7 +371,6 @@
 
         </table>
     </div>
-
 
     {{-- PAGINACIÓN --}}
     <div>
@@ -381,7 +421,7 @@
 
                             {{-- Nombre --}}
                             <div>
-                                <label class="block text-sm mb-1">Nombre del Banco</label>
+                                <label class="block text-sm mb-1">Nombre del Banco:</label>
                                 <input wire:model="nombre" autocomplete="off"
                                     class="w-full rounded border px-3 py-2
                                        bg-white dark:bg-neutral-900
@@ -395,9 +435,25 @@
                                 @enderror
                             </div>
 
+                            {{-- Titular --}}
+                            <div>
+                                <label class="block text-sm mb-1">Titular de la Cuenta:</label>
+                                <input wire:model="titular" autocomplete="off"
+                                    class="w-full rounded border px-3 py-2
+                                       bg-white dark:bg-neutral-900
+                                       border-gray-300 dark:border-neutral-700
+                                       text-gray-900 dark:text-neutral-100
+                                       placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                                       focus:outline-none focus:ring-2
+                                       focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                                @error('titular')
+                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             {{-- Número de cuenta --}}
                             <div>
-                                <label class="block text-sm mb-1">Número de Cuenta</label>
+                                <label class="block text-sm mb-1">Número de Cuenta:</label>
                                 <input wire:model="numero_cuenta" autocomplete="off"
                                     class="w-full rounded border px-3 py-2
                                        bg-white dark:bg-neutral-900
@@ -411,9 +467,37 @@
                                 @enderror
                             </div>
 
+                            {{-- Monto (NO editable en editar) --}}
+                            <div>
+                                <label class="block text-sm mb-1">Monto:</label>
+
+                                <input type="text" inputmode="decimal" wire:model.lazy="monto_formatted"
+                                    placeholder="0,00" @disabled($bancoId) {{-- ✅ si existe bancoId = edit => deshabilita --}}
+                                    class="w-full rounded border px-3 py-2
+                                       bg-white dark:bg-neutral-900
+                                       border-gray-300 dark:border-neutral-700
+                                       text-gray-900 dark:text-neutral-100
+                                       placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                                       focus:outline-none focus:ring-2
+                                       focus:ring-gray-300 dark:focus:ring-neutral-700
+                                       disabled:bg-gray-100 disabled:dark:bg-neutral-800
+                                       disabled:opacity-80 disabled:cursor-not-allowed" />
+
+                                @error('monto')
+                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                                @enderror
+
+                                @if ($bancoId)
+                                    <div class="text-xs mt-1 text-gray-500 dark:text-neutral-400">
+                                        El monto inicial no se puede editar. Registra movimientos desde el módulo
+                                        correspondiente.
+                                    </div>
+                                @endif
+                            </div>
+
                             {{-- Moneda --}}
                             <div>
-                                <label class="block text-sm mb-1">Moneda</label>
+                                <label class="block text-sm mb-1">Moneda:</label>
                                 <select wire:model="moneda"
                                     class="w-full rounded border px-3 py-2
                                        bg-white dark:bg-neutral-900
@@ -429,7 +513,6 @@
                                     <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
-
                         </div>
 
                         {{-- Footer (sticky) --}}
@@ -455,5 +538,7 @@
             </div>
         @endif
     @endcanany
+
+
 
 </div>

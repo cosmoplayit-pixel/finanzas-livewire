@@ -16,6 +16,7 @@ class Banco extends Model
         'titular',
         'numero_cuenta',
         'moneda',
+        'monto',
         'tipo_cuenta',
         'active',
     ];

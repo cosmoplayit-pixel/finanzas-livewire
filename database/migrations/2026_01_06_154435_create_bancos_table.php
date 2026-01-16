@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->string('titular', 150)->nullable();
             $table->string('numero_cuenta', 50);
             $table->enum('moneda', ['BOB', 'USD']);
+            $table->decimal('monto', 15, 2)->default(0);
             $table->enum('tipo_cuenta', ['AHORRO', 'CORRIENTE'])->nullable();
             $table->boolean('active')->default(true);
             $table->timestamps();

@@ -42,6 +42,8 @@ class BancosSeeder extends Seeder
                         $banco['moneda'],
                         $empresa->id,
                     ),
+                    // Nuevo: monto inicial aleatorio
+                    'monto' => rand(1000, 10000),
 
                     'moneda' => $banco['moneda'],
 

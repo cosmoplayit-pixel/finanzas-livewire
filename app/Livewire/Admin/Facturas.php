@@ -18,6 +18,12 @@ class Facturas extends Component
     use WithPagination;
 
     // ==========================================================
+    // Filtro fecha (rango) - fecha_emision
+    // ==========================================================
+    public ?string $f_fecha_desde = null; // YYYY-MM-DD
+    public ?string $f_fecha_hasta = null; // YYYY-MM-DD
+
+    // ==========================================================
     // Filtros facturas (multi-select)
     // ==========================================================
     public array $f_pago = []; // ['pendiente','parcial','pagada_neto']
@@ -64,6 +70,12 @@ class Facturas extends Component
     public ?string $observacion = null;
     public ?string $fecha_pago = null;
 
+    public function mount(): void
+    {
+        // Por defecto: mostrar abiertas (pero el usuario puede marcar ambas)
+        $this->f_cerrada = ['abierta'];
+    }
+
     // ==========================================================
     // Helpers
     // ==========================================================
@@ -76,6 +88,40 @@ class Facturas extends Component
     protected function empresaId(): ?int
     {
         return auth()->user()?->empresa_id;
+    }
+
+    public function setFechaEsteAnio(): void
+    {
+        $this->f_fecha_desde = now()->startOfYear()->toDateString();
+        $this->f_fecha_hasta = now()->endOfYear()->toDateString();
+        $this->resetPage();
+    }
+
+    public function setFechaAnioPasado(): void
+    {
+        $this->f_fecha_desde = now()->subYear()->startOfYear()->toDateString();
+        $this->f_fecha_hasta = now()->subYear()->endOfYear()->toDateString();
+        $this->resetPage();
+    }
+
+    public function clearFecha(): void
+    {
+        $this->f_fecha_desde = null;
+        $this->f_fecha_hasta = null;
+        $this->resetPage();
+    }
+
+    // ==========================================================
+    // Reset paginación cuando cambies filtros de fecha
+    // ==========================================================
+    public function updatingFFechaDesde(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingFFechaHasta(): void
+    {
+        $this->resetPage();
     }
 
     // ==========================================================
@@ -581,6 +627,16 @@ class Facturas extends Component
                             fn($q3) => $q3->where('nombre', 'like', $s),
                         );
                 });
+            })
+
+            // ======================================================
+            // ✅ FILTRO: FECHA EMISIÓN (RANGO)
+            // ======================================================
+            ->when($this->f_fecha_desde, function ($q) {
+                $q->whereDate('facturas.fecha_emision', '>=', $this->f_fecha_desde);
+            })
+            ->when($this->f_fecha_hasta, function ($q) {
+                $q->whereDate('facturas.fecha_emision', '<=', $this->f_fecha_hasta);
             });
 
         // 2) Subquery para filtrar por alias

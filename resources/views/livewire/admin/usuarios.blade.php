@@ -1,6 +1,6 @@
 @section('title', 'Usuarios')
 
-<div class="p-0 md:p-6 space-y-4" :title="__('Dashboard')">
+<div class="p-0 md:p-6 space-y-4">
 
     @can('users.view')
         {{-- HEADER (RESPONSIVE PARA MOBILE) --}}
@@ -8,8 +8,11 @@
             <h1 class="text-2xl font-semibold">Usuarios</h1>
 
             @can('users.create')
-                <button wire:click="openCreate" class="w-full sm:w-auto px-4 py-2 rounded bg-black text-white hover:opacity-90">
-                    Nuevo Usuario
+                <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
+                    class="w-full sm:w-auto px-4 py-2 rounded bg-black text-white hover:bg-gray-800 hover:text-white transition-colors duration-150
+                     cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span wire:loading.remove wire:target="openCreate"> Nuevo Usuario </span>
+                    <span wire:loading wire:target="openCreate"> Abriendo… </span>
                 </button>
             @endcan
         </div>
@@ -35,7 +38,7 @@
             {{-- Selects --}}
             <div class="flex flex-col sm:flex-row gap-3 md:ml-auto w-full md:w-auto">
                 <select wire:model.live="status"
-                    class="w-full sm:w-auto
+                    class="cursor-pointer w-full sm:w-auto
                        border rounded px-3 py-2
                        bg-white text-gray-900 border-gray-300
                        dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
@@ -47,7 +50,7 @@
                 </select>
 
                 <select wire:model.live="perPage"
-                    class="w-full sm:w-auto
+                    class="cursor-pointer w-full sm:w-auto
                        border rounded px-3 py-2
                        bg-white text-gray-900 border-gray-300
                        dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
@@ -123,10 +126,23 @@
                             @else
                                 <div class="flex gap-2">
                                     @can('users.update')
-                                        <button wire:click="openEdit({{ $u->id }})"
-                                            class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                                   dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                            Editar
+                                        <button wire:click="openEdit({{ $u->id }})" wire:loading.attr="disabled"
+                                            wire:target="openEdit({{ $u->id }})"
+                                            class="w-full px-3 py-1 rounded border border-gray-300
+                                            cursor-pointer
+                                            hover:bg-gray-50
+                                            dark:border-neutral-700 dark:hover:bg-neutral-800
+                                            disabled:opacity-50 disabled:cursor-not-allowed">
+
+                                            {{-- Texto normal --}}
+                                            <span wire:loading.remove wire:target="openEdit({{ $u->id }})">
+                                                Editar
+                                            </span>
+
+                                            {{-- Texto loading --}}
+                                            <span wire:loading wire:target="openEdit({{ $u->id }})">
+                                                Abriendo…
+                                            </span>
                                         </button>
                                     @endcan
 
@@ -228,7 +244,8 @@
                             $isRoot = (bool) ($u->is_root ?? false);
                         @endphp
 
-                        <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
+                        <tr wire:key="{{ $u->id }}"
+                            class="max-w-[50px] hover:bg-gray-100 dark:hover:bg-neutral-900">
                             <td class="p-3 whitespace-nowrap">{{ $u->id }}</td>
 
                             {{-- Nombre --}}
@@ -240,14 +257,14 @@
 
                             {{-- Email --}}
                             <td class="p-3 hidden lg:table-cell">
-                                <span class="block max-w-[260px] truncate" title="{{ $u->email }}">
+                                <span class="block max-w-[250px] truncate" title="{{ $u->email }}">
                                     {{ $u->email }}
                                 </span>
                             </td>
 
                             {{-- Empresa --}}
                             <td class="p-3">
-                                <span class="block max-w-[180px] lg:max-w-[260px] truncate"
+                                <span class="block max-w-[150px] lg:max-w-[260px] truncate"
                                     title="{{ $u->empresa?->nombre ?? 'Admin global' }}">
                                     {{ $u->empresa?->nombre ?? '—' }}
                                 </span>
@@ -287,11 +304,23 @@
                                     @else
                                         <div class="flex items-center gap-2">
                                             @can('users.update')
-                                                <button wire:click="openEdit({{ $u->id }})"
-                                                    class="px-3 py-1 cursor-pointer rounded border border-gray-300
-                                                           hover:bg-gray-50
-                                                           dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                                    Editar
+                                                <button wire:click="openEdit({{ $u->id }})" wire:loading.attr="disabled"
+                                                    wire:target="openEdit({{ $u->id }})"
+                                                    class="w-full px-3 py-1 rounded border border-gray-300
+                                                    cursor-pointer
+                                                    hover:bg-gray-50
+                                                    dark:border-neutral-700 dark:hover:bg-neutral-800
+                                                    disabled:opacity-50 disabled:cursor-not-allowed">
+
+                                                    {{-- Texto normal --}}
+                                                    <span wire:loading.remove wire:target="openEdit({{ $u->id }})">
+                                                        Editar
+                                                    </span>
+
+                                                    {{-- Texto loading --}}
+                                                    <span wire:loading wire:target="openEdit({{ $u->id }})">
+                                                        Abriendo…
+                                                    </span>
                                                 </button>
                                             @endcan
 
@@ -335,196 +364,237 @@
             {{ $users->links() }}
         </div>
 
-        {{-- INICIO - MODAL --}}
-        @if ($openModal)
-            @canany(['users.create', 'users.update'])
-                <div wire:key="usuarios-modal" class="fixed inset-0 z-50">
-                    {{-- Backdrop --}}
-                    <div class="absolute inset-0 bg-black/50 dark:bg-black/70" wire:click="closeModal"></div>
-
-                    {{-- Dialog --}}
-                    <div class="relative h-full w-full flex items-end sm:items-center justify-center p-0 sm:p-4">
-                        <div
-                            class="
-                            w-full
-                            h-[100dvh] sm:h-auto
-                            sm:max-h-[90vh]
-                            sm:max-w-xl md:max-w-2xl
-                            bg-white dark:bg-neutral-900
-                            text-gray-700 dark:text-neutral-200
-                            border border-gray-200 dark:border-neutral-800
-                            rounded-none sm:rounded-xl
-                            overflow-hidden
-                            shadow-xl
-                        ">
-                            {{-- Header (sticky) --}}
-                            <div
-                                class="sticky top-0 z-10 px-5 py-4 flex justify-between items-center
-                                        bg-gray-50 dark:bg-neutral-900
-                                        border-b border-gray-200 dark:border-neutral-800">
-                                <h2 class="text-lg font-semibold text-gray-900 dark:text-neutral-100">
-                                    {{ $userId ? 'Editar Usuario' : 'Nuevo Usuario' }}
-                                </h2>
-
-                                <button type="button" wire:click="closeModal"
-                                    class="inline-flex items-center justify-center size-9 rounded-md
-                                           text-gray-500 hover:text-gray-900 hover:bg-gray-100
-                                           dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800">
-                                    ✕
-                                </button>
-                            </div>
-
-                            {{-- Body (scroll) --}}
-                            <div class="p-5 space-y-4 overflow-y-auto
-                                    h-[calc(100dvh-64px-76px)] sm:h-auto sm:max-h-[calc(90vh-64px-76px)]"
-                                x-data="{ isAdmin: (@entangle('role').live === 'Administrador') }" x-effect="isAdmin = (@entangle('role').live === 'Administrador')">
-
-                                {{-- Nombre --}}
-                                <div>
-                                    <label class="block text-sm mb-1">Nombre</label>
-                                    <input wire:model="name" autocomplete="off"
-                                        class="w-full rounded border px-3 py-2
-                                           bg-white dark:bg-neutral-900
-                                           border-gray-300 dark:border-neutral-700
-                                           text-gray-900 dark:text-neutral-100
-                                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                           focus:outline-none focus:ring-2
-                                           focus:ring-gray-300 dark:focus:ring-neutral-700">
-                                    @error('name')
-                                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- Trucos anti-autocomplete --}}
-                                <input type="text" name="fake_email" autocomplete="username" style="display:none">
-                                <input type="password" name="fake_password" autocomplete="current-password"
-                                    style="display:none">
-
-                                {{-- Email --}}
-                                <div>
-                                    <label class="block text-sm mb-1">Email</label>
-                                    <input wire:model="email" type="email" name="email" autocomplete="off"
-                                        autocapitalize="off" spellcheck="false" inputmode="email"
-                                        class="w-full rounded border px-3 py-2
-                                           bg-white dark:bg-neutral-900
-                                           border-gray-300 dark:border-neutral-700
-                                           text-gray-900 dark:text-neutral-100
-                                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                           focus:outline-none focus:ring-2
-                                           focus:ring-gray-300 dark:focus:ring-neutral-700">
-                                    @error('email')
-                                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- Rol --}}
-                                @can('users.assign_role')
-                                    <div>
-                                        <label class="block text-sm mb-1">Rol</label>
-                                        <select wire:model.live="role"
-                                            class="w-full rounded border px-3 py-2
-                                               bg-white dark:bg-neutral-900
-                                               border-gray-300 dark:border-neutral-700
-                                               text-gray-900 dark:text-neutral-100
-                                               focus:outline-none focus:ring-2
-                                               focus:ring-gray-300 dark:focus:ring-neutral-700">
-                                            <option value="">-- Seleccione --</option>
-                                            @foreach ($roles as $r)
-                                                <option value="{{ $r }}">{{ $r }}</option>
-                                            @endforeach
-                                        </select>
-                                        @error('role')
-                                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-                                @endcan
-
-                                {{-- Empresa (OCULTAR si es Administrador) --}}
-                                @if ($role !== 'Administrador')
-                                    <div>
-                                        <label class="block text-sm mb-1">Empresa</label>
-                                        <select wire:model.live="empresa_id"
-                                            class="w-full rounded border px-3 py-2
-                                               bg-white dark:bg-neutral-900
-                                               border-gray-300 dark:border-neutral-700
-                                               text-gray-900 dark:text-neutral-100
-                                               focus:outline-none focus:ring-2
-                                               focus:ring-gray-300 dark:focus:ring-neutral-700">
-                                            <option value="">-- Seleccione --</option>
-                                            @foreach ($empresas as $emp)
-                                                <option value="{{ $emp->id }}">{{ $emp->nombre }}</option>
-                                            @endforeach
-                                        </select>
-
-                                        @error('empresa_id')
-                                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                        @enderror
-
-                                        <p class="text-xs text-gray-500 dark:text-neutral-400 mt-1">
-                                            Para roles distintos de Administrador, la empresa es obligatoria.
-                                        </p>
-                                    </div>
-                                @endif
-
-                                {{-- Password --}}
-                                <div class="pt-3 border-t border-gray-200 dark:border-neutral-800">
-                                    <label class="block text-sm mb-1">
-                                        {{ $userId ? 'Nueva contraseña (opcional)' : 'Contraseña' }}
-                                    </label>
-                                    <input wire:model="password" type="password" autocomplete="new-password"
-                                        class="w-full rounded border px-3 py-2
-                                           bg-white dark:bg-neutral-900
-                                           border-gray-300 dark:border-neutral-700
-                                           text-gray-900 dark:text-neutral-100
-                                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                           focus:outline-none focus:ring-2
-                                           focus:ring-gray-300 dark:focus:ring-neutral-700">
-                                    @error('password')
-                                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                {{-- Confirmación --}}
-                                <div>
-                                    <label class="block text-sm mb-1">Confirmar contraseña</label>
-                                    <input wire:model="password_confirmation" type="password" autocomplete="new-password"
-                                        class="w-full rounded border px-3 py-2
-                                           bg-white dark:bg-neutral-900
-                                           border-gray-300 dark:border-neutral-700
-                                           text-gray-900 dark:text-neutral-100
-                                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                           focus:outline-none focus:ring-2
-                                           focus:ring-gray-300 dark:focus:ring-neutral-700">
-                                </div>
-                            </div>
-
-                            {{-- Footer (sticky) --}}
-                            <div
-                                class="sticky bottom-0 z-10 px-5 py-4 flex gap-2
-                                        bg-gray-50 dark:bg-neutral-900
-                                        border-t border-gray-200 dark:border-neutral-800">
-                                <button wire:click="closeModal"
-                                    class="w-1/2 px-4 py-2 rounded border
-                                           border-gray-300 dark:border-neutral-700
-                                           text-gray-700 dark:text-neutral-200
-                                           hover:bg-gray-100 dark:hover:bg-neutral-800">
-                                    Cancelar
-                                </button>
-
-                                <button wire:click="save"
-                                    class="w-1/2 px-4 py-2 rounded
-                                           bg-gray-900 text-white hover:opacity-90
-                                           dark:bg-white dark:text-black">
-                                    {{ $userId ? 'Actualizar' : 'Guardar' }}
-                                </button>
-                            </div>
-
-                        </div>
+        {{-- INICIO - MODAL (reutilizando x-ui.modal) --}}
+        @canany(['users.create', 'users.update'])
+            <x-ui.modal model="openModal" :title="$userId ? 'Editar Usuario' : 'Nuevo Usuario'" maxWidth="md:max-w-2xl" onClose="closeModal">
+                {{-- BODY --}}
+                <div x-data="{ isAdmin: (@entangle('role').live === 'Administrador') }" x-effect="isAdmin = (@entangle('role').live === 'Administrador')"
+                    class="space-y-4">
+                    {{-- Nombre --}}
+                    <div>
+                        <label class="block text-sm mb-1">
+                            Nombre <span class="text-red-500">*</span>
+                        </label>
+                        <input wire:model="name" autocomplete="off" placeholder="Ej: Juan Pérez"
+                            class="w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700">
+                        @error('name')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
                     </div>
+
+                    {{-- Trucos anti-autocomplete --}}
+                    <input type="text" name="fake_email" autocomplete="username" style="display:none">
+                    <input type="password" name="fake_password" autocomplete="current-password" style="display:none">
+
+                    {{-- Email --}}
+                    <div>
+                        <label class="block text-sm mb-1">
+                            Email <span class="text-red-500">*</span>
+                        </label>
+                        <input wire:model="email" type="email" name="email" autocomplete="off" autocapitalize="off"
+                            spellcheck="false" inputmode="email" placeholder="Ej: usuario@dominio.com"
+                            class="w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700">
+                        @error('email')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Rol --}}
+                    @can('users.assign_role')
+                        <div>
+                            <label class="block text-sm mb-1">
+                                Rol <span class="text-red-500">*</span>
+                            </label>
+                            <select wire:model.live="role"
+                                class="cursor-pointer w-full rounded border px-3 py-2
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2
+                               focus:ring-gray-300 dark:focus:ring-neutral-700">
+                                <option value="">-- Seleccione --</option>
+                                @foreach ($roles as $r)
+                                    <option value="{{ $r }}">{{ $r }}</option>
+                                @endforeach
+                            </select>
+                            @error('role')
+                                <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    @endcan
+
+                    {{-- Empresa (OBLIGATORIA si NO es Administrador) --}}
+                    @if ($role !== 'Administrador')
+                        <div>
+                            <label class="block text-sm mb-1">
+                                Empresa <span class="text-red-500">*</span>
+                            </label>
+                            <select wire:model.live="empresa_id"
+                                class="cursor-pointer w-full rounded border px-3 py-2
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2
+                               focus:ring-gray-300 dark:focus:ring-neutral-700">
+                                <option value="">-- Seleccione --</option>
+                                @foreach ($empresas as $emp)
+                                    <option value="{{ $emp->id }}">{{ $emp->nombre }}</option>
+                                @endforeach
+                            </select>
+
+                            @error('empresa_id')
+                                <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+
+                            <p class="text-xs text-gray-500 dark:text-neutral-400 mt-1">
+                                Para roles distintos de Administrador, la empresa es obligatoria.
+                            </p>
+                        </div>
+                    @endif
+
+                    {{-- Password --}}
+                    <div x-data="{ show: false }" class="pt-3 border-t border-gray-200 dark:border-neutral-800">
+                        <label class="block text-sm mb-1">
+                            {{ $userId ? 'Nueva contraseña (opcional)' : 'Contraseña' }}
+                            @if (!$userId)
+                                <span class="text-red-500">*</span>
+                            @endif
+                        </label>
+
+                        <div class="relative">
+                            <input :type="show ? 'text' : 'password'" wire:model="password" autocomplete="new-password"
+                                placeholder="{{ $userId ? 'Dejar vacío para mantener la contraseña actual' : 'Mínimo 8 caracteres' }}"
+                                class="w-full rounded border px-3 py-2 pr-10
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                               focus:outline-none focus:ring-2
+                               focus:ring-gray-300 dark:focus:ring-neutral-700">
+
+                            {{-- Ojo --}}
+                            <button type="button" @click="show = !show"
+                                class="absolute inset-y-0 right-0 px-3 flex items-center
+                               text-gray-500 dark:text-neutral-400
+                               hover:text-gray-700 dark:hover:text-neutral-200"
+                                tabindex="-1">
+                                {{-- Ojo cerrado --}}
+                                <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" class="cursor-pointer h-5 w-5"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 12s3.6-7 9-7 9 7 9 7-3.6 7-9 7-9-7-9-7z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+
+                                {{-- Ojo abierto --}}
+                                <svg x-show="show" x-cloak xmlns="http://www.w3.org/2000/svg" class="cursor-pointer h-5 w-5"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13.875 18.825A10.05 10.05 0 0112 19 c-5.4 0-9-7-9-7a18.9 18.9 0 014.125-4.825M9.9 4.5 A9.956 9.956 0 0112 4 c5.4 0 9 7 9 7 a18.9 18.9 0 01-4.2 4.9M15 12 a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        @error('password')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Confirmación --}}
+                    <div x-data="{ show: false }">
+                        <label class="block text-sm mb-1">
+                            Confirmar contraseña
+                            @if (!$userId)
+                                <span class="text-red-500">*</span>
+                            @endif
+                        </label>
+
+                        <div class="relative">
+                            <input :type="show ? 'text' : 'password'" wire:model="password_confirmation"
+                                autocomplete="new-password"
+                                placeholder="{{ $userId ? 'Solo si estás cambiando la contraseña' : 'Repite la contraseña' }}"
+                                class="w-full rounded border px-3 py-2 pr-10
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                               focus:outline-none focus:ring-2
+                               focus:ring-gray-300 dark:focus:ring-neutral-700">
+
+                            {{-- Ojo --}}
+                            <button type="button" @click="show = !show"
+                                class="absolute inset-y-0 right-0 px-3 flex items-center
+                               text-gray-500 dark:text-neutral-400
+                               hover:text-gray-700 dark:hover:text-neutral-200"
+                                tabindex="-1">
+                                {{-- Ojo cerrado --}}
+                                <svg x-show="!show" xmlns="http://www.w3.org/2000/svg" class="cursor-pointer h-5 w-5"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 12s3.6-7 9-7 9 7 9 7-3.6 7-9 7-9-7-9-7z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+
+                                {{-- Ojo abierto --}}
+                                <svg x-show="show" x-cloak xmlns="http://www.w3.org/2000/svg" class="cursor-pointer h-5 w-5"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13.875 18.825A10.05 10.05 0 0112 19 c-5.4 0-9-7-9-7a18.9 18.9 0 014.125-4.825M9.9 4.5 A9.956 9.956 0 0112 4 c5.4 0 9 7 9 7 a18.9 18.9 0 01-4.2 4.9M15 12 a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        @error('password_confirmation')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Nota de obligatorios --}}
+                    <p class="text-xs text-gray-500 dark:text-neutral-400 pt-2">
+                        <span class="text-red-500">*</span> Campos obligatorios.
+                    </p>
                 </div>
-            @endcanany
-        @endif
+
+                {{-- FOOTER --}}
+                @slot('footer')
+                    <button type="button" wire:click="closeModal"
+                        class="cursor-pointer px-4 py-2 rounded border border-gray-300 dark:border-neutral-700
+                       text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800">
+                        Cancelar
+                    </button>
+
+                    <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
+                        class="cursor-pointer px-4 py-2 rounded bg-gray-900 text-white hover:opacity-90
+                       dark:bg-white dark:text-black disabled:opacity-50 disabled:cursor-not-allowed">
+                        {{-- Texto normal --}}
+                        <span wire:loading.remove wire:target="save">
+                            {{ $userId ? 'Actualizar' : 'Guardar' }}
+                        </span>
+
+                        {{-- Texto loading --}}
+                        <span wire:loading wire:target="save">
+                            Guardando…
+                        </span>
+                    </button>
+                @endslot
+            </x-ui.modal>
+        @endcanany
         {{-- FIN - MODAL --}}
+
     @endcan
 
     @cannot('users.view')

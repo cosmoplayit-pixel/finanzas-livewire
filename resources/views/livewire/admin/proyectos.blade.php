@@ -146,34 +146,60 @@
                         <span>{{ $p->fecha_fin ? $p->fecha_fin->format('Y-m-d') : '—' }}</span>
                     </div>
                 </div>
-
                 {{-- Acciones --}}
                 @canany(['proyectos.update', 'proyectos.toggle'])
-                    <div class="mt-4 flex  gap-2">
+                    <div class="mt-4 flex gap-2">
+                        {{-- EDITAR (Livewire) --}}
                         @can('proyectos.update')
-                            <button wire:click="openEdit({{ $p->id }})"
-                                class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                       dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                Editar
+                            <button wire:click="openEdit({{ $p->id }})" wire:loading.attr="disabled"
+                                wire:target="openEdit({{ $p->id }})"
+                                class="w-full px-3 py-1 rounded border border-gray-300
+                       cursor-pointer
+                       hover:bg-gray-50
+                       dark:border-neutral-700 dark:hover:bg-neutral-800
+                       disabled:opacity-50 disabled:cursor-not-allowed">
+
+                                <span wire:loading.remove wire:target="openEdit({{ $p->id }})">
+                                    Editar
+                                </span>
+
+                                <span wire:loading wire:target="openEdit({{ $p->id }})">
+                                    Abriendo…
+                                </span>
                             </button>
                         @endcan
 
+                        {{-- TOGGLE ACTIVO (SweetAlert + Alpine loading) --}}
                         @can('proyectos.toggle')
-                            <button type="button"
-                                wire:click="$dispatch('swal:toggle-active-proyecto', {
+                            <button type="button" x-data="{ loading: false }"
+                                x-on:click="
+                                loading = true;
+                                $dispatch('swal:toggle-active-proyecto', {
                                     id: {{ $p->id }},
                                     active: @js($p->active),
                                     name: @js($p->nombre)
-                                })"
+                                });
+                            "
+                                x-on:swal:done.window="loading = false" x-bind:disabled="loading"
                                 class="w-full px-3 py-1 rounded text-sm font-medium
-                                {{ $p->active
-                                    ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
-                                    : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-                                {{ $p->active ? 'Desactivar' : 'Activar' }}
+                       cursor-pointer
+                       disabled:opacity-50 disabled:cursor-not-allowed
+                       {{ $p->active
+                           ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                           : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+
+                                <span x-show="!loading">
+                                    {{ $p->active ? 'Desactivar' : 'Activar' }}
+                                </span>
+
+                                <span x-show="loading" x-cloak>
+                                    Procesando…
+                                </span>
                             </button>
                         @endcan
                     </div>
                 @endcanany
+
             </div>
         @empty
             <div class="border rounded p-4 text-sm text-gray-600 dark:text-neutral-300 dark:border-neutral-800">
@@ -266,7 +292,8 @@
             </thead>
 
             @foreach ($proyectos as $p)
-                <tbody x-data="{ open: false }" class="divide-y divide-gray-200 dark:divide-neutral-200">
+                <tbody wire:key="{{ $p->id }}" x-data="{ open: false }"
+                    class="divide-y divide-gray-200 dark:divide-neutral-200">
                     <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
 
                         <td class="p-1 whitespace-nowrap text-center" x-data="{ showToggle: !window.matchMedia('(min-width: 1536px)').matches }" x-init="const mq = window.matchMedia('(min-width: 1536px)');
@@ -334,52 +361,94 @@
                         @canany(['proyectos.update', 'proyectos.toggle'])
                             <td class="p-2 whitespace-nowrap">
                                 <div class="flex items-center justify-center gap-2">
+                                    {{-- EDITAR (Livewire) --}}
                                     @can('proyectos.update')
-                                        <button wire:click="openEdit({{ $p->id }})"
-                                            class="cursor-pointer rounded dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        <button wire:click="openEdit({{ $p->id }})" wire:loading.attr="disabled"
+                                            wire:target="openEdit({{ $p->id }})" title="Editar proyecto"
+                                            aria-label="Editar proyecto"
+                                            class="cursor-pointer rounded p-1
+                           hover:bg-gray-100 dark:hover:bg-neutral-800
+                           disabled:opacity-50 disabled:cursor-not-allowed">
+
+                                            {{-- Ícono normal --}}
+                                            <svg wire:loading.remove wire:target="openEdit({{ $p->id }})"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                 stroke-width="1.5" stroke="currentColor" class="size-6">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
+
+                                            {{-- Loader --}}
+                                            <svg wire:loading wire:target="openEdit({{ $p->id }})"
+                                                class="size-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                    stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
+                                            </svg>
                                         </button>
                                     @endcan
 
+                                    {{-- TOGGLE ACTIVO (SweetAlert + Alpine loading) --}}
                                     @can('proyectos.toggle')
-                                        <button type="button"
+                                        <button type="button" x-data="{ loading: false }"
+                                            x-on:click="
+                                                loading = true;
+                                                $dispatch('swal:toggle-active-proyecto', {
+                                                    id: {{ $p->id }},
+                                                    active: @js($p->active),
+                                                    name: @js($p->nombre)
+                                                });
+                                            "
+                                            x-on:swal:done.window="loading = false" x-bind:disabled="loading"
                                             title="{{ $p->active ? 'Desactivar proyecto' : 'Activar proyecto' }}"
-                                            wire:click="$dispatch('swal:toggle-active-proyecto', {
-                                            id: {{ $p->id }},
-                                            active: @js($p->active),
-                                            name: @js($p->nombre)
-                                        })"
+                                            aria-label="{{ $p->active ? 'Desactivar proyecto' : 'Activar proyecto' }}"
                                             class="cursor-pointer inline-flex items-center justify-center size-8 rounded
-                                        {{ $p->active
-                                            ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
-                                            : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+                                            disabled:opacity-50 disabled:cursor-not-allowed
+                                            {{ $p->active
+                                                ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                                                : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
 
-                                            @if ($p->active)
-                                                {{-- Heroicon: eye-slash (Desactivar) --}}
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                    stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M3 3l18 18M10.584 10.584A2.25 2.25 0 0012 14.25 2.25 2.25 0 0014.25 12c0-.5-.167-.96-.45-1.33M9.88 5.09 A9.715 9.715 0 0112 4.5c4.478 0 8.268 2.943 9.543 7.5 a9.66 9.66 0 01-2.486 3.95M6.18 6.18 C4.634 7.436 3.55 9.135 3 12 c1.275 4.557 5.065 7.5 9.543 7.5 1.79 0 3.487-.469 4.993-1.29" />
+                                            {{-- Ícono normal --}}
+                                            <span x-show="!loading">
+                                                @if ($p->active)
+                                                    {{-- eye-slash --}}
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                        class="size-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M3 3l18 18M10.584 10.584A2.25 2.25 0 0012 14.25 2.25 2.25 0 0014.25 12c0-.5-.167-.96-.45-1.33M9.88 5.09 A9.715 9.715 0 0112 4.5c4.478 0 8.268 2.943 9.543 7.5 a9.66 9.66 0 01-2.486 3.95M6.18 6.18 C4.634 7.436 3.55 9.135 3 12 c1.275 4.557 5.065 7.5 9.543 7.5 1.79 0 3.487-.469 4.993-1.29" />
+                                                    </svg>
+                                                @else
+                                                    {{-- eye --}}
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                        class="size-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M2.036 12.322a1.012 1.012 0 010-.639 C3.423 7.51 7.36 4.5 12 4.5 c4.638 0 8.573 3.007 9.963 7.178 .07.207.07.431 0 .639 C20.577 16.49 16.64 19.5 12 19.5 c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                @endif
+                                            </span>
+
+                                            {{-- Loader --}}
+                                            <span x-show="loading" x-cloak>
+                                                <svg class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
                                                 </svg>
-                                            @else
-                                                {{-- Heroicon: eye (Activar) --}}
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                    stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M2.036 12.322a1.012 1.012 0 010-.639 C3.423 7.51 7.36 4.5 12 4.5 c4.638 0 8.573 3.007 9.963 7.178 .07.207.07.431 0 .639 C20.577 16.49 16.64 19.5 12 19.5 c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                </svg>
-                                            @endif
+                                            </span>
                                         </button>
                                     @endcan
                                 </div>
                             </td>
                         @endcanany
+
                     </tr>
 
                     {{-- ✅ Detalle expandible SOLO cuando NO es 2xl y con 4 columnas --}}
@@ -456,231 +525,187 @@
         {{ $proyectos->links() }}
     </div>
 
-    {{-- MODAL (solo create/update) --}}
+    {{-- MODAL PROYECTO (create / update) --}}
     @canany(['proyectos.create', 'proyectos.update'])
-        @if ($openModal)
-            <div wire:key="proyectos-modal" class="fixed inset-0 z-50">
-                {{-- Backdrop --}}
-                <div class="absolute inset-0 bg-black/50 dark:bg-black/70" wire:click="closeModal"></div>
+        <x-ui.modal wire:key="proyectos-modal" model="openModal" :title="$proyectoId ? 'Editar Proyecto' : 'Nuevo Proyecto'" maxWidth="sm:max-w-xl md:max-w-2xl"
+            onClose="closeModal">
+            {{-- BODY --}}
+            <div class="space-y-4">
+                {{-- Entidad (OBLIGATORIO) --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Entidad <span class="text-red-500">*</span>
+                    </label>
+                    <select wire:model="entidad_id"
+                        class="cursor-pointer w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700">
+                        <option value="">Seleccione...</option>
+                        @foreach ($entidades as $en)
+                            <option value="{{ $en->id }}" title="{{ $en->nombre }}">
+                                {{ $en->sigla ? $en->sigla . ' - ' : '' }}
+                                {{ \Illuminate\Support\Str::limit($en->nombre, 30) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('entidad_id')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
 
-                {{-- Dialog --}}
-                <div class="relative h-full w-full flex items-end sm:items-center justify-center p-0 sm:p-4">
-                    <div
-                        class="w-full
-                       h-[100dvh] sm:h-auto
-                       sm:max-h-[90vh]
-                       sm:max-w-xl md:max-w-2xl
-                       bg-white dark:bg-neutral-900
-                       text-gray-700 dark:text-neutral-200
-                       border border-gray-200 dark:border-neutral-800
-                       rounded-none sm:rounded-xl
-                       overflow-hidden shadow-xl">
+                {{-- Nombre (OBLIGATORIO) --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Nombre <span class="text-red-500">*</span>
+                    </label>
+                    <input wire:model="nombre" autocomplete="off" placeholder="Ej: Construcción oficina central"
+                        class="w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                    @error('nombre')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
 
-                        {{-- Header (sticky) --}}
-                        <div
-                            class="sticky top-0 z-10 px-5 py-4 flex justify-between items-center
-                           bg-gray-50 dark:bg-neutral-900
-                           border-b border-gray-200 dark:border-neutral-800">
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-neutral-100">
-                                {{ $proyectoId ? 'Editar Proyecto' : 'Nuevo Proyecto' }}
-                            </h2>
+                {{-- Código --}}
+                <div>
+                    <label class="block text-sm mb-1">Código</label>
+                    <input wire:model="codigo" autocomplete="off" placeholder="Ej: PRY-2026-001"
+                        class="w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                    @error('codigo')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
 
-                            <button type="button" wire:click="closeModal"
-                                class="inline-flex items-center justify-center size-9 rounded-md
-                               text-gray-500 hover:text-gray-900 hover:bg-gray-100
-                               dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800">
-                                ✕
-                            </button>
-                        </div>
+                {{-- Monto --}}
+                <div>
+                    <label class="block text-sm mb-1">Monto del Proyecto</label>
+                    <input type="number" step="0.01" min="0" wire:model.live="monto" placeholder="0.00"
+                        class="w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                    @error('monto')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
 
-                        {{-- Body (scroll) --}}
-                        <div
-                            class="p-5 space-y-4 overflow-y-auto
-                           h-[calc(100dvh-64px-76px)] sm:h-auto sm:max-h-[calc(90vh-64px-76px)]">
-
-                            {{-- Entidad --}}
-                            <div>
-                                <label class="block text-sm mb-1">Entidad</label>
-                                <select wire:model="entidad_id"
-                                    class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700">
-                                    <option value="">Seleccione...</option>
-                                    @foreach ($entidades as $en)
-                                        <option value="{{ $en->id }}" title="{{ $en->nombre }}">
-                                            {{ $en->sigla ? $en->sigla . ' - ' : '' }}
-                                            {{ \Illuminate\Support\Str::limit($en->nombre, 30) }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                @error('entidad_id')
-                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            {{-- Nombre --}}
-                            <div>
-                                <label class="block text-sm mb-1">Nombre</label>
-                                <input wire:model="nombre" autocomplete="off"
-                                    class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                                @error('nombre')
-                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            {{-- Código --}}
-                            <div>
-                                <label class="block text-sm mb-1">Código</label>
-                                <input wire:model="codigo" autocomplete="off"
-                                    class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                                @error('codigo')
-                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            {{-- Monto --}}
-                            <div>
-                                <label class="block text-sm mb-1">Monto del Proyecto</label>
-                                <input type="number" step="0.01" min="0" wire:model.live="monto"
-                                    class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                                @error('monto')
-                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            {{-- ✅ Retención --}}
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                <div>
-                                    <label class="block text-sm mb-1">Retención (%)</label>
-                                    <input type="number" step="0.01" min="0" max="100"
-                                        wire:model.live="retencion"
-                                        class="w-full rounded border px-3 py-2
-                                       bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700
-                                       text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2
-                                       focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                                    @error('retencion')
-                                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm mb-1">Monto retenido</label>
-                                    <input readonly
-                                        value="{{ number_format((float) $monto * ((float) ($retencion ?? 0) / 100), 2, ',', '.') }}"
-                                        class="w-full rounded border px-3 py-2
-                                       bg-gray-50 dark:bg-neutral-800
-                                       border-gray-200 dark:border-neutral-700
-                                       text-gray-700 dark:text-neutral-200" />
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm mb-1">Monto neto</label>
-                                    @php
-                                        $m = (float) $monto;
-                                        $r = (float) ($retencion ?? 0);
-                                        $retenido = $m * ($r / 100);
-                                        $neto = max(0, $m - $retenido);
-                                    @endphp
-                                    <input readonly value="{{ number_format($neto, 2, ',', '.') }}"
-                                        class="w-full rounded border px-3 py-2
-                                       bg-gray-50 dark:bg-neutral-800
-                                       border-gray-200 dark:border-neutral-700
-                                       text-gray-700 dark:text-neutral-200" />
-                                </div>
-                            </div>
-
-                            {{-- Fechas --}}
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-sm mb-1">Fecha inicio</label>
-                                    <input type="date" wire:model="fecha_inicio"
-                                        class="w-full rounded border px-3 py-2
-                                       bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700
-                                       text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2
-                                       focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                                    @error('fecha_inicio')
-                                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm mb-1">Fecha fin</label>
-                                    <input type="date" wire:model="fecha_fin"
-                                        class="w-full rounded border px-3 py-2
-                                       bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700
-                                       text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2
-                                       focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                                    @error('fecha_fin')
-                                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
-                            {{-- Descripción --}}
-                            <div>
-                                <label class="block text-sm mb-1">Descripción</label>
-                                <textarea wire:model="descripcion" rows="3"
-                                    class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700"></textarea>
-                                @error('descripcion')
-                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                        </div>
-
-                        {{-- Footer (sticky) --}}
-                        <div
-                            class="sticky bottom-0 px-5 py-4 flex justify-end gap-2
-                           bg-gray-50 dark:bg-neutral-900
-                           border-t border-gray-200 dark:border-neutral-800">
-                            <button wire:click="closeModal"
-                                class="px-4 py-2 rounded border
+                {{-- Retención --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-sm mb-1">Retención (%)</label>
+                        <input type="number" step="0.01" min="0" max="100" wire:model.live="retencion"
+                            placeholder="0"
+                            class="w-full rounded border px-3 py-2
+                               bg-white dark:bg-neutral-900
                                border-gray-300 dark:border-neutral-700
-                               text-gray-700 dark:text-neutral-200
-                               hover:bg-gray-100 dark:hover:bg-neutral-800">
-                                Cancelar
-                            </button>
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2
+                               focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                        @error('retencion')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                            <button wire:click="save" class="px-4 py-2 rounded bg-black text-white hover:opacity-90">
-                                {{ $proyectoId ? 'Actualizar' : 'Guardar' }}
-                            </button>
-                        </div>
+                    <div>
+                        <label class="block text-sm mb-1">Monto retenido</label>
+                        <input readonly
+                            value="{{ number_format((float) $monto * ((float) ($retencion ?? 0) / 100), 2, ',', '.') }}"
+                            class="w-full rounded border px-3 py-2
+                               bg-gray-50 dark:bg-neutral-800
+                               border-gray-200 dark:border-neutral-700
+                               text-gray-700 dark:text-neutral-200" />
+                    </div>
 
+                    <div>
+                        <label class="block text-sm mb-1">Monto neto</label>
+                        @php
+                            $m = (float) $monto;
+                            $r = (float) ($retencion ?? 0);
+                            $retenido = $m * ($r / 100);
+                            $neto = max(0, $m - $retenido);
+                        @endphp
+                        <input readonly value="{{ number_format($neto, 2, ',', '.') }}"
+                            class="w-full rounded border px-3 py-2
+                               bg-gray-50 dark:bg-neutral-800
+                               border-gray-200 dark:border-neutral-700
+                               text-gray-700 dark:text-neutral-200" />
                     </div>
                 </div>
+
+                {{-- Fechas --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm mb-1">Fecha inicio</label>
+                        <input type="date" wire:model="fecha_inicio"
+                            class="w-full rounded border px-3 py-2
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2
+                               focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                        @error('fecha_inicio')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm mb-1">Fecha fin</label>
+                        <input type="date" wire:model="fecha_fin"
+                            class="w-full rounded border px-3 py-2
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2
+                               focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                        @error('fecha_fin')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                {{-- Nota --}}
+                <p class="text-xs text-gray-500 dark:text-neutral-400 pt-1">
+                    <span class="text-red-500">*</span> Campos obligatorios.
+                </p>
             </div>
-        @endif
+
+            {{-- FOOTER --}}
+            @slot('footer')
+                <button type="button" wire:click="closeModal"
+                    class="px-4 py-2 rounded border cursor-pointer
+                       border-gray-300 dark:border-neutral-700
+                       text-gray-700 dark:text-neutral-200
+                       hover:bg-gray-100 dark:hover:bg-neutral-800">
+                    Cancelar
+                </button>
+
+                <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
+                    class="px-4 py-2 rounded cursor-pointer bg-black text-white hover:opacity-90
+                       disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span wire:loading.remove wire:target="save">
+                        {{ $proyectoId ? 'Actualizar' : 'Guardar' }}
+                    </span>
+                    <span wire:loading wire:target="save">
+                        Guardando…
+                    </span>
+                </button>
+            @endslot
+        </x-ui.modal>
     @endcanany
 </div>

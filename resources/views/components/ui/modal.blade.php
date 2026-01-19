@@ -1,9 +1,13 @@
 {{-- resources/views/components/ui/modal.blade.php --}}
 @props([
     'title' => 'Modal',
-    'show' => false,
+    'model' => null,
     'maxWidth' => 'md:max-w-2xl',
-    'onClose' => null, // método Livewire: closeFactura, closePago, etc.
+    'onClose' => null,
+
+    // ✅ NUEVO
+    'closeOnBackdrop' => true, // permitir o no cerrar al hacer click afuera
+    'busy' => false, // si está true, bloquea cierre (útil mientras guarda Livewire)
 ])
 
 @php
@@ -11,20 +15,35 @@
 @endphp
 
 <div x-data="{
-    open: @js($show),
+    open: @if ($model) @entangle($model).live @else false @endif,
+
     close() {
+        if (@js($busy)) return; // no cerrar si está busy
         this.open = false;
         @if ($closeJs) {!! $closeJs !!}; @endif
-    }
-}" x-effect="open = @js($show)" x-show="open" x-cloak
-    class="fixed inset-0 z-50" @keydown.escape.window="close()">
-    {{-- Backdrop --}}
-    <div class="absolute inset-0 bg-black/50 dark:bg-black/70" @click="close()"></div>
+    },
 
-    {{-- Wrapper (click fuera del panel = cerrar) --}}
-    <div class="relative h-full w-full flex items-end sm:items-center justify-center p-0 sm:p-4" @click.self="close()">
-        {{-- Panel --}}
-        <div @click.stop
+    setBodyLock(value) {
+        // bloquea el scroll del documento (mejor en mobile)
+        const el = document.documentElement;
+        if (value) el.classList.add('overflow-hidden');
+        else el.classList.remove('overflow-hidden');
+    },
+}" x-init="$watch('open', (v) => setBodyLock(v))" x-show="open" x-cloak class="fixed inset-0 z-50"
+    @keydown.escape.window="close()">
+    {{-- Backdrop (fade) --}}
+    <div class="absolute inset-0 bg-black/50 dark:bg-black/70" x-show="open" x-transition.opacity></div>
+
+    {{-- Wrapper --}}
+    <div class="relative h-full w-full flex items-end sm:items-center justify-center p-0 sm:p-4"
+        @mousedown="{{ $closeOnBackdrop ? 'close()' : '' }}">
+        {{-- Panel (scale + slide) --}}
+        <div @mousedown.stop @click.stop x-show="open" x-transition:enter="transition ease-out duration-150"
+            x-transition:enter-start="opacity-0 translate-y-2 sm:translate-y-0 sm:scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave="transition ease-in duration-120"
+            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+            x-transition:leave-end="opacity-0 translate-y-2 sm:translate-y-0 sm:scale-95"
             class="w-full
                    h-[100dvh] sm:h-auto
                    sm:max-h-[90vh]
@@ -43,11 +62,13 @@
                     {{ $title }}
                 </h2>
 
-                <button type="button" @click="close()"
-                    class="inline-flex items-center justify-center size-9 rounded-md
+                <button type="button" @click="close()" :disabled="@js($busy)"
+                    class="cursor-pointer inline-flex items-center justify-center size-9 rounded-md
                            text-gray-500 hover:text-gray-900 hover:bg-gray-200
                            dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800
-                           transition">
+                           transition
+                           disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Cerrar">
                     ✕
                 </button>
             </div>

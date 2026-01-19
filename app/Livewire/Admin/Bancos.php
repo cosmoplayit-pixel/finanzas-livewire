@@ -191,6 +191,8 @@ class Bancos extends Component
     // =========================
     public function openCreate(): void
     {
+        $this->resetErrorBag();
+        $this->resetValidation();
         $this->resetForm();
 
         if (!$this->isAdmin()) {
@@ -202,6 +204,8 @@ class Bancos extends Component
 
     public function openEdit(int $id): void
     {
+        $this->resetErrorBag();
+        $this->resetValidation();
         $b = Banco::findOrFail($id);
 
         if (!$this->isAdmin() && (int) $b->empresa_id !== (int) $this->userEmpresaId()) {

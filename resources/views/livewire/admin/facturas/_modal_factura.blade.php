@@ -1,5 +1,6 @@
 {{-- MODAL: NUEVA FACTURA (create) --}}
-<x-ui.modal wire:key="facturas-create-modal" :show="$openFacturaModal" title="Nueva Factura" onClose="closeFactura">
+<x-ui.modal wire:key="facturas-create-modal" model="openFacturaModal" title="Nueva Factura" maxWidth="md:max-w-2xl"
+    onClose="closeFactura">
     {{-- Entidad --}}
     <div>
         <label class="block text-sm mb-1">Entidad</label>
@@ -157,7 +158,7 @@
             Cancelar
         </button>
 
-        <button wire:click="saveFactura" wire:loading.attr="disabled" wire:target="saveFactura"
+        <button type="button" wire:click="saveFactura" wire:loading.attr="disabled" wire:target="saveFactura"
             class="w-full sm:w-auto px-4 py-2 rounded bg-black text-white
                    hover:bg-gray-800 transition
                    disabled:opacity-50 disabled:cursor-not-allowed">

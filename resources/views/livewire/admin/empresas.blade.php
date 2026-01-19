@@ -1,15 +1,30 @@
 @section('title', 'Empresas')
 
-<div class="p-0 md:p-6 space-y-4" :title="__('Dashboard')">
+<div class="p-0 md:p-6 space-y-4">
 
     {{-- HEADER (RESPONSIVE PARA MOBILE) --}}
     @can('empresas.create')
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h1 class="text-2xl font-semibold">Empresas</h1>
+            <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
+                class="w-full sm:w-auto px-4 py-2 rounded
+                bg-black text-white
+                hover:bg-gray-800 hover:text-white
+                transition-colors duration-150
+                cursor-pointer
+                disabled:opacity-50 disabled:cursor-not-allowed">
 
-            <button wire:click="openCreate" class="w-full sm:w-auto px-4 py-2 rounded bg-black text-white hover:opacity-90">
-                Nueva Empresa
+                {{-- Texto normal --}}
+                <span wire:loading.remove wire:target="openCreate">
+                    Nueva Empresa
+                </span>
+
+                {{-- Texto loading --}}
+                <span wire:loading wire:target="openCreate">
+                    Abriendo…
+                </span>
             </button>
+
         </div>
     @else
         <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -187,16 +202,18 @@
                         @endif
                     </th>
 
-                    <th class="p-3 whitespace-nowrap w-40 lg:w-56">
-                        Acciones
-                    </th>
+                    @canany(['empresas.update', 'empresas.toggle'])
+                        <th class="p-3 whitespace-nowrap w-40 lg:w-56">
+                            Acciones
+                        </th>
+                    @endcanany
                 </tr>
             </thead>
 
             {{-- ================= TBODY ================= --}}
             <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
                 @foreach ($empresas as $e)
-                    <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
+                    <tr wire:key="{{ $e->id }}" class="hover:bg-gray-100 dark:hover:bg-neutral-900">
                         <td class="p-3 whitespace-nowrap">{{ $e->id }}</td>
 
                         {{-- Nombre --}}
@@ -240,33 +257,47 @@
                         </td>
 
                         {{-- Acciones --}}
-                        <td class="p-3 whitespace-nowrap">
-                            <div class="flex items-center gap-2">
-                                @can('empresas.update')
-                                    <button wire:click="openEdit({{ $e->id }})"
-                                        class="px-3 py-1 cursor-pointer rounded border border-gray-300
-                                       hover:bg-gray-50
-                                       dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                        Editar
-                                    </button>
-                                @endcan
+                        @canany(['empresas.update', 'empresas.toggle'])
+                            <td class="p-3 whitespace-nowrap">
+                                <div class="flex items-center gap-2">
+                                    @can('empresas.update')
+                                        <button wire:click="openEdit({{ $e->id }})" wire:loading.attr="disabled"
+                                            wire:target="openEdit({{ $e->id }})"
+                                            class="px-3 py-1 rounded border border-gray-300
+                                        cursor-pointer
+                                        hover:bg-gray-50
+                                        dark:border-neutral-700 dark:hover:bg-neutral-800
+                                        disabled:opacity-50 disabled:cursor-not-allowed">
 
-                                @can('empresas.toggle')
-                                    <button type="button"
-                                        wire:click="$dispatch('swal:toggle-active-empresa', {
+                                            {{-- Texto normal --}}
+                                            <span wire:loading.remove wire:target="openEdit({{ $e->id }})">
+                                                Editar
+                                            </span>
+
+                                            {{-- Texto loading --}}
+                                            <span wire:loading wire:target="openEdit({{ $e->id }})">
+                                                Abriendo…
+                                            </span>
+                                        </button>
+                                    @endcan
+
+                                    @can('empresas.toggle')
+                                        <button type="button"
+                                            wire:click="$dispatch('swal:toggle-active-empresa', {
                                         id: {{ $e->id }},
                                         active: {{ $e->active ? 'true' : 'false' }},
                                         name: @js($e->nombre)
                                     })"
-                                        class="px-3 py-1 cursor-pointer rounded text-sm font-medium
+                                            class="px-3 py-1 cursor-pointer rounded text-sm font-medium
                                     {{ $e->active
                                         ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                                         : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-                                        {{ $e->active ? 'Desactivar' : 'Activar' }}
-                                    </button>
-                                @endcan
-                            </div>
-                        </td>
+                                            {{ $e->active ? 'Desactivar' : 'Activar' }}
+                                        </button>
+                                    @endcan
+                                </div>
+                            </td>
+                        @endcanany
                     </tr>
                 @endforeach
 
@@ -286,134 +317,103 @@
         {{ $empresas->links() }}
     </div>
 
-    {{-- INICIO - MODAL --}}
-    @if ($openModal)
-        <div wire:key="empresas-modal" class="fixed inset-0 z-50">
-
-            {{-- Backdrop --}}
-            <div class="absolute inset-0 bg-black/50 dark:bg-black/70" wire:click="closeModal"></div>
-
-            {{-- Dialog --}}
-            <div class="relative h-full w-full flex items-end sm:items-center justify-center p-0 sm:p-4">
-                <div
-                    class="
-                    w-full
-                    h-[100dvh] sm:h-auto
-                    sm:max-h-[90vh]
-                    sm:max-w-xl md:max-w-2xl
-                    bg-white dark:bg-neutral-900
-                    text-gray-700 dark:text-neutral-200
-                    border border-gray-200 dark:border-neutral-800
-                    rounded-none sm:rounded-xl
-                    overflow-hidden
-                    shadow-xl
-                ">
-
-                    {{-- Header (sticky) --}}
-                    <div
-                        class="sticky top-0 z-10 px-5 py-4 flex justify-between items-center
-                           bg-gray-50 dark:bg-neutral-900
-                           border-b border-gray-200 dark:border-neutral-800">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-neutral-100">
-                            {{ $empresaId ? 'Editar Empresa' : 'Nueva Empresa' }}
-                        </h2>
-
-                        <button type="button" wire:click="closeModal"
-                            class="inline-flex items-center justify-center size-9 rounded-md
-                               text-gray-500 hover:text-gray-900 hover:bg-gray-100
-                               dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800">
-                            ✕
-                        </button>
-                    </div>
-
-                    {{-- Body (scroll) --}}
-                    <div
-                        class="p-5 space-y-4 overflow-y-auto
-                            h-[calc(100dvh-64px-76px)] sm:h-auto sm:max-h-[calc(90vh-64px-76px)]">
-
-                        {{-- Nombre --}}
-                        <div>
-                            <label class="block text-sm mb-1">Nombre</label>
-                            <input wire:model="nombre" autocomplete="off"
-                                class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700">
-                            @error('nombre')
-                                <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- Trucos anti-autocomplete --}}
-                        <input type="text" name="fake_email" autocomplete="username" style="display:none">
-                        <input type="password" name="fake_password" autocomplete="current-password"
-                            style="display:none">
-
-                        {{-- NIT --}}
-                        <div>
-                            <label class="block text-sm mb-1">NIT</label>
-                            <input wire:model="nit" autocomplete="off"
-                                class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700">
-                            @error('nit')
-                                <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- Email --}}
-                        <div>
-                            <label class="block text-sm mb-1">Email</label>
-                            <input wire:model="email" type="email" name="email" autocomplete="off"
-                                autocapitalize="off" spellcheck="false" inputmode="email"
-                                class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700">
-                            @error('email')
-                                <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                    </div>
-
-                    {{-- Footer (sticky) --}}
-                    <div
-                        class="sticky bottom-0 z-10 px-5 py-4 flex gap-2
-                           bg-gray-50 dark:bg-neutral-900
-                           border-t border-gray-200 dark:border-neutral-800">
-                        <button wire:click="closeModal"
-                            class="w-1/2 px-4 py-2 rounded border
-                               border-gray-300 dark:border-neutral-700
-                               text-gray-700 dark:text-neutral-200
-                               hover:bg-gray-100 dark:hover:bg-neutral-800">
-                            Cancelar
-                        </button>
-
-                        @canany(['empresas.create', 'empresas.update'])
-                            <button wire:click="save"
-                                class="w-1/2 px-4 py-2 rounded
-                               bg-gray-900 text-white hover:opacity-90
-                               dark:bg-white dark:text-black">
-                                {{ $empresaId ? 'Actualizar' : 'Guardar' }}
-                            </button>
-                        @endcanany
-                    </div>
-
+    {{-- INICIO - MODAL (reutilizando x-ui.modal) --}}
+    @canany(['empresas.create', 'empresas.update'])
+        <x-ui.modal wire:key="empresas-modal" model="openModal" :title="$empresaId ? 'Editar Empresa' : 'Nueva Empresa'" maxWidth="md:max-w-2xl"
+            onClose="closeModal">
+            {{-- BODY --}}
+            <div class="space-y-4">
+                {{-- Nombre --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Nombre <span class="text-red-500">*</span>
+                    </label>
+                    <input wire:model="nombre" autocomplete="off" placeholder="Ej: Mi Empresa S.R.L."
+                        class="w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700">
+                    @error('nombre')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
+
+                {{-- Trucos anti-autocomplete --}}
+                <input type="text" name="fake_email" autocomplete="username" style="display:none">
+                <input type="password" name="fake_password" autocomplete="current-password" style="display:none">
+
+                {{-- NIT --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        NIT
+                    </label>
+                    <input wire:model="nit" autocomplete="off" placeholder="Ej: 123456789"
+                        class="w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700">
+                    @error('nit')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Email --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Email
+                    </label>
+                    <input wire:model="email" type="email" name="email" autocomplete="off" autocapitalize="off"
+                        spellcheck="false" inputmode="email" placeholder="Ej: contacto@empresa.com"
+                        class="w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700">
+                    @error('email')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Nota --}}
+                <p class="text-xs text-gray-500 dark:text-neutral-400 pt-1">
+                    <span class="text-red-500">*</span> Campos obligatorios.
+                </p>
             </div>
-        </div>
-    @endif
+
+            {{-- FOOTER --}}
+            @slot('footer')
+                <button type="button" wire:click="closeModal"
+                    class="cursor-pointer px-4 py-2 rounded border
+                       border-gray-300 dark:border-neutral-700
+                       text-gray-700 dark:text-neutral-200
+                       hover:bg-gray-100 dark:hover:bg-neutral-800">
+                    Cancelar
+                </button>
+
+                <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
+                    class="cursor-pointer px-4 py-2 rounded
+                       bg-gray-900 text-white hover:opacity-90
+                       dark:bg-white dark:text-black
+                       disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span wire:loading.remove wire:target="save">
+                        {{ $empresaId ? 'Actualizar' : 'Guardar' }}
+                    </span>
+                    <span wire:loading wire:target="save">
+                        Guardando…
+                    </span>
+                </button>
+            @endslot
+        </x-ui.modal>
+    @endcanany
     {{-- FIN - MODAL --}}
+
 
 </div>

@@ -155,27 +155,6 @@ class RolesAndUsersSeeder extends Seeder
             'roles.update',
             'roles.toggle',
             'roles.assign_permissions',
-
-            'entidades.view',
-            'entidades.create',
-            'entidades.update',
-            'entidades.toggle',
-
-            'proyectos.view',
-            'proyectos.create',
-            'proyectos.update',
-            'proyectos.toggle',
-
-            'bancos.view',
-            'bancos.create',
-            'bancos.update',
-            'bancos.toggle',
-
-            'facturas.view',
-            'facturas.create',
-            'facturas.update',
-            'facturas.toggle',
-            'facturas.pay',
         ]);
 
         // Empresa_Manager

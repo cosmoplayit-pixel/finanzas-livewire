@@ -44,7 +44,7 @@
 
                     {{-- Roles --}}
                     @can('roles.view')
-                        <flux:navlist.item icon="shield-check" :href="route('admin.roles')"
+                        <flux:navlist.item icon="shield-check" :href="route('roles')"
                             :current="request()->routeIs('admin.roles')" wire:navigate>
                             <span class="flex w-full items-center justify-between gap-2">
                                 <span>{{ __('Roles') }}</span>
@@ -333,55 +333,82 @@
         });
 
         // ===================== ENTIDADES =====================
-        Livewire.on('swal:toggle-active-entidad', ({
-            id,
-            active,
-            name
-        }) => {
-            Swal.fire({
-                title: active ? '¿Desactivar entidad?' : '¿Activar entidad?',
-                text: `¿Seguro que desea ${active ? 'desactivar' : 'activar'} la entidad "${name}"?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: active ? '#dc2626' : '#16a34a',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
-                cancelButtonText: 'Cancelar',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Livewire.dispatch('toggleEntidad', {
-                        id
-                    });
-                }
-            });
-        });
+        function registerSwalToggleEntidad() {
+            window.addEventListener('swal:toggle-active-entidad', (event) => {
+                const {
+                    id,
+                    active,
+                    name
+                } = event.detail || {};
 
-        // ===================== PROYECTOS =====================
-        Livewire.on('swal:toggle-active-proyecto', ({
-            id,
-            active,
-            name
-        }) => {
-            Swal.fire({
-                title: active ? '¿Desactivar proyecto?' : '¿Activar proyecto?',
-                text: '¿Seguro que desea ' + (active ? 'desactivar' : 'activar') +
-                    ` el proyecto "${name}"?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: active ? '#dc2626' : '#16a34a',
-                cancelButtonColor: '#6b7280',
-                reverseButtons: true, // ✅ corregido (antes estaba duplicado)
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Livewire.dispatch('doToggleActiveProyecto', {
-                        id
-                    });
-                }
+                Swal.fire({
+                    title: active ? '¿Desactivar entidad?' : '¿Activar entidad?',
+                    text: `¿Seguro que desea ${active ? 'desactivar' : 'activar'} la entidad "${name}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: active ? '#dc2626' : '#16a34a',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Livewire.dispatch('toggleEntidad', {
+                            id
+                        });
+                    }
+
+                    // Importante: para quitar tu loading Alpine
+                    window.dispatchEvent(new CustomEvent('swal:done'));
+                });
             });
-        });
+        }
+
+        // Livewire 3 (recomendado)
+        document.addEventListener('livewire:init', registerSwalToggleEntidad);
+
+        // Si usas navegación tipo SPA (Livewire navigate), registra también:
+        document.addEventListener('livewire:navigated', registerSwalToggleEntidad);
+
+
+        // ===================== PROYECTOS (SweetAlert + DOM event) =====================
+        function registerSwalToggleProyecto() {
+            window.addEventListener('swal:toggle-active-proyecto', (event) => {
+                const {
+                    id,
+                    active,
+                    name
+                } = event.detail || {};
+
+                Swal.fire({
+                    title: active ? '¿Desactivar proyecto?' : '¿Activar proyecto?',
+                    text: `¿Seguro que desea ${active ? 'desactivar' : 'activar'} el proyecto "${name}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: active ? '#dc2626' : '#16a34a',
+                    cancelButtonColor: '#6b7280',
+                    reverseButtons: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Livewire.dispatch('doToggleActiveProyecto', {
+                            id
+                        });
+                    }
+                }).finally(() => {
+                    // ✅ libera el loading Alpine SIEMPRE (confirmó o canceló)
+                    window.dispatchEvent(new CustomEvent('swal:done'));
+                });
+            });
+        }
+
+        // Registra cuando Livewire inicia
+        document.addEventListener('livewire:init', registerSwalToggleProyecto);
+
+        // Si usas navegación (wire:navigate), registra también al navegar
+        document.addEventListener('livewire:navigated', registerSwalToggleProyecto);
+
 
         // ===================== BANCOS =====================
         Livewire.on('swal:toggle-active-banco', ({

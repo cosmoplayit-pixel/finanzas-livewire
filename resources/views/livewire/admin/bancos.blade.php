@@ -146,30 +146,57 @@
                 {{-- Acciones --}}
                 @canany(['bancos.update', 'bancos.toggle'])
                     <div class="mt-4 flex gap-2">
+
+                        {{-- EDITAR (con bloqueo) --}}
                         @can('bancos.update')
-                            <button wire:click="openEdit({{ $b->id }})"
-                                class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                   dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                Editar
+                            <button wire:click="openEdit({{ $b->id }})" wire:loading.attr="disabled"
+                                wire:target="openEdit({{ $b->id }})"
+                                class="w-full px-3 py-1 rounded border border-gray-300
+                                       cursor-pointer hover:bg-gray-50
+                                       dark:border-neutral-700 dark:hover:bg-neutral-800
+                                       disabled:opacity-50 disabled:cursor-not-allowed">
+
+                                <span wire:loading.remove wire:target="openEdit({{ $b->id }})">
+                                    Editar
+                                </span>
+
+                                <span wire:loading wire:target="openEdit({{ $b->id }})">
+                                    Abriendo…
+                                </span>
                             </button>
                         @endcan
 
+                        {{-- TOGGLE ACTIVO (SweetAlert + Alpine loading) --}}
                         @can('bancos.toggle')
-                            <button type="button"
-                                wire:click="$dispatch('swal:toggle-active-banco', {
-                                id: {{ $b->id }},
-                                active: @js($b->active),
-                                name: @js($b->nombre)
-                            })"
+                            <button type="button" x-data="{ loading: false }"
+                                x-on:click="
+                                    loading = true;
+                                    $dispatch('swal:toggle-active-banco', {
+                                        id: {{ $b->id }},
+                                        active: @js($b->active),
+                                        name: @js($b->nombre)
+                                    });
+                                "
+                                x-on:swal:done.window="loading = false" x-bind:disabled="loading"
                                 class="w-full px-3 py-1 rounded text-sm font-medium
-                            {{ $b->active
-                                ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
-                                : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-                                {{ $b->active ? 'Desactivar' : 'Activar' }}
+                                       cursor-pointer
+                                       disabled:opacity-50 disabled:cursor-not-allowed
+                                       {{ $b->active
+                                           ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                                           : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+
+                                <span x-show="!loading">
+                                    {{ $b->active ? 'Desactivar' : 'Activar' }}
+                                </span>
+
+                                <span x-show="loading" x-cloak>
+                                    Procesando…
+                                </span>
                             </button>
                         @endcan
                     </div>
                 @endcanany
+
             </div>
         @empty
             <div class="border rounded p-4 text-sm text-gray-600 dark:text-neutral-300 dark:border-neutral-800">
@@ -178,7 +205,7 @@
         @endforelse
     </div>
 
-    {{-- TABLET + DESKTOP: TABLA (sin ocultar columnas) --}}
+    {{-- TABLET + DESKTOP: TABLA (misma plantilla estilo Proyectos, SIN expandible) --}}
     <div class="hidden md:block border rounded bg-white dark:bg-neutral-800 overflow-hidden">
         <table class="w-full table-fixed text-sm">
 
@@ -194,31 +221,29 @@
                         @endif
                     </th>
 
-                    <th class="w-[200px] p-2 cursor-pointer select-none whitespace-nowrap"
-                        wire:click="sortBy('nombre')">
+                    <th class="p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('nombre')">
                         Banco
                         @if ($sortField === 'nombre')
                             {{ $sortDirection === 'asc' ? '▲' : '▼' }}
                         @endif
                     </th>
 
-                    <th class="w-[220px] p-2 cursor-pointer select-none whitespace-nowrap"
-                        wire:click="sortBy('titular')">
+                    <th class="p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('titular')">
                         Titular
                         @if ($sortField === 'titular')
                             {{ $sortDirection === 'asc' ? '▲' : '▼' }}
                         @endif
                     </th>
 
-                    <th class="w-[180px] p-2 cursor-pointer select-none whitespace-nowrap"
-                        wire:click="sortBy('numero_cuenta')">
+                    <th class="p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('numero_cuenta')">
                         Nro. Cuenta
                         @if ($sortField === 'numero_cuenta')
                             {{ $sortDirection === 'asc' ? '▲' : '▼' }}
                         @endif
                     </th>
 
-                    <th class="w-[130px] p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('monto')">
+                    <th class="w-[130px] p-2 cursor-pointer select-none whitespace-nowrap text-right"
+                        wire:click="sortBy('monto')">
                         Monto
                         @if ($sortField === 'monto')
                             {{ $sortDirection === 'asc' ? '▲' : '▼' }}
@@ -232,7 +257,7 @@
                         @endif
                     </th>
 
-                    <th class="w-[110px] text-center p-2 cursor-pointer select-none whitespace-nowrap"
+                    <th class="text-center w-[85px] p-2 cursor-pointer select-none whitespace-nowrap"
                         wire:click="sortBy('active')">
                         Estado
                         @if ($sortField === 'active')
@@ -241,15 +266,15 @@
                     </th>
 
                     @canany(['bancos.update', 'bancos.toggle'])
-                        <th class="w-[110px] p-2 whitespace-nowrap text-center">
+                        <th class="w-[120px] p-2 whitespace-nowrap text-center">
                             Acciones
                         </th>
                     @endcanany
                 </tr>
             </thead>
 
-            <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
-                @forelse ($bancos as $b)
+            @foreach ($bancos as $b)
+                <tbody wire:key="banco-{{ $b->id }}" class="divide-y divide-gray-200 dark:divide-neutral-200">
                     <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
 
                         {{-- ID --}}
@@ -307,68 +332,110 @@
                         @canany(['bancos.update', 'bancos.toggle'])
                             <td class="p-2 whitespace-nowrap">
                                 <div class="flex items-center justify-center gap-2">
+
+                                    {{-- EDITAR (Livewire) --}}
                                     @can('bancos.update')
-                                        <button wire:click="openEdit({{ $b->id }})" title="Editar banco"
-                                            class="cursor-pointer rounded dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        <button wire:click="openEdit({{ $b->id }})" wire:loading.attr="disabled"
+                                            wire:target="openEdit({{ $b->id }})" title="Editar banco"
+                                            aria-label="Editar banco"
+                                            class="cursor-pointer rounded p-1
+                                                   hover:bg-gray-100 dark:hover:bg-neutral-800
+                                                   disabled:opacity-50 disabled:cursor-not-allowed">
+
+                                            <svg wire:loading.remove wire:target="openEdit({{ $b->id }})"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                                 stroke-width="1.5" stroke="currentColor" class="size-6">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
                                             </svg>
+
+                                            <svg wire:loading wire:target="openEdit({{ $b->id }})"
+                                                class="size-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                    stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
+                                            </svg>
                                         </button>
                                     @endcan
 
+                                    {{-- TOGGLE ACTIVO (SweetAlert + Alpine loading) --}}
                                     @can('bancos.toggle')
-                                        <button type="button"
+                                        <button type="button" x-data="{ loading: false }"
+                                            x-on:click="
+                                                loading = true;
+                                                $dispatch('swal:toggle-active-banco', {
+                                                    id: {{ $b->id }},
+                                                    active: @js($b->active),
+                                                    name: @js($b->nombre)
+                                                });
+                                            "
+                                            x-on:swal:done.window="loading = false" x-bind:disabled="loading"
                                             title="{{ $b->active ? 'Desactivar banco' : 'Activar banco' }}"
-                                            wire:click="$dispatch('swal:toggle-active-banco', {
-                                            id: {{ $b->id }},
-                                            active: @js($b->active),
-                                            name: @js($b->nombre)
-                                        })"
+                                            aria-label="{{ $b->active ? 'Desactivar banco' : 'Activar banco' }}"
                                             class="cursor-pointer inline-flex items-center justify-center size-8 rounded
-                                        {{ $b->active
-                                            ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
-                                            : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-                                            @if ($b->active)
-                                                {{-- eye-slash --}}
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                    stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M3 3l18 18M10.584 10.584A2.25 2.25 0 0012 14.25 2.25 2.25 0 0014.25 12c0-.5-.167-.96-.45-1.33M9.88 5.09 A9.715 9.715 0 0112 4.5c4.478 0 8.268 2.943 9.543 7.5 a9.66 9.66 0 01-2.486 3.95M6.18 6.18 C4.634 7.436 3.55 9.135 3 12 c1.275 4.557 5.065 7.5 9.543 7.5 1.79 0 3.487-.469 4.993-1.29" />
+                                                   disabled:opacity-50 disabled:cursor-not-allowed
+                                                   {{ $b->active
+                                                       ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                                                       : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+
+                                            <span x-show="!loading">
+                                                @if ($b->active)
+                                                    {{-- eye-slash --}}
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                        class="size-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M3 3l18 18M10.584 10.584A2.25 2.25 0 0012 14.25 2.25 2.25 0 0014.25 12c0-.5-.167-.96-.45-1.33M9.88 5.09 A9.715 9.715 0 0112 4.5c4.478 0 8.268 2.943 9.543 7.5 a9.66 9.66 0 01-2.486 3.95M6.18 6.18 C4.634 7.436 3.55 9.135 3 12 c1.275 4.557 5.065 7.5 9.543 7.5 1.79 0 3.487-.469 4.993-1.29" />
+                                                    </svg>
+                                                @else
+                                                    {{-- eye --}}
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                        class="size-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M2.036 12.322a1.012 1.012 0 010-.639 C3.423 7.51 7.36 4.5 12 4.5 c4.638 0 8.573 3.007 9.963 7.178 .07.207.07.431 0 .639 C20.577 16.49 16.64 19.5 12 19.5 c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    </svg>
+                                                @endif
+                                            </span>
+
+                                            <span x-show="loading" x-cloak>
+                                                <svg class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
                                                 </svg>
-                                            @else
-                                                {{-- eye --}}
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                    stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M2.036 12.322a1.012 1.012 0 010-.639 C3.423 7.51 7.36 4.5 12 4.5 c4.638 0 8.573 3.007 9.963 7.178 .07.207.07.431 0 .639 C20.577 16.49 16.64 19.5 12 19.5 c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                </svg>
-                                            @endif
+                                            </span>
                                         </button>
                                     @endcan
+
                                 </div>
                             </td>
                         @endcanany
 
                     </tr>
-                @empty
+                </tbody>
+            @endforeach
+
+            @if ($bancos->count() === 0)
+                <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
+                    @php
+                        $colspan =
+                            7 + (auth()->user()->can('bancos.update') || auth()->user()->can('bancos.toggle') ? 1 : 0);
+                    @endphp
                     <tr>
-                        @php
-                            $colspan =
-                                7 +
-                                (auth()->user()->can('bancos.update') || auth()->user()->can('bancos.toggle') ? 1 : 0);
-                        @endphp
                         <td class="p-4 text-center text-gray-500 dark:text-neutral-400"
                             colspan="{{ $colspan }}">
                             Sin resultados.
                         </td>
                     </tr>
-                @endforelse
-            </tbody>
-
+                </tbody>
+            @endif
         </table>
     </div>
 
@@ -377,168 +444,146 @@
         {{ $bancos->links() }}
     </div>
 
-    {{-- MODAL (solo create/update) --}}
+    {{-- MODAL BANCO (create / update) --}}
     @canany(['bancos.create', 'bancos.update'])
-        @if ($openModal)
-            <div wire:key="bancos-modal" class="fixed inset-0 z-50">
-                {{-- Backdrop --}}
-                <div class="absolute inset-0 bg-black/50 dark:bg-black/70" wire:click="closeModal"></div>
-
-                {{-- Dialog --}}
-                <div class="relative h-full w-full flex items-end sm:items-center justify-center p-0 sm:p-4">
-                    <div
-                        class="w-full
-                           h-[100dvh] sm:h-auto
-                           sm:max-h-[90vh]
-                           sm:max-w-xl md:max-w-2xl
+        <x-ui.modal wire:key="bancos-modal" model="openModal" :title="$bancoId ? 'Editar Banco' : 'Nuevo Banco'" maxWidth="sm:max-w-xl md:max-w-2xl"
+            onClose="closeModal">
+            {{-- BODY --}}
+            <div class="space-y-4">
+                {{-- Nombre (OBLIGATORIO) --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Nombre del Banco <span class="text-red-500">*</span>
+                    </label>
+                    <input wire:model="nombre" autocomplete="off" placeholder="Ej: Banco Unión"
+                        class="w-full rounded border px-3 py-2
                            bg-white dark:bg-neutral-900
-                           text-gray-700 dark:text-neutral-200
-                           border border-gray-200 dark:border-neutral-800
-                           rounded-none sm:rounded-xl
-                           overflow-hidden shadow-xl">
-
-                        {{-- Header (sticky) --}}
-                        <div
-                            class="sticky top-0 z-10 px-5 py-4 flex justify-between items-center
-                               bg-gray-50 dark:bg-neutral-900
-                               border-b border-gray-200 dark:border-neutral-800">
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-neutral-100">
-                                {{ $bancoId ? 'Editar Banco' : 'Nuevo Banco' }}
-                            </h2>
-
-                            <button type="button" wire:click="closeModal"
-                                class="inline-flex items-center justify-center size-9 rounded-md
-                                   text-gray-500 hover:text-gray-900 hover:bg-gray-100
-                                   dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800">
-                                ✕
-                            </button>
-                        </div>
-
-                        {{-- Body (scroll) --}}
-                        <div
-                            class="p-5 space-y-4 overflow-y-auto
-                               h-[calc(100dvh-64px-76px)] sm:h-auto sm:max-h-[calc(90vh-64px-76px)]">
-
-                            {{-- Nombre --}}
-                            <div>
-                                <label class="block text-sm mb-1">Nombre del Banco:</label>
-                                <input wire:model="nombre" autocomplete="off"
-                                    class="w-full rounded border px-3 py-2
-                                       bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700
-                                       text-gray-900 dark:text-neutral-100
-                                       placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                       focus:outline-none focus:ring-2
-                                       focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                                @error('nombre')
-                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            {{-- Titular --}}
-                            <div>
-                                <label class="block text-sm mb-1">Titular de la Cuenta:</label>
-                                <input wire:model="titular" autocomplete="off"
-                                    class="w-full rounded border px-3 py-2
-                                       bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700
-                                       text-gray-900 dark:text-neutral-100
-                                       placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                       focus:outline-none focus:ring-2
-                                       focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                                @error('titular')
-                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            {{-- Número de cuenta --}}
-                            <div>
-                                <label class="block text-sm mb-1">Número de Cuenta:</label>
-                                <input wire:model="numero_cuenta" autocomplete="off"
-                                    class="w-full rounded border px-3 py-2
-                                       bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700
-                                       text-gray-900 dark:text-neutral-100
-                                       placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                       focus:outline-none focus:ring-2
-                                       focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                                @error('numero_cuenta')
-                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            {{-- Monto (NO editable en editar) --}}
-                            <div>
-                                <label class="block text-sm mb-1">Monto:</label>
-
-                                <input type="text" inputmode="decimal" wire:model.lazy="monto_formatted"
-                                    placeholder="0,00" @disabled($bancoId) {{-- ✅ si existe bancoId = edit => deshabilita --}}
-                                    class="w-full rounded border px-3 py-2
-                                       bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700
-                                       text-gray-900 dark:text-neutral-100
-                                       placeholder:text-gray-400 dark:placeholder:text-neutral-500
-                                       focus:outline-none focus:ring-2
-                                       focus:ring-gray-300 dark:focus:ring-neutral-700
-                                       disabled:bg-gray-100 disabled:dark:bg-neutral-800
-                                       disabled:opacity-80 disabled:cursor-not-allowed" />
-
-                                @error('monto')
-                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-
-                                @if ($bancoId)
-                                    <div class="text-xs mt-1 text-gray-500 dark:text-neutral-400">
-                                        El monto inicial no se puede editar. Registra movimientos desde el módulo
-                                        correspondiente.
-                                    </div>
-                                @endif
-                            </div>
-
-                            {{-- Moneda --}}
-                            <div>
-                                <label class="block text-sm mb-1">Moneda:</label>
-                                <select wire:model="moneda"
-                                    class="w-full rounded border px-3 py-2
-                                       bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700
-                                       text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2
-                                       focus:ring-gray-300 dark:focus:ring-neutral-700">
-                                    <option value="">Seleccione...</option>
-                                    <option value="BOB">Bolivianos (Bs)</option>
-                                    <option value="USD">Dólar (USD)</option>
-                                </select>
-                                @error('moneda')
-                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        {{-- Footer (sticky) --}}
-                        <div
-                            class="sticky bottom-0 px-5 py-4 flex justify-end gap-2
-                               bg-gray-50 dark:bg-neutral-900
-                               border-t border-gray-200 dark:border-neutral-800">
-                            <button wire:click="closeModal"
-                                class="px-4 py-2 rounded border
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-700 dark:text-neutral-200
-                                   hover:bg-gray-100 dark:hover:bg-neutral-800">
-                                Cancelar
-                            </button>
-
-                            <button wire:click="save" class="px-4 py-2 rounded bg-black text-white hover:opacity-90">
-                                {{ $bancoId ? 'Actualizar' : 'Guardar' }}
-                            </button>
-                        </div>
-
-                    </div>
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                    @error('nombre')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
-            </div>
-        @endif
-    @endcanany
 
+                {{-- Titular (opcional) --}}
+                <div>
+                    <label class="block text-sm mb-1">Titular de la Cuenta</label>
+                    <input wire:model="titular" autocomplete="off" placeholder="Ej: Sitcom SRL"
+                        class="w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                    @error('titular')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Número de cuenta (OBLIGATORIO) --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Número de Cuenta <span class="text-red-500">*</span>
+                    </label>
+                    <input wire:model="numero_cuenta" autocomplete="off" placeholder="Ej: 123-4567890-01"
+                        class="w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                    @error('numero_cuenta')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Monto (solo editable en create) --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Monto
+                        @if (!$bancoId)
+                            <span class="text-red-500">*</span>
+                        @endif
+                    </label>
+
+                    <input type="text" inputmode="decimal" wire:model.lazy="monto_formatted" placeholder="0,00"
+                        @disabled($bancoId)
+                        class="w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700
+                           disabled:bg-gray-100 disabled:dark:bg-neutral-800
+                           disabled:opacity-80 disabled:cursor-not-allowed" />
+
+                    @error('monto')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+
+                    @if ($bancoId)
+                        <div class="text-xs mt-1 text-gray-500 dark:text-neutral-400">
+                            El monto inicial no se puede editar. Registra movimientos desde el módulo correspondiente.
+                        </div>
+                    @endif
+                </div>
+
+                {{-- Moneda (OBLIGATORIO) --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Moneda <span class="text-red-500">*</span>
+                    </label>
+                    <select wire:model="moneda"
+                        class="cursor-pointer w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700">
+                        <option value="">Seleccione...</option>
+                        <option value="BOB">Bolivianos (Bs)</option>
+                        <option value="USD">Dólar (USD)</option>
+                    </select>
+                    @error('moneda')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                {{-- Nota --}}
+                <p class="text-xs text-gray-500 dark:text-neutral-400 pt-1">
+                    <span class="text-red-500">*</span> Campos obligatorios.
+                </p>
+            </div>
+
+            {{-- FOOTER --}}
+            @slot('footer')
+                <button type="button" wire:click="closeModal"
+                    class="px-4 py-2 rounded border cursor-pointer
+                       border-gray-300 dark:border-neutral-700
+                       text-gray-700 dark:text-neutral-200
+                       hover:bg-gray-100 dark:hover:bg-neutral-800">
+                    Cancelar
+                </button>
+
+                <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
+                    class="px-4 py-2 cursor-pointer rounded bg-black text-white hover:opacity-90
+                       disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span wire:loading.remove wire:target="save">
+                        {{ $bancoId ? 'Actualizar' : 'Guardar' }}
+                    </span>
+                    <span wire:loading wire:target="save">
+                        Guardando…
+                    </span>
+                </button>
+            @endslot
+        </x-ui.modal>
+    @endcanany
 
 
 </div>

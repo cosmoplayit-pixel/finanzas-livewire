@@ -61,8 +61,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     // ROLES
     // =======================
     Route::middleware(['permission:roles.view'])
-        ->get('/admin/roles', Roles::class)
-        ->name('admin.roles');
+        ->get('/roles', Roles::class)
+        ->name('roles');
 
     // =======================
     // EMPRESAS

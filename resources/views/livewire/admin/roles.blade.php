@@ -1,300 +1,362 @@
 @section('title', 'Roles')
 
-<div class="p-0 md:p-6 space-y-4" :title="__('Dashboard')">
+<div class="p-0 md:p-6 space-y-4">
 
-    {{-- HEADER (RESPONSIVE PARA MOBILE) --}}
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 class="text-2xl font-semibold">Roles</h1>
+    @can('roles.view')
+        {{-- HEADER --}}
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h1 class="text-2xl font-semibold">Roles</h1>
+            @can('roles.create')
+                <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
+                    class="w-full sm:w-auto px-4 py-2 rounded
+                bg-black text-white
+                hover:bg-gray-800 hover:text-white
+                transition-colors duration-150
+                cursor-pointer
+                disabled:opacity-50 disabled:cursor-not-allowed">
 
-        <button wire:click="openCreate" class="w-full sm:w-auto px-4 py-2 rounded bg-black text-white hover:opacity-90">
-            Nuevo Rol
-        </button>
-    </div>
+                    {{-- Texto normal --}}
+                    <span wire:loading.remove wire:target="openCreate">
+                        Nuevo Rol
+                    </span>
 
-    {{-- ALERTAS (LIGHT/DARK) --}}
-    @if (session('success'))
-        <div class="p-3 rounded bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-200">
-            {{ session('success') }}
+                    {{-- Texto loading --}}
+                    <span wire:loading wire:target="openCreate">
+                        Abriendo…
+                    </span>
+                </button>
+            @endcan
         </div>
-    @endif
-    @if (session('error'))
-        <div class="p-3 rounded bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-200">
-            {{ session('error') }}
-        </div>
-    @endif
 
-    {{-- FILTROS --}}
-    <div class="flex flex-col gap-3 md:flex-row md:items-center">
-        <input type="search" wire:model.live="search" placeholder="Buscar Rol o Descripción"
-            class="w-full md:w-72 lg:w-md border rounded px-3 py-2" autocomplete="off" />
+        {{-- ALERTAS (LIGHT/DARK) --}}
+        @if (session('success'))
+            <div class="p-3 rounded bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-200">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="p-3 rounded bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-200">
+                {{ session('error') }}
+            </div>
+        @endif
 
-        <div class="flex flex-col sm:flex-row gap-3 md:ml-auto w-full md:w-auto">
-            <select wire:model.live="type"
-                class="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
+        {{-- FILTROS --}}
+        <div class="flex flex-col gap-3 md:flex-row md:items-center">
+            <input type="search" wire:model.live="search" placeholder="Buscar Rol o Descripción"
+                class="w-full md:w-72 lg:w-md border rounded px-3 py-2" autocomplete="off" />
+
+            <div class="flex flex-col sm:flex-row gap-3 md:ml-auto w-full md:w-auto">
+                <select wire:model.live="type"
+                    class="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
                        dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                        focus:outline-none focus:ring-2 focus:ring-offset-0
                        focus:ring-gray-300 dark:focus:ring-neutral-600">
-                <option value="all">Todos</option>
-                <option value="system">Sistema</option>
-                <option value="custom">Personalizados</option>
-            </select>
+                    <option value="all">Todos</option>
+                    <option value="system">Sistema</option>
+                    <option value="custom">Personalizados</option>
+                </select>
 
-            <select wire:model.live="status"
-                class="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
+                <select wire:model.live="status"
+                    class="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
                        dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                        focus:outline-none focus:ring-2 focus:ring-offset-0
                        focus:ring-gray-300 dark:focus:ring-neutral-600">
-                <option value="all">Todos</option>
-                <option value="active">Activos</option>
-                <option value="inactive">Inactivos</option>
-            </select>
+                    <option value="all">Todos</option>
+                    <option value="active">Activos</option>
+                    <option value="inactive">Inactivos</option>
+                </select>
 
-            <select wire:model.live="perPage"
-                class="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
+                <select wire:model.live="perPage"
+                    class="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
                        dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                        focus:outline-none focus:ring-2 focus:ring-offset-0
                        focus:ring-gray-300 dark:focus:ring-neutral-600">
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-            </select>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
         </div>
-    </div>
 
-    {{-- MOBILE: CARDS (md:hidden) --}}
-    <div class="space-y-3 md:hidden">
-        @forelse ($roles as $r)
-            <div class="border rounded-lg p-4 bg-white dark:bg-neutral-900 dark:border-neutral-800">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
-                        <div class="font-semibold truncate">{{ $r->name }}</div>
+        {{-- MOBILE: CARDS (md:hidden) --}}
+        <div class="space-y-3 md:hidden">
+            @forelse ($roles as $r)
+                <div wire:key="{{ $r->id }}"
+                    class="border rounded-lg p-4 bg-white dark:bg-neutral-900 dark:border-neutral-800">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="font-semibold truncate">{{ $r->name }}</div>
 
-                    </div>
-
-                    <div class="shrink-0 flex  gap-2 items-end">
-                        <span
-                            class="px-2 py-1 rounded text-xs
-                            {{ $r->is_system ? 'bg-gray-200 text-gray-800 dark:bg-neutral-700 dark:text-neutral-100' : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200' }}">
-                            {{ $r->is_system ? 'Sistema' : 'Personalizado' }}
-                        </span>
-
-                        <span
-                            class="px-2 py-1 rounded text-xs
-                            {{ $r->active ? 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200' }}">
-                            {{ $r->active ? 'Activo' : 'Inactivo' }}
-                        </span>
-                    </div>
-                </div>
-
-                <div class="mt-3 grid grid-cols-1 gap-2 text-sm">
-                    <div class="flex justify-between gap-3">
-                        <span class="text-gray-500 dark:text-neutral-400">ID</span>
-                        <span class="font-medium">{{ $r->id }}</span>
-                    </div>
-                    <div class="flex justify-between gap-3">
-                        <span class="text-gray-500 dark:text-neutral-400 ">Descripción</span>
-                        <span class="font-medium truncate">{{ $r->description ?? '—' }}</span>
-                    </div>
-                </div>
-
-                <div class="mt-4 flex  gap-2">
-                    @if (!$r->is_system)
-                        <button wire:click="openEdit({{ $r->id }})"
-                            class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                   dark:border-neutral-700 dark:hover:bg-neutral-800">
-                            Editar
-                        </button>
-
-                        <button wire:click="openPermissions({{ $r->id }})"
-                            class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                   dark:border-neutral-700 dark:hover:bg-neutral-800">
-                            Permisos
-                        </button>
-
-                        <button type="button"
-                            wire:click="$dispatch('swal:toggle-active-rol', {
-                                id: {{ $r->id }},
-                                active: @js($r->active),
-                                name: @js($r->name)
-                            })"
-                            class="px-3 py-1 cursor-pointer rounded text-sm font-medium
-                            {{ $r->active
-                                ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
-                                : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
-                            {{ $r->active ? 'Desactivar' : 'Activar' }}
-                        </button>
-                    @else
-                        <div class="text-xs text-gray-500 dark:text-neutral-400">
-                            Rol del sistema: bloqueado.
                         </div>
-                    @endif
-                </div>
-            </div>
-        @empty
-            <div class="border rounded p-4 text-sm text-gray-600 dark:text-neutral-300 dark:border-neutral-800">
-                Sin resultados.
-            </div>
-        @endforelse
-    </div>
 
-    {{-- TABLET + DESKTOP: TABLA (visible desde md) --}}
-    <div class="hidden md:block overflow-x-auto overflow-y-hidden border rounded bg-white dark:bg-neutral-800">
-        <table class="w-full text-sm">
-            <thead
-                class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-200">
-                <tr class="text-left">
-                    <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('id')">
-                        ID
-                        @if ($sortField === 'id')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
-                        @endif
-                    </th>
-
-                    <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('name')">
-                        Nombre
-                        @if ($sortField === 'name')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
-                        @endif
-                    </th>
-
-                    <th class="p-3 whitespace-nowrap hidden lg:table-cell">
-                        Descripción
-                    </th>
-
-                    <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('is_system')">
-                        Tipo
-                        @if ($sortField === 'is_system')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
-                        @endif
-                    </th>
-
-                    <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('active')">
-                        Estado
-                        @if ($sortField === 'active')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
-                        @endif
-                    </th>
-
-                    <th class="p-3 whitespace-nowrap w-56">
-                        Acciones
-                    </th>
-                </tr>
-            </thead>
-
-            <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
-                @foreach ($roles as $r)
-                    <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
-                        <td class="p-3 whitespace-nowrap">{{ $r->id }}</td>
-
-                        <td class="p-3">
-                            <span class="block max-w-[280px] truncate" title="{{ $r->name }}">
-                                {{ $r->name }}
-                            </span>
-                        </td>
-
-                        <td class="p-3 hidden lg:table-cell">
-                            <span class="block max-w-[420px] truncate" title="{{ $r->description }}">
-                                {{ $r->description ?? '—' }}
-                            </span>
-                        </td>
-
-                        <td class="p-3 whitespace-nowrap">
+                        <div class="shrink-0 flex  gap-2 items-end">
                             <span
                                 class="px-2 py-1 rounded text-xs
-                                {{ $r->is_system ? 'bg-gray-200 text-gray-800 dark:bg-neutral-700 dark:text-neutral-100' : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200' }}">
+                            {{ $r->is_system ? 'bg-gray-200 text-gray-800 dark:bg-neutral-700 dark:text-neutral-100' : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200' }}">
                                 {{ $r->is_system ? 'Sistema' : 'Personalizado' }}
                             </span>
-                        </td>
 
-                        <td class="p-3 whitespace-nowrap">
                             <span
                                 class="px-2 py-1 rounded text-xs
-                                {{ $r->active ? 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200' }}">
+                            {{ $r->active ? 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200' }}">
                                 {{ $r->active ? 'Activo' : 'Inactivo' }}
                             </span>
-                        </td>
+                        </div>
+                    </div>
 
-                        <td class="p-3 whitespace-nowrap">
+                    <div class="mt-3 grid grid-cols-1 gap-2 text-sm">
+                        <div class="flex justify-between gap-3">
+                            <span class="text-gray-500 dark:text-neutral-400">ID</span>
+                            <span class="font-medium">{{ $r->id }}</span>
+                        </div>
+                        <div class="flex justify-between gap-3">
+                            <span class="text-gray-500 dark:text-neutral-400 ">Descripción</span>
+                            <span class="font-medium truncate">{{ $r->description ?? '—' }}</span>
+                        </div>
+                    </div>
+
+                    @canany(['roles.update', 'roles.assign_permissions', 'roles.toggle'])
+                        <div class="mt-4 grid grid-cols-3 gap-2">
                             @if (!$r->is_system)
-                                <div class="flex items-center gap-2">
-                                    <button wire:click="openEdit({{ $r->id }})"
-                                        class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                               dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                        Editar
-                                    </button>
+                                {{-- EDITAR --}}
+                                @can('roles.update')
+                                    <button wire:click="openEdit({{ $r->id }})" wire:loading.attr="disabled"
+                                        wire:target="openEdit({{ $r->id }})"
+                                        class="w-full px-3 py-1 rounded border border-gray-300
+                           cursor-pointer hover:bg-gray-50
+                           dark:border-neutral-700 dark:hover:bg-neutral-800
+                           disabled:opacity-50 disabled:cursor-not-allowed">
 
-                                    <button wire:click="openPermissions({{ $r->id }})"
-                                        class="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                               dark:border-neutral-700 dark:hover:bg-neutral-800">
-                                        Permisos
+                                        <span wire:loading.remove wire:target="openEdit({{ $r->id }})">Editar</span>
+                                        <span wire:loading wire:target="openEdit({{ $r->id }})">Abriendo…</span>
                                     </button>
+                                @endcan
 
+                                {{-- PERMISOS --}}
+                                @can('roles.assign_permissions')
+                                    <button wire:click="openPermissions({{ $r->id }})" wire:loading.attr="disabled"
+                                        wire:target="openPermissions({{ $r->id }})"
+                                        class="w-full px-3 py-1 rounded border border-gray-300
+                           cursor-pointer hover:bg-gray-50
+                           dark:border-neutral-700 dark:hover:bg-neutral-800
+                           disabled:opacity-50 disabled:cursor-not-allowed">
+
+                                        <span wire:loading.remove
+                                            wire:target="openPermissions({{ $r->id }})">Permisos</span>
+                                        <span wire:loading wire:target="openPermissions({{ $r->id }})">Cargando…</span>
+                                    </button>
+                                @endcan
+
+                                {{-- ACTIVAR / DESACTIVAR --}}
+                                @can('roles.toggle')
                                     <button type="button"
                                         wire:click="$dispatch('swal:toggle-active-rol', {
-                                        id: {{ $r->id }},
-                                        active: @js($r->active),
-                                        name: @js($r->name)
-                                    })"
-                                        class="px-3 py-1 cursor-pointer rounded text-sm font-medium
-                                    {{ $r->active
-                                        ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
-                                        : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+                        id: {{ $r->id }},
+                        active: @js($r->active),
+                        name: @js($r->name)
+                    })"
+                                        class="w-full px-3 py-1 cursor-pointer rounded text-sm font-medium
+                           disabled:opacity-50 disabled:cursor-not-allowed
+                        {{ $r->active
+                            ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                            : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
                                         {{ $r->active ? 'Desactivar' : 'Activar' }}
                                     </button>
-
-                                </div>
+                                @endcan
                             @else
-                                <span
-                                    class="px-2 py-1 rounded text-xs bg-gray-200 text-gray-800 dark:bg-neutral-700 dark:text-neutral-100">Bloqueado</span>
+                                <div class="col-span-3 text-xs text-gray-500 dark:text-neutral-400">
+                                    Rol del sistema: bloqueado.
+                                </div>
                             @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
-
-    <div class="mt-3">
-        {{ $roles->links() }}
-    </div>
-
-    {{-- MODAL CREAR / EDITAR ROL --}}
-    @if ($openModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div
-                class="w-full max-w-md rounded-lg bg-white dark:bg-neutral-900
-                    border border-gray-200 dark:border-neutral-800 p-5">
-
-                {{-- Header --}}
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-semibold">
-                        {{ $roleId ? 'Editar rol' : 'Crear rol' }}
-                    </h2>
-                    <button wire:click="closeModal" class="text-gray-500 hover:text-gray-800 dark:hover:text-white">
-                        ✕
-                    </button>
+                        </div>
+                    @endcanany
                 </div>
+            @empty
+                <div class="border rounded p-4 text-sm text-gray-600 dark:text-neutral-300 dark:border-neutral-800">
+                    Sin resultados.
+                </div>
+            @endforelse
+        </div>
 
+        {{-- TABLET + DESKTOP: TABLA (visible desde md) --}}
+        <div class="hidden md:block overflow-x-auto overflow-y-hidden border rounded bg-white dark:bg-neutral-800">
+            <table class="w-full text-sm">
+                <thead
+                    class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-200">
+                    <tr class="text-left">
+                        <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('id')">
+                            ID
+                            @if ($sortField === 'id')
+                                {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @endif
+                        </th>
+
+                        <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('name')">
+                            Nombre
+                            @if ($sortField === 'name')
+                                {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @endif
+                        </th>
+
+                        <th class="p-3 whitespace-nowrap hidden lg:table-cell">
+                            Descripción
+                        </th>
+
+                        <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('is_system')">
+                            Tipo
+                            @if ($sortField === 'is_system')
+                                {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @endif
+                        </th>
+
+                        <th class="p-3 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('active')">
+                            Estado
+                            @if ($sortField === 'active')
+                                {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @endif
+                        </th>
+                        @canany(['roles.update', 'roles.assign_permissions', 'roles.toggle'])
+                            <th class="p-3 whitespace-nowrap w-56">
+                                Acciones
+                            </th>
+                        @endcanany
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
+                    @foreach ($roles as $r)
+                        <tr wire:key="{{ $r->id }}" class="hover:bg-gray-100 dark:hover:bg-neutral-900">
+                            <td class="p-3 whitespace-nowrap">{{ $r->id }}</td>
+
+                            <td class="p-3">
+                                <span class="block max-w-[280px] truncate" title="{{ $r->name }}">
+                                    {{ $r->name }}
+                                </span>
+                            </td>
+
+                            <td class="p-3 hidden lg:table-cell">
+                                <span class="block max-w-[420px] truncate" title="{{ $r->description }}">
+                                    {{ $r->description ?? '—' }}
+                                </span>
+                            </td>
+
+                            <td class="p-3 whitespace-nowrap">
+                                <span
+                                    class="px-2 py-1 rounded text-xs
+                                {{ $r->is_system ? 'bg-gray-200 text-gray-800 dark:bg-neutral-700 dark:text-neutral-100' : 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200' }}">
+                                    {{ $r->is_system ? 'Sistema' : 'Personalizado' }}
+                                </span>
+                            </td>
+
+                            <td class="p-3 whitespace-nowrap">
+                                <span
+                                    class="px-2 py-1 rounded text-xs
+                                {{ $r->active ? 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200' }}">
+                                    {{ $r->active ? 'Activo' : 'Inactivo' }}
+                                </span>
+                            </td>
+                            <td class="p-3 whitespace-nowrap">
+                                @if (!$r->is_system)
+                                    <div class="flex items-center gap-2">
+
+                                        {{-- EDITAR --}}
+                                        @can('roles.update')
+                                            <button wire:click="openEdit({{ $r->id }})" wire:loading.attr="disabled"
+                                                wire:target="openEdit({{ $r->id }})"
+                                                class="px-3 py-1 rounded border border-gray-300
+                                            cursor-pointer
+                                            hover:bg-gray-50
+                                            dark:border-neutral-700 dark:hover:bg-neutral-800
+                                            disabled:opacity-50 disabled:cursor-not-allowed">
+
+                                                <span wire:loading.remove wire:target="openEdit({{ $r->id }})">
+                                                    Editar
+                                                </span>
+
+                                                <span wire:loading wire:target="openEdit({{ $r->id }})">
+                                                    Abriendo…
+                                                </span>
+                                            </button>
+                                        @endcan
+
+                                        {{-- PERMISOS --}}
+                                        @can('roles.assign_permissions')
+                                            <button wire:click="openPermissions({{ $r->id }})"
+                                                wire:loading.attr="disabled"
+                                                wire:target="openPermissions({{ $r->id }})"
+                                                class="px-3 py-1 rounded border border-gray-300
+                           cursor-pointer
+                           hover:bg-gray-50
+                           dark:border-neutral-700 dark:hover:bg-neutral-800
+                           disabled:opacity-50 disabled:cursor-not-allowed">
+
+                                                <span wire:loading.remove wire:target="openPermissions({{ $r->id }})">
+                                                    Permisos
+                                                </span>
+
+                                                <span wire:loading wire:target="openPermissions({{ $r->id }})">
+                                                    Cargando…
+                                                </span>
+                                            </button>
+                                        @endcan
+
+                                        {{-- ACTIVAR / DESACTIVAR --}}
+                                        @can('roles.toggle')
+                                            <button type="button"
+                                                wire:click="$dispatch('swal:toggle-active-rol', {
+                        id: {{ $r->id }},
+                        active: @js($r->active),
+                        name: @js($r->name)
+                    })"
+                                                class="px-3 py-1 cursor-pointer rounded text-sm font-medium
+                        {{ $r->active
+                            ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                            : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+                                                {{ $r->active ? 'Desactivar' : 'Activar' }}
+                                            </button>
+                                        @endcan
+
+                                    </div>
+                                @else
+                                    <span
+                                        class="px-2 py-1 rounded text-xs
+                   bg-gray-200 text-gray-800
+                   dark:bg-neutral-700 dark:text-neutral-100">
+                                        Bloqueado
+                                    </span>
+                                @endif
+                            </td>
+
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-3">
+            {{ $roles->links() }}
+        </div>
+
+        {{-- MODAL CREAR / EDITAR ROL (reutilizando x-ui.modal) --}}
+        @canany(['roles.create', 'roles.update'])
+            <x-ui.modal model="openModal" :title="$roleId ? 'Editar rol' : 'Crear rol'" maxWidth="md:max-w-2xl" onClose="closeModal">
                 {{-- Formulario --}}
                 <div class="space-y-4">
-
                     {{-- Nombre --}}
                     <div>
                         <label class="block text-sm font-medium mb-1">
                             Nombre del rol <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" wire:model.defer="name"
-                            placeholder="Ejemplo: Administrador, Cajero, Gerente"
+                        <input type="text" wire:model.defer="name" placeholder="Ej: Administrador, Cajero, Gerente"
                             class="w-full rounded border px-3 py-2
-                               bg-white dark:bg-neutral-900
-                               border-gray-300 dark:border-neutral-700
-                               text-gray-900 dark:text-neutral-100
-                               focus:outline-none focus:ring-2
-                               focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700" />
                         @error('name')
-                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">
-                                {{ $message }}
-                            </div>
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                         @enderror
                     </div>
 
@@ -305,15 +367,14 @@
                         </label>
                         <textarea wire:model.defer="description" rows="3" placeholder="Describe brevemente la función del rol"
                             class="w-full rounded border px-3 py-2
-                               bg-white dark:bg-neutral-900
-                               border-gray-300 dark:border-neutral-700
-                               text-gray-900 dark:text-neutral-100
-                               focus:outline-none focus:ring-2
-                               focus:ring-gray-300 dark:focus:ring-neutral-700"></textarea>
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700"></textarea>
                         @error('description')
-                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">
-                                {{ $message }}
-                            </div>
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                         @enderror
                     </div>
 
@@ -325,47 +386,43 @@
                         </label>
                     </div>
 
+                    {{-- Nota de obligatorios --}}
+                    <p class="text-xs text-gray-500 dark:text-neutral-400 pt-1">
+                        <span class="text-red-500">*</span> Campos obligatorios.
+                    </p>
                 </div>
 
                 {{-- Footer --}}
-                <div class="mt-6 flex justify-end gap-2">
+                @slot('footer')
                     <button type="button" wire:click="closeModal"
-                        class="px-4 py-2 rounded
-                           border border-gray-300
-                           hover:bg-gray-50
-                           dark:border-neutral-700
-                           dark:hover:bg-neutral-800">
+                        class="cursor-pointer px-4 py-2 rounded
+                       border border-gray-300
+                       hover:bg-gray-50
+                       dark:border-neutral-700
+                       dark:hover:bg-neutral-800">
                         Cancelar
                     </button>
 
-                    <button type="button" wire:click="save"
-                        class="px-4 py-2 rounded
-                           bg-black text-white
-                           hover:opacity-90">
-                        {{ $roleId ? 'Guardar cambios' : 'Crear rol' }}
+                    <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
+                        class="cursor-pointer px-4 py-2 rounded
+                       bg-black text-white
+                       hover:opacity-90
+                       disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="save">
+                            {{ $roleId ? 'Guardar cambios' : 'Crear rol' }}
+                        </span>
+                        <span wire:loading wire:target="save">
+                            Guardando…
+                        </span>
                     </button>
-                </div>
+                @endslot
+            </x-ui.modal>
+        @endcanany
 
-            </div>
-        </div>
-    @endif
-
-    {{-- MODAL PERMISOS --}}
-    @if ($openPermsModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div class="w-full max-w-4xl rounded-lg bg-white dark:bg-neutral-900 border dark:border-neutral-800 p-5">
-
-                <div class="flex items-center justify-between mb-4">
-                    <div>
-                        <h2 class="text-lg font-semibold">Permisos del rol</h2>
-                        <p class="text-sm text-gray-600 dark:text-neutral-300">
-                            Define qué acciones podrá realizar este rol dentro del sistema.
-                        </p>
-                    </div>
-                    <button wire:click="closePermissions"
-                        class="text-gray-500 hover:text-gray-800 dark:hover:text-white">✕</button>
-                </div>
-
+        {{-- MODAL PERMISOS (reutilizando x-ui.modal) --}}
+        @can('roles.assign_permissions')
+            <x-ui.modal wire:key="roles-permissions-modal" model="openPermsModal" title="Permisos del rol"
+                maxWidth="md:max-w-4xl" onClose="closePermissions">
                 @php
                     // 1) Normalizar a array
                     $pg = $permissionsGrouped ?? [];
@@ -495,17 +552,18 @@
                     <div class="flex flex-col sm:flex-row gap-3">
                         <div class="flex-1">
                             <label class="text-sm font-medium">Buscar permiso</label>
-                            <input x-model="q" type="text"
-                                placeholder="Ejemplo: ver, crear, editar, usuarios..."
-                                class="mt-1 w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100" />
+                            <input x-model="q" type="text" placeholder="Ej: ver, crear, editar, usuarios..."
+                                class="mt-1 w-full rounded border px-3 py-2
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               placeholder:text-gray-400 dark:placeholder:text-neutral-500" />
                         </div>
 
                         <div class="sm:w-72">
                             <div class="mt-6 text-xs text-gray-600 dark:text-neutral-400">
-                                Recomendación: habilita solo lo necesario. Comienza por <b>Ver</b> y luego agrega
-                                <b>Crear</b> o <b>Editar</b>.
+                                Recomendación: habilita solo lo necesario. Comienza por <b>Ver</b> y luego agrega <b>Crear</b> o
+                                <b>Editar</b>.
                             </div>
                         </div>
                     </div>
@@ -530,13 +588,13 @@
                                     <div class="flex items-center gap-2 shrink-0">
                                         <button type="button"
                                             class="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                               dark:border-neutral-700 dark:hover:bg-neutral-800"
+                                           dark:border-neutral-700 dark:hover:bg-neutral-800"
                                             wire:click="selectAllGroup(@js($group))">
                                             Seleccionar todo
                                         </button>
                                         <button type="button"
                                             class="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                               dark:border-neutral-700 dark:hover:bg-neutral-800"
+                                           dark:border-neutral-700 dark:hover:bg-neutral-800"
                                             wire:click="clearAllGroup(@js($group))">
                                             Quitar todo
                                         </button>
@@ -565,8 +623,7 @@
                                                         wire:model.defer="permissionsSelected" class="mt-1 rounded" />
 
                                                     <div class="min-w-0">
-                                                        <div
-                                                            class="font-medium text-sm text-gray-900 dark:text-neutral-100">
+                                                        <div class="font-medium text-sm text-gray-900 dark:text-neutral-100">
                                                             {{ $info['label'] ?? 'Permiso' }}
                                                         </div>
                                                         <div class="text-xs text-gray-600 dark:text-neutral-400">
@@ -583,20 +640,30 @@
                     </div>
 
                     {{-- Footer --}}
-                    <div class="mt-5 flex gap-2 justify-end">
-                        <button wire:click="closePermissions"
-                            class="px-4 py-2 rounded border border-gray-300 hover:bg-gray-50
-                               dark:border-neutral-700 dark:hover:bg-neutral-800">
+                    @slot('footer')
+                        <button type="button" wire:click="closePermissions"
+                            class="cursor-pointer px-4 py-2 rounded border border-gray-300 hover:bg-gray-50
+                           dark:border-neutral-700 dark:hover:bg-neutral-800">
                             Cancelar
                         </button>
-                        <button wire:click="savePermissions"
-                            class="px-4 py-2 rounded bg-black text-white hover:opacity-90">
-                            Guardar permisos
-                        </button>
-                    </div>
-                </div>
 
-            </div>
+                        <button type="button" wire:click="savePermissions" wire:loading.attr="disabled"
+                            wire:target="savePermissions"
+                            class="cursor-pointer px-4 py-2 rounded bg-black text-white hover:opacity-90
+                           disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span wire:loading.remove wire:target="savePermissions">Guardar permisos</span>
+                            <span wire:loading wire:target="savePermissions">Guardando…</span>
+                        </button>
+                    @endslot
+                </div>
+            </x-ui.modal>
+        @endcan
+    @endcan
+
+    @cannot('roles.view')
+        <div
+            class="p-4 border rounded bg-yellow-50 dark:bg-yellow-900 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200">
+            No tienes permiso para ver esta sección.
         </div>
-    @endif
+    @endcannot
 </div>

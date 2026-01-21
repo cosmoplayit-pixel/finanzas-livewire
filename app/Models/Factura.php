@@ -19,7 +19,7 @@ class Factura extends Model
     ];
 
     protected $casts = [
-        'fecha_emision' => 'date',
+        'fecha_emision' => 'datetime',
         'monto_facturado' => 'decimal:2',
         'retencion' => 'decimal:2', // ✅ Cast correcto
         'active' => 'boolean',

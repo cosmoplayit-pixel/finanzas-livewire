@@ -61,8 +61,15 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div>
             <label class="block text-sm mb-1">Monto <span class="text-red-500">*</span></label>
-            <input type="number" step="0.01" wire:model.live="monto"
-                class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700">
+            <input type="text" inputmode="decimal" wire:model.lazy="monto_formatted" placeholder="0,00"
+                class="w-full rounded border px-3 py-2
+                bg-white dark:bg-neutral-900
+                border-gray-300 dark:border-neutral-700
+                text-gray-900 dark:text-neutral-100
+                placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                focus:outline-none focus:ring-2
+                focus:ring-gray-300 dark:focus:ring-neutral-700">
+
             @error('monto')
                 <div class="text-red-600 text-xs">{{ $message }}</div>
             @enderror
@@ -89,13 +96,13 @@
 
     <x-slot:footer>
         <button type="button" @click="close()"
-            class="px-4 py-2 rounded border border-gray-300 dark:border-neutral-700
+            class="px-4 py-2 rounded cursor-pointer border border-gray-300 dark:border-neutral-700
                    text-gray-700 dark:text-neutral-200 hover:bg-gray-200 dark:hover:bg-neutral-800">
             Cancelar
         </button>
 
         <button type="button" wire:click="savePago" wire:loading.attr="disabled" wire:target="savePago"
-            class="px-4 py-2 rounded bg-black text-white hover:bg-gray-800
+            class="px-4 py-2 cursor-pointer rounded bg-black text-white hover:bg-gray-800
                    disabled:opacity-50 disabled:cursor-not-allowed">
             <span wire:loading.remove wire:target="savePago">Guardar pago</span>
             <span wire:loading wire:target="savePago">Guardando…</span>

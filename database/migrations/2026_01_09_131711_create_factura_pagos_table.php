@@ -20,7 +20,7 @@ return new class extends Migration {
             // normal | retencion
             $table->enum('tipo', ['normal', 'retencion']);
 
-            $table->decimal('monto', 12, 2)->default(0);
+            $table->decimal('monto', 14, 2)->default(0);
 
             // transferencia|deposito|cheque|efectivo|tarjeta|qr|otro
             $table->string('metodo_pago', 30)->nullable();

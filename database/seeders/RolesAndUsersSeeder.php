@@ -88,6 +88,19 @@ class RolesAndUsersSeeder extends Seeder
             'facturas.update',
             'facturas.toggle',
             'facturas.pay', // registrar pagos
+
+            // Agentes de Servicio
+            'agentes_servicio.view',
+            'agentes_servicio.create',
+            'agentes_servicio.update',
+            'agentes_servicio.toggle',
+
+            // Agentes de Presupuestos
+            'agente_presupuestos.view',
+            'agente_presupuestos.create',
+            'agente_presupuestos.update',
+            'agente_presupuestos.toggle',
+            'agente_presupuestos.close',
         ];
 
         foreach ($permissions as $p) {
@@ -180,6 +193,17 @@ class RolesAndUsersSeeder extends Seeder
             'facturas.create',
             'facturas.update',
             'facturas.pay',
+
+            'agentes_servicio.view',
+            'agentes_servicio.create',
+            'agentes_servicio.update',
+            'agentes_servicio.toggle',
+
+            'agente_presupuestos.view',
+            'agente_presupuestos.create',
+            'agente_presupuestos.update',
+            'agente_presupuestos.toggle',
+            'agente_presupuestos.close',
         ]);
 
         // Empresa_Visualizador
@@ -190,6 +214,8 @@ class RolesAndUsersSeeder extends Seeder
             'proyectos.view',
             'bancos.view',
             'facturas.view',
+            'agentes_servicio.view',
+            'agente_presupuestos.view',
         ]);
 
         /*

@@ -141,6 +141,35 @@
                         </flux:navlist.item>
                     @endcan
 
+                    {{-- Agentes de Servicio --}}
+                    @can('agentes_servicio.view')
+                        <flux:navlist.item icon="user-group" :href="route('agentes-servicio')"
+                            :current="request()->routeIs('agentes-servicio')" wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Agentes de Servicio') }}</span>
+                                @isset($navCounts['agentes_servicio'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['agentes_servicio'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
+
+                    {{-- Agentes de Presupuestos --}}
+                    @can('agente_presupuestos.view')
+                        <flux:navlist.item icon="user-group" :href="route('agentes-presupuestos')"
+                            :current="request()->routeIs('agentes-presupuestos')" wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Agentes de Presupuestos') }}</span>
+                                @isset($navCounts['agentes_presupuestos'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['agentes_presupuestos'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
 
                 </flux:navlist.group>
             @endcanany

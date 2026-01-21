@@ -12,6 +12,8 @@ use App\Livewire\Admin\Entidades;
 use App\Livewire\Admin\Proyectos;
 use App\Livewire\Admin\Bancos;
 use App\Livewire\Admin\Facturas;
+use App\Livewire\Admin\AgentesServicio;
+use App\Livewire\Admin\AgentePresupuestos;
 
 Route::get('/', fn() => redirect()->route('login'))->name('home');
 
@@ -98,4 +100,14 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware(['permission:bancos.view'])
         ->get('/bancos', Bancos::class)
         ->name('bancos');
+
+    // Agentes de Servicio
+    Route::middleware(['permission:agentes_servicio.view'])
+        ->get('/agentes-servicio', AgentesServicio::class)
+        ->name('agentes-servicio');
+
+    // Agente Presupuestos
+    Route::middleware(['permission:agente_presupuestos.view'])
+        ->get('/agentes-presupuestos', AgentePresupuestos::class)
+        ->name('agentes-presupuestos');
 });

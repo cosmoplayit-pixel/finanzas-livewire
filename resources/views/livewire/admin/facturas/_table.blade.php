@@ -168,7 +168,7 @@
                                         <line x1="3" y1="10" x2="21" y2="10" />
                                     </svg>
                                     <span>Fecha:
-                                        {{ $f->fecha_emision ? $f->fecha_emision->format('Y-m-d') : '—' }}</span>
+                                        {{ $f->fecha_emision ? $f->fecha_emision->format('Y-m-d H:i') : '—' }}</span>
                                 </div>
 
                                 {{-- Monto + Retención --}}

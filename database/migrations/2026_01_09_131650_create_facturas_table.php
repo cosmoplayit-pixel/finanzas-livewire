@@ -13,9 +13,9 @@ return new class extends Migration {
             $table->foreignId('proyecto_id')->constrained('proyectos')->cascadeOnDelete();
 
             $table->string('numero', 100)->nullable(); // nro factura (opcional)
-            $table->date('fecha_emision')->nullable();
-            $table->decimal('monto_facturado', 12, 2)->default(0);
-            $table->decimal('retencion', 12, 2)->default(0); // ✅ Retención
+            $table->dateTime('fecha_emision')->nullable();
+            $table->decimal('monto_facturado', 14, 2)->default(0);
+            $table->decimal('retencion', 14, 2)->default(0); // ✅ Retención
 
             $table->text('observacion')->nullable();
 

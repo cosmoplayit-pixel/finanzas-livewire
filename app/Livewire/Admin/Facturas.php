@@ -18,30 +18,25 @@ use Livewire\WithPagination;
 class Facturas extends Component
 {
     use WithPagination;
+    // Formateo monto facturado
+    public string $monto_facturado_formatted = '';
+    public string $monto_formatted = '';
 
-    // =========================
     // Filtros fecha (rango) - fecha_emision
-    // =========================
     public ?string $f_fecha_desde = null;
     public ?string $f_fecha_hasta = null;
 
-    // =========================
     // Filtros facturas (multi-select)
-    // =========================
     public array $f_pago = [];
     public array $f_retencion = [];
     public array $f_cerrada = [];
 
-    // =========================
     // Tabla
-    // =========================
     public string $search = '';
     public int $perPage = 5;
 
-    // =========================
     // Totales (resumen inferior)
     // - Se calculan sobre el universo filtrado (no solo la página)
-    // =========================
     public array $totales = [
         'facturado' => 0.0,
         'pagado_total' => 0.0,
@@ -49,9 +44,7 @@ class Facturas extends Component
         'retencion_pendiente' => 0.0,
     ];
 
-    // =========================
     // Modal FACTURA
-    // =========================
     public bool $openFacturaModal = false;
     public ?int $facturaEditId = null;
 
@@ -67,9 +60,7 @@ class Facturas extends Component
 
     public ?string $observacion_factura = null;
 
-    // =========================
     // Modal PAGO
-    // =========================
     public bool $openPagoModal = false;
     public ?int $facturaId = null;
 
@@ -96,10 +87,49 @@ class Facturas extends Component
     {
         return auth()->user()?->empresa_id;
     }
+    // formateo monto facturado
+    public function updatedMontoFacturadoFormatted($value): void
+    {
+        $value = trim((string) $value);
 
-    // =========================
+        if ($value === '') {
+            $this->monto_facturado = 0;
+            $this->monto_facturado_formatted = '';
+            return;
+        }
+
+        // miles "." -> remove, decimal "," -> "."
+        $clean = str_replace(['.', ','], ['', '.'], $value);
+
+        if (is_numeric($clean)) {
+            $this->monto_facturado = (float) $clean;
+            $this->monto_facturado_formatted = number_format($this->monto_facturado, 2, ',', '.');
+            return;
+        }
+    }
+
+    // formateo monto pago
+    public function updatedMontoFormatted($value): void
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            $this->monto = 0;
+            $this->monto_formatted = '';
+            return;
+        }
+
+        // miles "." -> remove, decimal "," -> "."
+        $clean = str_replace(['.', ','], ['', '.'], $value);
+
+        if (is_numeric($clean)) {
+            $this->monto = (float) $clean;
+            $this->monto_formatted = number_format($this->monto, 2, ',', '.');
+            return;
+        }
+    }
+
     // Fecha helpers
-    // =========================
     public function setFechaEsteAnio(): void
     {
         $this->f_fecha_desde = now()->startOfYear()->toDateString();
@@ -121,9 +151,7 @@ class Facturas extends Component
         $this->resetPage();
     }
 
-    // =========================
     // Reset paginación en cambios
-    // =========================
     public function updatingFFechaDesde(): void
     {
         $this->resetPage();
@@ -144,9 +172,7 @@ class Facturas extends Component
         $this->resetPage();
     }
 
-    // =========================
     // Filtros UI
-    // =========================
     private function normalizeFilter(array $values): array
     {
         $values = array_map('strval', $values);
@@ -188,9 +214,7 @@ class Facturas extends Component
         $this->resetPage();
     }
 
-    // =========================
     // FACTURAS: Crear
-    // =========================
     public function openCreateFactura(): void
     {
         $this->authorize('create', Factura::class);
@@ -204,8 +228,9 @@ class Facturas extends Component
         $this->entidad_id = null;
         $this->proyecto_id = '';
         $this->numero = null;
-        $this->fecha_emision = now()->toDateString();
+        $this->fecha_emision = now()->format('Y-m-d\TH:i');
         $this->monto_facturado = 0;
+        $this->monto_facturado_formatted = '';
 
         $this->retencion_porcentaje = 0;
         $this->retencion_monto = 0;
@@ -270,9 +295,7 @@ class Facturas extends Component
         }
     }
 
-    // =========================
     // Entidad / Proyecto dependiente (retención UI)
-    // =========================
     public function updatedEntidadId($value): void
     {
         $this->resetErrorBag('entidad_id,proyecto_id');
@@ -349,9 +372,7 @@ class Facturas extends Component
         $this->monto_neto = max(0, round($monto - $ret, 2));
     }
 
-    // =========================
     // PAGOS
-    // =========================
     public function openPago(int $facturaId): void
     {
         $this->facturaId = $facturaId;
@@ -368,6 +389,7 @@ class Facturas extends Component
         $this->metodo_pago = 'transferencia';
         $this->banco_id = null;
         $this->monto = 0;
+        $this->monto_formatted = '';
         $this->fecha_pago = now()->format('Y-m-d\TH:i');
         $this->nro_operacion = null;
         $this->observacion = null;
@@ -441,9 +463,7 @@ class Facturas extends Component
         }
     }
 
-    // =========================
     // ELIMINAR PAGO (SweetAlert)
-    // =========================
     public function confirmDeletePago(int $pagoId): void
     {
         $pago = FacturaPago::with(['factura'])->findOrFail($pagoId);
@@ -478,9 +498,7 @@ class Facturas extends Component
         }
     }
 
-    // =========================
     // RENDER (delegado al Query Object)
-    // =========================
     public function render()
     {
         $empresaId = $this->empresaId();

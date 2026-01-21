@@ -14,6 +14,7 @@ class MultiEmpresaSeeder extends Seeder
             EntidadesSeeder::class,
             ProyectosSeeder::class,
             BancosSeeder::class,
+            AgenteServicioSeeder::class,
         ]);
     }
 }

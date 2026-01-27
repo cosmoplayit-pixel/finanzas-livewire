@@ -440,29 +440,42 @@
 
 
         // ===================== BANCOS =====================
-        Livewire.on('swal:toggle-active-banco', ({
-            id,
-            active,
-            name
-        }) => {
-            Swal.fire({
-                title: active ? '¿Desactivar banco?' : '¿Activar banco?',
-                text: `¿Seguro que deseas ${active ? 'desactivar' : 'activar'}: "${name}"?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: active ? '#dc2626' : '#16a34a',
-                cancelButtonColor: '#6b7280',
-                confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
-                cancelButtonText: 'Cancelar',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Livewire.dispatch('doToggleActiveBanco', {
-                        id
-                    });
-                }
+        function registerSwalToggleBanco() {
+            window.addEventListener('swal:toggle-active-banco', (event) => {
+                const {
+                    id,
+                    active,
+                    name
+                } = event.detail || {};
+
+                Swal.fire({
+                    title: active ? '¿Desactivar banco?' : '¿Activar banco?',
+                    text: `¿Seguro que deseas ${active ? 'desactivar' : 'activar'} el banco "${name}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: active ? '#dc2626' : '#16a34a',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Livewire.dispatch('doToggleActiveBanco', {
+                            id
+                        });
+                    }
+                }).finally(() => {
+                    // ✅ libera el loading Alpine SIEMPRE
+                    window.dispatchEvent(new CustomEvent('swal:done'));
+                });
             });
-        });
+        }
+
+        // Si usas navegación tipo SPA (wire:navigate), registra también:
+        document.addEventListener('livewire:navigated', registerSwalToggleBanco);
+
+        // ✅ y regístralo una vez al iniciar (ESTO va dentro de tu livewire:init wrapper)
+        registerSwalToggleBanco();
 
         // ===================== FACTURAS: ELIMINAR PAGO =====================
         Livewire.on('swal:delete-pago', ({
@@ -494,6 +507,40 @@
                 behavior: 'auto'
             }));
         });
+
+        // ===================== RENDICIÓN: ELIMINAR MOVIMIENTO =====================
+        function registerSwalDeleteMovimiento() {
+            window.addEventListener('swal:delete-movimiento', (event) => {
+                const {
+                    id,
+                    monto
+                } = event.detail || {};
+
+                Swal.fire({
+                    title: '¿Eliminar movimiento?',
+                    text: `Esta acción no se puede deshacer.${monto ? ' (' + monto + ')' : ''}`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    reverseButtons: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Livewire.dispatch('doDeleteMovimiento', {
+                            id
+                        });
+                    }
+                }).finally(() => {
+                    // si usas loading alpine, libera
+                    window.dispatchEvent(new CustomEvent('swal:done'));
+                });
+            });
+        }
+
+        document.addEventListener('livewire:init', registerSwalDeleteMovimiento);
+        document.addEventListener('livewire:navigated', registerSwalDeleteMovimiento);
 
 
 

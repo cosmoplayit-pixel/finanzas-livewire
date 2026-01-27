@@ -101,13 +101,25 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->get('/bancos', Bancos::class)
         ->name('bancos');
 
-    // Agentes de Servicio
+    // =======================
+    // AGENTES DE SERVICIO
+    // =======================
     Route::middleware(['permission:agentes_servicio.view'])
         ->get('/agentes-servicio', AgentesServicio::class)
         ->name('agentes-servicio');
 
-    // Agente Presupuestos
+    // =======================
+    // AGENTE PRESUPUESTOS + RENDICIÓN (UNIFICADO)
+    // =======================
     Route::middleware(['permission:agente_presupuestos.view'])
         ->get('/agentes-presupuestos', AgentePresupuestos::class)
         ->name('agentes-presupuestos');
+
+    /**
+     * Compatibilidad: si antes tenías "agentes-rendicion",
+     * redirige al módulo unificado.
+     */
+    Route::middleware(['permission:agente_presupuestos.view'])
+        ->get('/agentes-rendicion', fn() => redirect()->route('agentes-presupuestos'))
+        ->name('agentes-rendicion');
 });

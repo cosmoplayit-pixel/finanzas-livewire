@@ -20,8 +20,8 @@ class AgenteServicioSeeder extends Seeder
                 'nombre' => 'WILLAM ROJAS VIDAL',
                 'ci' => '7706841',
                 'nro_celular' => '74604441',
-                'saldo_usd' => 1000,
-                'saldo_bob' => 10000,
+                'saldo_usd' => 0,
+                'saldo_bob' => 0,
                 'active' => true,
             ],
             [
@@ -29,7 +29,7 @@ class AgenteServicioSeeder extends Seeder
                 'ci' => '4561365',
                 'nro_celular' => null,
                 'saldo_usd' => 0,
-                'saldo_bob' => 5000,
+                'saldo_bob' => 0,
                 'active' => true,
             ],
             [
@@ -37,7 +37,7 @@ class AgenteServicioSeeder extends Seeder
                 'ci' => '6302878',
                 'nro_celular' => null,
                 'saldo_usd' => 0,
-                'saldo_bob' => 500,
+                'saldo_bob' => 0,
                 'active' => true,
             ],
             [
@@ -45,7 +45,7 @@ class AgenteServicioSeeder extends Seeder
                 'ci' => '652145632',
                 'nro_celular' => null,
                 'saldo_usd' => 0,
-                'saldo_bob' => 2368,
+                'saldo_bob' => 0,
                 'active' => true,
             ],
         ];

@@ -583,6 +583,4 @@
             @endslot
         </x-ui.modal>
     @endcanany
-
-
 </div>

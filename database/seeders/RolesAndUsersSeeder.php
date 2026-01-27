@@ -101,6 +101,13 @@ class RolesAndUsersSeeder extends Seeder
             'agente_presupuestos.update',
             'agente_presupuestos.toggle',
             'agente_presupuestos.close',
+
+            // Agentes de Rendicion
+            'agente_rendicion.view',
+            'agente_rendicion.create',
+            'agente_rendicion.update',
+            'agente_rendicion.toggle',
+            'agente_rendicion.close',
         ];
 
         foreach ($permissions as $p) {
@@ -204,6 +211,12 @@ class RolesAndUsersSeeder extends Seeder
             'agente_presupuestos.update',
             'agente_presupuestos.toggle',
             'agente_presupuestos.close',
+
+            'agente_rendicion.view',
+            'agente_rendicion.create',
+            'agente_rendicion.update',
+            'agente_rendicion.toggle',
+            'agente_rendicion.close',
         ]);
 
         // Empresa_Visualizador
@@ -216,6 +229,7 @@ class RolesAndUsersSeeder extends Seeder
             'facturas.view',
             'agentes_servicio.view',
             'agente_presupuestos.view',
+            'agente_rendicion.view',
         ]);
 
         /*

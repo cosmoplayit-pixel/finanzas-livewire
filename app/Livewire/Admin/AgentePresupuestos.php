@@ -6,59 +6,47 @@ use App\Models\AgentePresupuesto;
 use App\Models\AgenteServicio;
 use App\Models\Banco;
 use App\Models\Empresa;
+use App\Models\Entidad;
+use App\Models\Proyecto;
+use App\Models\Rendicion;
+use App\Models\RendicionMovimiento;
 use App\Services\AgentePresupuestoService;
+use App\Services\RendicionService;
 use DomainException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
-use Livewire\Attributes\Computed;
 
 class AgentePresupuestos extends Component
 {
     use WithPagination;
-    public string $panelMoneda = 'BOB'; // BOB | USD (moneda que se muestra en el panel)
+    use WithFileUploads;
 
-    public bool $soloActivos = true;
-
-    public string $banco_label = '';
-    public string $agente_label = '';
-
-    public float $saldo_banco_actual_preview = 0;
-    public float $saldo_agente_actual_preview = 0;
-
-    // =========================
-    // Filtros / Tabla
-    // =========================
+    // TABLA PRINCIPAL (RESUMEN POR AGENTE + MONEDA)
     public string $search = '';
     public int $perPage = 10;
+    public bool $soloPendientes = true;
 
-    public string $status = 'all';
-    public string $estadoFilter = 'all';
-    public string $monedaFilter = 'all';
+    public string $moneda = 'all'; // all | BOB | USD
+
+    // Admin
     public string $empresaFilter = 'all';
 
-    public string $sortField = 'id';
-    public string $sortDirection = 'desc';
+    // Orden
+    public string $sortField = 'agente'; // agente | moneda | total_presupuesto | total_rendido | total_saldo | total_presupuestos
+    public string $sortDirection = 'asc';
 
-    // =========================
-    // Modal
-    // =========================
+    // MODAL CREAR PRESUPUESTO
     public bool $openModal = false;
 
-    // =========================
-    // Panel (estilo Excel)
-    // =========================
-    public bool $openPanel = false; // muestra la “ventana”
-    public string $panelTab = 'activos'; // activos | todos
-    public ?int $panelAgenteId = null; // agente seleccionado
-    public ?int $lastCreatedId = null; // resalta último creado
-
-    // =========================
-    // Form (Crear)
-    // =========================
     public ?int $banco_id = null;
     public ?int $agente_servicio_id = null;
 
-    public string $moneda = '';
+    public string $monedaBanco = '';
     public string $fecha_presupuesto = '';
     public string $nro_transaccion = '';
     public ?string $observacion = null;
@@ -66,16 +54,74 @@ class AgentePresupuestos extends Component
     public string $monto_formatted = '';
     public float $monto = 0;
 
-    // =========================
-    // Previews (UI)
-    // =========================
-    public float $saldo_banco_antes_preview = 0;
+    // Previews
+    public float $saldo_banco_actual_preview = 0;
     public float $saldo_banco_despues_preview = 0;
 
-    public float $saldo_agente_antes_preview = 0;
+    public float $saldo_agente_actual_preview = 0;
     public float $saldo_agente_despues_preview = 0;
 
     public bool $monto_excede_saldo = false;
+
+    // EDITOR RENDICIÓN (SIN EDICIÓN DE MOVIMIENTOS)
+    public bool $openEditor = false;
+    public ?int $editorRendicionId = null;
+
+    public ?string $editorRendicionNro = null;
+    public ?string $editorAgenteNombre = null;
+    public ?string $editorFecha = null;
+    public ?string $editorMonedaBase = null;
+
+    public float $editorPresupuestoTotal = 0;
+    public float $editorRendidoTotal = 0;
+    public float $editorSaldo = 0;
+
+    public string $editorTab = 'compra';
+    public ?string $editorCuadreMsg = null;
+
+    public array $editorEntidades = [];
+    public array $editorProyectos = [];
+    public array $editorBancos = [];
+
+    public array $editorCompras = [];
+    public array $editorDevoluciones = [];
+
+    public float $editorTotalComprasBase = 0;
+    public float $editorTotalDevolucionesBase = 0;
+
+    // Form movimiento
+    public ?string $mov_fecha = null; // Y-m-d
+    public string $mov_moneda = 'BOB'; // BOB|USD
+    public ?string $mov_tipo_cambio = null;
+    public ?string $mov_monto = null;
+
+    // compra
+    public ?int $mov_entidad_id = null;
+    public ?int $mov_proyecto_id = null;
+    public ?string $mov_tipo_comprobante = null;
+    public ?string $mov_nro_comprobante = null;
+
+    // devolucion
+    public ?int $mov_banco_id = null;
+    public ?string $mov_nro_transaccion = null;
+
+    public ?string $mov_observacion = null;
+    public $mov_foto = null;
+
+    // Foto preview
+    public bool $openFotoModal = false;
+    public ?string $fotoUrl = null;
+
+    // UI anti doble click
+    public bool $creatingRendicion = false;
+
+    // Paneles inline
+    public array $panelsOpen = [];
+    public array $panelData = [];
+    public array $panelTotalFalta = [];
+    public array $panelAgenteMeta = [];
+
+    public array $panelEstado = []; // ALL | OPEN | CLOSED
 
     public function mount(): void
     {
@@ -83,54 +129,130 @@ class AgentePresupuestos extends Component
             $this->empresaFilter = (string) $this->userEmpresaId();
         }
 
-        $this->fecha_presupuesto = now()->format('Y-m-d');
+        $this->fecha_presupuesto = now()->format('Y-m-d\TH:i');
     }
 
-    protected function rules(): array
+    #[On('doDeleteMovimiento')]
+    public function doDeleteMovimiento(int $id, RendicionService $service): void
+    {
+        $this->deleteMovimiento($id, $service);
+    }
+
+    // Helpers
+    private function normalizeMoneda(?string $moneda): string
+    {
+        $m = strtoupper(trim((string) $moneda));
+        return in_array($m, ['BOB', 'USD'], true) ? $m : 'BOB';
+    }
+
+    // Clave única por fila agente+moneda
+    private function rowKey(int $agenteId, string $moneda): string
+    {
+        return $agenteId . '|' . $this->normalizeMoneda($moneda);
+    }
+
+    // Reglas de validación para presupuesto
+    protected function presupuestoRules(): array
     {
         return [
             'banco_id' => ['required', 'exists:bancos,id'],
             'agente_servicio_id' => ['required', 'exists:agentes_servicio,id'],
-
-            // viene de datetime-local, pero guardamos DATE (Y-m-d)
             'fecha_presupuesto' => ['required', 'date'],
             'nro_transaccion' => ['required', 'string', 'max:50'],
-
             'monto' => ['required', 'numeric', 'min:0.01'],
             'observacion' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
-    #[Computed]
-    public function puedeGuardar(): bool
+    // Reglas de validación para movimiento
+    protected function movimientoRules(): array
     {
-        if (!$this->banco_id) {
-            return false;
-        }
-        if (!$this->agente_servicio_id) {
-            return false;
+        $base = [
+            'mov_fecha' => ['required', 'date_format:Y-m-d'],
+            'mov_moneda' => ['required', Rule::in(['BOB', 'USD'])],
+            'mov_monto' => ['required', 'numeric', 'min:0.01'],
+            'mov_tipo_cambio' => ['nullable', 'numeric', 'min:0.000001'],
+            'mov_observacion' => ['nullable', 'string', 'max:2000'],
+            'mov_foto' => ['nullable', 'file', 'max:5120'],
+        ];
+
+        if (($this->editorTab ?? 'compra') === 'compra') {
+            $base['mov_entidad_id'] = ['required', 'integer', 'exists:entidades,id'];
+            $base['mov_proyecto_id'] = [
+                'required',
+                'integer',
+                Rule::exists('proyectos', 'id')->where(
+                    fn($q) => $q->where('entidad_id', $this->mov_entidad_id)->where('active', true),
+                ),
+            ];
+            $base['mov_tipo_comprobante'] = [
+                'required',
+                Rule::in(['FACTURA', 'RECIBO', 'TRANSFERENCIA']),
+            ];
+        } else {
+            $base['mov_banco_id'] = ['required', 'integer', 'exists:bancos,id'];
+            $base['mov_nro_transaccion'] = ['required', 'string', 'max:60'];
         }
 
-        if (round((float) $this->monto, 2) <= 0) {
-            return false;
-        }
-        if ($this->monto_excede_saldo) {
-            return false;
-        }
-
-        if (trim((string) $this->fecha_presupuesto) === '') {
-            return false;
-        }
-        if (trim((string) $this->nro_transaccion) === '') {
-            return false;
-        }
-
-        return true;
+        return $base;
     }
 
-    // =========================
-    // Updated hooks (filtros)
-    // =========================
+    // TOGGLE panel inline
+    public function togglePanel(int $agenteId, string $moneda): void
+    {
+        $moneda = $this->normalizeMoneda($moneda);
+        $key = $this->rowKey($agenteId, $moneda);
+
+        $isOpen = (bool) ($this->panelsOpen[$key] ?? false);
+        $this->panelsOpen[$key] = !$isOpen;
+
+        if ($this->panelsOpen[$key]) {
+            $this->loadPanel($agenteId, $moneda);
+        }
+    }
+
+    // Cargar datos del panel inline
+    private function loadPanel(int $agenteId, string $moneda): void
+    {
+        $moneda = $this->normalizeMoneda($moneda);
+        $rowKey = $this->rowKey($agenteId, $moneda);
+
+        $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
+
+        $agente = AgenteServicio::query()
+            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->find($agenteId);
+
+        if (!$agente) {
+            $this->panelData[$rowKey] = [];
+            $this->panelTotalFalta[$rowKey] = 0;
+            $this->panelAgenteMeta[$rowKey] = ['nombre' => '—', 'ci' => '—'];
+            return;
+        }
+
+        $this->panelAgenteMeta[$rowKey] = [
+            'nombre' => $agente->nombre,
+            'ci' => $agente->ci ?? '—',
+        ];
+
+        $pq = AgentePresupuesto::query()
+            ->with(['rendicion', 'banco'])
+            ->where('agente_servicio_id', $agenteId)
+            ->where('moneda', $moneda)
+            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->orderByDesc('fecha_presupuesto')
+            ->orderByDesc('id');
+
+        $rows = $pq->get();
+        $this->panelData[$rowKey] = $rows->all();
+        $this->panelTotalFalta[$rowKey] = (float) $rows->sum('saldo_por_rendir');
+
+        $rows = $pq->get();
+        $this->panelData[$rowKey] = $rows->all();
+        $this->panelTotalFalta[$rowKey] = (float) $rows->sum('saldo_por_rendir');
+    }
+
+    // HOOKS (tabla)
     public function updatedSearch(): void
     {
         $this->resetPage();
@@ -139,15 +261,7 @@ class AgentePresupuestos extends Component
     {
         $this->resetPage();
     }
-    public function updatedStatus(): void
-    {
-        $this->resetPage();
-    }
-    public function updatedEstadoFilter(): void
-    {
-        $this->resetPage();
-    }
-    public function updatedMonedaFilter(): void
+    public function updatedSoloPendientes(): void
     {
         $this->resetPage();
     }
@@ -156,6 +270,12 @@ class AgentePresupuestos extends Component
         $this->resetPage();
     }
 
+    public function updatedMoneda(): void
+    {
+        $this->resetPage();
+    }
+
+    // Ordenar por campo
     public function sortBy(string $field): void
     {
         if ($this->sortField === $field) {
@@ -166,38 +286,26 @@ class AgentePresupuestos extends Component
         $this->sortDirection = 'asc';
     }
 
-    public function updatedNroTransaccion($value): void
+    // Abrir modal
+    public function openCreate(): void
     {
-        $this->nro_transaccion = trim((string) $value);
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->resetPresupuestoForm();
+
+        $this->fecha_presupuesto = now()->format('Y-m-d\TH:i');
+        $this->recalcularPreviews();
+        $this->openModal = true;
     }
 
-    // =========================
-    // Panel actions
-    // =========================
-    public function setPanelTab(string $tab): void
+    // Cerrar modal
+    public function closeModal(): void
     {
-        $tab = strtolower(trim($tab));
-        $this->panelTab = in_array($tab, ['activos', 'todos'], true) ? $tab : 'activos';
-    }
-    public function setPanelMoneda(string $moneda): void
-    {
-        $moneda = strtoupper(trim($moneda));
-        $this->panelMoneda = in_array($moneda, ['BOB', 'USD'], true) ? $moneda : 'BOB';
+        $this->resetPresupuestoForm();
+        $this->openModal = false;
     }
 
-    public function closePanel(): void
-    {
-        $this->openPanel = false;
-        $this->panelAgenteId = null;
-        $this->panelTab = 'activos';
-        $this->soloActivos = true;
-        $this->panelMoneda = 'BOB'; // ✅ opcional
-        $this->lastCreatedId = null;
-    }
-
-    // =========================
-    // Formateo monto
-    // =========================
+    // Al cambiar monto formateado
     public function updatedMontoFormatted($value): void
     {
         $value = trim((string) $value);
@@ -209,7 +317,6 @@ class AgentePresupuestos extends Component
             return;
         }
 
-        // "1.234,56" -> "1234.56"
         $clean = str_replace('.', '', $value);
         $clean = str_replace(',', '.', $clean);
 
@@ -221,10 +328,16 @@ class AgentePresupuestos extends Component
 
         $this->monto = round((float) $clean, 2);
         $this->monto_formatted = number_format($this->monto, 2, ',', '.');
-
         $this->recalcularPreviews();
     }
 
+    // Al cambiar nro transacción
+    public function updatedNroTransaccion($value): void
+    {
+        $this->nro_transaccion = trim((string) $value);
+    }
+
+    // Al cambiar banco
     public function updatedBancoId(): void
     {
         $this->cargarBancoPreview();
@@ -232,40 +345,44 @@ class AgentePresupuestos extends Component
         $this->recalcularPreviews();
     }
 
+    // Al cambiar agente
     public function updatedAgenteServicioId(): void
     {
         $this->cargarAgentePreview();
         $this->recalcularPreviews();
     }
 
-    // =========================
-    // UI
-    // =========================
-    public function openCreate(): void
+    // Puede guardar presupuesto
+    public function getPuedeGuardarProperty(): bool
     {
-        $this->resetErrorBag();
-        $this->resetValidation();
-        $this->resetForm();
+        if (!$this->banco_id) {
+            return false;
+        }
+        if (!$this->agente_servicio_id) {
+            return false;
+        }
+        if (round((float) $this->monto, 2) <= 0) {
+            return false;
+        }
+        if ($this->monto_excede_saldo) {
+            return false;
+        }
+        if (trim((string) $this->fecha_presupuesto) === '') {
+            return false;
+        }
+        if (trim((string) $this->nro_transaccion) === '') {
+            return false;
+        }
 
-        $this->fecha_presupuesto = now()->format('Y-m-d\TH:i'); // para datetime-local
+        return true;
+    }
+
+    // Guardar presupuesto
+    public function savePresupuesto(AgentePresupuestoService $svc): void
+    {
+        $data = $this->validate($this->presupuestoRules());
+
         $this->recalcularPreviews();
-
-        $this->openModal = true;
-    }
-
-    public function closeModal(): void
-    {
-        $this->resetForm();
-        $this->openModal = false;
-    }
-
-    // =========================
-    // Guardar
-    // =========================
-    public function save(): void
-    {
-        $data = $this->validate();
-
         if ($this->monto_excede_saldo) {
             $this->addError('monto', 'El monto no puede ser mayor al saldo actual del banco.');
             return;
@@ -285,33 +402,28 @@ class AgentePresupuestos extends Component
             }
         }
 
-        $moneda = (string) $banco->moneda;
-
-        // ✅ tu columna es datetime, pero el input es datetime-local (Y-m-d\TH:i)
+        $mon = (string) $banco->moneda;
         $fecha = date('Y-m-d H:i:00', strtotime($data['fecha_presupuesto']));
 
         try {
-            /** @var AgentePresupuestoService $svc */
-            $svc = app(AgentePresupuestoService::class);
-
-            $presupuesto = $svc->crear(
+            $svc->crear(
                 agente: $agente,
                 banco: $banco,
                 monto: (float) $this->monto,
-                moneda: $moneda,
+                moneda: $mon,
                 fecha: $fecha,
                 nro_transaccion: $data['nro_transaccion'],
                 observacion: $data['observacion'] ?? null,
                 user: auth()->user(),
             );
 
-            // ✅ cerrar modal + abrir “ventana” estilo Excel
             $this->closeModal();
-            $this->openPanel = true;
-            $this->panelAgenteId = (int) $agente->id;
-            $this->panelTab = 'activos';
-            $this->panelMoneda = $moneda;
-            $this->lastCreatedId = (int) $presupuesto->id;
+
+            // Abrir panel inline de esa fila
+            $rk = $this->rowKey((int) $agente->id, $mon);
+            $this->panelsOpen[$rk] = true;
+            $this->panelEstado[$rk] = $this->panelEstado[$rk] ?? 'ALL';
+            $this->loadPanel((int) $agente->id, $mon);
 
             session()->flash('success', 'Presupuesto registrado correctamente.');
         } catch (DomainException $e) {
@@ -319,250 +431,500 @@ class AgentePresupuestos extends Component
         }
     }
 
-    // =========================
-    // Previews
-    // =========================
+    // Cargar preview banco
     private function cargarBancoPreview(): void
     {
-        // Reset Banco preview
-        $this->moneda = '';
+        $this->monedaBanco = '';
         $this->saldo_banco_actual_preview = 0;
-        $this->saldo_banco_despues_preview = 0;
 
-        // Si no hay banco seleccionado, igual recalcula para limpiar “después”
         if (!$this->banco_id) {
-            $this->monto_excede_saldo = false;
-
-            // La moneda afecta el saldo del agente, así que refrescamos agente también
-            $this->cargarAgentePreview();
-            $this->recalcularPreviews();
             return;
         }
 
         $b = Banco::query()->find($this->banco_id);
-
         if (!$b) {
             $this->banco_id = null;
-            $this->monto_excede_saldo = false;
-            $this->cargarAgentePreview();
-            $this->recalcularPreviews();
             return;
         }
 
-        // Seguridad multiempresa (preview)
         if (!$this->isAdmin() && (int) $b->empresa_id !== (int) $this->userEmpresaId()) {
             $this->banco_id = null;
-            $this->monto_excede_saldo = false;
-            $this->cargarAgentePreview();
-            $this->recalcularPreviews();
             return;
         }
 
-        // Moneda viene del banco (regla dura)
-        $this->moneda = (string) $b->moneda;
-
-        // Saldo actual del banco (tu campo real)
+        $this->monedaBanco = (string) $b->moneda;
         $this->saldo_banco_actual_preview = round((float) ($b->monto ?? 0), 2);
-
-        // Como la moneda cambió (posible), refrescamos agente y recalculamos
-        $this->cargarAgentePreview();
-        $this->recalcularPreviews();
     }
 
+    // Cargar preview agente
     private function cargarAgentePreview(): void
     {
-        // Reset Agente preview
         $this->saldo_agente_actual_preview = 0;
-        $this->saldo_agente_despues_preview = 0;
-
         if (!$this->agente_servicio_id) {
-            $this->recalcularPreviews();
             return;
         }
 
         $a = AgenteServicio::query()->find($this->agente_servicio_id);
-
         if (!$a) {
             $this->agente_servicio_id = null;
-            $this->recalcularPreviews();
             return;
         }
 
-        // Seguridad multiempresa (preview)
         if (!$this->isAdmin() && (int) $a->empresa_id !== (int) $this->userEmpresaId()) {
             $this->agente_servicio_id = null;
-            $this->recalcularPreviews();
             return;
         }
 
-        // OJO: el saldo “actual” del agente depende de la moneda del banco.
-        // Si todavía no hay banco/moneda, dejamos 0 para evitar mostrar datos incorrectos.
-        if ($this->moneda === 'USD') {
+        if ($this->monedaBanco === 'USD') {
             $this->saldo_agente_actual_preview = round((float) ($a->saldo_usd ?? 0), 2);
-        } elseif ($this->moneda === 'BOB') {
+        } elseif ($this->monedaBanco === 'BOB') {
             $this->saldo_agente_actual_preview = round((float) ($a->saldo_bob ?? 0), 2);
-        } else {
-            $this->saldo_agente_actual_preview = 0;
         }
-
-        $this->recalcularPreviews();
     }
 
+    // Recalcular previews
     private function recalcularPreviews(): void
     {
-        $monto = round((float) $this->monto, 2);
+        $m = round((float) $this->monto, 2);
 
-        // Banco
         $antesBanco = round((float) $this->saldo_banco_actual_preview, 2);
+        $this->monto_excede_saldo = (bool) ($this->banco_id && $m > 0 && $m > $antesBanco);
 
-        $this->monto_excede_saldo = $this->banco_id && $monto > 0 && $monto > $antesBanco;
+        $this->saldo_banco_despues_preview = round($antesBanco - $m, 2);
 
-        // “Después” (si excede, igual calculamos para preview, pero bloqueamos el guardar)
-        $this->saldo_banco_despues_preview = round($antesBanco - $monto, 2);
-
-        // Agente
         $antesAgente = round((float) $this->saldo_agente_actual_preview, 2);
-        $this->saldo_agente_despues_preview = round($antesAgente + $monto, 2);
+        $this->saldo_agente_despues_preview = round($antesAgente + $m, 2);
     }
 
-    private function resetForm(): void
+    // Reset form presupuesto
+    private function resetPresupuestoForm(): void
     {
         $this->reset([
             'banco_id',
             'agente_servicio_id',
-            'banco_label',
-            'agente_label',
-            'moneda',
+            'monedaBanco',
             'fecha_presupuesto',
             'nro_transaccion',
             'observacion',
-            'monto',
             'monto_formatted',
+            'monto',
             'saldo_banco_actual_preview',
-            'saldo_banco_antes_preview',
             'saldo_banco_despues_preview',
             'saldo_agente_actual_preview',
-            'saldo_agente_antes_preview',
             'saldo_agente_despues_preview',
             'monto_excede_saldo',
         ]);
 
+        $this->fecha_presupuesto = now()->format('Y-m-d\TH:i');
         $this->monto = 0;
         $this->monto_formatted = '';
-        $this->moneda = '';
+        $this->monedaBanco = '';
         $this->monto_excede_saldo = false;
     }
 
-    // =========================
-    // Render
-    // =========================
-    public function render()
+    // RENDICIÓN: crear + abrir editor
+    public function crearRendicion(int $presupuestoId, RendicionService $service): void
     {
-        $q = AgentePresupuesto::query()->with(['agente', 'banco']);
+        if ($this->creatingRendicion) {
+            return;
+        }
+        $this->creatingRendicion = true;
 
-        if (!$this->isAdmin()) {
-            $q->where('empresa_id', $this->userEmpresaId());
-        } else {
-            $q->when(
-                $this->empresaFilter !== 'all',
-                fn($qq) => $qq->where('empresa_id', $this->empresaFilter),
+        try {
+            $p0 = AgentePresupuesto::query()
+                ->when(!$this->isAdmin(), fn($q) => $q->where('empresa_id', $this->userEmpresaId()))
+                ->findOrFail($presupuestoId);
+
+            $rend = $service->crearDesdePresupuesto($p0, auth()->user());
+
+            $this->openRendicionEditor((int) $rend->id);
+            session()->flash('success', 'Rendición creada.');
+        } finally {
+            $this->creatingRendicion = false;
+        }
+    }
+
+    // Abrir editor de rendición
+    public function openRendicionEditor(int $rendicionId): void
+    {
+        $this->resetErrorBag();
+        $r = Rendicion::query()
+            ->when(!$this->isAdmin(), fn($q) => $q->where('empresa_id', $this->userEmpresaId()))
+            ->with(['agente'])
+            ->findOrFail($rendicionId);
+
+        $this->editorRendicionId = (int) $r->id;
+        $this->openEditor = true;
+
+        $this->editorRendicionNro = $r->nro_rendicion ?? null;
+        $this->editorAgenteNombre = $r->agente?->nombre ?? null;
+        $this->editorFecha = $r->fecha_rendicion ? (string) $r->fecha_rendicion : null;
+        $this->editorMonedaBase = (string) $r->moneda;
+
+        $this->editorPresupuestoTotal = (float) ($r->presupuesto_total ?? 0);
+        $this->editorRendidoTotal = (float) ($r->rendido_total ?? 0);
+        $this->editorSaldo = (float) ($r->saldo ?? 0);
+
+        $this->editorTab = $this->editorTab ?: 'compra';
+        $this->editorCuadreMsg = null;
+
+        $this->loadEditorCatalogos();
+        $this->loadEditorMovimientos();
+
+        // defaults
+        $this->mov_fecha = now()->toDateString();
+        $this->mov_moneda = $this->editorMonedaBase ?: 'BOB';
+        $this->mov_tipo_cambio = null;
+        $this->mov_monto = null;
+
+        $this->mov_entidad_id = null;
+        $this->mov_proyecto_id = null;
+
+        $this->mov_tipo_comprobante = null;
+        $this->mov_nro_comprobante = null;
+
+        $this->mov_banco_id = null;
+        $this->mov_nro_transaccion = null;
+
+        $this->mov_observacion = null;
+        $this->mov_foto = null;
+
+        $this->editorProyectos = [];
+    }
+
+    // Cerrar editor
+    public function closeEditor(): void
+    {
+        $this->openEditor = false;
+        $this->editorRendicionId = null;
+        $this->editorCuadreMsg = null;
+        $this->resetMovimientoForm();
+    }
+
+    // Reset form movimiento
+    private function loadEditorCatalogos(): void
+    {
+        $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
+
+        // ENTIDADES: solo las que tengan al menos 1 proyecto ACTIVO
+        $this->editorEntidades = Entidad::query()
+            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->where('active', true)
+            ->whereHas('proyectos', function ($q) use ($empresaId) {
+                $q->where('active', true);
+
+                // si Proyecto también tiene empresa_id (multi-empresa), asegura el scope
+                if ($empresaId) {
+                    $q->where('empresa_id', $empresaId);
+                }
+            })
+            ->orderBy('nombre')
+            ->get(['id', 'nombre'])
+            ->map(fn($e) => ['id' => $e->id, 'nombre' => $e->nombre])
+            ->all();
+
+        // BANCOS igual
+        $this->editorBancos = Banco::query()
+            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->where('active', true)
+            ->orderBy('nombre')
+            ->get(['id', 'nombre', 'numero_cuenta', 'moneda'])
+            ->map(
+                fn($b) => [
+                    'id' => $b->id,
+                    'nombre' => $b->nombre,
+                    'numero_cuenta' => $b->numero_cuenta,
+                    'moneda' => $b->moneda,
+                ],
+            )
+            ->all();
+
+        // Opcional: si la entidad seleccionada ya no existe en el listado, la reseteas
+        if ($this->mov_entidad_id) {
+            $exists = collect($this->editorEntidades)->contains(
+                fn($e) => (int) $e['id'] === (int) $this->mov_entidad_id,
             );
+            if (!$exists) {
+                $this->mov_entidad_id = null;
+                $this->mov_proyecto_id = null;
+                $this->editorProyectos = [];
+            }
+        }
+    }
+
+    // Cargar proyectos al cambiar entidad
+    public function updatedMovEntidadId($value): void
+    {
+        $this->mov_proyecto_id = null;
+        $this->loadProyectosByEntidad((int) $value);
+    }
+
+    // Cargar proyectos por entidad seleccionada
+    private function loadProyectosByEntidad(?int $entidadId): void
+    {
+        $this->editorProyectos = [];
+        if (!$entidadId) {
+            return;
         }
 
-        $presupuestos = $q
-            ->when($this->search, function ($qq) {
-                $s = trim($this->search);
-                $qq->where(function ($w) use ($s) {
-                    $w->where('nro_transaccion', 'like', "%{$s}%")
-                        ->orWhereHas(
-                            'banco',
-                            fn($b) => $b
-                                ->where('nombre', 'like', "%{$s}%")
-                                ->orWhere('numero_cuenta', 'like', "%{$s}%"),
-                        )
-                        ->orWhereHas(
-                            'agente',
-                            fn($a) => $a
-                                ->where('nombre', 'like', "%{$s}%")
-                                ->orWhere('ci', 'like', "%{$s}%"),
-                        );
-                });
-            })
-            ->when(
-                $this->monedaFilter !== 'all',
-                fn($qq) => $qq->where('moneda', $this->monedaFilter),
-            )
-            ->when(
-                $this->estadoFilter !== 'all',
-                fn($qq) => $qq->where('estado', $this->estadoFilter),
-            )
-            ->when(
-                $this->status !== 'all',
-                fn($qq) => $qq->where('active', $this->status === 'active'),
-            )
-            ->orderBy($this->sortField, $this->sortDirection)
-            ->paginate($this->perPage);
+        $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
 
-        $bancos = Banco::query()
-            ->when(!$this->isAdmin(), fn($b) => $b->where('empresa_id', $this->userEmpresaId()))
+        $this->editorProyectos = Proyecto::query()
+            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->where('entidad_id', $entidadId)
             ->where('active', true)
             ->orderBy('nombre')
-            ->get();
+            ->get(['id', 'nombre'])
+            ->map(fn($p) => ['id' => $p->id, 'nombre' => $p->nombre])
+            ->all();
+    }
 
-        $agentes = AgenteServicio::query()
-            ->when(!$this->isAdmin(), fn($a) => $a->where('empresa_id', $this->userEmpresaId()))
+    // Cargar movimientos del editor
+    private function loadEditorMovimientos(): void
+    {
+        if (!$this->editorRendicionId) {
+            return;
+        }
+
+        $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
+
+        $movs = RendicionMovimiento::query()
+            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->where('rendicion_id', $this->editorRendicionId)
             ->where('active', true)
-            ->orderBy('nombre')
+            ->with(['entidad', 'proyecto', 'banco'])
+            ->orderBy('fecha')
+            ->orderBy('id')
             ->get();
 
-        // ====== Panel Excel ======
-        $panelAgente = null;
-        $panelPresupuestos = collect();
-        $panelTotalFalta = 0;
+        $this->editorCompras = $movs->where('tipo', 'COMPRA')->values()->all();
+        $this->editorDevoluciones = $movs->where('tipo', 'DEVOLUCION')->values()->all();
 
-        if ($this->openPanel && $this->panelAgenteId) {
-            $panelAgente = AgenteServicio::query()
-                ->when(
-                    !$this->isAdmin(),
-                    fn($qq) => $qq->where('empresa_id', $this->userEmpresaId()),
-                )
-                ->find($this->panelAgenteId);
+        $this->editorTotalComprasBase = round(
+            (float) $movs->where('tipo', 'COMPRA')->sum('monto_base'),
+            2,
+        );
+        $this->editorTotalDevolucionesBase = round(
+            (float) $movs->where('tipo', 'DEVOLUCION')->sum('monto_base'),
+            2,
+        );
+    }
 
-            if ($panelAgente) {
-                $pq = AgentePresupuesto::query()
-                    ->where('agente_servicio_id', $panelAgente->id)
-                    ->when(
-                        !$this->isAdmin(),
-                        fn($qq) => $qq->where('empresa_id', $this->userEmpresaId()),
-                    )
-                    ->where('moneda', $this->panelMoneda) // ✅ NUEVO: tabla según moneda
-                    ->orderBy('fecha_presupuesto')
-                    ->orderBy('id');
+    // Movimientos: Add / Delete
+    public function addMovimiento(RendicionService $service): void
+    {
+        if (!$this->editorRendicionId) {
+            $this->addError('mov_monto', 'No hay rendición seleccionada.');
+            return;
+        }
 
-                if ($this->soloActivos) {
-                    // ✅ usa tu boolean (en vez de panelTab)
-                    $pq->where('estado', 'abierto');
-                }
+        $this->resetErrorBag();
 
-                $panelPresupuestos = $pq->get();
-                $panelTotalFalta = (float) $panelPresupuestos->sum('saldo_por_rendir');
+        $this->mov_monto = $this->normalizeDecimal($this->mov_monto);
+        $this->mov_tipo_cambio = $this->normalizeDecimal($this->mov_tipo_cambio);
+
+        $data = $this->validate($this->movimientoRules());
+
+        /** @var Rendicion $r */
+        $r = Rendicion::query()
+            ->when(!$this->isAdmin(), fn($q) => $q->where('empresa_id', $this->userEmpresaId()))
+            ->findOrFail($this->editorRendicionId);
+
+        $tipo = ($this->editorTab ?? 'compra') === 'devolucion' ? 'DEVOLUCION' : 'COMPRA';
+
+        try {
+            $service->registrarMovimiento(
+                rendicion: $r,
+                tipo: $tipo,
+                data: $data,
+                user: auth()->user(),
+                foto: $this->mov_foto,
+            );
+
+            session()->flash('success', 'Movimiento registrado.');
+
+            // refresca desde DB
+            $this->openRendicionEditor((int) $r->id);
+            $this->resetMovimientoForm();
+        } catch (DomainException $e) {
+            $this->addError('mov_monto', $e->getMessage());
+        }
+    }
+
+    // Eliminar movimiento
+    public function deleteMovimiento(int $movId, RendicionService $service): void
+    {
+        if (!$this->editorRendicionId) {
+            return;
+        }
+
+        /** @var Rendicion $r */
+        $r = Rendicion::query()
+            ->when(!$this->isAdmin(), fn($q) => $q->where('empresa_id', $this->userEmpresaId()))
+            ->findOrFail($this->editorRendicionId);
+
+        $service->eliminarMovimiento($r, $movId, auth()->user());
+
+        $this->openRendicionEditor((int) $r->id);
+        $this->resetMovimientoForm();
+
+        session()->flash('success', 'Movimiento eliminado.');
+    }
+
+    // Foto
+    public function verFoto(int $movId): void
+    {
+        $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
+
+        $m = RendicionMovimiento::query()
+            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->findOrFail($movId);
+
+        if (empty($m->foto_path)) {
+            $this->fotoUrl = null;
+            $this->openFotoModal = true;
+            return;
+        }
+
+        $this->fotoUrl = Storage::disk('public')->url($m->foto_path);
+        $this->openFotoModal = true;
+    }
+
+    // Cerrar modal foto
+    public function closeFoto(): void
+    {
+        $this->openFotoModal = false;
+        $this->fotoUrl = null;
+    }
+
+    // Cerrar rendición
+    public function cerrarRendicion(RendicionService $service): void
+    {
+        if (!$this->editorRendicionId) {
+            return;
+        }
+
+        /** @var Rendicion $r */
+        $r = Rendicion::query()
+            ->when(!$this->isAdmin(), fn($q) => $q->where('empresa_id', $this->userEmpresaId()))
+            ->findOrFail($this->editorRendicionId);
+
+        try {
+            $service->cerrarRendicion($r, auth()->user());
+            session()->flash('success', 'Rendición cerrada.');
+            $this->openRendicionEditor((int) $r->id);
+        } catch (DomainException $e) {
+            session()->flash('error', $e->getMessage());
+        }
+    }
+
+    // RENDER
+    public function render()
+    {
+        $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
+
+        $q = DB::table('agente_presupuestos as ap')
+            ->join('agentes_servicio as a', 'a.id', '=', 'ap.agente_servicio_id')
+            ->leftJoin('rendiciones as r', 'r.id', '=', 'ap.rendicion_id') // ✅ CLAVE
+            ->select([
+                'ap.agente_servicio_id',
+                'a.nombre as agente_nombre',
+                'a.ci as agente_ci',
+                'ap.moneda',
+                DB::raw('SUM(ap.monto) as total_presupuesto'),
+                DB::raw('SUM(ap.rendido_total) as total_rendido'),
+                DB::raw('SUM(ap.saldo_por_rendir) as total_saldo'),
+                DB::raw('COUNT(ap.id) as total_presupuestos'),
+            ])
+            ->where('ap.active', 1);
+
+        // ===================== EMPRESA =====================
+        if ($empresaId) {
+            $q->where('ap.empresa_id', $empresaId);
+        } else {
+            if (($this->empresaFilter ?? 'all') !== 'all') {
+                $q->where('ap.empresa_id', $this->empresaFilter);
             }
         }
 
+        // ===================== BUSCADOR =====================
+        if (!empty($this->search)) {
+            $s = trim((string) $this->search);
+            $q->where(function ($w) use ($s) {
+                $w->where('a.nombre', 'like', "%{$s}%")->orWhere('a.ci', 'like', "%{$s}%");
+            });
+        }
+
+        // ===================== MONEDA =====================
+        $mon = strtoupper(trim((string) ($this->moneda ?? 'all')));
+
+        if (in_array($mon, ['BOB', 'USD'], true)) {
+            $q->where('ap.moneda', $mon);
+        }
+
+        // ===================== SOLO PENDIENTES =====================
+        if ($this->soloPendientes) {
+            // Abiertos
+            $q->whereNull('r.fecha_cierre');
+        } else {
+            // Cerrados
+            $q->whereNotNull('r.fecha_cierre');
+        }
+
+        // ===================== GROUP =====================
+        $q->groupBy('ap.agente_servicio_id', 'a.nombre', 'a.ci', 'ap.moneda');
+
+        // ===================== ORDEN =====================
+        $sortKey = $this->sortField ?: 'agente';
+        $dir = $this->sortDirection === 'desc' ? 'desc' : 'asc';
+
+        if ($sortKey === 'agente') {
+            $q->orderBy('a.nombre', $dir);
+        } elseif ($sortKey === 'moneda') {
+            $q->orderBy('ap.moneda', $dir);
+        } elseif (
+            in_array(
+                $sortKey,
+                ['total_presupuesto', 'total_rendido', 'total_saldo', 'total_presupuestos'],
+                true,
+            )
+        ) {
+            $q->orderByRaw("{$sortKey} {$dir}");
+        } else {
+            $q->orderBy('a.nombre', 'asc');
+        }
+
+        $agentesResumen = $q->paginate($this->perPage);
+
+        // ===================== MODAL DATA =====================
+        $bancos = collect();
+        $agentes = collect();
+
+        if ($this->openModal ?? false) {
+            $bancos = Banco::query()
+                ->when(!$this->isAdmin(), fn($b) => $b->where('empresa_id', $this->userEmpresaId()))
+                ->where('active', true)
+                ->orderBy('nombre')
+                ->get(['id', 'empresa_id', 'nombre', 'numero_cuenta', 'moneda', 'monto']);
+
+            $agentes = AgenteServicio::query()
+                ->when(!$this->isAdmin(), fn($a) => $a->where('empresa_id', $this->userEmpresaId()))
+                ->where('active', true)
+                ->orderBy('nombre')
+                ->get(['id', 'empresa_id', 'nombre', 'ci', 'saldo_bob', 'saldo_usd']);
+        }
+
         return view('livewire.admin.agente-presupuestos', [
-            'presupuestos' => $presupuestos,
+            'agentesResumen' => $agentesResumen,
             'bancos' => $bancos,
             'agentes' => $agentes,
             'empresas' => $this->isAdmin()
-                ? Empresa::orderBy('nombre')->get()
-                : Empresa::where('id', $this->userEmpresaId())->get(),
-
-            'panelAgente' => $panelAgente,
-            'panelPresupuestos' => $panelPresupuestos,
-            'panelTotalFalta' => $panelTotalFalta,
+                ? Empresa::orderBy('nombre')->get(['id', 'nombre'])
+                : Empresa::where('id', $this->userEmpresaId())->get(['id', 'nombre']),
         ]);
     }
 
+    // Helpers auth
     private function isAdmin(): bool
     {
         return (bool) auth()->user()?->hasRole('Administrador');
@@ -571,5 +933,38 @@ class AgentePresupuestos extends Component
     private function userEmpresaId(): int
     {
         return (int) auth()->user()?->empresa_id;
+    }
+
+    // Helpers
+    private function normalizeDecimal(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $v = trim($value);
+        if ($v === '') {
+            return null;
+        }
+
+        $v = str_replace([' ', "\u{00A0}"], '', $v);
+        $v = str_replace('.', '', $v);
+        $v = str_replace(',', '.', $v);
+
+        return $v;
+    }
+
+    private function resetMovimientoForm(): void
+    {
+        $this->mov_monto = null;
+        $this->mov_tipo_cambio = null;
+        $this->mov_entidad_id = null;
+        $this->mov_proyecto_id = null;
+        $this->mov_tipo_comprobante = null;
+        $this->mov_nro_comprobante = null;
+        $this->mov_banco_id = null;
+        $this->mov_nro_transaccion = null;
+        $this->mov_observacion = null;
+        $this->mov_foto = null;
     }
 }

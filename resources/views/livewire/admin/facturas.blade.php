@@ -21,9 +21,6 @@
     {{-- Tabla Desktop --}}
     @include('livewire.admin.facturas._table')
 
-    {{-- Paginación --}}
-    @include('livewire.admin.facturas._pagination')
-
     {{-- Modales --}}
     @includeWhen($openFacturaModal, 'livewire.admin.facturas._modal_factura')
     @includeWhen($openPagoModal, 'livewire.admin.facturas._modal_pago')

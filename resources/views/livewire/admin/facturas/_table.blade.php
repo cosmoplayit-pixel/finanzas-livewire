@@ -567,3 +567,8 @@
         </table>
     </div>
 </div>
+
+{{-- PAGINACIÓN --}}
+<div>
+    {{ $facturas->links() }}
+</div>

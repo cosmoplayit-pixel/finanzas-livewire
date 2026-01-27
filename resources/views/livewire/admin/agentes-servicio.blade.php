@@ -588,38 +588,37 @@
             @endslot
         </x-ui.modal>
     @endcanany
+</div>
 
-    {{-- SWEETALERT TOGGLE (igual patrón que Bancos) --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            window.addEventListener('swal:toggle-active-agente', (e) => {
-                const {
-                    id,
-                    active,
-                    name
-                } = e.detail;
+{{-- SWEETALERT TOGGLE (igual patrón que Bancos) --}}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('swal:toggle-active-agente', (e) => {
+            const {
+                id,
+                active,
+                name
+            } = e.detail;
 
-                Swal.fire({
-                    title: active ? '¿Desactivar agente?' : '¿Activar agente?',
-                    text: '¿Seguro que desea ' + (active ? 'desactivar' : 'activar') +
-                        ` al agente "${name}"?`,
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
-                    cancelButtonText: 'Cancelar',
-                    confirmButtonColor: active ? '#dc2626' : '#16a34a',
-                    cancelButtonColor: '#6b7280',
-                    reverseButtons: true,
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        Livewire.dispatch('doToggleActiveAgente', {
-                            id
-                        });
-                    }
-                    window.dispatchEvent(new CustomEvent('swal:done'));
-                });
+            Swal.fire({
+                title: active ? '¿Desactivar agente?' : '¿Activar agente?',
+                text: '¿Seguro que desea ' + (active ? 'desactivar' : 'activar') +
+                    ` al agente "${name}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: active ? '#dc2626' : '#16a34a',
+                cancelButtonColor: '#6b7280',
+                reverseButtons: true,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Livewire.dispatch('doToggleActiveAgente', {
+                        id
+                    });
+                }
+                window.dispatchEvent(new CustomEvent('swal:done'));
             });
         });
-    </script>
-
-</div>
+    });
+</script>

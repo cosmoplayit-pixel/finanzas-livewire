@@ -61,4 +61,9 @@ class AgentePresupuesto extends Model
     {
         return $this->belongsTo(Empresa::class, 'empresa_id');
     }
+
+    public function rendicion()
+    {
+        return $this->belongsTo(Rendicion::class, 'rendicion_id');
+    }
 }

@@ -45,7 +45,7 @@ class Bancos extends Component
     // =========================
     public $empresa_id = '';
     public string $nombre = '';
-    public string $titular = ''; // ✅ NUEVO
+    public string $titular = ''; //  NUEVO
     public string $numero_cuenta = '';
     public string $moneda = '';
 
@@ -91,7 +91,7 @@ class Bancos extends Component
             'empresa_id' => $this->isAdmin() ? ['required', 'exists:empresas,id'] : ['nullable'],
 
             'nombre' => ['required', 'string', 'min:3', 'max:150'],
-            'titular' => ['required', 'string', 'min:3', 'max:150'], // ✅ NUEVO
+            'titular' => ['required', 'string', 'min:3', 'max:150'], //  NUEVO
 
             'numero_cuenta' => [
                 'required',
@@ -104,7 +104,7 @@ class Bancos extends Component
 
             'moneda' => ['required', 'in:BOB,USD'],
 
-            // ✅ valor real que se guarda
+            //  valor real que se guarda
             'monto' => ['required', 'numeric', 'min:0'],
         ];
     }
@@ -164,7 +164,7 @@ class Bancos extends Component
                 $q->where(function ($qq) use ($s) {
                     $qq->where('nombre', 'like', "%{$s}%")
                         ->orWhere('numero_cuenta', 'like', "%{$s}%")
-                        ->orWhere('titular', 'like', "%{$s}%"); // ✅ NUEVO
+                        ->orWhere('titular', 'like', "%{$s}%"); //  NUEVO
                 });
             })
             ->when(
@@ -215,11 +215,11 @@ class Bancos extends Component
         $this->bancoId = $b->id;
         $this->empresa_id = (string) $b->empresa_id;
         $this->nombre = (string) $b->nombre;
-        $this->titular = (string) ($b->titular ?? ''); // ✅ NUEVO
+        $this->titular = (string) ($b->titular ?? ''); //  NUEVO
         $this->numero_cuenta = (string) $b->numero_cuenta;
         $this->moneda = (string) $b->moneda;
 
-        // ✅ cargar monto y formatearlo para UI
+        //  cargar monto y formatearlo para UI
         $this->monto = (float) ($b->monto ?? 0);
         $this->monto_formatted = $this->monto > 0 ? number_format($this->monto, 2, ',', '.') : '';
 
@@ -231,7 +231,7 @@ class Bancos extends Component
         $data = $this->validate();
 
         $data['nombre'] = trim($data['nombre']);
-        $data['titular'] = trim($data['titular']); // ✅ NUEVO
+        $data['titular'] = trim($data['titular']); //  NUEVO
         $data['numero_cuenta'] = preg_replace('/\s+/', '', $data['numero_cuenta']);
 
         if (!$this->isAdmin()) {
@@ -259,10 +259,6 @@ class Bancos extends Component
     {
         $b = Banco::findOrFail($id);
 
-        if (!$this->isAdmin() && (int) $b->empresa_id !== (int) $this->userEmpresaId()) {
-            abort(403);
-        }
-
         $b->update(['active' => !$b->active]);
         session()->flash('success', $b->active ? 'Banco activado.' : 'Banco desactivado.');
     }
@@ -279,7 +275,7 @@ class Bancos extends Component
             'bancoId',
             'empresa_id',
             'nombre',
-            'titular', // ✅ NUEVO
+            'titular',
             'numero_cuenta',
             'moneda',
             'monto',

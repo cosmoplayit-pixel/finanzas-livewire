@@ -78,7 +78,7 @@
 
             {{-- ================= GESTIÓN FINANCIERA ================= --}}
             @canany(['entidades.view', 'proyectos.view', 'bancos.view'])
-                <flux:navlist.group :heading="__('Gestión Financiera')" class="grid">
+                <flux:navlist.group :heading="__('Gestión de Catalogos')" class="grid">
 
                     {{-- Entidades --}}
                     @can('entidades.view')
@@ -125,26 +125,10 @@
                         </flux:navlist.item>
                     @endcan
 
-                    {{-- Facturas --}}
-                    @can('facturas.view')
-                        <flux:navlist.item icon="document-text" :href="route('facturas')"
-                            :current="request()->routeIs('facturas')" wire:navigate>
-                            <span class="flex w-full items-center justify-between gap-2">
-                                <span>{{ __('Facturas') }}</span>
-
-                                @isset($navCounts['facturas'])
-                                    <flux:badge size="sm" variant="subtle">
-                                        {{ $navCounts['facturas'] }}
-                                    </flux:badge>
-                                @endisset
-                            </span>
-                        </flux:navlist.item>
-                    @endcan
-
                     {{-- Agentes de Servicio --}}
                     @can('agentes_servicio.view')
-                        <flux:navlist.item icon="user-group" :href="route('agentes-servicio')"
-                            :current="request()->routeIs('agentes-servicio')" wire:navigate>
+                        <flux:navlist.item icon="user-group" :href="route('agentes_servicio')"
+                            :current="request()->routeIs('agentes_servicio')" wire:navigate>
                             <span class="flex w-full items-center justify-between gap-2">
                                 <span>{{ __('Agentes de Servicio') }}</span>
                                 @isset($navCounts['agentes_servicio'])
@@ -156,21 +140,38 @@
                         </flux:navlist.item>
                     @endcan
 
-                    {{-- Agentes de Presupuestos --}}
-                    @can('agente_presupuestos.view')
-                        <flux:navlist.item icon="user-group" :href="route('agentes-presupuestos')"
-                            :current="request()->routeIs('agentes-presupuestos')" wire:navigate>
-                            <span class="flex w-full items-center justify-between gap-2">
-                                <span>{{ __('Agentes de Presupuestos') }}</span>
-                                @isset($navCounts['agentes_presupuestos'])
-                                    <flux:badge size="sm" variant="subtle">
-                                        {{ $navCounts['agentes_presupuestos'] }}
-                                    </flux:badge>
-                                @endisset
-                            </span>
-                        </flux:navlist.item>
-                    @endcan
+                    <flux:navlist.group :heading="__('Gestión Financiera')" class="grid">
 
+                        {{-- Facturas --}}
+                        @can('facturas.view')
+                            <flux:navlist.item icon="document-text" :href="route('facturas')"
+                                :current="request()->routeIs('facturas')" wire:navigate>
+                                <span class="flex w-full items-center justify-between gap-2">
+                                    <span>{{ __('Proyetos Facturas') }}</span>
+                                    @isset($navCounts['facturas'])
+                                        <flux:badge size="sm" variant="subtle">
+                                            {{ $navCounts['facturas'] }}
+                                        </flux:badge>
+                                    @endisset
+                                </span>
+                            </flux:navlist.item>
+                        @endcan
+
+                        {{-- Agentes de Presupuestos --}}
+                        @can('agente_presupuestos.view')
+                            <flux:navlist.item icon="user-group" :href="route('agente_presupuestos')"
+                                :current="request()->routeIs('agente_presupuestos')" wire:navigate>
+                                <span class="flex w-full items-center justify-between gap-2">
+                                    <span>{{ __('Ag. Presupuestos') }}</span>
+                                    @isset($navCounts['agente_presupuestos'])
+                                        <flux:badge size="sm" variant="subtle">
+                                            {{ $navCounts['agente_presupuestos'] }}
+                                        </flux:badge>
+                                    @endisset
+                                </span>
+                            </flux:navlist.item>
+                        @endcan
+                    </flux:navlist.group>
                 </flux:navlist.group>
             @endcanany
 

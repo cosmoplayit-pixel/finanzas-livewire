@@ -20,7 +20,7 @@ class Proyectos extends Component
 
     // Ordenamiento
     public string $sortField = 'id';
-    public string $sortDirection = 'asc';
+    public string $sortDirection = 'desc';
 
     // Modal
     public bool $openModal = false;

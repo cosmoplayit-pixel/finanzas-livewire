@@ -40,7 +40,7 @@ class Entidades extends Component
     public string $observaciones = '';
 
     public string $sortField = 'id';
-    public string $sortDirection = 'asc';
+    public string $sortDirection = 'desc';
 
     protected $listeners = [
         'toggleEntidad' => 'toggleActive',

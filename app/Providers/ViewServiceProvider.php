@@ -115,6 +115,26 @@ class ViewServiceProvider extends ServiceProvider
                     ->count();
             }
 
+            // AGENTE DE SERVICIO
+            if ($user->can('agentes_servicio.view')) {
+                $navCounts['agentes_servicio'] = DB::table('agentes_servicio')
+                    ->where('active', true)
+                    ->when(!$user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                        $q->where('empresa_id', $empresaId);
+                    })
+                    ->count();
+            }
+
+            // AGENTE PRESUPUESTOS + RENDICIÓN (UNIFICADO)
+            if ($user->can('agente_presupuestos.view')) {
+                $navCounts['agente_presupuestos'] = DB::table('agente_presupuestos')
+                    ->where('active', true)
+                    ->when(!$user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                        $q->where('empresa_id', $empresaId);
+                    })
+                    ->count();
+            }
+
             $view->with('navCounts', $navCounts);
         });
     }

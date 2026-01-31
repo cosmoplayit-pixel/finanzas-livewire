@@ -19,7 +19,7 @@
                         Comprobante adjunto
                     </div>
                     <div class="text-xs text-gray-500 dark:text-neutral-400">
-                        Pasa el cursor para ampliar y mover (tipo Amazon)
+                        Pasa el cursor para ampliar y mover
                     </div>
                 </div>
 

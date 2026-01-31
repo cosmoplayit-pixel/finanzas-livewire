@@ -12,10 +12,13 @@
     @include('livewire.admin.presupuestos._filters')
 
     {{-- TABLA PRINCIPAL + PANEL --}}
-    @include('livewire.admin.presupuestos.._table')
+    @include('livewire.admin.presupuestos._table')
+    @include('livewire.admin.presupuestos._mobile_table')
 
     {{-- MODALES --}}
     @include('livewire.admin.presupuestos._modal_presupuesto')
     @include('livewire.admin.presupuestos._modal_editor_rendicion')
     @include('livewire.admin.presupuestos._modal_foto')
+    @include('livewire.admin.presupuestos._modal_movimiento')
+
 </div>

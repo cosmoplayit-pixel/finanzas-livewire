@@ -111,7 +111,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // =======================
     // AGENTE PRESUPUESTOS + RENDICIÓN (UNIFICADO)
     // =======================
-    Route::middleware(['permission:agente_presupuestos.view'])
-        ->get('/agente_presupuestos', AgentePresupuestos::class)
-        ->name('agente_presupuestos');
+    Route::middleware(['permission:agente_presupuestos.view'])->group(function () {
+        Route::get('/agente_presupuestos', AgentePresupuestos::class)->name('agente_presupuestos');
+    });
 });

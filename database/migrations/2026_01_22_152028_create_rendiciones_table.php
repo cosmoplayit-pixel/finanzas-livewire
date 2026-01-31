@@ -50,9 +50,9 @@ return new class extends Migration {
             // Estado
             // =========================
             // pendiente: creada pero aún no operada / o sin cierre
-            // abierta: operando (con movimientos)
-            // cerrada: saldo = 0 (o regla de cierre cumplida)
-            $table->enum('estado', ['pendiente', 'abierta', 'cerrada'])->default('pendiente');
+            // abierto: operando (con movimientos)
+            // cerrado: saldo = 0 (o regla de cierre cumplida)
+            $table->enum('estado', ['pendiente', 'abierto', 'cerrado'])->default('pendiente');
             $table->boolean('active')->default(true);
 
             // Auditoría

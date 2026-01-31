@@ -548,3 +548,42 @@
 
     });
 </script>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('modalStack', {
+            stack: [], // [{ id, closeFn }...]
+
+            open(id, closeFn) {
+                // evita duplicados
+                this.stack = this.stack.filter(x => x.id !== id);
+                this.stack.push({
+                    id,
+                    closeFn
+                });
+                document.documentElement.classList.add('overflow-hidden');
+            },
+
+            closeTop() {
+                const top = this.stack[this.stack.length - 1];
+                if (top?.closeFn) top.closeFn();
+            },
+
+            close(id) {
+                // si se cierra el que no es top, lo sacamos sin afectar top
+                this.stack = this.stack.filter(x => x.id !== id);
+                if (this.stack.length === 0) {
+                    document.documentElement.classList.remove('overflow-hidden');
+                }
+            },
+
+            isTop(id) {
+                return this.stack.length && this.stack[this.stack.length - 1].id === id;
+            },
+
+            hasAny() {
+                return this.stack.length > 0;
+            }
+        });
+    });
+</script>

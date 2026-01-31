@@ -67,7 +67,7 @@ class RendicionService
                 'saldo' => $montoPresupuesto,
                 'fecha_rendicion' => now(),
                 'fecha_cierre' => null,
-                'estado' => 'pendiente',
+                'estado' => 'abierto',
                 'active' => true,
                 'created_by' => (int) $user->id,
             ]);
@@ -97,10 +97,6 @@ class RendicionService
             // Reglas duras
             if (!$r->active) {
                 throw new DomainException('La rendición está inactiva.');
-            }
-
-            if ($r->estado === 'cerrada') {
-                throw new DomainException('La rendición está cerrada.');
             }
 
             if (!in_array($tipo, ['COMPRA', 'DEVOLUCION'], true)) {
@@ -276,10 +272,6 @@ class RendicionService
                 throw new DomainException('La rendición está inactiva.');
             }
 
-            if ($r->estado === 'cerrada') {
-                throw new DomainException('La rendición está cerrada.');
-            }
-
             /** @var RendicionMovimiento $m */
             $m = RendicionMovimiento::query()
                 ->lockForUpdate()
@@ -287,7 +279,7 @@ class RendicionService
                 ->where('id', $movimientoId)
                 ->firstOrFail();
 
-            // ✅ Revertir banco si era devolución
+            // Revertir banco si era devolución
             if ($m->tipo === 'DEVOLUCION') {
                 if (empty($m->banco_id)) {
                     throw new DomainException('La devolución no tiene banco asociado.');
@@ -348,17 +340,17 @@ class RendicionService
                 throw new DomainException('La rendición está inactiva.');
             }
 
-            if ($r->estado === 'cerrada') {
+            if ($r->estado === 'cerrado') {
                 return;
             }
 
             $this->recalcularTotales($r);
 
             if (round((float) ($r->saldo ?? 0), 2) > 0) {
-                throw new DomainException('No se puede cerrar: todavía hay saldo pendiente.');
+                throw new DomainException('No se puede cerrar: todavía hay saldo abierto.');
             }
 
-            $r->estado = 'cerrada';
+            $r->estado = 'cerrado';
             $r->fecha_cierre = now()->toDateString();
             $r->save();
 

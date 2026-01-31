@@ -74,11 +74,19 @@
                                   wire:click="togglePanel({{ $agenteId }}, '{{ $rowMoneda }}')"
                                   wire:loading.attr="disabled"
                                   wire:target="togglePanel({{ $agenteId }}, '{{ $rowMoneda }}')"
-                                  class="cursor-pointer w-7 h-7 inline-flex items-center justify-center rounded border
-                                       border-gray-300 text-gray-700 hover:bg-gray-100
-                                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
-                                  {{ $open ? '−' : '+' }}
+                                  x-data="{ open: @js($open) }" @click="open = !open"
+                                  class="cursor-pointer w-7 h-7 inline-flex items-center justify-center rounded border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all duration-200 ease-out dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+
+                                  <span
+                                      :class="open
+                                          ?
+                                          'rotate-180 scale-110' :
+                                          'rotate-0 scale-100'"
+                                      class="inline-block transform transition-transform duration-200">
+                                      {{ $open ? '−' : '+' }}
+                                  </span>
                               </button>
+
                           </td>
 
                           <td class="p-2 align-top">

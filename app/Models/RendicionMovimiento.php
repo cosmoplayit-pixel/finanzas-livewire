@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RendicionMovimiento extends Model
 {
@@ -13,18 +14,25 @@ class RendicionMovimiento extends Model
         'rendicion_id',
         'tipo',
         'fecha',
+
         'entidad_id',
         'proyecto_id',
+
         'tipo_comprobante',
         'nro_comprobante',
+
         'banco_id',
         'nro_transaccion',
+
         'moneda',
         'tipo_cambio',
+
         'monto',
         'monto_base',
+
         'foto_path',
         'observacion',
+
         'active',
     ];
 
@@ -36,22 +44,22 @@ class RendicionMovimiento extends Model
         'active' => 'boolean',
     ];
 
-    public function rendicion()
+    public function rendicion(): BelongsTo
     {
         return $this->belongsTo(Rendicion::class, 'rendicion_id');
     }
 
-    public function entidad()
+    public function entidad(): BelongsTo
     {
         return $this->belongsTo(Entidad::class, 'entidad_id');
     }
 
-    public function proyecto()
+    public function proyecto(): BelongsTo
     {
         return $this->belongsTo(Proyecto::class, 'proyecto_id');
     }
 
-    public function banco()
+    public function banco(): BelongsTo
     {
         return $this->belongsTo(Banco::class, 'banco_id');
     }

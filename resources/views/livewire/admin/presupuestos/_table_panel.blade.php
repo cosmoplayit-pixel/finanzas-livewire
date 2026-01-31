@@ -22,13 +22,14 @@
                         <thead
                             class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-700">
                             <tr class="text-left">
+                                <th class="p-3 text-center w-[50px]">#</th>
                                 <th class="p-3 w-[240px]">Banco</th>
-                                <th class="p-3 w-[160px]">Transacción</th>
+                                <th class="p-3 w-[160px]">Nro Transacción</th>
                                 <th class="p-3 w-[170px]">Fecha</th>
                                 <th class="p-3 text-right w-[140px]">Presupuesto</th>
-                                <th class="p-3 text-right w-[140px]">Rendido</th>
-                                <th class="p-3 text-right w-[150px]">Saldo por rendir</th>
-                                <th class="p-3 text-center w-[200px]">Acciones</th>
+                                <th class="p-3 text-right w-[130px]">Rendido</th>
+                                <th class="p-3 text-right w-[140px]">Saldo por rendir</th>
+                                <th class="p-3 text-center w-[75px]">Acciones.</th>
                             </tr>
                         </thead>
 
@@ -45,6 +46,9 @@
 
                                 <tr wire:key="panel-{{ $rowKey }}-pres-{{ $p->id }}"
                                     class="hover:bg-gray-50 dark:hover:bg-neutral-900/40">
+                                    <td class="p-3 whitespace-nowrap text-gray-700 dark:text-neutral-200 text-center">
+                                        {{ $loop->iteration }}
+                                    </td>
 
                                     <td class="p-3 align-middle">
                                         <div class="min-w-0 space-y-0.5 leading-snug">
@@ -106,21 +110,34 @@
                                                 <button type="button" wire:click="crearRendicion({{ $p->id }})"
                                                     wire:loading.attr="disabled"
                                                     wire:target="crearRendicion({{ $p->id }})"
-                                                    wire:loading.class="cursor-not-allowed opacity-50"
+                                                    wire:loading.class="cursor-not-allowed opacity-60"
                                                     wire:loading.class.remove="cursor-pointer hover:bg-green-700 hover:border-green-700"
-                                                    class="px-3 py-1 rounded border transition cursor-pointer text-sm bg-green-600 text-white border-green-600
-                                                                            hover:bg-green-700 hover:border-green-700 dark:bg-green-500 dark:border-green-500 dark:hover:bg-green-400 dark:hover:border-green-400">
+                                                    class="px-3 py-1 rounded border transition cursor-pointer text-sm
+                                                    bg-green-600 text-white border-green-600
+                                                    hover:bg-green-700 hover:border-green-700
+                                                    dark:bg-green-500 dark:border-green-500 dark:hover:bg-green-400 dark:hover:border-green-400
+                                                    inline-flex items-center justify-center gap-2">
 
+                                                    {{-- Texto normal --}}
                                                     <span wire:loading.remove
                                                         wire:target="crearRendicion({{ $p->id }})">
-                                                        Crear rendición
+                                                        Crear
                                                     </span>
 
+                                                    {{-- Spinner --}}
                                                     <span wire:loading
-                                                        wire:target="crearRendicion({{ $p->id }})">
-                                                        Procesando…
+                                                        wire:target="crearRendicion({{ $p->id }})"
+                                                        class="inline-flex items-center">
+                                                        <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24"
+                                                            fill="none">
+                                                            <circle class="opacity-25" cx="12" cy="12"
+                                                                r="10" stroke="currentColor" stroke-width="4" />
+                                                            <path class="opacity-75" fill="currentColor"
+                                                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                                        </svg>
                                                     </span>
                                                 </button>
+
 
                                                 {{-- VER RENDICIÓN --}}
                                             @else
@@ -128,23 +145,35 @@
                                                     wire:click="openRendicionEditor({{ $p->rendicion_id }})"
                                                     wire:loading.attr="disabled"
                                                     wire:target="openRendicionEditor({{ $p->rendicion_id }})"
-                                                    wire:loading.class="cursor-not-allowed opacity-50"
+                                                    wire:loading.class="cursor-not-allowed opacity-60"
                                                     wire:loading.class.remove="cursor-pointer hover:bg-gray-200 hover:border-gray-300"
-                                                    class="px-3 py-1 rounded border transition cursor-pointer text-sm bg-gray-100 text-gray-700 border-gray-300
-                                                                            hover:bg-gray-200 hover:border-gray-300 dark:bg-neutral-800 dark:text-neutral-200 dark:border-neutral-700 dark:hover:bg-neutral-700 dark:hover:border-neutral-600">
+                                                    class="px-3 py-1 rounded border transition cursor-pointer text-sm
+                                                    bg-gray-100 text-gray-700 border-gray-300
+                                                    hover:bg-gray-200 hover:border-gray-300
+                                                    dark:bg-neutral-800 dark:text-neutral-200 dark:border-neutral-700
+                                                    dark:hover:bg-neutral-700 dark:hover:border-neutral-600
+                                                    inline-flex items-center justify-center gap-2">
 
+                                                    {{-- Texto normal --}}
                                                     <span wire:loading.remove
                                                         wire:target="openRendicionEditor({{ $p->rendicion_id }})">
-                                                        Ver rendición
+                                                        Ver
                                                     </span>
 
+                                                    {{-- Spinner --}}
                                                     <span wire:loading
-                                                        wire:target="openRendicionEditor({{ $p->rendicion_id }})">
-                                                        Abriendo…
+                                                        wire:target="openRendicionEditor({{ $p->rendicion_id }})"
+                                                        class="inline-flex items-center">
+                                                        <svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24"
+                                                            fill="none">
+                                                            <circle class="opacity-25" cx="12" cy="12"
+                                                                r="10" stroke="currentColor" stroke-width="4" />
+                                                            <path class="opacity-75" fill="currentColor"
+                                                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                                        </svg>
                                                     </span>
                                                 </button>
                                             @endif
-
                                         </div>
                                     </td>
                                 </tr>

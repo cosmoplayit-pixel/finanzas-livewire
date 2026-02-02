@@ -104,7 +104,7 @@ trait RendicionEditor
             'mov_moneda' => ['required', Rule::in(['BOB', 'USD'])],
             'mov_monto' => ['required', 'numeric', 'min:0.01'],
             'mov_tipo_cambio' => ['nullable', 'numeric', 'min:0.000001'],
-            'mov_observacion' => ['nullable', 'string', 'max:200'],
+            'mov_observacion' => ['nullable', 'string', 'max:100'],
             'mov_foto' => ['nullable', 'file', 'max:5120'],
         ];
 

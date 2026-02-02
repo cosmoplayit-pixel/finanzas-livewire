@@ -264,13 +264,16 @@ class RendicionService
 
     public function eliminarMovimiento(Rendicion $rendicion, int $movimientoId, User $user): void
     {
-        DB::transaction(function () use ($rendicion, $movimientoId) {
+        DB::transaction(function () use ($rendicion, $movimientoId, $user) {
             /** @var Rendicion $r */
             $r = Rendicion::query()->lockForUpdate()->findOrFail($rendicion->id);
 
             if (!$r->active) {
                 throw new DomainException('La rendición está inactiva.');
             }
+
+            // Guardamos estado previo
+            $estabaCerrada = ((string) ($r->estado ?? '')) === 'cerrado';
 
             /** @var RendicionMovimiento $m */
             $m = RendicionMovimiento::query()
@@ -279,7 +282,9 @@ class RendicionService
                 ->where('id', $movimientoId)
                 ->firstOrFail();
 
-            // Revertir banco si era devolución
+            // =========================================================
+            // 1) Revertir banco si era devolución
+            // =========================================================
             if ($m->tipo === 'DEVOLUCION') {
                 if (empty($m->banco_id)) {
                     throw new DomainException('La devolución no tiene banco asociado.');
@@ -301,11 +306,14 @@ class RendicionService
                     throw new DomainException('Monto inválido.');
                 }
 
+                // Revertir aumento del banco
                 $b->monto = round(((float) ($b->monto ?? 0)) - $monto, 2);
                 $b->save();
             }
 
-            // ✅ Revertir saldo del agente (al borrar, devolvemos monto_base)
+            // =========================================================
+            // 2) Revertir saldo del agente (al borrar devolvemos monto_base)
+            // =========================================================
             $montoBase = round((float) ($m->monto_base ?? 0), 2);
             if ($montoBase <= 0) {
                 throw new DomainException('Monto base inválido.');
@@ -322,11 +330,48 @@ class RendicionService
 
             $this->aplicarDeltaAgente($ag, (string) $r->moneda, +$montoBase);
 
-            // Eliminar movimiento
+            // =========================================================
+            // 3) Eliminar movimiento
+            // =========================================================
             $m->delete();
 
-            // Recalcular
+            // =========================================================
+            // 4) Recalcular totales de la rendición
+            // =========================================================
             $this->recalcularTotales($r);
+
+            // =========================================================
+            // 5) Si estaba cerrada: REABRIR rendición + presupuestos ligados
+            // =========================================================
+            if ($estabaCerrada) {
+                // ----- Reabrir rendición -----
+                $r->estado = 'abierto';
+                $r->fecha_cierre = null;
+                $r->save();
+
+                // ----- Reabrir AgentePresupuestos (OJO: aquí está tu caso real) -----
+                $presupuestos = AgentePresupuesto::query()
+                    ->lockForUpdate()
+                    ->where('rendicion_id', $r->id)
+                    ->where('active', 1) // opcional, según tu lógica
+                    ->get();
+
+                foreach ($presupuestos as $p) {
+                    // Seguridad empresa / moneda (opcional pero recomendable)
+                    if ((int) $p->empresa_id !== (int) $r->empresa_id) {
+                        throw new DomainException('El presupuesto no pertenece a la empresa.');
+                    }
+                    if ((string) $p->moneda !== (string) $r->moneda) {
+                        // si tus rendiciones son 1 moneda, esto ayuda a evitar errores
+                        throw new DomainException(
+                            'La moneda del presupuesto no coincide con la rendición.',
+                        );
+                    }
+
+                    $p->estado = 'abierto';
+                    $p->save();
+                }
+            }
         });
     }
 

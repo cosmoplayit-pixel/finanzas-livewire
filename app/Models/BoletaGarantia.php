@@ -18,8 +18,6 @@ class BoletaGarantia extends Model
         'tipo',
         'moneda',
         'retencion',
-        'comision',
-        'total',
         'fecha_emision',
         'fecha_vencimiento',
         'observacion',
@@ -29,8 +27,6 @@ class BoletaGarantia extends Model
 
     protected $casts = [
         'retencion' => 'decimal:2',
-        'comision' => 'decimal:2',
-        'total' => 'decimal:2',
         'fecha_emision' => 'date',
         'fecha_vencimiento' => 'date',
         'active' => 'boolean',

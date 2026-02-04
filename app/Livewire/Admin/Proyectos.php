@@ -44,6 +44,11 @@ class Proyectos extends Component
         'doToggleActiveProyecto' => 'toggleActive',
     ];
 
+    public function mount(): void
+    {
+        $this->status = 'active';
+    }
+
     protected function rules(): array
     {
         return [

@@ -78,7 +78,7 @@
             {{-- Footer --}}
             @isset($footer)
                 <div
-                    class="shrink-0 px-4 sm:px-5 py-3 sm:py-4
+                    class="shrink-0 text-right px-4 sm:px-5 py-3 sm:py-4
                            bg-gray-50 dark:bg-neutral-900
                            border-t border-gray-200 dark:border-neutral-800">
                     {{ $footer }}

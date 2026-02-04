@@ -603,3 +603,28 @@
         });
     });
 </script>
+
+<script>
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('swal:confirm-delete-devolucion', ({
+            boletaId,
+            devolucionId
+        }) => {
+            Swal.fire({
+                title: '¿Eliminar devolución?',
+                text: 'Esta acción revertirá el saldo del banco.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    Livewire.dispatch('bg:delete-devolucion', {
+                        boletaId,
+                        devolucionId
+                    });
+                }
+            });
+        });
+    });
+</script>

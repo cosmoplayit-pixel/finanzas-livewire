@@ -25,8 +25,8 @@ return new class extends Migration {
             $table->string('moneda', 3); // BOB | USD
 
             $table->decimal('retencion', 14, 2);
-            $table->decimal('comision', 14, 2)->default(0);
-            $table->decimal('total', 14, 2);
+            //$table->decimal('comision', 14, 2)->default(0);
+            //$table->decimal('total', 14, 2);
 
             $table->date('fecha_emision')->nullable();
             $table->date('fecha_vencimiento')->nullable();

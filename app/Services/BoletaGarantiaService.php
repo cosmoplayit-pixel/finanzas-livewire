@@ -18,19 +18,11 @@ class BoletaGarantiaService
     {
         try {
             return DB::transaction(function () use ($data) {
-
                 $retencion = (float) ($data['retencion'] ?? 0);
-                $comision  = (float) ($data['comision'] ?? 0);
-                $total     = round($retencion + $comision, 2);
 
                 if ($retencion <= 0) {
                     throw new DomainException('La retención debe ser mayor a 0.');
                 }
-                if ($comision < 0) {
-                    throw new DomainException('La comisión no puede ser negativa.');
-                }
-
-                $data['total'] = $total;
 
                 /** @var Banco $banco */
                 $banco = Banco::query()
@@ -39,21 +31,22 @@ class BoletaGarantiaService
                     ->where('id', $data['banco_egreso_id'])
                     ->firstOrFail();
 
-                if ((string) $banco->moneda !== (string) $data['moneda']) {
-                    throw new DomainException('La moneda del banco no coincide con la moneda de la boleta.');
-                }
+                // ✅ Moneda se define AUTOMÁTICAMENTE por el banco egreso
+                $moneda = (string) $banco->moneda;
 
                 $saldo = (float) $banco->monto;
-                if ($total > $saldo) {
-                    throw new DomainException('El total excede el saldo actual del banco.');
+                if ($retencion > $saldo) {
+                    throw new DomainException('La retención excede el saldo actual del banco.');
                 }
 
-                // Egreso = TOTAL
-                $banco->monto = $saldo - $total;
+                // ✅ Egreso = RETENCIÓN
+                $banco->monto = $saldo - $retencion;
                 $banco->save();
 
                 return BoletaGarantia::create([
                     ...$data,
+                    'moneda' => $moneda, // ✅ guardado automático
+                    'retencion' => $retencion,
                     'estado' => 'abierta',
                     'active' => true,
                 ]);
@@ -67,14 +60,12 @@ class BoletaGarantiaService
         }
     }
 
-    /**
-     * Registrar UNA devolución (puede haber muchas).
-     * Regla: suma total devoluciones <= retención.
-     */
-    public function devolver(BoletaGarantia $boleta, array $data, int $userId): BoletaGarantiaDevolucion
-    {
+    public function devolver(
+        BoletaGarantia $boleta,
+        array $data,
+        int $userId,
+    ): BoletaGarantiaDevolucion {
         return DB::transaction(function () use ($boleta, $data) {
-
             /** @var BoletaGarantia $bg */
             $bg = BoletaGarantia::query()->lockForUpdate()->findOrFail($boleta->id);
 
@@ -87,7 +78,6 @@ class BoletaGarantiaService
                 throw new DomainException('El monto a devolver debe ser mayor a 0.');
             }
 
-            // total devuelto actual (lock por transacción sobre devoluciones)
             $totalDevuelto = (float) BoletaGarantiaDevolucion::query()
                 ->where('boleta_garantia_id', $bg->id)
                 ->lockForUpdate()
@@ -106,11 +96,12 @@ class BoletaGarantiaService
                 ->where('id', $data['banco_id'])
                 ->firstOrFail();
 
+            // ✅ Se sigue validando contra moneda guardada en boleta (ya viene del banco egreso)
             if ((string) $bancoDestino->moneda !== (string) $bg->moneda) {
                 throw new DomainException('La moneda del banco destino no coincide con la boleta.');
             }
 
-            $antes   = (float) $bancoDestino->monto;
+            $antes = (float) $bancoDestino->monto;
             $despues = $antes + $monto;
 
             $bancoDestino->monto = $despues;
@@ -127,22 +118,17 @@ class BoletaGarantiaService
                 'saldo_banco_despues' => $despues,
             ]);
 
-            // recalcular estado
             $nuevoTotalDevuelto = $totalDevuelto + $monto;
-            $bg->estado = ($nuevoTotalDevuelto >= (float) $bg->retencion) ? 'devuelta' : 'abierta';
+            $bg->estado = $nuevoTotalDevuelto >= (float) $bg->retencion ? 'devuelta' : 'abierta';
             $bg->save();
 
             return $devol;
         });
     }
 
-    /**
-     * Eliminar devolución y revertir el incremento del banco destino.
-     */
     public function eliminarDevolucion(BoletaGarantia $boleta, int $devolucionId, int $userId): void
     {
         DB::transaction(function () use ($boleta, $devolucionId) {
-
             /** @var BoletaGarantia $bg */
             $bg = BoletaGarantia::query()->lockForUpdate()->findOrFail($boleta->id);
 
@@ -165,12 +151,12 @@ class BoletaGarantiaService
                 ->firstOrFail();
 
             $monto = (float) $dev->monto;
-
-            // Reversión: restar al banco destino lo que se sumó
             $saldoActual = (float) $bancoDestino->monto;
 
             if ($saldoActual < $monto) {
-                throw new DomainException('No se puede eliminar: el banco destino no tiene saldo suficiente para revertir.');
+                throw new DomainException(
+                    'No se puede eliminar: el banco destino no tiene saldo suficiente para revertir.',
+                );
             }
 
             $bancoDestino->monto = $saldoActual - $monto;
@@ -178,12 +164,11 @@ class BoletaGarantiaService
 
             $dev->delete();
 
-            // recalcular estado
             $totalDevuelto = (float) BoletaGarantiaDevolucion::query()
                 ->where('boleta_garantia_id', $bg->id)
                 ->sum('monto');
 
-            $bg->estado = ($totalDevuelto >= (float) $bg->retencion) ? 'devuelta' : 'abierta';
+            $bg->estado = $totalDevuelto >= (float) $bg->retencion ? 'devuelta' : 'abierta';
             $bg->save();
         });
     }

@@ -95,16 +95,17 @@ class Facturas extends Component
         if ($value === '') {
             $this->monto_facturado = 0;
             $this->monto_facturado_formatted = '';
+            $this->recalcularRetencionUI();
             return;
         }
 
-        // miles "." -> remove, decimal "," -> "."
         $clean = str_replace(['.', ','], ['', '.'], $value);
 
         if (is_numeric($clean)) {
             $this->monto_facturado = (float) $clean;
             $this->monto_facturado_formatted = number_format($this->monto_facturado, 2, ',', '.');
-            return;
+
+            $this->recalcularRetencionUI();
         }
     }
 
@@ -472,7 +473,7 @@ class Facturas extends Component
 
         $facturaLabel = $pago->factura
             ? ($pago->factura->numero ?:
-                'Factura #' . $pago->factura->id)
+            'Factura #' . $pago->factura->id)
             : 'Factura —';
 
         $montoLabel = 'Bs ' . number_format((float) ($pago->monto ?? 0), 2, ',', '.');
@@ -573,6 +574,9 @@ class Facturas extends Component
         $entidades = Entidad::query()
             ->where('active', true)
             ->where('empresa_id', $empresaId)
+            ->whereHas('proyectos', function ($q) use ($empresaId) {
+                $q->where('active', true)->where('empresa_id', $empresaId);
+            })
             ->orderBy('nombre')
             ->get();
 

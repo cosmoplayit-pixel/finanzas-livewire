@@ -50,6 +50,8 @@ class AgentesServicio extends Component
         if (!$this->isAdmin()) {
             $this->empresaFilter = (string) $this->userEmpresaId();
         }
+
+        $this->status = 'active';
     }
 
     protected function rules(): array

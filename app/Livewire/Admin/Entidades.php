@@ -46,6 +46,11 @@ class Entidades extends Component
         'toggleEntidad' => 'toggleActive',
     ];
 
+    public function mount(): void
+    {
+        $this->status = 'active';
+    }
+
     protected function rules(): array
     {
         $isAdmin = auth()->user()->hasRole('Administrador');
@@ -282,9 +287,7 @@ class Entidades extends Component
         if ($this->search !== '') {
             $s = trim($this->search);
             $q->where(function ($qq) use ($s) {
-                $qq->where('nombre', 'like', "%{$s}%")
-                    ->orWhere('sigla', 'like', "%{$s}%")
-                    ->orWhere('email', 'like', "%{$s}%");
+                $qq->where('nombre', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%");
             });
         }
 

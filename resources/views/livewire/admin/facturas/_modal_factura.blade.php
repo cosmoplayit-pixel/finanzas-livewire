@@ -111,26 +111,26 @@
         {{-- Retención monto --}}
         <div>
             <label class="block text-sm mb-1">Retención (Monto)</label>
-            <input type="number" step="0.01" disabled
-                value="{{ number_format((float) ($retencion_monto ?? 0), 2, '.', '') }}"
+            <input type="number" step="0.01" disabled wire:model="retencion_monto"
                 class="w-full rounded border px-3 py-2
-                       bg-gray-100 dark:bg-neutral-800
-                       border-gray-300 dark:border-neutral-700
-                       text-gray-900 dark:text-neutral-100
-                       opacity-80 cursor-not-allowed" />
+               bg-gray-100 dark:bg-neutral-800
+               border-gray-300 dark:border-neutral-700
+               text-gray-900 dark:text-neutral-100
+               opacity-80 cursor-not-allowed" />
         </div>
+
 
         {{-- Neto --}}
         <div>
             <label class="block text-sm mb-1">Monto Neto</label>
-            <input type="number" step="0.01" disabled
-                value="{{ number_format((float) ($monto_neto ?? 0), 2, '.', '') }}"
+            <input type="number" step="0.01" disabled wire:model="monto_neto"
                 class="w-full rounded border px-3 py-2
-                       bg-gray-100 dark:bg-neutral-800
-                       border-gray-300 dark:border-neutral-700
-                       text-gray-900 dark:text-neutral-100
-                       opacity-80 cursor-not-allowed" />
+               bg-gray-100 dark:bg-neutral-800
+               border-gray-300 dark:border-neutral-700
+               text-gray-900 dark:text-neutral-100
+               opacity-80 cursor-not-allowed" />
         </div>
+
     </div>
 
     {{-- Detalle --}}

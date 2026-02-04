@@ -14,7 +14,7 @@ use App\Livewire\Admin\Bancos;
 use App\Livewire\Admin\Facturas;
 use App\Livewire\Admin\AgentesServicio;
 use App\Livewire\Admin\AgentePresupuestos;
-use App\Livewire\Admin\BoletasGarantia;
+use App\Livewire\Admin\BoletasGarantia\Index;
 
 Route::get('/', fn() => redirect()->route('login'))->name('home');
 
@@ -46,7 +46,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->middleware(
             when(
                 Features::canManageTwoFactorAuthentication() &&
-                Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
+                    Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
                 ['password.confirm'],
                 [],
             ),
@@ -120,6 +120,6 @@ Route::middleware(['auth', 'active'])->group(function () {
     // Boleta de Garantia
     // =======================
     Route::middleware(['permission:boletas_garantia.view'])->group(function () {
-        Route::get('/boletas_garantia', BoletasGarantia::class)->name('boletas_garantia');
+        Route::get('/boletas_garantia', Index::class)->name('boletas_garantia');
     });
 });

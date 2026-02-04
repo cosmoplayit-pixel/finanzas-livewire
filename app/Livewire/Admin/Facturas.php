@@ -472,7 +472,7 @@ class Facturas extends Component
 
         $facturaLabel = $pago->factura
             ? ($pago->factura->numero ?:
-            'Factura #' . $pago->factura->id)
+                'Factura #' . $pago->factura->id)
             : 'Factura —';
 
         $montoLabel = 'Bs ' . number_format((float) ($pago->monto ?? 0), 2, ',', '.');

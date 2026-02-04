@@ -108,6 +108,12 @@ class RolesAndUsersSeeder extends Seeder
             'agente_rendicion.update',
             'agente_rendicion.toggle',
             'agente_rendicion.close',
+
+            // Boletas de Garantia
+            'boletas_garantia.view',
+            'boletas_garantia.create',
+            'boletas_garantia.update',
+            'boletas_garantia.toggle',
         ];
 
         foreach ($permissions as $p) {
@@ -217,6 +223,11 @@ class RolesAndUsersSeeder extends Seeder
             'agente_rendicion.update',
             'agente_rendicion.toggle',
             'agente_rendicion.close',
+
+            'boletas_garantia.view',
+            'boletas_garantia.create',
+            'boletas_garantia.update',
+            'boletas_garantia.toggle',
         ]);
 
         // Empresa_Visualizador
@@ -230,6 +241,7 @@ class RolesAndUsersSeeder extends Seeder
             'agentes_servicio.view',
             'agente_presupuestos.view',
             'agente_rendicion.view',
+            'boletas_garantia.view',
         ]);
 
         /*

@@ -171,6 +171,22 @@
                                 </span>
                             </flux:navlist.item>
                         @endcan
+
+                        {{-- Boletas de Garantia --}}
+                        @can('boletas_garantia.view')
+                            <flux:navlist.item icon="shield-check" :href="route('boletas_garantia')"
+                                :current="request()->routeIs('boletas_garantia')" wire:navigate>
+                                <span class="flex w-full items-center justify-between gap-2">
+                                    <span>{{ __('Boletas de Garantía') }}</span>
+                                    @isset($navCounts['boletas_garantia'])
+                                        <flux:badge size="sm" variant="subtle">
+                                            {{ $navCounts['boletas_garantia'] }}
+                                        </flux:badge>
+                                    @endisset
+                                </span>
+                            </flux:navlist.item>
+                        @endcan
+
                     </flux:navlist.group>
                 </flux:navlist.group>
             @endcanany

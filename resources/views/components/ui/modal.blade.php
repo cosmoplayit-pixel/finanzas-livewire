@@ -28,10 +28,10 @@
 }" x-init="$watch('open', (v) => setBodyLock(v))" x-show="open" x-cloak class="fixed inset-0 z-50"
     @keydown.escape.window="close()">
     {{-- Backdrop --}}
-    <div class="absolute inset-0 bg-black/50 dark:bg-black/70" x-show="open" x-transition.opacity></div>
+    <div class="fixed inset-0 bg-black/50 dark:bg-black/70" x-show="open" x-transition.opacity></div>
 
     {{-- Wrapper --}}
-    <div class="relative h-full w-full flex items-stretch sm:items-center justify-center p-0 sm:p-4"
+    <div class="fixed inset-0 flex items-stretch sm:items-center justify-center p-0 sm:p-4"
         @mousedown="{{ $closeOnBackdrop ? 'close()' : '' }}">
         {{-- Panel --}}
         <div @mousedown.stop @click.stop x-show="open" x-transition:enter="transition ease-out duration-150"

@@ -14,7 +14,9 @@ use App\Livewire\Admin\Bancos;
 use App\Livewire\Admin\Facturas;
 use App\Livewire\Admin\AgentesServicio;
 use App\Livewire\Admin\AgentePresupuestos;
-use App\Livewire\Admin\BoletasGarantia\Index;
+
+use App\Livewire\Admin\BoletasGarantia\Index as BoletasGarantiaIndex;
+use App\Livewire\Admin\Inversiones\Index as InversionesIndex;
 
 Route::get('/', fn() => redirect()->route('login'))->name('home');
 
@@ -117,9 +119,16 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
 
     // =======================
-    // Boleta de Garantia
+    // BOLETAS DE GARANTÍA
     // =======================
     Route::middleware(['permission:boletas_garantia.view'])->group(function () {
-        Route::get('/boletas_garantia', Index::class)->name('boletas_garantia');
+        Route::get('/boletas_garantia', BoletasGarantiaIndex::class)->name('boletas_garantia');
+    });
+
+    // =======================
+    // INVERSIONES
+    // =======================
+    Route::middleware(['permission:inversiones.view'])->group(function () {
+        Route::get('/inversiones', InversionesIndex::class)->name('inversiones');
     });
 });

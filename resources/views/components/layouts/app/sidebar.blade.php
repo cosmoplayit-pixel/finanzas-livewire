@@ -187,6 +187,21 @@
                             </flux:navlist.item>
                         @endcan
 
+                        {{-- Inversiones --}}
+                        @can('inversiones.view')
+                            <flux:navlist.item icon="currency-dollar" :href="route('inversiones')"
+                                :current="request()->routeIs('inversiones')" wire:navigate>
+                                <span class="flex w-full items-center justify-between gap-2">
+                                    <span>{{ __('Inversiones') }}</span>
+                                    @isset($navCounts['inversiones'])
+                                        <flux:badge size="sm" variant="subtle">
+                                            {{ $navCounts['inversiones'] }}
+                                        </flux:badge>
+                                    @endisset
+                                </span>
+                            </flux:navlist.item>
+                        @endcan
+
                     </flux:navlist.group>
                 </flux:navlist.group>
             @endcanany

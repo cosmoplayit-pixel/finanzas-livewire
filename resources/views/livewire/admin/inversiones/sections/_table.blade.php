@@ -95,7 +95,7 @@
 
                         {{-- % UTILIDAD --}}
                         <td class="p-3 text-center tabular-nums">
-                            {{ number_format($inv->porcentaje_utilidad, 4, ',', '.') }}%
+                            {{ number_format($inv->porcentaje_utilidad, 2, ',', '.') }}%
                         </td>
 
                         {{-- FECHAS (más grande y compacto) --}}

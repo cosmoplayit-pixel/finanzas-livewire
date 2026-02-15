@@ -163,13 +163,13 @@ class MovimientoModal extends Component
             ->where('inversion_id', $this->inversion->id)
             ->findOrFail($movId);
 
-        if (empty($m->imagen)) {
+        if (empty($m->comprobante_imagen_path)) {
             $this->fotoUrl = null;
             $this->openFotoModal = true;
             return;
         }
 
-        $this->fotoUrl = Storage::disk('public')->url($m->imagen);
+        $this->fotoUrl = Storage::disk('public')->url($m->comprobante_imagen_path);
         $this->openFotoModal = true;
     }
 

@@ -28,7 +28,7 @@ return new class extends Migration {
             $table->foreignId('banco_id')->nullable()->constrained('bancos')->nullOnDelete();
 
             $table->decimal('capital_actual', 14, 2)->default(0);
-            $table->decimal('porcentaje_utilidad', 8, 4)->default(0);
+            $table->decimal('porcentaje_utilidad', 8, 2)->default(0);
 
             $table->string('comprobante', 255)->nullable();
 

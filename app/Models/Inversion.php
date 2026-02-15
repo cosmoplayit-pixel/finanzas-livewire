@@ -33,7 +33,7 @@ class Inversion extends Model
         'fecha_vencimiento' => 'date',
         'hasta_fecha' => 'date',
         'capital_actual' => 'decimal:2',
-        'porcentaje_utilidad' => 'decimal:4',
+        'porcentaje_utilidad' => 'decimal:2',
     ];
 
     public function empresa(): BelongsTo

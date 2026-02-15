@@ -16,20 +16,37 @@ class InversionMovimiento extends Model
         'fecha',
         'fecha_pago',
         'descripcion',
-        'porcentaje_utilidad',
+
         'monto_capital',
         'monto_utilidad',
+        'porcentaje_utilidad',
+
+        'utilidad_fecha_inicio',
+        'utilidad_dias',
+        'utilidad_monto_mes',
+
+        'moneda_banco',
+        'tipo_cambio',
+
         'banco_id',
         'comprobante',
-        'imagen',
+        'comprobante_imagen_path',
     ];
 
     protected $casts = [
         'fecha' => 'date',
         'fecha_pago' => 'date',
+        'utilidad_fecha_inicio' => 'date',
+
         'monto_capital' => 'decimal:2',
         'monto_utilidad' => 'decimal:2',
-        'porcentaje_utilidad' => 'decimal:4',
+        'utilidad_monto_mes' => 'decimal:2',
+
+        'porcentaje_utilidad' => 'decimal:2',
+        'tipo_cambio' => 'decimal:2',
+
+        'utilidad_dias' => 'integer',
+        'nro' => 'integer',
     ];
 
     public function inversion(): BelongsTo

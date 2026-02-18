@@ -122,13 +122,15 @@ class PagarBancoModal extends Component
             ->where('active', true)
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'numero_cuenta', 'moneda', 'monto'])
-            ->map(fn($b) => [
-                'id' => $b->id,
-                'nombre' => $b->nombre,
-                'numero_cuenta' => $b->numero_cuenta,
-                'moneda' => $b->moneda,
-                'monto' => (float) ($b->monto ?? 0),
-            ])
+            ->map(
+                fn($b) => [
+                    'id' => $b->id,
+                    'nombre' => $b->nombre,
+                    'numero_cuenta' => $b->numero_cuenta,
+                    'moneda' => $b->moneda,
+                    'monto' => (float) ($b->monto ?? 0),
+                ],
+            )
             ->all();
 
         $this->fecha = now()->toDateString();
@@ -229,7 +231,6 @@ class PagarBancoModal extends Component
 
     public function updatedConcepto(): void
     {
-
         $this->resetMontos();
 
         $this->applyConceptUi();
@@ -239,7 +240,6 @@ class PagarBancoModal extends Component
         $this->resetErrorBag();
         $this->resetValidation();
     }
-
 
     public function updatedFechaPago(): void
     {
@@ -273,8 +273,9 @@ class PagarBancoModal extends Component
 
     public function updatedMontoTotalFormatted($value): void
     {
-        if ($this->lock_total)
+        if ($this->lock_total) {
             return;
+        }
 
         $n = $this->toFloatDecimal((string) $value);
         $this->monto_total = $n > 0 ? $n : null;
@@ -286,8 +287,9 @@ class PagarBancoModal extends Component
 
     public function updatedMontoCapitalFormatted($value): void
     {
-        if ($this->lock_breakdown)
+        if ($this->lock_breakdown) {
             return;
+        }
 
         $n = $this->toFloatDecimal((string) $value);
         $this->monto_capital = $n >= 0 ? $n : 0.0;
@@ -297,11 +299,11 @@ class PagarBancoModal extends Component
         $this->recalcTotalFromBreakdown();
     }
 
-
     public function updatedMontoInteresFormatted($value): void
     {
-        if ($this->lock_breakdown)
+        if ($this->lock_breakdown) {
             return;
+        }
 
         $n = $this->toFloatDecimal((string) $value);
         $this->monto_interes = $n >= 0 ? $n : 0.0;
@@ -313,8 +315,9 @@ class PagarBancoModal extends Component
 
     public function updatedMontoMoraFormatted($value): void
     {
-        if ($this->lock_breakdown)
+        if ($this->lock_breakdown) {
             return;
+        }
 
         $n = $this->toFloatDecimal((string) $value);
         $this->monto_mora = $n >= 0 ? $n : 0.0;
@@ -326,8 +329,9 @@ class PagarBancoModal extends Component
 
     public function updatedMontoComisionFormatted($value): void
     {
-        if ($this->lock_breakdown)
+        if ($this->lock_breakdown) {
             return;
+        }
 
         $n = $this->toFloatDecimal((string) $value);
         $this->monto_comision = $n >= 0 ? $n : 0.0;
@@ -339,8 +343,9 @@ class PagarBancoModal extends Component
 
     public function updatedMontoSeguroFormatted($value): void
     {
-        if ($this->lock_breakdown)
+        if ($this->lock_breakdown) {
             return;
+        }
 
         $n = $this->toFloatDecimal((string) $value);
         $this->monto_seguro = $n >= 0 ? $n : 0.0;
@@ -349,8 +354,6 @@ class PagarBancoModal extends Component
         $this->recalcTotalFromBreakdown();
         $this->recalcImpacto();
     }
-
-
 
     // ==========================
     // UI + Defaults por concepto
@@ -429,7 +432,8 @@ class PagarBancoModal extends Component
         $diaPago = max(1, min(28, $diaPago));
 
         // Buscar última cuota registrada
-        $lastCuota = $this->inversion->movimientos()
+        $lastCuota = $this->inversion
+            ->movimientos()
             ->where('concepto', 'PAGO_CUOTA')
             ->orderByDesc('fecha_pago')
             ->value('fecha_pago');
@@ -452,8 +456,9 @@ class PagarBancoModal extends Component
         $this->proxima_fecha_pago_fmt = null;
         $this->aviso_vencimiento = null;
 
-        if (!$this->inversion)
+        if (!$this->inversion) {
             return;
+        }
 
         if ($this->concepto === 'PAGO_CUOTA') {
             $this->setCuotaBancoBySchema();
@@ -516,23 +521,22 @@ class PagarBancoModal extends Component
         }
 
         $invMon = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
-
         $saldo = (float) ($this->inversion->capital_actual ?? 0);
         $tasaAnual = (float) ($this->inversion->tasa_anual ?? 0);
         $plazo = (int) ($this->inversion->plazo_meses ?? 0);
-        $sistema = strtoupper((string) ($this->inversion->amortizacion ?? 'FRANCESA'));
 
         // ✅ Fecha cuota automática “en la que se quedó”
         $next = $this->computeNextDueDateFromMovimientos();
         $this->proxima_fecha_pago_fmt = $next->format('d/m/Y');
 
-        // ✅ Bloquea y setea las fechas del form
+        // ✅ Bloquea y setea las fechas del form (en cuota)
         $this->fecha_pago = $next->format('Y-m-d');
         $this->fecha = $this->fecha_pago;
 
         // --- Validaciones mínimas ---
         if ($saldo <= 0 || $plazo <= 0 || $tasaAnual <= 0) {
-            $this->aviso_vencimiento = 'Falta configurar tasa_anual / plazo_meses / capital_actual para calcular cuota.';
+            $this->aviso_vencimiento =
+                'Falta configurar tasa_anual / plazo_meses / capital_actual para calcular cuota.';
 
             $this->monto_total = 0.0;
             $this->monto_total_formatted = '0,00';
@@ -543,22 +547,50 @@ class PagarBancoModal extends Component
             $this->monto_interes = 0.0;
             $this->monto_interes_formatted = '0,00';
 
+            $this->monto_mora = 0.0;
+            $this->monto_mora_formatted = '0,00';
+
+            $this->monto_comision = 0.0;
+            $this->monto_comision_formatted = '0,00';
+
+            $this->monto_seguro = 0.0;
+            $this->monto_seguro_formatted = '0,00';
+
             $this->monto_cuota_fmt = $this->fmtMoney(0, $invMon);
             $this->cuota_capital_fmt = $this->fmtMoney(0, $invMon);
             $this->cuota_interes_fmt = $this->fmtMoney(0, $invMon);
             return;
         }
 
-        // --- Cálculo cuota ---
-        $r = ($tasaAnual / 100.0) / 12.0;
-        $n = $plazo;
+        // --- Tasa mensual ---
+        $r = $tasaAnual / 100.0 / 12.0;
 
-        $cuota = 0.0;
-        $pow = pow(1 + $r, -$n);
+        // =========================================================
+        // ✅ CUOTA FIJA (FRANCESA REAL):
+        // Se calcula con el CAPITAL INICIAL y el PLAZO TOTAL.
+        // El SALDO ACTUAL solo se usa para calcular el interés del mes.
+        // =========================================================
+
+        // Capital inicial desde el movimiento CAPITAL_INICIAL
+        $capitalInicial =
+            (float) ($this->inversion
+                ->movimientos()
+                ->where('concepto', 'CAPITAL_INICIAL')
+                ->orderBy('nro')
+                ->value('monto_capital') ?? 0);
+
+        // fallback si por algo no existe el movimiento
+        if ($capitalInicial <= 0) {
+            $capitalInicial = (float) ($this->inversion->capital_actual ?? 0);
+        }
+
+        // Cuota fija francesa
+        $pow = pow(1 + $r, -$plazo);
         $den = 1 - $pow;
-        $cuota = $den > 0 ? ($saldo * $r / $den) : 0.0;
-
+        $cuota = $den > 0 ? ($capitalInicial * $r) / $den : 0.0;
         $cuota = round($cuota, 2);
+
+        // --- Desglose con el SALDO ACTUAL ---
         $interes = round($saldo * $r, 2);
         $capital = round(max(0, $cuota - $interes), 2);
 
@@ -568,6 +600,7 @@ class PagarBancoModal extends Component
         $this->monto_interes = $interes;
         $this->monto_interes_formatted = number_format($interes, 2, ',', '.');
 
+        // En cuota, estos van en 0
         $this->monto_mora = 0.0;
         $this->monto_mora_formatted = '0,00';
 
@@ -577,14 +610,16 @@ class PagarBancoModal extends Component
         $this->monto_seguro = 0.0;
         $this->monto_seguro_formatted = '0,00';
 
+        // Total (CUOTA FIJA)
         $this->monto_total = $cuota;
         $this->monto_total_formatted = number_format($cuota, 2, ',', '.');
 
         $this->monto_cuota_fmt = $this->fmtMoney($cuota, $invMon);
         $this->cuota_capital_fmt = $this->fmtMoney($capital, $invMon);
         $this->cuota_interes_fmt = $this->fmtMoney($interes, $invMon);
-    }
 
+        $this->aviso_vencimiento = null;
+    }
 
     // ==========================
     // Validación
@@ -592,10 +627,33 @@ class PagarBancoModal extends Component
     protected function rules(): array
     {
         $rules = [
-            'fecha' => ['required', 'date_format:Y-m-d', fn($a, $v, $f) => $this->parseStrictDate((string) $v) ? null : $f('Fecha inválida.')],
-            'fecha_pago' => ['required', 'date_format:Y-m-d', fn($a, $v, $f) => $this->parseStrictDate((string) $v) ? null : $f('Fecha pago inválida.')],
+            'fecha' => [
+                'required',
+                'date_format:Y-m-d',
+                fn($a, $v, $f) => $this->parseStrictDate((string) $v)
+                    ? null
+                    : $f('Fecha inválida.'),
+            ],
+            'fecha_pago' => [
+                'required',
+                'date_format:Y-m-d',
+                fn($a, $v, $f) => $this->parseStrictDate((string) $v)
+                    ? null
+                    : $f('Fecha pago inválida.'),
+            ],
             'banco_id' => ['required', 'integer', Rule::exists('bancos', 'id')],
-            'concepto' => ['required', Rule::in(['PAGO_CUOTA', 'PAGO_PARCIAL', 'PAGO_ADELANTADO', 'ABONO_CAPITAL', 'CARGO', 'AJUSTE', 'REVERSO'])],
+            'concepto' => [
+                'required',
+                Rule::in([
+                    'PAGO_CUOTA',
+                    'PAGO_PARCIAL',
+                    'PAGO_ADELANTADO',
+                    'ABONO_CAPITAL',
+                    'CARGO',
+                    'AJUSTE',
+                    'REVERSO',
+                ]),
+            ],
             'nro_comprobante' => ['nullable', 'string', 'max:30'],
             'comprobante_imagen' => ['nullable', 'image', 'max:5120'],
         ];
@@ -655,8 +713,9 @@ class PagarBancoModal extends Component
             return;
         }
 
-        if (!$this->inversion)
+        if (!$this->inversion) {
             return;
+        }
 
         try {
             $path = null;
@@ -837,13 +896,11 @@ class PagarBancoModal extends Component
 
     protected function sumBreakdown(): float
     {
-        return (float) (
-            (float) ($this->monto_capital ?? 0) +
+        return (float) ((float) ($this->monto_capital ?? 0) +
             (float) ($this->monto_interes ?? 0) +
             (float) ($this->monto_mora ?? 0) +
             (float) ($this->monto_comision ?? 0) +
-            (float) ($this->monto_seguro ?? 0)
-        );
+            (float) ($this->monto_seguro ?? 0));
     }
 
     protected function recalcTotalFromBreakdown(): void
@@ -860,7 +917,12 @@ class PagarBancoModal extends Component
         $sum = $this->sumBreakdown();
         if ($sum <= 0 && (float) ($this->monto_total ?? 0) > 0) {
             $this->monto_capital = (float) $this->monto_total;
-            $this->monto_capital_formatted = number_format((float) $this->monto_capital, 2, ',', '.');
+            $this->monto_capital_formatted = number_format(
+                (float) $this->monto_capital,
+                2,
+                ',',
+                '.',
+            );
         }
     }
 
@@ -868,7 +930,7 @@ class PagarBancoModal extends Component
     {
         $moneda = strtoupper($moneda);
         $val = number_format($n, 2, ',', '.');
-        return $moneda === 'USD' ? ('$ ' . $val) : ($val . ' Bs');
+        return $moneda === 'USD' ? '$ ' . $val : $val . ' Bs';
     }
 
     protected function parseStrictDate(string $value): ?Carbon
@@ -884,8 +946,9 @@ class PagarBancoModal extends Component
     protected function toFloatDecimal(string $value): float
     {
         $v = trim($value);
-        if ($v === '')
+        if ($v === '') {
             return 0.0;
+        }
 
         $v = str_replace([' ', "\u{00A0}"], '', $v);
         $v = str_replace('.', '', $v);
@@ -906,9 +969,7 @@ class PagarBancoModal extends Component
         }
         $diaPago = max(1, min(28, $diaPago));
 
-        $base = $fromDate
-            ? (Carbon::parse($fromDate)->startOfDay())
-            : now()->startOfDay();
+        $base = $fromDate ? Carbon::parse($fromDate)->startOfDay() : now()->startOfDay();
 
         $next = $base->copy()->day($diaPago);
 
@@ -918,7 +979,6 @@ class PagarBancoModal extends Component
 
         return $next;
     }
-
 
     public function render()
     {

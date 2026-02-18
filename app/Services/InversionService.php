@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Models\Banco;
 use App\Models\Inversion;
+use App\Models\InversionMovimiento;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class InversionService
 {
@@ -14,13 +16,15 @@ class InversionService
         return DB::transaction(function () use ($data) {
             $empresaId = auth()->user()->empresa_id;
 
-
             // Banco (si aplica): ingreso inicial aumenta banco
             if (!empty($data['banco_id'])) {
                 /** @var Banco $banco */
                 $banco = Banco::query()->lockForUpdate()->findOrFail((int) $data['banco_id']);
 
-                if (!empty($banco->moneda) && strtoupper((string) $banco->moneda) !== strtoupper((string) $data['moneda'])) {
+                if (
+                    !empty($banco->moneda) &&
+                    strtoupper((string) $banco->moneda) !== strtoupper((string) $data['moneda'])
+                ) {
                     throw new DomainException('La moneda no coincide con la moneda del banco.');
                 }
 
@@ -39,7 +43,7 @@ class InversionService
 
             // Normaliza tipo
             $tipo = strtoupper((string) ($data['tipo'] ?? 'PRIVADO'));
-            $esBanco = ($tipo === 'BANCO');
+            $esBanco = $tipo === 'BANCO';
 
             $inv = Inversion::create([
                 'empresa_id' => $empresaId,
@@ -67,10 +71,12 @@ class InversionService
             $inv->codigo = $codigoBase . '-' . $inv->id;
             $inv->save();
 
-            // Movimiento inicial (mejorado para tabla BANCO: concepto + total)
+            // Movimiento inicial
             $monedaBanco = null;
             if (!empty($data['banco_id'])) {
-                $monedaBanco = strtoupper((string) (Banco::find((int) $data['banco_id'])->moneda ?? null));
+                $monedaBanco = strtoupper(
+                    (string) (Banco::find((int) $data['banco_id'])->moneda ?? null),
+                );
             }
 
             $inv->movimientos()->create([
@@ -82,11 +88,9 @@ class InversionService
                 'fecha_pago' => $data['fecha_inicio'],
                 'descripcion' => 'Capital inicial',
 
-                // BASE inversión
                 'monto_total' => (float) $data['capital'],
                 'monto_capital' => (float) $data['capital'],
 
-                // desglose banco en 0
                 'monto_interes' => 0,
                 'monto_mora' => 0,
                 'monto_comision' => 0,
@@ -100,12 +104,14 @@ class InversionService
 
                 'moneda_banco' => $monedaBanco,
                 'tipo_cambio' => null,
+
+                'estado' => 'PAGADO',
+                'pagado_en' => now(),
             ]);
 
             return $inv;
         });
     }
-
 
     public function registrarMovimiento(Inversion $inv, array $data): void
     {
@@ -138,13 +144,11 @@ class InversionService
             $monInv = strtoupper((string) ($invLocked->moneda ?? 'BOB'));
             $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
 
-            // monto en moneda del banco (input)
             $montoBanco = (float) ($data['monto'] ?? 0);
             if ($montoBanco <= 0) {
                 throw new DomainException('El monto es obligatorio.');
             }
 
-            // TC opcional/obligatorio si monedas difieren
             $tc = null;
             $montoBase = $montoBanco;
 
@@ -163,17 +167,11 @@ class InversionService
                 }
             }
 
-            // Validaciones de saldos
+            // Validaciones de saldos SOLO para devolución
             if ($tipo === 'DEVOLUCION_CAPITAL') {
                 if ((float) $invLocked->capital_actual < (float) $montoBase) {
                     throw new DomainException('Capital insuficiente.');
                 }
-                if ((float) $banco->monto < (float) $montoBanco) {
-                    throw new DomainException('Saldo insuficiente en banco.');
-                }
-            }
-
-            if ($tipo === 'PAGO_UTILIDAD') {
                 if ((float) $banco->monto < (float) $montoBanco) {
                     throw new DomainException('Saldo insuficiente en banco.');
                 }
@@ -186,42 +184,37 @@ class InversionService
                 $deltaCapital = (float) $montoBase;
                 $invLocked->capital_actual = (float) $invLocked->capital_actual + $deltaCapital;
                 $banco->monto = (float) $banco->monto + (float) $montoBanco;
+                $invLocked->hasta_fecha = $fechaMov;
+
+                $invLocked->save();
+                $banco->save();
             }
 
             if ($tipo === 'DEVOLUCION_CAPITAL') {
                 $deltaCapital = -(float) $montoBase;
                 $invLocked->capital_actual = (float) $invLocked->capital_actual + $deltaCapital;
                 $banco->monto = (float) $banco->monto - (float) $montoBanco;
+                $invLocked->hasta_fecha = $fechaMov;
+
+                $invLocked->save();
+                $banco->save();
             }
 
-            if ($tipo === 'PAGO_UTILIDAD') {
-                $banco->monto = (float) $banco->monto - (float) $montoBanco;
-                $invLocked->hasta_fecha = $fechaMov; // tu regla: utilidad actualiza hasta_fecha
-            } else {
-                $invLocked->hasta_fecha = $fechaMov; // tu regla actual: capital también actualiza hasta_fecha
-            }
-
-            $invLocked->save();
-            $banco->save();
-
-            // nro correlativo general
+            // nro correlativo
             $nro = (int) $invLocked->movimientos()->max('nro');
             $nro = $nro > 0 ? $nro + 1 : 1;
 
-            // correlativo por tipo para el texto
             $seqTipo = (int) $invLocked->movimientos()->where('tipo', $tipo)->count() + 1;
 
-            // descripción bonita (sin tipo crudo)
             $label = match ($tipo) {
-                'INGRESO_CAPITAL' => 'Ingreso de capital',
-                'DEVOLUCION_CAPITAL' => 'Devolución de capital',
-                'PAGO_UTILIDAD' => 'Pago de utilidad',
+                'INGRESO_CAPITAL' => 'Ingreso de Capital',
+                'DEVOLUCION_CAPITAL' => 'Devolución de Capital',
+                'PAGO_UTILIDAD' => 'Pago de Utilidad',
                 default => 'Movimiento',
             };
 
             $descripcion = sprintf('%s #%02d', $label, $seqTipo);
 
-            // crear movimiento
             $payload = [
                 'nro' => $nro,
                 'tipo' => $tipo,
@@ -231,7 +224,8 @@ class InversionService
 
                 'banco_id' => $banco->id,
                 'comprobante' => $data['nro_comprobante'] ?? ($data['comprobante'] ?? null),
-                'comprobante_imagen_path' => $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
+                'comprobante_imagen_path' =>
+                    $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
 
                 'moneda_banco' => $monBank,
                 'tipo_cambio' => $monInv !== $monBank ? $tc : null,
@@ -239,17 +233,35 @@ class InversionService
 
             if ($tipo === 'PAGO_UTILIDAD') {
                 $payload['monto_utilidad'] = (float) $montoBase;
-                $payload['porcentaje_utilidad'] = isset($data['porcentaje_utilidad']) ? (float) $data['porcentaje_utilidad'] : null;
+                $payload['porcentaje_utilidad'] = isset($data['porcentaje_utilidad'])
+                    ? (float) $data['porcentaje_utilidad']
+                    : null;
                 $payload['utilidad_fecha_inicio'] = $data['fecha_inicio'] ?? null;
                 $payload['utilidad_dias'] = isset($data['dias']) ? (int) $data['dias'] : null;
-                $payload['utilidad_monto_mes'] = isset($data['utilidad_monto_mes']) ? (float) $data['utilidad_monto_mes'] : null;
+                $payload['utilidad_monto_mes'] = isset($data['utilidad_monto_mes'])
+                    ? (float) $data['utilidad_monto_mes']
+                    : null;
+
+                // ✅ CLAVE: queda PENDIENTE hasta confirmar
+                $payload['estado'] = 'PENDIENTE';
+                $payload['pagado_en'] = null;
+
+                // ✅ NO debita banco aquí, NO actualiza hasta_fecha aquí
             } else {
                 $payload['monto_capital'] = (float) $deltaCapital;
+                $payload['estado'] = 'PAGADO';
+                $payload['pagado_en'] = now();
             }
 
             $invLocked->movimientos()->create($payload);
         });
     }
+
+    /**
+     * ✅ REGISTRA UTILIDAD como PENDIENTE (NO debita banco).
+     * Nota: esto reemplaza tu pagarUtilidad anterior.
+     */
+
     public function pagarUtilidad(Inversion $inv, array $data): void
     {
         DB::transaction(function () use ($inv, $data) {
@@ -260,27 +272,25 @@ class InversionService
                 throw new DomainException('La inversión está cerrada.');
             }
 
+            // ✅ BLOQUEO: no permitir nueva utilidad si hay una PENDIENTE
+            $hayPendiente = InversionMovimiento::query()
+                ->where('inversion_id', $invLocked->id)
+                ->where('tipo', 'PAGO_UTILIDAD')
+                ->where('estado', 'PENDIENTE')
+                ->exists();
+
+            if ($hayPendiente) {
+                throw new DomainException(
+                    'No puedes registrar una nueva utilidad: tienes una utilidad PENDIENTE por confirmar.',
+                );
+            }
+
             if (empty($data['banco_id'])) {
                 throw new DomainException('Debe seleccionar un banco.');
             }
 
             /** @var Banco $banco */
             $banco = Banco::query()->lockForUpdate()->findOrFail((int) $data['banco_id']);
-
-            $monto = (float) ($data['monto_utilidad'] ?? ($data['monto'] ?? 0));
-            if ($monto <= 0) {
-                throw new DomainException('El monto de utilidad es obligatorio.');
-            }
-
-            if ((float) $banco->monto < $monto) {
-                throw new DomainException('Saldo insuficiente en banco.');
-            }
-
-            $banco->monto = (float) $banco->monto - $monto;
-            $banco->save();
-
-            $nro = (int) $invLocked->movimientos()->max('nro');
-            $nro = $nro > 0 ? $nro + 1 : 1;
 
             $monInv = strtoupper((string) ($invLocked->moneda ?? 'BOB'));
             $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
@@ -290,31 +300,125 @@ class InversionService
                 throw new DomainException('Tipo de cambio obligatorio.');
             }
 
+            // ✅ En tu modal envías 'monto' (debito banco) y/o 'monto_utilidad'
+            $monto = (float) ($data['monto_utilidad'] ?? ($data['monto'] ?? 0));
+            if ($monto <= 0) {
+                throw new DomainException('El monto de utilidad es obligatorio.');
+            }
+
+            $nro = (int) $invLocked->movimientos()->max('nro');
+            $nro = $nro > 0 ? $nro + 1 : 1;
+
             $invLocked->movimientos()->create([
                 'nro' => $nro,
                 'tipo' => 'PAGO_UTILIDAD',
-                'fecha' => $data['fecha'], // fecha final
+                'fecha' => $data['fecha'],
                 'fecha_pago' => $data['fecha_pago'] ?? $data['fecha'],
-                'descripcion' => $data['descripcion'] ?? 'PAGO UTILIDAD',
+                'descripcion' => $data['descripcion'] ?? 'Pago de Utilidad',
 
                 'monto_utilidad' => $monto,
-                'porcentaje_utilidad' => (float) ($data['porcentaje_utilidad'] ?? $invLocked->porcentaje_utilidad),
+                'porcentaje_utilidad' =>
+                    (float) ($data['porcentaje_utilidad'] ?? $invLocked->porcentaje_utilidad),
 
                 'utilidad_fecha_inicio' => $data['fecha_inicio'] ?? null,
                 'utilidad_dias' => isset($data['dias']) ? (int) $data['dias'] : null,
-                'utilidad_monto_mes' => isset($data['utilidad_monto_mes']) ? (float) $data['utilidad_monto_mes'] : null,
+                'utilidad_monto_mes' => isset($data['utilidad_monto_mes'])
+                    ? (float) $data['utilidad_monto_mes']
+                    : null,
 
                 'moneda_banco' => $monBank,
                 'tipo_cambio' => $tc,
 
                 'banco_id' => $banco->id,
                 'comprobante' => $data['nro_comprobante'] ?? ($data['comprobante'] ?? null),
-                'comprobante_imagen_path' => $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
-            ]);
+                'comprobante_imagen_path' =>
+                    $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
 
-            // “hasta_fecha” = última fecha liquidada de utilidad (tu fecha final)
-            $invLocked->hasta_fecha = $data['fecha'];
-            $invLocked->save();
+                // ✅ se crea como pendiente (luego confirmas desde Movimientos)
+                'estado' => 'PENDIENTE',
+                'pagado_en' => null,
+            ]);
+        });
+    }
+    /**
+     * ✅ CONFIRMA un PAGO_UTILIDAD pendiente: recién aquí debita banco y actualiza hasta_fecha.
+     * Requiere que en tu tabla de movimientos tengas estado/pagado_en (recomendado).
+     */
+    public function confirmarPagoUtilidad(int $movimientoId): void
+    {
+        DB::transaction(function () use ($movimientoId) {
+            /** @var InversionMovimiento $mov */
+            $mov = InversionMovimiento::query()->lockForUpdate()->findOrFail($movimientoId);
+
+            if (strtoupper((string) $mov->tipo) !== 'PAGO_UTILIDAD') {
+                throw new DomainException('El movimiento no es un pago de utilidad.');
+            }
+
+            $estado = strtoupper((string) ($mov->estado ?? ''));
+            if ($estado !== 'PENDIENTE') {
+                throw new DomainException('Este pago ya fue confirmado o no está pendiente.');
+            }
+
+            /** @var Inversion $inv */
+            $inv = Inversion::query()->lockForUpdate()->findOrFail((int) $mov->inversion_id);
+
+            if ($inv->estado !== 'ACTIVA') {
+                throw new DomainException('La inversión está cerrada.');
+            }
+
+            if (empty($mov->banco_id)) {
+                throw new DomainException('El movimiento no tiene banco asignado.');
+            }
+
+            /** @var Banco $banco */
+            $banco = Banco::query()->lockForUpdate()->findOrFail((int) $mov->banco_id);
+
+            $monInv = strtoupper((string) ($inv->moneda ?? 'BOB'));
+            $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
+
+            $montoBase = (float) ($mov->monto_utilidad ?? 0);
+            if ($montoBase <= 0) {
+                throw new DomainException('Monto de utilidad inválido.');
+            }
+
+            $debitoBanco = $montoBase;
+            if ($monInv !== $monBank) {
+                $tc = (float) ($mov->tipo_cambio ?? 0);
+                if ($tc <= 0) {
+                    throw new DomainException('Tipo de cambio obligatorio.');
+                }
+
+                if ($monInv === 'BOB' && $monBank === 'USD') {
+                    $debitoBanco = $montoBase / $tc;
+                } elseif ($monInv === 'USD' && $monBank === 'BOB') {
+                    $debitoBanco = $montoBase * $tc;
+                } else {
+                    throw new DomainException('Conversión no soportada para este par de monedas.');
+                }
+
+                $debitoBanco = round($debitoBanco, 2);
+            }
+
+            if ((float) $banco->monto < (float) $debitoBanco) {
+                throw new DomainException('Saldo insuficiente en banco.');
+            }
+
+            // ✅ debitar banco
+            $banco->monto = (float) $banco->monto - (float) $debitoBanco;
+            $banco->save();
+
+            // ✅ actualizar hasta_fecha al cierre del periodo
+            $inv->hasta_fecha = (string) $mov->fecha;
+            $inv->save();
+
+            // ✅ marcar pagado
+            $mov->estado = 'PAGADO';
+            $mov->pagado_en = now();
+
+            // opcional: registrar fecha_pago como “hoy” (si quieres)
+            // $mov->fecha_pago = now()->toDateString();
+
+            $mov->save();
         });
     }
 
@@ -329,7 +433,7 @@ class InversionService
             }
 
             if ($invLocked->estado !== 'ACTIVA') {
-                throw new DomainException('La inversión está cerrada.');
+                throw new DomainException('La inversión ya está finalizada.');
             }
 
             if (empty($data['banco_id'])) {
@@ -341,7 +445,6 @@ class InversionService
 
             $concepto = strtoupper(trim((string) ($data['concepto'] ?? '')));
 
-            // ✅ SOLO 3 CONCEPTOS
             $valid = ['PAGO_CUOTA', 'ABONO_CAPITAL', 'CARGO'];
             if (!in_array($concepto, $valid, true)) {
                 throw new DomainException('Concepto inválido.');
@@ -356,7 +459,6 @@ class InversionService
             $monInv = strtoupper((string) ($invLocked->moneda ?? 'BOB'));
             $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
 
-            // Montos en moneda BASE (monInv)
             $totalBase = (float) ($data['monto_total'] ?? 0);
             if ($totalBase <= 0) {
                 throw new DomainException('El monto total es obligatorio.');
@@ -368,13 +470,23 @@ class InversionService
             $com = max(0.0, (float) ($data['monto_comision'] ?? 0));
             $seg = max(0.0, (float) ($data['monto_seguro'] ?? 0));
 
-            // coherencia: si hay desglose, el total es la suma
             $sum = $cap + $int + $mora + $com + $seg;
             if ($sum > 0) {
                 $totalBase = round($sum, 2);
             }
 
-            // Convertir BASE → monto a debitar del banco (monBank)
+            if ($concepto === 'ABONO_CAPITAL') {
+                $cap = round($totalBase, 2);
+                $int = 0.0;
+                $mora = 0.0;
+                $com = 0.0;
+                $seg = 0.0;
+            }
+
+            if (in_array($concepto, ['PAGO_CUOTA', 'ABONO_CAPITAL'], true) && $cap <= 0) {
+                throw new DomainException('El monto de capital debe ser mayor a 0.');
+            }
+
             $debitoBanco = $totalBase;
             $tc = null;
 
@@ -384,8 +496,6 @@ class InversionService
                     throw new DomainException('Tipo de cambio obligatorio.');
                 }
 
-                // inv=BOB bank=USD => bank = base / tc
-                // inv=USD bank=BOB => bank = base * tc
                 if ($monInv === 'BOB' && $monBank === 'USD') {
                     $debitoBanco = $totalBase / $tc;
                 } elseif ($monInv === 'USD' && $monBank === 'BOB') {
@@ -397,21 +507,22 @@ class InversionService
                 $debitoBanco = round((float) $debitoBanco, 2);
             }
 
-            // ✅ SOLO estos 3: todos DEBITAN banco
             if ((float) $banco->monto < (float) $debitoBanco) {
                 throw new DomainException('Saldo insuficiente en banco.');
             }
             $banco->monto = (float) $banco->monto - (float) $debitoBanco;
 
-            // Impacto en "deuda" (capital_actual lo tratamos como saldo pendiente)
             $saldo = (float) ($invLocked->capital_actual ?? 0);
 
             if ($concepto === 'CARGO') {
-                // Cargo financiado: aumenta deuda por total
                 $saldo = $saldo + $totalBase;
             } else {
-                // PAGO_CUOTA / ABONO_CAPITAL: reduce deuda por capital
                 $saldo = max(0, $saldo - $cap);
+            }
+
+            if ($saldo <= 0.01) {
+                $saldo = 0.0;
+                $invLocked->estado = 'FINALIZADA';
             }
 
             $invLocked->capital_actual = $saldo;
@@ -420,15 +531,15 @@ class InversionService
             $invLocked->save();
             $banco->save();
 
-            // nro correlativo general (se mantiene para el campo nro)
             $nro = (int) $invLocked->movimientos()->max('nro');
             $nro = $nro > 0 ? $nro + 1 : 1;
 
-            // correlativo POR CONCEPTO (solo BANCO_PAGO)
-            $seq = (int) $invLocked->movimientos()
-                ->where('tipo', 'BANCO_PAGO')
-                ->where('concepto', $concepto)
-                ->count() + 1;
+            $seq =
+                (int) $invLocked
+                    ->movimientos()
+                    ->where('tipo', 'BANCO_PAGO')
+                    ->where('concepto', $concepto)
+                    ->count() + 1;
 
             $label = match ($concepto) {
                 'PAGO_CUOTA' => 'Pago cuota',
@@ -438,7 +549,6 @@ class InversionService
             };
 
             $descripcion = sprintf('%s #%02d', $label, $seq);
-
 
             $payload = [
                 'nro' => $nro,
@@ -457,7 +567,8 @@ class InversionService
 
                 'banco_id' => $banco->id,
                 'comprobante' => $data['nro_comprobante'] ?? null,
-                'comprobante_imagen_path' => $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
+                'comprobante_imagen_path' =>
+                    $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
 
                 'moneda_banco' => $monBank,
                 'tipo_cambio' => $monInv !== $monBank ? $tc : null,
@@ -466,5 +577,4 @@ class InversionService
             $invLocked->movimientos()->create($payload);
         });
     }
-
 }

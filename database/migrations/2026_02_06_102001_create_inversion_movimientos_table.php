@@ -24,14 +24,20 @@ return new class extends Migration {
             $table->string('concepto', 30)->nullable(); // PAGO_CUOTA, ABONO_CAPITAL, CARGO, AJUSTE, etc.
 
             $table->date('fecha'); // Capital: fecha mov | Utilidad: fecha final | Banco: fecha contable
-            $table->date('fecha_pago')->nullable();
+            $table->date('fecha_pago')->nullable(); // fecha prevista / fecha pagada según tu flujo
 
             $table->string('descripcion')->nullable();
 
             // =========================
+            // ✅ CONTROL DE ESTADO (PENDIENTE / PAGADO)
+            // =========================
+            $table->string('estado', 15)->default('PENDIENTE'); // PENDIENTE | PAGADO | ANULADO
+            $table->timestamp('pagado_en')->nullable(); // se llena cuando se confirma el débito real
+
+            // =========================
             // BANCO: desglose (opcional)
             // =========================
-            $table->decimal('monto_total', 14, 4)->nullable();   // total pagado (moneda base)
+            $table->decimal('monto_total', 14, 4)->nullable(); // total pagado (moneda base)
             $table->decimal('monto_interes', 14, 4)->nullable();
             $table->decimal('monto_mora', 14, 4)->nullable();
             $table->decimal('monto_comision', 14, 4)->nullable();
@@ -57,6 +63,7 @@ return new class extends Migration {
 
             // Banco + comprobantes
             $table->foreignId('banco_id')->nullable()->constrained('bancos')->nullOnDelete();
+
             $table->string('comprobante', 255)->nullable();
             $table->string('comprobante_imagen_path', 255)->nullable();
 
@@ -67,6 +74,8 @@ return new class extends Migration {
             $table->index(['concepto']);
             $table->index(['banco_id']);
             $table->index(['fecha_pago']);
+            $table->index(['estado']);
+
             $table->unique(['inversion_id', 'nro']);
         });
     }

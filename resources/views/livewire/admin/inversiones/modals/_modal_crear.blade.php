@@ -2,11 +2,6 @@
 <x-ui.modal wire:key="inversion-create-{{ $open ? 'open' : 'closed' }}" model="open" title="Nueva inversión"
     maxWidth="sm:max-w-xl md:max-w-4xl" onClose="close">
 
-    @php
-        $isBanco = $tipo === 'BANCO';
-        $isPrivado = $tipo === 'PRIVADO';
-    @endphp
-
     <div class="space-y-3 sm:space-y-4">
 
         {{-- DATOS PRINCIPALES --}}
@@ -49,7 +44,7 @@
                     <div>
                         <label class="block text-sm mb-1">Fecha inicio <span class="text-red-500">*</span></label>
                         <input type="date" wire:model.live="fecha_inicio"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                            class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                    focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                         @error('fecha_inicio')
@@ -61,7 +56,7 @@
                     <div>
                         <label class="block text-sm mb-1">Fecha vencimiento <span class="text-red-500">*</span></label>
                         <input type="date" wire:model="fecha_vencimiento"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                            class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                    focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                         @error('fecha_vencimiento')
@@ -73,7 +68,7 @@
                     <div>
                         <label class="block text-sm mb-1">Tipo <span class="text-red-500">*</span></label>
                         <select wire:model.live="tipo"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                            class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                    focus:outline-none focus:ring-2 focus:ring-gray-500/40">
                             <option value="">Ninguno</option>
@@ -85,30 +80,24 @@
                         @enderror
                     </div>
 
-                    {{-- Banco (siempre requerido por tu regla actual, pero lo mostramos solo en BANCO) --}}
-                    @if ($isBanco)
-                        <div>
-                            <label class="block text-sm mb-1">Banco <span class="text-red-500">*</span></label>
-                            <select wire:model.live="banco_id"
-                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                    {{-- Banco (solo BANCO) --}}
+                    <div>
+                        <label class="block text-sm mb-1">Banco <span class="text-red-500">*</span></label>
+                        <select wire:model.live="banco_id"
+                            class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                        focus:outline-none focus:ring-2 focus:ring-gray-500/40">
-                                <option value="">Seleccione…</option>
-                                @foreach ($this->bancos as $b)
-                                    <option value="{{ $b->id }}">
-                                        {{ $b->nombre }} — {{ $b->numero_cuenta ?? '—' }} ({{ $b->moneda ?? '' }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('banco_id')
-                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                            @enderror
-
-                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
-                                Moneda: <span class="font-semibold">{{ $moneda }}</span>
-                            </div>
-                        </div>
-                    @endif
+                            <option value="">Seleccione…</option>
+                            @foreach ($this->bancos as $b)
+                                <option value="{{ $b->id }}">
+                                    {{ $b->nombre }} — {{ $b->numero_cuenta ?? '—' }} ({{ $b->moneda ?? '' }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('banco_id')
+                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
                     {{-- Capital --}}
                     <div>
@@ -123,8 +112,8 @@
                         @enderror
                     </div>
 
-                    {{-- % Utilidad (SOLO PRIVADO) --}}
-                    @if ($isPrivado)
+                    {{-- % Utilidad (solo PRIVADO) --}}
+                    @if ($showPrivadoFields)
                         <div>
                             <label class="block text-sm mb-1">% Utilidad <span class="text-red-500">*</span></label>
                             <input type="text" inputmode="decimal" wire:model.defer="porcentaje_utilidad_formatted"
@@ -138,8 +127,8 @@
                         </div>
                     @endif
 
-                    {{-- ✅ Datos BANCO (SOLO BANCO) --}}
-                    @if ($isBanco)
+                    {{-- Datos BANCO (solo BANCO) --}}
+                    @if ($showBancoFields)
                         <div>
                             <label class="block text-sm mb-1">Plazo (meses) <span class="text-red-500">*</span></label>
                             <input type="text" inputmode="numeric" wire:model.defer="plazo_meses_formatted"
@@ -173,20 +162,6 @@
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                        focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                             @error('tasa_anual')
-                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm mb-1">Amortización <span class="text-red-500">*</span></label>
-                            <select wire:model.live="sistema"
-                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40">
-                                <option value="FRANCESA">Francesa (cuota fija)</option>
-                                <option value="ALEMANA">Alemana (capital fijo)</option>
-                            </select>
-                            @error('sistema')
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
                         </div>
@@ -245,8 +220,8 @@
             </div>
         </div>
 
-        {{-- IMPACTO EN BANCO (SOLO BANCO) --}}
-        @if ($isBanco)
+        {{-- IMPACTO EN BANCO (solo BANCO) --}}
+        @if ($showBancoFields)
             <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
                 <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b dark:border-neutral-700">
                     <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto banco</div>
@@ -269,7 +244,8 @@
                         <div
                             class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
                             <div class="text-xs text-gray-500 dark:text-neutral-400">Aumento</div>
-                            <div class="text-sm font-semibold tabular-nums text-gray-700 dark:text-gray-300">
+                            <div
+                                class="text-sm text-green-600 font-semibold tabular-nums text-gray-700 dark:text-gray-300">
                                 +{{ number_format((float) $saldo_banco_aumento_preview, 2, ',', '.') }}
                                 {{ $moneda === 'USD' ? '$' : 'Bs' }}
                             </div>
@@ -278,7 +254,8 @@
                         <div
                             class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
                             <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo después</div>
-                            <div class="text-sm font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                            <div
+                                class="text-sm text-red-600 font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
                                 {{ number_format((float) $saldo_banco_despues_preview, 2, ',', '.') }}
                                 {{ $moneda === 'USD' ? '$' : 'Bs' }}
                             </div>
@@ -309,3 +286,27 @@
     @endslot
 
 </x-ui.modal>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('swal:error', (e) => {
+            Swal.fire({
+                icon: 'error',
+                title: 'No se puede registrar',
+                text: e.detail.message,
+                confirmButtonText: 'Entendido',
+            });
+        });
+
+        window.addEventListener('swal:success', (e) => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Listo',
+                text: e.detail.message,
+                timer: 1800,
+                showConfirmButton: false,
+            });
+        });
+    });
+</script>

@@ -35,10 +35,12 @@ class CreateModal extends Component
     public bool $moneda_locked = false;
 
     // ===== SOLO BANCO =====
-    public ?int $plazo_meses = null;       // 12,24,36...
-    public ?int $dia_pago = null;          // 1..28
-    public ?float $tasa_anual = null;      // 18.00 => 18%
-    public ?string $sistema = 'FRANCESA';  // FRANCESA | ALEMANA
+    public ?int $plazo_meses = null;
+    public ?int $dia_pago = null;
+    public ?float $tasa_anual = null;
+
+    // ✅ SOLO 1 OPCIÓN
+    public string $sistema = 'FRANCESA';
 
     public string $tasa_anual_formatted = '';
     public string $plazo_meses_formatted = '';
@@ -49,6 +51,19 @@ class CreateModal extends Component
     public float $saldo_banco_actual_preview = 0.0;
     public float $saldo_banco_aumento_preview = 0.0;
     public float $saldo_banco_despues_preview = 0.0;
+
+    // =====================
+    // ✅ Getters para la vista (sin @php)
+    // =====================
+    public function getShowBancoFieldsProperty(): bool
+    {
+        return (string) $this->tipo === 'BANCO';
+    }
+
+    public function getShowPrivadoFieldsProperty(): bool
+    {
+        return (string) $this->tipo === 'PRIVADO';
+    }
 
     public function mount(): void
     {
@@ -97,12 +112,9 @@ class CreateModal extends Component
             'saldo_banco_actual_preview',
             'saldo_banco_aumento_preview',
             'saldo_banco_despues_preview',
-
-            // banco
             'plazo_meses',
             'dia_pago',
             'tasa_anual',
-            'sistema',
             'tasa_anual_formatted',
             'plazo_meses_formatted',
             'dia_pago_formatted',
@@ -118,10 +130,12 @@ class CreateModal extends Component
         $this->capital_formatted = $this->fmtNumber($this->capital, 2);
         $this->porcentaje_utilidad_formatted = $this->fmtNumber($this->porcentaje_utilidad, 2);
 
-        // defaults BANCO
+        // ✅ defaults BANCO
         $this->plazo_meses = null;
         $this->dia_pago = null;
         $this->tasa_anual = null;
+
+        // ✅ SOLO 1 OPCIÓN
         $this->sistema = 'FRANCESA';
 
         $this->plazo_meses_formatted = '';
@@ -140,18 +154,18 @@ class CreateModal extends Component
     // =====================
     public function updatedTipo($value): void
     {
-        // Si cambias a BANCO, forzamos banco requerido y limpiamos %utilidad
         if ((string) $value === 'BANCO') {
             $this->porcentaje_utilidad = 0.0;
             $this->porcentaje_utilidad_formatted = $this->fmtNumber(0.0, 2);
 
-            // si no hay vencimiento, lo puedes autocalcular luego de poner plazo (opcional)
+            // ✅ fijo
+            $this->sistema = 'FRANCESA';
         } else {
-            // PRIVADO: limpiar campos banco si quieres
             $this->plazo_meses = null;
             $this->dia_pago = null;
             $this->tasa_anual = null;
             $this->sistema = 'FRANCESA';
+
             $this->plazo_meses_formatted = '';
             $this->dia_pago_formatted = '';
             $this->tasa_anual_formatted = '';
@@ -205,7 +219,8 @@ class CreateModal extends Component
     public function formatTasaAnual(): void
     {
         $this->tasa_anual = $this->parseNumber($this->tasa_anual_formatted);
-        $this->tasa_anual_formatted = $this->tasa_anual !== null ? $this->fmtNumber((float) $this->tasa_anual, 2) : '';
+        $this->tasa_anual_formatted =
+            $this->tasa_anual !== null ? $this->fmtNumber((float) $this->tasa_anual, 2) : '';
     }
 
     public function formatPlazo(): void
@@ -218,28 +233,27 @@ class CreateModal extends Component
     public function formatDiaPago(): void
     {
         $v = (int) $this->parseNumber($this->dia_pago_formatted);
-        $this->dia_pago = ($v >= 1 && $v <= 28) ? $v : null;
+        $this->dia_pago = $v >= 1 && $v <= 28 ? $v : null;
         $this->dia_pago_formatted = $this->dia_pago ? (string) $this->dia_pago : '';
     }
 
-    /**
-     *  Previsualización: saldo actual + capital => saldo después.
-     */
     private function recalcImpactoBanco(): void
     {
         $this->saldo_banco_actual_preview = 0.0;
         $this->saldo_banco_aumento_preview = 0.0;
         $this->saldo_banco_despues_preview = 0.0;
 
-        if (empty($this->banco_id))
+        if (empty($this->banco_id)) {
             return;
+        }
 
         $banco = Banco::query()
             ->where('empresa_id', auth()->user()->empresa_id)
             ->find($this->banco_id);
 
-        if (!$banco)
+        if (!$banco) {
             return;
+        }
 
         $saldoActual = (float) ($banco->monto ?? 0);
         $aumento = max(0.0, (float) $this->capital);
@@ -256,7 +270,6 @@ class CreateModal extends Component
     {
         $rules = [
             'codigo' => ['required', 'string', 'max:150'],
-
             'nombre_completo' => ['required', 'string', 'max:150'],
             'fecha_inicio' => ['required', 'date'],
             'fecha_vencimiento' => ['required', 'date', 'after_or_equal:fecha_inicio'],
@@ -270,12 +283,13 @@ class CreateModal extends Component
         if ($this->tipo === 'PRIVADO') {
             $rules['porcentaje_utilidad'] = ['required', 'numeric', 'min:0'];
         } else {
-            // BANCO
             $rules['tasa_anual'] = ['required', 'numeric', 'min:0.0001'];
             $rules['plazo_meses'] = ['required', 'integer', 'min:1', 'max:600'];
             $rules['dia_pago'] = ['required', 'integer', 'min:1', 'max:28'];
-            $rules['sistema'] = ['required', Rule::in(['FRANCESA', 'ALEMANA'])];
-            // porcentaje_utilidad NO aplica
+
+            // ✅ SOLO 1 OPCIÓN
+            $rules['sistema'] = ['required', Rule::in(['FRANCESA'])];
+
             $rules['porcentaje_utilidad'] = ['nullable', 'numeric', 'min:0'];
         }
 
@@ -293,9 +307,12 @@ class CreateModal extends Component
             $this->formatTasaAnual();
             $this->formatPlazo();
             $this->formatDiaPago();
-            // Forzamos porcentaje_utilidad 0
+
             $this->porcentaje_utilidad = 0.0;
             $this->porcentaje_utilidad_formatted = $this->fmtNumber(0.0, 2);
+
+            // ✅ fijo
+            $this->sistema = 'FRANCESA';
         }
 
         $this->validate();
@@ -313,7 +330,7 @@ class CreateModal extends Component
                 'fecha_inicio' => $this->fecha_inicio,
                 'fecha_vencimiento' => $this->fecha_vencimiento,
                 'capital' => (float) $this->capital,
-                'porcentaje_utilidad' => (float) $this->porcentaje_utilidad, // privado o 0
+                'porcentaje_utilidad' => (float) $this->porcentaje_utilidad,
 
                 'moneda' => $this->moneda,
                 'tipo' => $this->tipo,
@@ -325,7 +342,9 @@ class CreateModal extends Component
                 'tasa_anual' => $this->tipo === 'BANCO' ? (float) $this->tasa_anual : null,
                 'plazo_meses' => $this->tipo === 'BANCO' ? (int) $this->plazo_meses : null,
                 'dia_pago' => $this->tipo === 'BANCO' ? (int) $this->dia_pago : null,
-                'sistema' => $this->tipo === 'BANCO' ? (string) $this->sistema : null,
+
+                // ✅ FIJO
+                'sistema' => $this->tipo === 'BANCO' ? 'FRANCESA' : null,
             ]);
 
             session()->flash('success', 'Inversión creada correctamente.');
@@ -334,8 +353,9 @@ class CreateModal extends Component
             $this->resetForm();
             $this->dispatch('inversionUpdated');
         } catch (DomainException $e) {
-            if ($path)
+            if ($path) {
                 Storage::disk('public')->delete($path);
+            }
             session()->flash('error', $e->getMessage());
         }
     }
@@ -343,8 +363,9 @@ class CreateModal extends Component
     private function parseNumber(?string $value): float
     {
         $v = trim((string) $value);
-        if ($v === '')
+        if ($v === '') {
             return 0.0;
+        }
 
         $v = str_replace(' ', '', $v);
 
@@ -375,6 +396,9 @@ class CreateModal extends Component
 
     public function render()
     {
-        return view('livewire.admin.inversiones.modals._modal_crear');
+        return view('livewire.admin.inversiones.modals._modal_crear', [
+            'showBancoFields' => $this->showBancoFields,
+            'showPrivadoFields' => $this->showPrivadoFields,
+        ]);
     }
 }

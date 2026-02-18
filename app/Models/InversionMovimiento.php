@@ -18,6 +18,10 @@ class InversionMovimiento extends Model
         'fecha_pago',
         'descripcion',
 
+        // ✅ CONTROL ESTADO
+        'estado',
+        'pagado_en',
+
         // BANCO
         'monto_total',
         'monto_interes',
@@ -47,6 +51,9 @@ class InversionMovimiento extends Model
         'fecha_pago' => 'date',
         'utilidad_fecha_inicio' => 'date',
         'utilidad_dias' => 'integer',
+
+        // ✅ CONTROL ESTADO
+        'pagado_en' => 'datetime',
 
         'monto_total' => 'decimal:2',
         'monto_interes' => 'decimal:2',

@@ -10,5 +10,7 @@
     <livewire:admin.inversiones.modals.create-modal />
     <livewire:admin.inversiones.modals.movimiento-modal />
     <livewire:admin.inversiones.modals.pagar-utilidad-modal />
+    <livewire:admin.inversiones.modals.pagar-banco-modal />
     <livewire:admin.inversiones.listeners.delete-movimiento-listener />
+
 </div>

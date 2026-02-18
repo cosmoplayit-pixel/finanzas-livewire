@@ -13,10 +13,19 @@ class InversionMovimiento extends Model
         'inversion_id',
         'nro',
         'tipo',
+        'concepto',
         'fecha',
         'fecha_pago',
         'descripcion',
 
+        // BANCO
+        'monto_total',
+        'monto_interes',
+        'monto_mora',
+        'monto_comision',
+        'monto_seguro',
+
+        // PRIVADO / BANCO
         'monto_capital',
         'monto_utilidad',
         'porcentaje_utilidad',
@@ -37,16 +46,19 @@ class InversionMovimiento extends Model
         'fecha' => 'date',
         'fecha_pago' => 'date',
         'utilidad_fecha_inicio' => 'date',
+        'utilidad_dias' => 'integer',
+
+        'monto_total' => 'decimal:2',
+        'monto_interes' => 'decimal:2',
+        'monto_mora' => 'decimal:2',
+        'monto_comision' => 'decimal:2',
+        'monto_seguro' => 'decimal:2',
 
         'monto_capital' => 'decimal:2',
         'monto_utilidad' => 'decimal:2',
-        'utilidad_monto_mes' => 'decimal:2',
-
         'porcentaje_utilidad' => 'decimal:2',
+        'utilidad_monto_mes' => 'decimal:2',
         'tipo_cambio' => 'decimal:2',
-
-        'utilidad_dias' => 'integer',
-        'nro' => 'integer',
     ];
 
     public function inversion(): BelongsTo

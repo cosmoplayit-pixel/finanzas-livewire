@@ -2,6 +2,11 @@
 <x-ui.modal wire:key="inversion-create-{{ $open ? 'open' : 'closed' }}" model="open" title="Nueva inversión"
     maxWidth="sm:max-w-xl md:max-w-4xl" onClose="close">
 
+    @php
+        $isBanco = $tipo === 'BANCO';
+        $isPrivado = $tipo === 'PRIVADO';
+    @endphp
+
     <div class="space-y-3 sm:space-y-4">
 
         {{-- DATOS PRINCIPALES --}}
@@ -29,7 +34,7 @@
                     </div>
 
                     {{-- Nombre --}}
-                    <div class="sm:col-span-1 lg:col-span-1">
+                    <div>
                         <label class="block text-sm mb-1">Nombre completo <span class="text-red-500">*</span></label>
                         <input wire:model.live="nombre_completo" placeholder="Ej: Willam Rojas Vidal"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -54,7 +59,7 @@
 
                     {{-- Fecha vencimiento --}}
                     <div>
-                        <label class="block text-sm mb-1">Fecha vencimiento</label>
+                        <label class="block text-sm mb-1">Fecha vencimiento <span class="text-red-500">*</span></label>
                         <input type="date" wire:model="fecha_vencimiento"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
@@ -80,24 +85,30 @@
                         @enderror
                     </div>
 
-                    {{-- Banco --}}
-                    <div class="lg:col-span-1">
-                        <label class="block text-sm mb-1">Banco:<span class="text-red-500">*</span></label>
-                        <select wire:model.live="banco_id"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40">
-                            <option value="">Ninguno</option>
-                            @foreach ($this->bancos as $b)
-                                <option value="{{ $b->id }}">
-                                    {{ $b->nombre }} — {{ $b->numero_cuenta ?? '—' }} ({{ $b->moneda ?? '' }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('banco_id')
-                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    {{-- Banco (siempre requerido por tu regla actual, pero lo mostramos solo en BANCO) --}}
+                    @if ($isBanco)
+                        <div>
+                            <label class="block text-sm mb-1">Banco <span class="text-red-500">*</span></label>
+                            <select wire:model.live="banco_id"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                                <option value="">Seleccione…</option>
+                                @foreach ($this->bancos as $b)
+                                    <option value="{{ $b->id }}">
+                                        {{ $b->nombre }} — {{ $b->numero_cuenta ?? '—' }} ({{ $b->moneda ?? '' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('banco_id')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+
+                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
+                                Moneda: <span class="font-semibold">{{ $moneda }}</span>
+                            </div>
+                        </div>
+                    @endif
 
                     {{-- Capital --}}
                     <div>
@@ -112,18 +123,74 @@
                         @enderror
                     </div>
 
-                    {{-- % Utilidad --}}
-                    <div>
-                        <label class="block text-sm mb-1">% Utilidad <span class="text-red-500">*</span></label>
-                        <input type="text" inputmode="decimal" wire:model.defer="porcentaje_utilidad_formatted"
-                            wire:blur="formatPorcentaje" placeholder="0,00"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
-                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                        @error('porcentaje_utilidad')
-                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    {{-- % Utilidad (SOLO PRIVADO) --}}
+                    @if ($isPrivado)
+                        <div>
+                            <label class="block text-sm mb-1">% Utilidad <span class="text-red-500">*</span></label>
+                            <input type="text" inputmode="decimal" wire:model.defer="porcentaje_utilidad_formatted"
+                                wire:blur="formatPorcentaje" placeholder="0,00"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            @error('porcentaje_utilidad')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    @endif
+
+                    {{-- ✅ Datos BANCO (SOLO BANCO) --}}
+                    @if ($isBanco)
+                        <div>
+                            <label class="block text-sm mb-1">Plazo (meses) <span class="text-red-500">*</span></label>
+                            <input type="text" inputmode="numeric" wire:model.defer="plazo_meses_formatted"
+                                wire:blur="formatPlazo" placeholder="12"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            @error('plazo_meses')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm mb-1">Día de pago (1–28) <span
+                                    class="text-red-500">*</span></label>
+                            <input type="text" inputmode="numeric" wire:model.defer="dia_pago_formatted"
+                                wire:blur="formatDiaPago" placeholder="1"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            @error('dia_pago')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm mb-1">Tasa anual (%) <span class="text-red-500">*</span></label>
+                            <input type="text" inputmode="decimal" wire:model.defer="tasa_anual_formatted"
+                                wire:blur="formatTasaAnual" placeholder="18,00"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            @error('tasa_anual')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm mb-1">Amortización <span class="text-red-500">*</span></label>
+                            <select wire:model.live="sistema"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                                <option value="FRANCESA">Francesa (cuota fija)</option>
+                                <option value="ALEMANA">Alemana (capital fijo)</option>
+                            </select>
+                            @error('sistema')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    @endif
 
                     {{-- Foto --}}
                     <div class="lg:col-span-1">
@@ -149,9 +216,8 @@
                                 </div>
 
                                 <div class="min-w-0">
-                                    <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">
-                                        Adjuntar archivo
-                                    </div>
+                                    <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">Adjuntar
+                                        archivo</div>
                                     <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
                                         @if ($comprobante)
                                             {{ $comprobante->getClientOriginalName() }}
@@ -162,7 +228,8 @@
                                 </div>
                             </div>
 
-                            <input type="file" wire:model="comprobante" accept=".jpg,.jpeg,.png" class="hidden" />
+                            <input type="file" wire:model="comprobante" accept=".jpg,.jpeg,.png"
+                                class="hidden" />
                         </label>
 
                         @error('comprobante')
@@ -178,52 +245,48 @@
             </div>
         </div>
 
-        {{-- IMPACTO EN BANCO (PREVISUALIZACIÓN) --}}
-        <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
-            <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b dark:border-neutral-700">
-                <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto banco</div>
-                <div class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
-                    Previsualización del saldo del banco con el capital ingresado.
+        {{-- IMPACTO EN BANCO (SOLO BANCO) --}}
+        @if ($isBanco)
+            <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
+                <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b dark:border-neutral-700">
+                    <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto banco</div>
+                    <div class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
+                        Previsualización del saldo del banco con el capital ingresado.
+                    </div>
+                </div>
+
+                <div class="p-3 sm:p-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div
+                            class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
+                            <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo actual</div>
+                            <div class="text-sm font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                {{ number_format((float) $saldo_banco_actual_preview, 2, ',', '.') }}
+                                {{ $moneda === 'USD' ? '$' : 'Bs' }}
+                            </div>
+                        </div>
+
+                        <div
+                            class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
+                            <div class="text-xs text-gray-500 dark:text-neutral-400">Aumento</div>
+                            <div class="text-sm font-semibold tabular-nums text-gray-700 dark:text-gray-300">
+                                +{{ number_format((float) $saldo_banco_aumento_preview, 2, ',', '.') }}
+                                {{ $moneda === 'USD' ? '$' : 'Bs' }}
+                            </div>
+                        </div>
+
+                        <div
+                            class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
+                            <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo después</div>
+                            <div class="text-sm font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                {{ number_format((float) $saldo_banco_despues_preview, 2, ',', '.') }}
+                                {{ $moneda === 'USD' ? '$' : 'Bs' }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <div class="p-3 sm:p-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-
-                    <div
-                        class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2
-                                    border-gray-200 dark:border-neutral-700">
-                        <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo actual</div>
-                        <div class="text-sm font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
-                            {{ number_format((float) $saldo_banco_actual_preview, 2, ',', '.') }}
-                            {{ $moneda === 'USD' ? '$' : 'Bs' }}
-                        </div>
-                    </div>
-
-                    <div
-                        class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2
-                                    border-gray-200 dark:border-neutral-700">
-                        <div class="text-xs text-gray-500 dark:text-neutral-400">Aumento</div>
-                        <div class="text-sm font-semibold tabular-nums text-gray-700 dark:text-gray-300">
-                            +{{ number_format((float) $saldo_banco_aumento_preview, 2, ',', '.') }}
-                            {{ $moneda === 'USD' ? '$' : 'Bs' }}
-                        </div>
-                    </div>
-
-                    <div
-                        class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2
-                                    border-gray-200 dark:border-neutral-700">
-                        <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo después</div>
-                        <div class="text-sm font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
-                            {{ number_format((float) $saldo_banco_despues_preview, 2, ',', '.') }}
-                            {{ $moneda === 'USD' ? '$' : 'Bs' }}
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-
+        @endif
 
     </div>
 
@@ -239,7 +302,7 @@
             <button type="button" wire:click="create" wire:loading.attr="disabled" wire:target="create,comprobante"
                 class="px-4 py-2 rounded-lg cursor-pointer bg-black text-white hover:opacity-90
                        disabled:opacity-50 disabled:cursor-not-allowed">
-                <span wire:loading.remove wire:target="create,comprobante"> Guardar </span>
+                <span wire:loading.remove wire:target="create,comprobante">Guardar</span>
                 <span wire:loading wire:target="create,comprobante">Procesando…</span>
             </button>
         </div>

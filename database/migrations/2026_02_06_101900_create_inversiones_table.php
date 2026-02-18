@@ -14,7 +14,7 @@ return new class extends Migration {
 
             $table->foreignId('empresa_id')->constrained('empresas')->cascadeOnDelete();
 
-            $table->string('codigo', 30);
+            $table->string('codigo', 150);
             $table->date('fecha_inicio');
             $table->date('fecha_vencimiento')->nullable();
 
@@ -27,8 +27,16 @@ return new class extends Migration {
 
             $table->foreignId('banco_id')->nullable()->constrained('bancos')->nullOnDelete();
 
-            $table->decimal('capital_actual', 14, 2)->default(0);
-            $table->decimal('porcentaje_utilidad', 8, 2)->default(0);
+            $table->decimal('capital_actual', 14, 4)->default(0);
+            $table->decimal('porcentaje_utilidad', 8, 4)->default(0);
+
+            // =========================
+            // CAMPOS SOLO PARA BANCO
+            // =========================
+            $table->decimal('tasa_anual', 8, 4)->nullable(); // 0.2450 = 24.50% anual
+            $table->unsignedInteger('plazo_meses')->nullable(); // 12, 24, 36...
+            $table->unsignedTinyInteger('dia_pago')->nullable(); // 1..28
+            $table->string('sistema', 20)->nullable(); // FRANCESA | ALEMANA | (opcional)
 
             $table->string('comprobante', 255)->nullable();
 

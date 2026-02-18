@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 
 class Inversion extends Model
 {
@@ -26,44 +25,44 @@ class Inversion extends Model
         'comprobante',
         'hasta_fecha',
         'estado',
+
+        // BANCO
+        'tasa_anual',
+        'plazo_meses',
+        'dia_pago',
+        'sistema',
     ];
 
     protected $casts = [
         'fecha_inicio' => 'date',
         'fecha_vencimiento' => 'date',
         'hasta_fecha' => 'date',
-        'capital_actual' => 'decimal:2',
-        'porcentaje_utilidad' => 'decimal:2',
+
+        'capital_actual' => 'decimal:4',
+        'porcentaje_utilidad' => 'decimal:4',
+
+        'tasa_anual' => 'decimal:4',
+        'plazo_meses' => 'integer',
+        'dia_pago' => 'integer',
     ];
-
-    public function empresa(): BelongsTo
-    {
-        return $this->belongsTo(Empresa::class);
-    }
-
-    public function responsable(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'responsable_id');
-    }
 
     public function banco(): BelongsTo
     {
-        return $this->belongsTo(Banco::class);
+        return $this->belongsTo(Banco::class, 'banco_id');
     }
+
     public function movimientos(): HasMany
     {
         return $this->hasMany(InversionMovimiento::class, 'inversion_id');
     }
 
-    /**
-     * URL pública para mostrar la imagen
-     */
-    public function getComprobanteImagenUrlAttribute(): ?string
+    public function isBanco(): bool
     {
-        if (!$this->comprobante) {
-            return null;
-        }
+        return strtoupper((string) $this->tipo) === 'BANCO';
+    }
 
-        return Storage::disk('public')->url($this->comprobante);
+    public function isPrivado(): bool
+    {
+        return strtoupper((string) $this->tipo) === 'PRIVADO';
     }
 }

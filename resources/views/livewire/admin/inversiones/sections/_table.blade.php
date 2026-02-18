@@ -196,9 +196,9 @@
                                 {{-- Ver Imagen (si existe) --}}
                                 <button type="button"
                                     wire:click="$dispatch('openFotoComprobanteInversion',[{{ $inv->id }}])"
-                                    @disabled(!$inv->comprobante_imagen_url)
+                                    @disabled(!$inv->comprobante)
                                     class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                    {{ $inv->comprobante_imagen_url
+                                    {{ $inv->comprobante
                                         ? 'border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700'
                                         : 'border-gray-200 text-gray-300 cursor-not-allowed dark:border-neutral-700 dark:text-neutral-600' }}"
                                     title="Ver imagen">

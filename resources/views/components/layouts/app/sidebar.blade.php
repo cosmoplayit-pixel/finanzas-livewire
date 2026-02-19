@@ -5,8 +5,32 @@
     @include('partials.head')
 </head>
 
-<body class="min-h-screen bg-white dark:bg-zinc-800">
-    <flux:sidebar sticky stashable class="border-e border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-900">
+<body class="min-h-screen bg-white dark:bg-zinc-800 relative overflow-x-hidden">
+
+    {{-- ===================== FONDO NODOS (GLOBAL) ===================== --}}
+    {{-- Queda detrás de TODO, no bloquea clicks --}}
+    <div class="pointer-events-none fixed inset-0 -z-10">
+        <canvas id="app-nodes-bg" class="absolute inset-0 w-full h-full"></canvas>
+
+        {{-- Overlay suave para que combine (light/dark) --}}
+        <div
+            class="absolute inset-0
+            bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.04)_0%,transparent_60%)]
+            dark:bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_0%,transparent_55%)]">
+        </div>
+
+        {{-- Vignette --}}
+        <div
+            class="absolute inset-0
+            bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.10)_100%)]
+            dark:bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.55)_100%)]">
+        </div>
+    </div>
+
+    {{-- ===================== SIDEBAR ===================== --}}
+    <flux:sidebar sticky stashable
+        class="border-e border-zinc-200 bg-zinc-100/85 backdrop-blur-xl
+               dark:border-zinc-700 dark:bg-zinc-900/70">
         <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
         <x-app-logo />
 
@@ -21,7 +45,6 @@
                     </flux:navlist.item>
                 </flux:navlist.group>
             @endcan
-
 
             {{-- ================= PLATAFORMA ================= --}}
             @canany(['users.view', 'roles.view', 'empresas.view'])
@@ -74,7 +97,6 @@
 
                 </flux:navlist.group>
             @endcanany
-
 
             {{-- ================= GESTIÓN FINANCIERA ================= --}}
             @canany(['entidades.view', 'proyectos.view', 'bancos.view'])
@@ -207,6 +229,7 @@
             @endcanany
 
         </flux:navlist>
+
         <flux:spacer />
 
         <!-- Desktop User Menu -->
@@ -257,7 +280,6 @@
     <!-- Mobile User Menu -->
     <flux:header class="lg:hidden">
         <flux:sidebar.toggle class="lg:hidden" icon="bars-2" inset="left" />
-
         <flux:spacer />
 
         <flux:dropdown position="top" align="end">
@@ -293,8 +315,8 @@
 
                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                     @csrf
-                    <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle" class="w-full"
-                        data-test="logout-button">
+                    <flux:menu.item as="button" type="submit" icon="arrow-right-start-on-rectangle"
+                        class="w-full" data-test="logout-button">
                         {{ __('Log Out') }}
                     </flux:menu.item>
                 </form>
@@ -309,12 +331,201 @@
 
 </html>
 
+{{-- ===================== SCRIPT NODOS (GLOBAL) ===================== --}}
+<script>
+    (function() {
+        const canvas = document.getElementById('app-nodes-bg');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d', {
+            alpha: true
+        });
+
+        const prefersReduced = window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        const mqMobile = window.matchMedia('(max-width: 767px)');
+
+        // Parallax (desktop)
+        const mouse = {
+            x: 0,
+            y: 0,
+            tx: 0,
+            ty: 0
+        };
+
+        function onMove(e) {
+            const w = window.innerWidth || 1;
+            const h = window.innerHeight || 1;
+            mouse.tx = (e.clientX / w - 0.5) * 2;
+            mouse.ty = (e.clientY / h - 0.5) * 2;
+        }
+
+        function syncMouseListener() {
+            window.removeEventListener('mousemove', onMove);
+            if (!mqMobile.matches) window.addEventListener('mousemove', onMove, {
+                passive: true
+            });
+        }
+        syncMouseListener();
+
+        function resize() {
+            const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+            canvas.width = Math.floor(window.innerWidth * dpr);
+            canvas.height = Math.floor(window.innerHeight * dpr);
+            canvas.style.width = window.innerWidth + 'px';
+            canvas.style.height = window.innerHeight + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        resize();
+        window.addEventListener('resize', resize, {
+            passive: true
+        });
+
+        const nodes = [];
+        const rand = (min, max) => min + Math.random() * (max - min);
+
+        function init() {
+            nodes.length = 0;
+
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const area = w * h;
+
+            // Densidad adaptativa (mobile más liviano)
+            const divisor = mqMobile.matches ? 73000 : 73000; // más nodos (antes 70k/90k)
+            const minN = mqMobile.matches ? 35 : 90; // mínimo más alto
+            const maxN = mqMobile.matches ? 90 : 220; // tope más alto
+
+
+            const count = Math.max(minN, Math.min(maxN, Math.floor(area / divisor)));
+
+            for (let i = 0; i < count; i++) {
+                nodes.push({
+                    x: rand(0, w),
+                    y: rand(0, h),
+                    z: rand(0.15, 1.0),
+                    vx: rand(-0.16, 0.16),
+                    vy: rand(-0.16, 0.16),
+                    r: rand(1.0, 2.0),
+                });
+            }
+        }
+        init();
+
+        let resizeTimer = null;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => init(), 140);
+        }, {
+            passive: true
+        });
+
+        mqMobile.addEventListener?.('change', () => {
+            syncMouseListener();
+            init();
+        });
+
+        function draw() {
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+
+            const ease = mqMobile.matches ? 0.02 : 0.06;
+            mouse.x += (mouse.tx - mouse.x) * ease;
+            mouse.y += (mouse.ty - mouse.y) * ease;
+
+            ctx.clearRect(0, 0, w, h);
+
+            const isDark = document.documentElement.classList.contains('dark');
+
+            // Colores: en light negro suave, en dark blanco suave
+            const line = isDark ? 'rgba(255,255,255,' : 'rgba(0,0,0,';
+            const glow = isDark ? 'rgba(16,185,129,' : 'rgba(0,0,0,'; // emerald glow en dark
+            const core = isDark ? 'rgba(255,255,255,' : 'rgba(0,0,0,';
+
+            for (const p of nodes) {
+                if (!prefersReduced) {
+                    const speed = mqMobile.matches ? 0.55 : 1.00;
+                    p.x += p.vx * speed * (1.10 - p.z);
+                    p.y += p.vy * speed * (1.10 - p.z);
+                }
+
+                if (p.x < -25) p.x = w + 25;
+                if (p.x > w + 25) p.x = -25;
+                if (p.y < -25) p.y = h + 25;
+                if (p.y > h + 25) p.y = -25;
+            }
+
+            const maxDist = mqMobile.matches ?
+                Math.min(150, Math.max(110, Math.floor(Math.min(w, h) / 6))) :
+                Math.min(260, Math.max(180, Math.floor(Math.min(w, h) / 4)));
+
+            for (let i = 0; i < nodes.length; i++) {
+                const a = nodes[i];
+                for (let j = i + 1; j < nodes.length; j++) {
+                    const b = nodes[j];
+                    const dx = a.x - b.x;
+                    const dy = a.y - b.y;
+                    const d = Math.hypot(dx, dy);
+                    if (d > maxDist) continue;
+
+                    const depth = (2 - (a.z + b.z)) / 2;
+                    const baseAlpha = mqMobile.matches ? 0.11 : 0.18;
+                    const alpha = Math.max(0, (1 - d / maxDist)) * baseAlpha * (0.6 + depth);
+
+                    const parallax = mqMobile.matches ? 5 : 10;
+                    const ax = a.x + mouse.x * (parallax * (1 - a.z));
+                    const ay = a.y + mouse.y * (parallax * (1 - a.z));
+                    const bx = b.x + mouse.x * (parallax * (1 - b.z));
+                    const by = b.y + mouse.y * (parallax * (1 - b.z));
+
+                    ctx.beginPath();
+                    ctx.moveTo(ax, ay);
+                    ctx.lineTo(bx, by);
+                    ctx.strokeStyle = line + alpha + ')';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
+
+            for (const p of nodes) {
+                const depth = (1 - p.z);
+                const parallax = mqMobile.matches ? 7 : 14;
+                const px = p.x + mouse.x * (parallax * (1 - p.z));
+                const py = p.y + mouse.y * (parallax * (1 - p.z));
+                const rr = p.r + depth * 1.4;
+
+                // glow
+                ctx.beginPath();
+                ctx.arc(px, py, rr * 3.0, 0, Math.PI * 2);
+                const glowA = isDark ? (0.02 + depth * 0.05) : (0.02 + depth * 0.03);
+                ctx.fillStyle = glow + glowA + ')';
+                ctx.fill();
+
+                // core
+                ctx.beginPath();
+                ctx.arc(px, py, rr, 0, Math.PI * 2);
+                const coreA = isDark ? (0.22 + depth * 0.16) : (0.20 + depth * 0.12);
+                ctx.fillStyle = core + coreA + ')';
+                ctx.fill();
+            }
+
+            requestAnimationFrame(draw);
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) resize();
+        });
+
+        draw();
+    })();
+</script>
+
 <script>
     document.addEventListener('livewire:init', () => {
 
         /* =========================================================
          * SWEETALERT CONFIRMS (Livewire)
-         * Recomendación: mantener todos los listeners aquí.
          * ========================================================= */
 
         // ===================== USUARIOS =====================
@@ -418,21 +629,15 @@
                             id
                         });
                     }
-
-                    // Importante: para quitar tu loading Alpine
                     window.dispatchEvent(new CustomEvent('swal:done'));
                 });
             });
         }
 
-        // Livewire 3 (recomendado)
         document.addEventListener('livewire:init', registerSwalToggleEntidad);
-
-        // Si usas navegación tipo SPA (Livewire navigate), registra también:
         document.addEventListener('livewire:navigated', registerSwalToggleEntidad);
 
-
-        // ===================== PROYECTOS (SweetAlert + DOM event) =====================
+        // ===================== PROYECTOS =====================
         function registerSwalToggleProyecto() {
             window.addEventListener('swal:toggle-active-proyecto', (event) => {
                 const {
@@ -458,18 +663,13 @@
                         });
                     }
                 }).finally(() => {
-                    // ✅ libera el loading Alpine SIEMPRE (confirmó o canceló)
                     window.dispatchEvent(new CustomEvent('swal:done'));
                 });
             });
         }
 
-        // Registra cuando Livewire inicia
         document.addEventListener('livewire:init', registerSwalToggleProyecto);
-
-        // Si usas navegación (wire:navigate), registra también al navegar
         document.addEventListener('livewire:navigated', registerSwalToggleProyecto);
-
 
         // ===================== BANCOS =====================
         function registerSwalToggleBanco() {
@@ -497,16 +697,12 @@
                         });
                     }
                 }).finally(() => {
-                    // ✅ libera el loading Alpine SIEMPRE
                     window.dispatchEvent(new CustomEvent('swal:done'));
                 });
             });
         }
 
-        // Si usas navegación tipo SPA (wire:navigate), registra también:
         document.addEventListener('livewire:navigated', registerSwalToggleBanco);
-
-        // ✅ y regístralo una vez al iniciar (ESTO va dentro de tu livewire:init wrapper)
         registerSwalToggleBanco();
 
         // ===================== FACTURAS: ELIMINAR PAGO =====================
@@ -532,6 +728,7 @@
                 }
             });
         });
+
         Livewire.on('scroll:restore', () => {
             const y = window.__lw_scrollY ?? 0;
             requestAnimationFrame(() => window.scrollTo({
@@ -565,7 +762,6 @@
                         });
                     }
                 }).finally(() => {
-                    // si usas loading alpine, libera
                     window.dispatchEvent(new CustomEvent('swal:done'));
                 });
             });
@@ -573,20 +769,15 @@
 
         document.addEventListener('livewire:init', registerSwalDeleteMovimiento);
         document.addEventListener('livewire:navigated', registerSwalDeleteMovimiento);
-
-
-
-
     });
 </script>
 
 <script>
     document.addEventListener('alpine:init', () => {
         Alpine.store('modalStack', {
-            stack: [], // [{ id, closeFn }...]
+            stack: [],
 
             open(id, closeFn) {
-                // evita duplicados
                 this.stack = this.stack.filter(x => x.id !== id);
                 this.stack.push({
                     id,
@@ -601,7 +792,6 @@
             },
 
             close(id) {
-                // si se cierra el que no es top, lo sacamos sin afectar top
                 this.stack = this.stack.filter(x => x.id !== id);
                 if (this.stack.length === 0) {
                     document.documentElement.classList.remove('overflow-hidden');
@@ -643,6 +833,7 @@
         });
     });
 </script>
+
 <script>
     document.addEventListener('livewire:init', () => {
         Livewire.on('swal', (payload) => {

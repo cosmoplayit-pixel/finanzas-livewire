@@ -242,14 +242,16 @@
                                     <th class="p-3 w-[120px]">Estado</th>
                                     <th class="p-3 w-[170px]">Acciones</th>
                                 @else
-                                    {{-- BANCO: 8 columnas (nuevo orden + acciones) --}}
+                                    {{-- BANCO: 10 columnas (2 fechas + % interés + acciones) --}}
                                     <th class="p-3 w-[50px]">#</th>
-                                    <th class="p-3 w-[120px]">Fecha</th>
+                                    <th class="p-3 w-[120px]">Fecha contable</th>
+                                    <th class="p-3 w-[120px]">Fecha pago</th>
                                     <th class="p-3 min-w-[320px] text-left">Descripción</th>
                                     <th class="p-3 w-[160px]">Comprobante</th>
                                     <th class="p-3 w-[150px]">Total</th>
                                     <th class="p-3 w-[150px]">Capital</th>
                                     <th class="p-3 w-[150px]">Interés</th>
+                                    <th class="p-3 w-[120px]">% Interés</th>
                                     <th class="p-3 w-[170px]">Acciones</th>
                                 @endif
                             </tr>
@@ -263,9 +265,19 @@
                                         {{ $m['idx'] }}
                                     </td>
 
-                                    <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
-                                        {{ $m['fecha'] }}
-                                    </td>
+                                    @if ($isBanco)
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['fecha_contable'] }}
+                                        </td>
+
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['fecha_pago'] }}
+                                        </td>
+                                    @else
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['fecha_contable'] }}
+                                        </td>
+                                    @endif
 
                                     <td class="p-2 text-left align-middle">
                                         <div class="text-gray-900 dark:text-neutral-100">
@@ -388,21 +400,28 @@
                                         </td>
 
                                         <td
-                                            class="p-2 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                            class="p-2 text-right tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['total'] }}
                                         </td>
-
                                         <td
-                                            class="p-2 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                            class="p-2 text-right tabular-nums align-middle
+                                            {{ !empty($m['capital_is_negative']) ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-neutral-100' }}">
                                             {{ $m['capital'] }}
                                         </td>
 
                                         <td
-                                            class="p-2 text-right tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                            class="p-2 text-right tabular-nums align-middle
+                                            {{ !empty($m['interes_is_negative']) ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-neutral-100' }}">
                                             {{ $m['interes'] }}
                                         </td>
 
-                                        {{-- ✅ ACCIONES BANCO: Ver imagen + Eliminar último (solo última fila) --}}
+
+                                        <td
+                                            class="p-2 text-right tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['pct_interes'] }}
+                                        </td>
+
+                                        {{-- ACCIONES BANCO: Ver imagen + Eliminar último (solo última fila) --}}
                                         <td class="p-2 align-middle">
                                             <div class="flex items-center justify-center gap-2">
                                                 @if (!empty($m['tiene_imagen']))
@@ -470,7 +489,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ !$isBanco ? 10 : 8 }}"
+                                    <td colspan="{{ !$isBanco ? 10 : 10 }}"
                                         class="p-6 text-center text-gray-500 dark:text-neutral-400">
                                         No hay movimientos registrados.
                                     </td>
@@ -498,9 +517,9 @@
                                     <td class="p-3 align-middle"></td>
                                 </tr>
                             @else
-                                {{-- BANCO: Totales Total/Capital/Interés (última columna Acciones vacía) --}}
+                                {{-- BANCO: Totales (dejamos vacías % interés y acciones) --}}
                                 <tr class="align-middle">
-                                    <td colspan="4"
+                                    <td colspan="5"
                                         class="p-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-neutral-300 align-middle">
                                         Totales
                                     </td>
@@ -512,7 +531,7 @@
 
                                     <td
                                         class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
-                                        {{ $totales['sumCapitalFmt'] }}
+                                        {{ $saldoDeudaFmt }}
                                     </td>
 
                                     <td
@@ -520,6 +539,7 @@
                                         {{ $totales['sumInteresFmt'] }}
                                     </td>
 
+                                    <td class="p-3 align-middle"></td>
                                     <td class="p-3 align-middle"></td>
                                 </tr>
                             @endif

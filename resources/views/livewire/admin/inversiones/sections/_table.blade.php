@@ -143,7 +143,7 @@
 
                                     <span
                                         class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-200">
-                                        <span class="font-semibold">Interés:</span>
+                                        <span class="font-semibold">Ult. Interés:</span>
                                         <span class="tabular-nums font-semibold text-rose-900 dark:text-rose-100">
                                             {{ $inv->resumen['interes'] ?? '—' }}
                                         </span>
@@ -151,7 +151,7 @@
 
                                     <span
                                         class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-200">
-                                        <span class="font-semibold">Total a pagar:</span>
+                                        <span class="font-semibold">Ult. Pago:</span>
                                         <span class="tabular-nums font-semibold text-violet-900 dark:text-violet-100">
                                             {{ $inv->resumen['total_a_pagar'] ?? '—' }}
                                         </span>

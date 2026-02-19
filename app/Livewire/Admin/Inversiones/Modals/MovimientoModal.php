@@ -43,7 +43,7 @@ class MovimientoModal extends Component
 
     public int $plazoMeses = 0;
     public int $diaPago = 0;
-    public string $tasaAmortizacionFmt = '0,00% • —';
+    public string $tasaAmortizacionFmt = '0,00%';
 
     public bool $puedeEliminarUltimo = false;
 
@@ -247,7 +247,11 @@ class MovimientoModal extends Component
         $sis = $this->inversion->sistema
             ? ucfirst(strtolower((string) $this->inversion->sistema))
             : '—';
-        $this->tasaAmortizacionFmt = $tasa . ' • ' . $sis;
+
+        $tasaAnual = (float) ($this->inversion->tasa_anual ?? 0); // ej: 12.5
+        $tasaMensual = $tasaAnual / 12;
+
+        $this->tasaAmortizacionFmt = number_format($tasaMensual, 2, ',', '.') . '%';
 
         $rows = $this->inversion->movimientos()->with('banco')->orderBy('nro')->get();
 
@@ -280,8 +284,9 @@ class MovimientoModal extends Component
             }
 
             $tipoRaw = strtoupper((string) ($m->tipo ?? ''));
-            $estado = strtoupper((string) ($m->estado ?? ''));
+            $concepto = strtoupper((string) ($m->concepto ?? ''));
 
+            $estado = strtoupper((string) ($m->estado ?? ''));
             if ($estado === '') {
                 if ($tipoRaw === 'PAGO_UTILIDAD') {
                     $estado = empty($m->comprobante) ? 'PENDIENTE' : 'PAGADO';
@@ -296,12 +301,45 @@ class MovimientoModal extends Component
                 $estado === 'PENDIENTE' &&
                 !$this->bloqueado;
 
+            // ============================
+            // BANCO: negativos en cuotas
+            // ============================
+            $esCuotaOAbono =
+                $tipoRaw === 'BANCO_PAGO' &&
+                in_array($concepto, ['PAGO_CUOTA', 'ABONO_CAPITAL'], true);
+
+            $capNum = (float) ($m->monto_capital ?? 0);
+            $intNum = (float) ($m->monto_interes ?? 0);
+
+            // Si es cuota/abono y vienen positivos, en UI se muestran como negativos y rojos
+            $capitalNegativo = $esCuotaOAbono && $capNum > 0;
+            $interesNegativo = $esCuotaOAbono && $intNum > 0;
+
+            $capitalFmt = $this->fmtMoney($capNum);
+            $interesFmt = $this->fmtMoney($intNum);
+
+            $capitalDisplay = $capitalNegativo ? '- ' . $capitalFmt : $capitalFmt;
+            $interesDisplay = $interesNegativo ? '- ' . $interesFmt : $interesFmt;
+
+            // ✅ % Interés (según tu regla): (interes * 100 / capital)
+            // OJO: uso ABS para que no te salga negativo si lo muestras como negativo en UI
+            $pctInteres = null;
+            $capDen = abs($capNum);
+            $intCalc = abs($intNum);
+
+            if ($capDen > 0 && $intCalc >= 0) {
+                $pctInteres = round(($intCalc * 100) / $capDen, 2);
+            }
+
             $out[] = [
                 'id' => (int) $m->id,
                 'idx' => $idx++,
-                'fecha' => $m->fecha ? $m->fecha->format('d/m/Y') : '—',
-                'descripcion' => (string) ($m->descripcion ?? '—'),
+
+                // ✅ Dos fechas
+                'fecha_contable' => $m->fecha ? $m->fecha->format('d/m/Y') : '—',
                 'fecha_pago' => $m->fecha_pago ? $m->fecha_pago->format('d/m/Y') : '—',
+
+                'descripcion' => (string) ($m->descripcion ?? '—'),
                 'comprobante' => (string) ($m->comprobante ?? '—'),
                 'banco_linea' => $bancoLinea,
 
@@ -313,12 +351,25 @@ class MovimientoModal extends Component
                     $m->porcentaje_utilidad !== null
                         ? number_format((float) $m->porcentaje_utilidad, 2, ',', '.') . '%'
                         : '—',
-                'capital' => $this->fmtMoney((float) ($m->monto_capital ?? 0)),
+
+                // ✅ Capital (negativo y rojo en cuotas/abono)
+                'capital' => $capitalDisplay,
+                'capital_is_negative' => $capitalNegativo,
+
                 'utilidad' => $this->fmtMoney((float) ($m->monto_utilidad ?? 0)),
 
                 // BANCO
                 'total' => $this->fmtMoney((float) ($m->monto_total ?? 0)),
-                'interes' => $this->fmtMoney((float) ($m->monto_interes ?? 0)),
+
+                // ✅ Interés (negativo y rojo en cuotas/abono)
+                'interes' => $interesDisplay,
+                'interes_is_negative' => $interesNegativo,
+
+                // ✅ % Interés
+                'pct_interes' =>
+                    $pctInteres !== null
+                        ? number_format((float) $pctInteres, 2, ',', '.') . '%'
+                        : '—',
 
                 'tiene_imagen' => !empty($imgPath),
             ];

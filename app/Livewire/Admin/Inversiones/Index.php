@@ -108,7 +108,7 @@ class Index extends Component
                 'tiene_utilidad_pendiente',
             )
 
-            // ✅ BANCO: PRÓXIMA CUOTA PENDIENTE (TOTAL A PAGAR DEL MES)
+            // ✅ BANCO: ÚLTIMO PAGO REALIZADO (TOTAL) (solo cuotas)
             ->selectSub(
                 InversionMovimiento::query()
                     ->selectRaw(
@@ -124,12 +124,33 @@ class Index extends Component
                     ",
                     )
                     ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
+                    ->where('tipo', 'BANCO_PAGO')
                     ->where('concepto', 'PAGO_CUOTA')
-                    ->where('estado', 'PENDIENTE')
-                    ->orderBy('fecha')
-                    ->orderBy('id')
+                    ->orderByDesc('fecha')
+                    ->orderByDesc('id')
                     ->limit(1),
-                'banco_proxima_cuota_total',
+                'banco_ultimo_pago_total',
+            )
+
+            // ✅ BANCO: ÚLTIMO % INTERÉS (interes * 100 / capital) del último pago (solo cuotas)
+            ->selectSub(
+                InversionMovimiento::query()
+                    ->selectRaw(
+                        "
+                        CASE
+                          WHEN COALESCE(monto_capital,0) > 0
+                            THEN ROUND((COALESCE(monto_interes,0) * 100.0) / COALESCE(monto_capital,0), 2)
+                          ELSE 0
+                        END
+                    ",
+                    )
+                    ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
+                    ->where('tipo', 'BANCO_PAGO')
+                    ->where('concepto', 'PAGO_CUOTA')
+                    ->orderByDesc('fecha')
+                    ->orderByDesc('id')
+                    ->limit(1),
+                'banco_ultimo_pago_pct_interes',
             );
 
         // =========================
@@ -199,9 +220,10 @@ class Index extends Component
         $tienePendiente = ((int) ($inv->tiene_utilidad_pendiente ?? 0)) === 1;
         $estadoUtilidad = !$isBanco && $tienePendiente ? 'PENDIENTE' : null;
 
-        // BANCO
-        $tasaAnual = (float) ($inv->tasa_anual ?? 0);
-        $totalAPagar = $isBanco ? (float) ($inv->banco_proxima_cuota_total ?? 0) : null;
+        // BANCO: mostrar ÚLTIMO total y ÚLTIMO % interés
+        $ultimoTotal = $isBanco ? (float) ($inv->banco_ultimo_pago_total ?? 0) : 0.0;
+        $ultimoPctInteres = $isBanco ? (float) ($inv->banco_ultimo_pago_pct_interes ?? 0) : 0.0;
+
         $deudaCuotas = $isBanco ? $capitalActual : null;
 
         $hastaFecha = $inv->hasta_fecha ? $inv->hasta_fecha->format('d/m/Y') : '—';
@@ -217,23 +239,28 @@ class Index extends Component
                     ? $this->fmtMoney($ultimaPagada, $inv->moneda)
                     : '—'),
 
-            // ✅ aquí debe salir lo PENDIENTE (sum)
             'utilidad_por_pagar' => $isBanco
                 ? null
                 : ($utilidadPorPagar > 0
                     ? $this->fmtMoney($utilidadPorPagar, $inv->moneda)
                     : '—'),
 
-            // ✅ clave para tu blade de Estado
             'estado_utilidad' => $estadoUtilidad,
 
             // BANCO
             'deuda_cuotas' => $isBanco ? $this->fmtMoney($deudaCuotas ?? 0, $inv->moneda) : null,
-            'interes' => $isBanco ? $this->fmtPct($tasaAnual) : null,
 
+            // ✅ aquí va el ÚLTIMO % interés (ej: 11,11%)
+            'interes' => $isBanco
+                ? ($ultimoPctInteres > 0
+                    ? $this->fmtPct($ultimoPctInteres)
+                    : '—')
+                : null,
+
+            // ✅ aquí va el ÚLTIMO total pagado (ej: 1.000,00 Bs)
             'total_a_pagar' => $isBanco
-                ? ($totalAPagar !== null && $totalAPagar > 0
-                    ? $this->fmtMoney($totalAPagar, $inv->moneda)
+                ? ($ultimoTotal > 0
+                    ? $this->fmtMoney($ultimoTotal, $inv->moneda)
                     : '—')
                 : null,
 

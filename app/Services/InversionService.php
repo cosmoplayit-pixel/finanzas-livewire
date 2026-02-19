@@ -159,9 +159,9 @@ class InversionService
                 }
 
                 if ($monInv === 'BOB' && $monBank === 'USD') {
-                    $montoBase = $montoBanco * $tc;
+                    $montoBase = $montoBanco * $tc; // base BOB
                 } elseif ($monInv === 'USD' && $monBank === 'BOB') {
-                    $montoBase = $montoBanco / $tc;
+                    $montoBase = $montoBanco / $tc; // base USD
                 } else {
                     throw new DomainException('Conversión no soportada para este par de monedas.');
                 }
@@ -182,8 +182,10 @@ class InversionService
 
             if ($tipo === 'INGRESO_CAPITAL') {
                 $deltaCapital = (float) $montoBase;
+
                 $invLocked->capital_actual = (float) $invLocked->capital_actual + $deltaCapital;
                 $banco->monto = (float) $banco->monto + (float) $montoBanco;
+
                 $invLocked->hasta_fecha = $fechaMov;
 
                 $invLocked->save();
@@ -192,8 +194,17 @@ class InversionService
 
             if ($tipo === 'DEVOLUCION_CAPITAL') {
                 $deltaCapital = -(float) $montoBase;
-                $invLocked->capital_actual = (float) $invLocked->capital_actual + $deltaCapital;
+
+                $nuevo = (float) $invLocked->capital_actual + $deltaCapital; // delta negativo
+                if ($nuevo <= 0.01) {
+                    $nuevo = 0.0;
+                    $invLocked->estado = 'FINALIZADA'; // ✅ CIERRE cuando llega a 0
+                }
+
+                $invLocked->capital_actual = $nuevo;
+
                 $banco->monto = (float) $banco->monto - (float) $montoBanco;
+
                 $invLocked->hasta_fecha = $fechaMov;
 
                 $invLocked->save();
@@ -227,6 +238,9 @@ class InversionService
                 'comprobante_imagen_path' =>
                     $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
 
+                // ✅ Guardamos monto_total como el monto en MONEDA DEL BANCO (sirve para reversas)
+                'monto_total' => (float) $montoBanco,
+
                 'moneda_banco' => $monBank,
                 'tipo_cambio' => $monInv !== $monBank ? $tc : null,
             ];
@@ -236,17 +250,18 @@ class InversionService
                 $payload['porcentaje_utilidad'] = isset($data['porcentaje_utilidad'])
                     ? (float) $data['porcentaje_utilidad']
                     : null;
+
                 $payload['utilidad_fecha_inicio'] = $data['fecha_inicio'] ?? null;
                 $payload['utilidad_dias'] = isset($data['dias']) ? (int) $data['dias'] : null;
                 $payload['utilidad_monto_mes'] = isset($data['utilidad_monto_mes'])
                     ? (float) $data['utilidad_monto_mes']
                     : null;
 
-                // ✅ CLAVE: queda PENDIENTE hasta confirmar
+                // ✅ queda PENDIENTE hasta confirmar
                 $payload['estado'] = 'PENDIENTE';
                 $payload['pagado_en'] = null;
 
-                // ✅ NO debita banco aquí, NO actualiza hasta_fecha aquí
+                // ✅ NO debita banco aquí
             } else {
                 $payload['monto_capital'] = (float) $deltaCapital;
                 $payload['estado'] = 'PAGADO';
@@ -256,11 +271,6 @@ class InversionService
             $invLocked->movimientos()->create($payload);
         });
     }
-
-    /**
-     * ✅ REGISTRA UTILIDAD como PENDIENTE (NO debita banco).
-     * Nota: esto reemplaza tu pagarUtilidad anterior.
-     */
 
     public function pagarUtilidad(Inversion $inv, array $data): void
     {
@@ -340,10 +350,7 @@ class InversionService
             ]);
         });
     }
-    /**
-     * ✅ CONFIRMA un PAGO_UTILIDAD pendiente: recién aquí debita banco y actualiza hasta_fecha.
-     * Requiere que en tu tabla de movimientos tengas estado/pagado_en (recomendado).
-     */
+
     public function confirmarPagoUtilidad(int $movimientoId): void
     {
         DB::transaction(function () use ($movimientoId) {
@@ -687,6 +694,216 @@ class InversionService
 
             // 5) Borrar el movimiento
             $last->delete();
+        });
+    }
+
+    private function cerrarPrivadoSiCapitalCero(Inversion $invLocked): void
+    {
+        // Solo PRIVADO
+        if (strtoupper((string) ($invLocked->tipo ?? '')) === 'BANCO') {
+            return;
+        }
+
+        $cap = round((float) ($invLocked->capital_actual ?? 0), 2);
+
+        if ($cap <= 0) {
+            $invLocked->capital_actual = 0.0;
+            $invLocked->estado = 'CERRADA';
+            $invLocked->save();
+        }
+    }
+
+    private function reabrirPrivadoSiCorresponde(Inversion $invLocked): void
+    {
+        // Solo PRIVADO
+        if (strtoupper((string) ($invLocked->tipo ?? '')) === 'BANCO') {
+            return;
+        }
+
+        $cap = round((float) ($invLocked->capital_actual ?? 0), 2);
+
+        if ($cap > 0 && strtoupper((string) ($invLocked->estado ?? '')) !== 'ACTIVA') {
+            $invLocked->estado = 'ACTIVA';
+            $invLocked->save();
+        }
+    }
+
+    public function eliminarUltimoMovimientoPrivado(Inversion $inv): void
+    {
+        DB::transaction(function () use ($inv) {
+            /** @var Inversion $invLocked */
+            $invLocked = Inversion::query()->lockForUpdate()->findOrFail($inv->id);
+
+            if (strtoupper((string) ($invLocked->tipo ?? '')) === 'BANCO') {
+                throw new DomainException('Esta acción aplica solo a inversiones PRIVADAS.');
+            }
+
+            /** @var InversionMovimiento|null $last */
+            $last = InversionMovimiento::query()
+                ->where('inversion_id', $invLocked->id)
+                ->orderByDesc('nro')
+                ->lockForUpdate()
+                ->first();
+
+            if (!$last) {
+                throw new DomainException('No hay movimientos para eliminar.');
+            }
+
+            $tipo = strtoupper((string) ($last->tipo ?? ''));
+            if (!in_array($tipo, ['DEVOLUCION_CAPITAL', 'PAGO_UTILIDAD'], true)) {
+                throw new DomainException(
+                    'Solo se puede eliminar el último registro si es DEVOLUCIÓN o UTILIDAD.',
+                );
+            }
+
+            // movimiento anterior para recalcular hasta_fecha
+            /** @var InversionMovimiento|null $prev */
+            $prev = InversionMovimiento::query()
+                ->where('inversion_id', $invLocked->id)
+                ->where('id', '!=', $last->id)
+                ->orderByDesc('nro')
+                ->lockForUpdate()
+                ->first();
+
+            // helpers
+            $monInv = strtoupper((string) ($invLocked->moneda ?? 'BOB'));
+
+            // ====== DEVOLUCIÓN DE CAPITAL ======
+            if ($tipo === 'DEVOLUCION_CAPITAL') {
+                if (empty($last->banco_id)) {
+                    throw new DomainException('El último movimiento no tiene banco asignado.');
+                }
+
+                /** @var Banco $banco */
+                $banco = Banco::query()->lockForUpdate()->findOrFail((int) $last->banco_id);
+
+                $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
+                $tc = (float) ($last->tipo_cambio ?? 0);
+
+                // monto base (moneda inversión) y monto banco (moneda banco) para revertir
+                $baseAbs = abs((float) ($last->monto_capital ?? 0)); // en devolución está negativo
+                if ($baseAbs <= 0) {
+                    throw new DomainException('Monto inválido en el último movimiento.');
+                }
+
+                // Preferimos monto_total guardado (monto en moneda banco)
+                $montoBanco = (float) ($last->monto_total ?? 0);
+                if ($montoBanco <= 0) {
+                    // reconstrucción por TC si no existía
+                    if ($monInv !== $monBank) {
+                        if ($tc <= 0) {
+                            throw new DomainException(
+                                'Tipo de cambio inválido en el último movimiento.',
+                            );
+                        }
+                        if ($monInv === 'BOB' && $monBank === 'USD') {
+                            $montoBanco = $baseAbs / $tc;
+                        } elseif ($monInv === 'USD' && $monBank === 'BOB') {
+                            $montoBanco = $baseAbs * $tc;
+                        } else {
+                            throw new DomainException(
+                                'Conversión no soportada para este par de monedas.',
+                            );
+                        }
+                        $montoBanco = round($montoBanco, 2);
+                    } else {
+                        $montoBanco = $baseAbs;
+                    }
+                }
+
+                // ✅ revertir banco (se le había restado, ahora se suma)
+                $banco->monto = (float) ($banco->monto ?? 0) + (float) $montoBanco;
+                $banco->save();
+
+                // ✅ revertir capital inversión (se le había restado, ahora se suma)
+                $nuevo = (float) ($invLocked->capital_actual ?? 0) + (float) $baseAbs;
+                $invLocked->capital_actual = round($nuevo, 2);
+
+                // ✅ volver ACTIVA si estaba FINALIZADA por llegar a 0
+                if ((float) $invLocked->capital_actual > 0.01) {
+                    $invLocked->estado = 'ACTIVA';
+                }
+
+                // ✅ revertir hasta_fecha
+                $invLocked->hasta_fecha = $prev?->fecha
+                    ? (string) $prev->fecha
+                    : (string) $invLocked->fecha_inicio;
+
+                $invLocked->save();
+
+                // ✅ borrar movimiento
+                $last->delete();
+                return;
+            }
+
+            // ====== PAGO DE UTILIDAD ======
+            if ($tipo === 'PAGO_UTILIDAD') {
+                $estadoMov = strtoupper((string) ($last->estado ?? ''));
+
+                // si está pendiente: NO tocó banco (en tu flujo), solo borramos
+                if ($estadoMov === 'PENDIENTE' || $estadoMov === '') {
+                    $last->delete();
+                    return;
+                }
+
+                // si está pagado: revertir el banco (porque ya se debitó en confirmarPagoUtilidad)
+                if ($estadoMov === 'PAGADO') {
+                    if (empty($last->banco_id)) {
+                        throw new DomainException('El último movimiento no tiene banco asignado.');
+                    }
+
+                    /** @var Banco $banco */
+                    $banco = Banco::query()->lockForUpdate()->findOrFail((int) $last->banco_id);
+
+                    $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
+                    $tc = (float) ($last->tipo_cambio ?? 0);
+
+                    $montoBase = (float) ($last->monto_utilidad ?? 0); // moneda inversión
+                    if ($montoBase <= 0) {
+                        throw new DomainException('Monto de utilidad inválido.');
+                    }
+
+                    // calcular cuánto se debitó al banco en su moneda
+                    $reembolsoBanco = $montoBase;
+
+                    if ($monInv !== $monBank) {
+                        if ($tc <= 0) {
+                            throw new DomainException('Tipo de cambio obligatorio para revertir.');
+                        }
+
+                        if ($monInv === 'BOB' && $monBank === 'USD') {
+                            $reembolsoBanco = $montoBase / $tc;
+                        } elseif ($monInv === 'USD' && $monBank === 'BOB') {
+                            $reembolsoBanco = $montoBase * $tc;
+                        } else {
+                            throw new DomainException(
+                                'Conversión no soportada para este par de monedas.',
+                            );
+                        }
+
+                        $reembolsoBanco = round($reembolsoBanco, 2);
+                    }
+
+                    // ✅ reembolsa banco
+                    $banco->monto = (float) ($banco->monto ?? 0) + (float) $reembolsoBanco;
+                    $banco->save();
+
+                    // ✅ revertir hasta_fecha al movimiento anterior
+                    $invLocked->hasta_fecha = $prev?->fecha
+                        ? (string) $prev->fecha
+                        : (string) $invLocked->fecha_inicio;
+
+                    $invLocked->save();
+
+                    // ✅ borrar movimiento
+                    $last->delete();
+                    return;
+                }
+
+                throw new DomainException(
+                    'El estado del último pago de utilidad no es válido para eliminar.',
+                );
+            }
         });
     }
 }

@@ -45,7 +45,8 @@ class MovimientoModal extends Component
     public int $diaPago = 0;
     public string $tasaAmortizacionFmt = '0,00%';
 
-    public bool $puedeEliminarUltimo = false;
+    public bool $puedeEliminarUltimo = false; // bancos
+    public bool $puedeEliminarUltimoPrivado = false; // privados
 
     /** @var array<string,mixed> */
     public array $totales = [
@@ -101,6 +102,7 @@ class MovimientoModal extends Component
             'diaPago',
             'tasaAmortizacionFmt',
             'puedeEliminarUltimo',
+            'puedeEliminarUltimoPrivado',
             'totales',
         ]);
 
@@ -142,6 +144,33 @@ class MovimientoModal extends Component
 
         try {
             $service->eliminarUltimoPagoBanco($this->inversion);
+
+            $this->loadData($this->inversion->id);
+            $this->dispatch('inversionUpdated');
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Eliminado',
+                'text' => 'Se eliminó el último registro correctamente.',
+            ]);
+        } catch (DomainException $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'No se pudo eliminar',
+                'text' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    // ✅ ELIMINAR ÚLTIMO REGISTRO PRIVADO (solo último: DEVOLUCION_CAPITAL o PAGO_UTILIDAD PENDIENTE)
+    public function eliminarUltimoRegistroPrivado(InversionService $service): void
+    {
+        if (!$this->inversion) {
+            return;
+        }
+
+        try {
+            $service->eliminarUltimoMovimientoPrivado($this->inversion);
 
             $this->loadData($this->inversion->id);
             $this->dispatch('inversionUpdated');
@@ -207,6 +236,7 @@ class MovimientoModal extends Component
     }
 
     // CARGA
+    // CARGA
     protected function loadData(int $inversionId): void
     {
         $this->inversion = Inversion::query()
@@ -217,7 +247,7 @@ class MovimientoModal extends Component
         $this->inversionId = (int) $this->inversion->id;
 
         $this->isBanco = strtoupper((string) ($this->inversion->tipo ?? '')) === 'BANCO';
-        $this->bloqueado = !$this->inversion || $this->inversion->estado !== 'ACTIVA';
+        $estado = strtoupper((string) ($this->inversion->estado ?? ''));
 
         $this->moneda = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
 
@@ -226,7 +256,9 @@ class MovimientoModal extends Component
         $this->inversionTipo = (string) ($this->inversion->tipo ?? '—');
         $this->bancoNombre = (string) ($this->inversion->banco?->nombre ?? 'Sin banco');
 
-        $this->capitalActualFmt = $this->fmtMoney((float) ($this->inversion->capital_actual ?? 0));
+        $capitalActual = round((float) ($this->inversion->capital_actual ?? 0), 2);
+
+        $this->capitalActualFmt = $this->fmtMoney($capitalActual);
         $this->saldoDeudaFmt = $this->capitalActualFmt;
 
         $this->fechaInicioFmt = $this->inversion->fecha_inicio
@@ -243,27 +275,35 @@ class MovimientoModal extends Component
         $this->plazoMeses = (int) ($this->inversion->plazo_meses ?? 0);
         $this->diaPago = (int) ($this->inversion->dia_pago ?? 0);
 
-        $tasa = number_format((float) ($this->inversion->tasa_anual ?? 0), 2, ',', '.') . '%';
-        $sis = $this->inversion->sistema
-            ? ucfirst(strtolower((string) $this->inversion->sistema))
-            : '—';
-
-        $tasaAnual = (float) ($this->inversion->tasa_anual ?? 0); // ej: 12.5
+        $tasaAnual = (float) ($this->inversion->tasa_anual ?? 0);
         $tasaMensual = $tasaAnual / 12;
-
         $this->tasaAmortizacionFmt = number_format($tasaMensual, 2, ',', '.') . '%';
+
+        // ✅ BLOQUEO:
+        // - banco: bloqueado si estado != ACTIVA
+        // - privado: bloqueado si estado != ACTIVA o capital_actual <= 0
+        $this->bloqueado = $estado !== 'ACTIVA' || (!$this->isBanco && $capitalActual <= 0);
 
         $rows = $this->inversion->movimientos()->with('banco')->orderBy('nro')->get();
 
         $this->movimientos = $this->mapMovimientosForView($rows);
         $this->totales = $this->calcTotalesForView($rows);
 
-        // ✅ puede eliminar si es banco y el último es BANCO_PAGO
         $last = $rows->last();
-        $this->puedeEliminarUltimo =
-            (bool) ($this->isBanco &&
-                $last &&
-                strtoupper((string) ($last->tipo ?? '')) === 'BANCO_PAGO');
+        $lastTipo = $last ? strtoupper((string) ($last->tipo ?? '')) : '';
+
+        // ✅ bancos: solo si el último es BANCO_PAGO
+        $this->puedeEliminarUltimo = (bool) ($this->isBanco && $last && $lastTipo === 'BANCO_PAGO');
+
+        // ✅ privados: mostrar eliminar SIEMPRE que sea la ÚLTIMA FILA y el último movimiento sea:
+        // - DEVOLUCION_CAPITAL
+        // - PAGO_UTILIDAD (PENDIENTE O PAGADO)
+        $this->puedeEliminarUltimoPrivado = false;
+        if (!$this->isBanco && $last) {
+            if (in_array($lastTipo, ['DEVOLUCION_CAPITAL', 'PAGO_UTILIDAD'], true)) {
+                $this->puedeEliminarUltimoPrivado = true;
+            }
+        }
     }
 
     /**
@@ -301,9 +341,7 @@ class MovimientoModal extends Component
                 $estado === 'PENDIENTE' &&
                 !$this->bloqueado;
 
-            // ============================
             // BANCO: negativos en cuotas
-            // ============================
             $esCuotaOAbono =
                 $tipoRaw === 'BANCO_PAGO' &&
                 in_array($concepto, ['PAGO_CUOTA', 'ABONO_CAPITAL'], true);
@@ -311,7 +349,6 @@ class MovimientoModal extends Component
             $capNum = (float) ($m->monto_capital ?? 0);
             $intNum = (float) ($m->monto_interes ?? 0);
 
-            // Si es cuota/abono y vienen positivos, en UI se muestran como negativos y rojos
             $capitalNegativo = $esCuotaOAbono && $capNum > 0;
             $interesNegativo = $esCuotaOAbono && $intNum > 0;
 
@@ -321,8 +358,6 @@ class MovimientoModal extends Component
             $capitalDisplay = $capitalNegativo ? '- ' . $capitalFmt : $capitalFmt;
             $interesDisplay = $interesNegativo ? '- ' . $interesFmt : $interesFmt;
 
-            // ✅ % Interés (según tu regla): (interes * 100 / capital)
-            // OJO: uso ABS para que no te salga negativo si lo muestras como negativo en UI
             $pctInteres = null;
             $capDen = abs($capNum);
             $intCalc = abs($intNum);
@@ -335,7 +370,6 @@ class MovimientoModal extends Component
                 'id' => (int) $m->id,
                 'idx' => $idx++,
 
-                // ✅ Dos fechas
                 'fecha_contable' => $m->fecha ? $m->fecha->format('d/m/Y') : '—',
                 'fecha_pago' => $m->fecha_pago ? $m->fecha_pago->format('d/m/Y') : '—',
 
@@ -346,26 +380,21 @@ class MovimientoModal extends Component
                 'estado' => $estado,
                 'puede_confirmar' => $puedeConfirmar,
 
-                // PRIVADO
                 'porcentaje_utilidad' =>
                     $m->porcentaje_utilidad !== null
                         ? number_format((float) $m->porcentaje_utilidad, 2, ',', '.') . '%'
                         : '—',
 
-                // ✅ Capital (negativo y rojo en cuotas/abono)
                 'capital' => $capitalDisplay,
                 'capital_is_negative' => $capitalNegativo,
 
                 'utilidad' => $this->fmtMoney((float) ($m->monto_utilidad ?? 0)),
 
-                // BANCO
                 'total' => $this->fmtMoney((float) ($m->monto_total ?? 0)),
 
-                // ✅ Interés (negativo y rojo en cuotas/abono)
                 'interes' => $interesDisplay,
                 'interes_is_negative' => $interesNegativo,
 
-                // ✅ % Interés
                 'pct_interes' =>
                     $pctInteres !== null
                         ? number_format((float) $pctInteres, 2, ',', '.') . '%'

@@ -175,7 +175,7 @@
                                 @if (!$isBanco)
                                     <button type="button"
                                         wire:click="$dispatch('openPagarUtilidad', { inversionId: {{ $inversionId }} })"
-                                        @disabled(!$inversionId)
+                                        @disabled($bloqueado || !$inversionId)
                                         class="h-9 px-3 cursor-pointer rounded-lg text-sm font-semibold inline-flex items-center gap-2
                                             bg-emerald-600 text-white hover:opacity-90
                                             disabled:opacity-50 disabled:cursor-not-allowed"
@@ -189,7 +189,7 @@
                                                 <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" />
                                             </svg>
                                         </span>
-                                        <span>Registrar utilidad</span>
+                                        <span>Registrar Pago</span>
                                     </button>
                                 @else
                                     <button type="button"
@@ -358,6 +358,7 @@
                                                         class="w-8 h-8 inline-flex items-center justify-center text-xs text-gray-400 dark:text-neutral-500">—</span>
                                                 @endif
 
+                                                {{-- ✅ CONFIRMAR UTILIDAD --}}
                                                 @if (!empty($m['puede_confirmar']))
                                                     <div x-data class="flex items-center justify-end">
                                                         <button type="button"
@@ -368,25 +369,64 @@
                                                             @click.prevent="
                                                               Swal.fire({
                                                                 title: '¿Confirmar pago?',
-                                                                text: 'Esto debitará el banco y marcarará la utilidad como PAGADA.',
+                                                                text: 'Esto debitará el banco y marcará la utilidad como PAGADA.',
                                                                 icon: 'warning',
                                                                 showCancelButton: true,
                                                                 confirmButtonText: 'Sí, confirmar',
                                                                 cancelButtonText: 'Cancelar',
                                                                 reverseButtons: true,
-                                                                confirmButtonColor: '#dc2626',
+                                                                confirmButtonColor: '#16a34a',
                                                                 cancelButtonColor: '#6b7280',
-                                                            }).then((r) => {
+                                                              }).then((r) => {
                                                                 if (r.isConfirmed) {
                                                                     $wire.confirmarPagoUtilidad({{ (int) $m['id'] }});
                                                                 }
-                                                            });
+                                                              });
                                                             ">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
                                                                 stroke-linecap="round" stroke-linejoin="round">
                                                                 <path d="M20 6 9 17l-5-5" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                @endif
+
+                                                {{-- ✅ ELIMINAR ÚLTIMO REGISTRO PRIVADO (solo última fila) --}}
+                                                @if ($puedeEliminarUltimoPrivado && $loop->last)
+                                                    <div x-data class="flex items-center">
+                                                        <button type="button"
+                                                            class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
+                                                                   border-red-300 text-red-700 hover:bg-red-100
+                                                                   dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
+                                                            title="Eliminar último registro"
+                                                            @click.prevent="
+                                                                Swal.fire({
+                                                                    title: '¿Eliminar el último registro?',
+                                                                    text: 'Se revertirá el capital/banco según corresponda.',
+                                                                    icon: 'warning',
+                                                                    showCancelButton: true,
+                                                                    confirmButtonText: 'Sí, eliminar',
+                                                                    cancelButtonText: 'Cancelar',
+                                                                    reverseButtons: true,
+                                                                    confirmButtonColor: '#dc2626',
+                                                                    cancelButtonColor: '#6b7280',
+                                                                }).then((r) => {
+                                                                    if (r.isConfirmed) {
+                                                                        $wire.eliminarUltimoRegistroPrivado();
+                                                                    }
+                                                                });
+                                                            ">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M3 6h18" />
+                                                                <path d="M8 6V4h8v2" />
+                                                                <path d="M6 6l1 16h10l1-16" />
+                                                                <path d="M10 11v6" />
+                                                                <path d="M14 11v6" />
                                                             </svg>
                                                         </button>
                                                     </div>
@@ -403,6 +443,7 @@
                                             class="p-2 text-right tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['total'] }}
                                         </td>
+
                                         <td
                                             class="p-2 text-right tabular-nums align-middle
                                             {{ !empty($m['capital_is_negative']) ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-neutral-100' }}">
@@ -414,7 +455,6 @@
                                             {{ !empty($m['interes_is_negative']) ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-neutral-100' }}">
                                             {{ $m['interes'] }}
                                         </td>
-
 
                                         <td
                                             class="p-2 text-right tabular-nums text-gray-900 dark:text-neutral-100 align-middle">

@@ -19,7 +19,7 @@ class Index extends Component
     // =========================
     public string $search = '';
     public string $fTipo = '';
-    public string $fEstado = ''; // ACTIVA | CERRADA | PENDIENTE (pendiente utilidad)
+    public string $fEstado = 'ACTIVA'; // ACTIVA | CERRADA | PENDIENTE (pendiente utilidad)
 
     protected $listeners = [
         'inversionUpdated' => '$refresh',

@@ -4,19 +4,8 @@
 
         @php
             $inv = $inversion;
-            $invMon = $inv?->moneda ?? 'BOB';
+            $invMon = strtoupper($inv?->moneda ?? 'BOB');
             $hasTC = (bool) $needs_tc;
-
-            $isCuota = $concepto === 'PAGO_CUOTA';
-            $isAbono = $concepto === 'ABONO_CAPITAL';
-
-            $showCapital = $show_capital ?? true;
-            $showInteres = $show_interes ?? true;
-            $showComision = $show_comision ?? true;
-            $showSeguro = $show_seguro ?? true;
-
-            $lockTotal = $lock_total ?? false;
-            $lockBreakdown = $lock_breakdown ?? false;
         @endphp
 
         <div class="space-y-4">
@@ -37,57 +26,18 @@
                 </div>
             </div>
 
-            {{-- BLOQUE BANCO: SOLO PAGO CUOTA --}}
-            @if ($isCuota)
-                <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
-                    <div class="p-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <div class="text-xs text-gray-500 dark:text-neutral-400">Próximo pago (sugerido)</div>
-                                <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                                    {{ $proxima_fecha_pago_fmt ?? '—' }}
-                                </div>
-                                @if (!empty($aviso_vencimiento))
-                                    <div class="mt-1 text-xs text-red-600 dark:text-red-400">
-                                        {{ $aviso_vencimiento }}
-                                    </div>
-                                @endif
-                            </div>
-
-                            <div class="text-right">
-                                <div class="text-xs text-gray-500 dark:text-neutral-400">Monto cuota</div>
-                                <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100 tabular-nums">
-                                    {{ $monto_cuota_fmt ?? '0,00' }}
-                                </div>
-                                <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
-                                    Capital: {{ $cuota_capital_fmt ?? '0,00' }} • Interés:
-                                    {{ $cuota_interes_fmt ?? '0,00' }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
             {{-- FORM --}}
             <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
                 <div class="p-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-                        {{-- CONCEPTO --}}
+                        {{-- CONCEPTO FIJO --}}
                         <div class="md:col-span-1">
-                            <label class="block text-sm mb-1">Concepto <span class="text-red-500">*</span></label>
-                            <select wire:model.live="concepto"
-                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                            <label class="block text-sm mb-1">Concepto</label>
+                            <input type="text" value="Pago cuota" readonly
+                                class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
-                                <option value="PAGO_CUOTA">Pago cuota</option>
-                                <option value="ABONO_CAPITAL">Amortización (abono a capital)</option>
-                                <option value="CARGO">Cargo (seguro/comisión financiada)</option>
-                            </select>
-                            @error('concepto')
-                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                            @enderror
+                                       cursor-not-allowed opacity-80">
                         </div>
 
                         {{-- FECHAS --}}
@@ -105,8 +55,8 @@
 
                         <div class="md:col-span-1">
                             <label class="block text-sm mb-1">Fecha pago <span class="text-red-500">*</span></label>
-                            <input type="date" wire:model.live="fecha_pago" @disabled($lock_fechas)
-                                class="w-full rounded-lg border px-3 py-2 disabled:cursor-not-allowed bg-white dark:bg-neutral-900
+                            <input type="date" wire:model.live="fecha_pago"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                        focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
                             @error('fecha_pago')
@@ -132,6 +82,7 @@
                             @error('banco_id')
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
+
                             @if (!empty($mov_moneda))
                                 <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
                                     Moneda banco: <span class="font-semibold">{{ $mov_moneda }}</span>
@@ -167,88 +118,42 @@
                         @endif
 
                         {{-- TOTAL --}}
-                        @if ($concepto !== 'ABONO_CAPITAL')
-                            <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">
-                                    Monto total (base {{ $invMon }}) <span class="text-red-500">*</span>
-                                </label>
+                        <div class="md:col-span-1">
+                            <label class="block text-sm mb-1">
+                                Monto total (base {{ $invMon }}) <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" wire:model.blur="monto_total_formatted" placeholder="0,00"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                            @error('monto_total')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                                <input type="text" wire:model.blur="monto_total_formatted" @readonly($lockTotal)
-                                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
-                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                    focus:outline-none focus:ring-2 focus:ring-indigo-500/40
-                                    {{ $lockTotal ? 'opacity-70 cursor-not-allowed' : '' }}">
+                        {{-- CAPITAL --}}
+                        <div class="md:col-span-1">
+                            <label class="block text-sm mb-1">Capital (base) <span class="text-red-500">*</span></label>
+                            <input type="text" wire:model.blur="monto_capital_formatted" placeholder="0,00"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                            @error('monto_capital')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
 
-                                @error('monto_total')
-                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        @endif
-
-
-                        {{-- DESGLOSE --}}
-                        @if ($showCapital)
-                            <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Capital (base) @if ($isAbono || $isCuota)
-                                        <span class="text-red-500">*</span>
-                                    @endif
-                                </label>
-                                <input type="text" wire:model.blur="monto_capital_formatted" placeholder="0,00"
-                                    @readonly($lockBreakdown)
-                                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                           focus:outline-none focus:ring-2 focus:ring-indigo-500/40
-                                           {{ $lockBreakdown ? 'opacity-70 cursor-not-allowed' : '' }}">
-                                @error('monto_capital')
-                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        @endif
-
-                        @if ($showInteres)
-                            <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Interés</label>
-                                <input type="text" wire:model.blur="monto_interes_formatted" placeholder="0,00"
-                                    @readonly($lockBreakdown)
-                                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                           focus:outline-none focus:ring-2 focus:ring-indigo-500/40
-                                           {{ $lockBreakdown ? 'opacity-70 cursor-not-allowed' : '' }}">
-                                @error('monto_interes')
-                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        @endif
-
-                        @if ($showComision)
-                            <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Comisión</label>
-                                <input type="text" wire:model.blur="monto_comision_formatted" placeholder="0,00"
-                                    @readonly($lockBreakdown)
-                                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                           focus:outline-none focus:ring-2 focus:ring-indigo-500/40
-                                           {{ $lockBreakdown ? 'opacity-70 cursor-not-allowed' : '' }}">
-                                @error('monto_comision')
-                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        @endif
-
-                        @if ($showSeguro)
-                            <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Seguro</label>
-                                <input type="text" wire:model.blur="monto_seguro_formatted" placeholder="0,00"
-                                    @readonly($lockBreakdown)
-                                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                           focus:outline-none focus:ring-2 focus:ring-indigo-500/40
-                                           {{ $lockBreakdown ? 'opacity-70 cursor-not-allowed' : '' }}">
-                                @error('monto_seguro')
-                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        @endif
+                        {{-- INTERÉS (BLOQUEADO = TOTAL - CAPITAL) --}}
+                        <div class="md:col-span-1">
+                            <label class="block text-sm mb-1">Interés (auto) <span class="text-red-500">*</span></label>
+                            <input type="text" wire:model="monto_interes_formatted" readonly
+                                class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800 text-right tabular-nums
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       cursor-not-allowed opacity-80">
+                            @error('monto_interes')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
 
                         {{-- FOTO --}}
                         <div class="md:col-span-1">
@@ -265,8 +170,8 @@
                                         flex items-center justify-center shrink-0">
                                         <svg xmlns="http://www.w3.org/2000/svg"
                                             class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                             <polyline points="17 8 12 3 7 8" />
                                             <line x1="12" y1="3" x2="12" y2="15" />
@@ -309,12 +214,16 @@
                                         <div class="mt-1 flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-neutral-300">Saldo actual</span>
                                             <span
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_banco_actual_fmt }}</span>
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $preview_banco_actual_fmt }}
+                                            </span>
                                         </div>
                                         <div class="mt-1 flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-neutral-300">Saldo después</span>
                                             <span
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_banco_despues_fmt }}</span>
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $preview_banco_despues_fmt }}
+                                            </span>
                                         </div>
                                     </div>
 
@@ -323,12 +232,16 @@
                                         <div class="mt-1 flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-neutral-300">Actual</span>
                                             <span
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_deuda_actual_fmt }}</span>
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $preview_deuda_actual_fmt }}
+                                            </span>
                                         </div>
                                         <div class="mt-1 flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-neutral-300">Después</span>
                                             <span
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_deuda_despues_fmt }}</span>
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $preview_deuda_despues_fmt }}
+                                            </span>
                                         </div>
                                     </div>
 
@@ -340,7 +253,8 @@
                                         </div>
                                         @if (!empty($impacto_detalle))
                                             <div class="mt-1 text-xs text-gray-500 dark:text-neutral-400">
-                                                {{ $impacto_detalle }}</div>
+                                                {{ $impacto_detalle }}
+                                            </div>
                                         @endif
                                     </div>
                                 </div>

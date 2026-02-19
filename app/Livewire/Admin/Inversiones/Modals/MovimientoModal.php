@@ -45,12 +45,14 @@ class MovimientoModal extends Component
     public int $diaPago = 0;
     public string $tasaAmortizacionFmt = '0,00% • —';
 
+    public bool $puedeEliminarUltimo = false;
+
     /** @var array<string,mixed> */
     public array $totales = [
         'sumCapitalFmt' => '0,00 Bs',
         'sumUtilidadFmt' => '0,00 Bs',
         'sumTotalFmt' => '0,00 Bs',
-        'subtotales' => [],
+        'sumInteresFmt' => '0,00 Bs',
     ];
 
     #[On('openMovimientosInversion')]
@@ -98,6 +100,7 @@ class MovimientoModal extends Component
             'plazoMeses',
             'diaPago',
             'tasaAmortizacionFmt',
+            'puedeEliminarUltimo',
             'totales',
         ]);
 
@@ -105,7 +108,7 @@ class MovimientoModal extends Component
             'sumCapitalFmt' => '0,00 Bs',
             'sumUtilidadFmt' => '0,00 Bs',
             'sumTotalFmt' => '0,00 Bs',
-            'subtotales' => [],
+            'sumInteresFmt' => '0,00 Bs',
         ];
     }
 
@@ -118,13 +121,42 @@ class MovimientoModal extends Component
         try {
             $service->confirmarPagoUtilidad($movId);
 
-            // refrescar modal
             $this->loadData($this->inversion->id);
-
-            // opcional: refrescar pantalla padre
             $this->dispatch('inversionUpdated');
         } catch (DomainException $e) {
             $this->addError('confirmar', $e->getMessage());
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    // ✅ ELIMINAR ÚLTIMO PAGO BANCO
+    public function eliminarUltimoPagoBanco(InversionService $service): void
+    {
+        if (!$this->inversion) {
+            return;
+        }
+
+        try {
+            $service->eliminarUltimoPagoBanco($this->inversion);
+
+            $this->loadData($this->inversion->id);
+            $this->dispatch('inversionUpdated');
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Eliminado',
+                'text' => 'Se eliminó el último registro correctamente.',
+            ]);
+        } catch (DomainException $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'No se pudo eliminar',
+                'text' => $e->getMessage(),
+            ]);
         }
     }
 
@@ -221,6 +253,13 @@ class MovimientoModal extends Component
 
         $this->movimientos = $this->mapMovimientosForView($rows);
         $this->totales = $this->calcTotalesForView($rows);
+
+        // ✅ puede eliminar si es banco y el último es BANCO_PAGO
+        $last = $rows->last();
+        $this->puedeEliminarUltimo =
+            (bool) ($this->isBanco &&
+                $last &&
+                strtoupper((string) ($last->tipo ?? '')) === 'BANCO_PAGO');
     }
 
     /**
@@ -234,30 +273,6 @@ class MovimientoModal extends Component
 
         foreach ($rows as $m) {
             $imgPath = $m->comprobante_imagen_path ?? ($m->imagen ?? null);
-
-            $detalles = [];
-
-            $int = (float) ($m->monto_interes ?? 0);
-            $mora = (float) ($m->monto_mora ?? 0);
-            $com = (float) ($m->monto_comision ?? 0);
-            $seg = (float) ($m->monto_seguro ?? 0);
-            $tc = (float) ($m->tipo_cambio ?? 0);
-
-            if ($int > 0) {
-                $detalles[] = 'Interés: ' . $this->fmtMoney($int);
-            }
-            if ($mora > 0) {
-                $detalles[] = 'Mora: ' . $this->fmtMoney($mora);
-            }
-            if ($com > 0) {
-                $detalles[] = 'Comisión: ' . $this->fmtMoney($com);
-            }
-            if ($seg > 0) {
-                $detalles[] = 'Seguro: ' . $this->fmtMoney($seg);
-            }
-            if ($tc > 0) {
-                $detalles[] = 'TC: ' . number_format($tc, 2, ',', '.');
-            }
 
             $bancoLinea = null;
             if (!empty($m->banco)) {
@@ -302,9 +317,8 @@ class MovimientoModal extends Component
                 'utilidad' => $this->fmtMoney((float) ($m->monto_utilidad ?? 0)),
 
                 // BANCO
-                'concepto' => (string) ($m->concepto ?? '—'),
                 'total' => $this->fmtMoney((float) ($m->monto_total ?? 0)),
-                'detalles' => $detalles,
+                'interes' => $this->fmtMoney((float) ($m->monto_interes ?? 0)),
 
                 'tiene_imagen' => !empty($imgPath),
             ];
@@ -327,7 +341,7 @@ class MovimientoModal extends Component
                 'sumCapitalFmt' => $this->fmtMoney($sumCapital),
                 'sumUtilidadFmt' => $this->fmtMoney($sumUtilidad),
                 'sumTotalFmt' => $this->fmtMoney(0),
-                'subtotales' => [],
+                'sumInteresFmt' => $this->fmtMoney(0),
             ];
         }
 
@@ -336,29 +350,12 @@ class MovimientoModal extends Component
         $sumTotal = (float) $pagos->sum(fn($m) => (float) ($m->monto_total ?? 0));
         $sumCapital = (float) $pagos->sum(fn($m) => (float) ($m->monto_capital ?? 0));
         $sumInteres = (float) $pagos->sum(fn($m) => (float) ($m->monto_interes ?? 0));
-        $sumMora = (float) $pagos->sum(fn($m) => (float) ($m->monto_mora ?? 0));
-        $sumComision = (float) $pagos->sum(fn($m) => (float) ($m->monto_comision ?? 0));
-        $sumSeguro = (float) $pagos->sum(fn($m) => (float) ($m->monto_seguro ?? 0));
-
-        $subtotales = [];
-        if ($sumInteres > 0) {
-            $subtotales[] = 'Interés: ' . $this->fmtMoney($sumInteres);
-        }
-        if ($sumMora > 0) {
-            $subtotales[] = 'Mora: ' . $this->fmtMoney($sumMora);
-        }
-        if ($sumComision > 0) {
-            $subtotales[] = 'Comisión: ' . $this->fmtMoney($sumComision);
-        }
-        if ($sumSeguro > 0) {
-            $subtotales[] = 'Seguro: ' . $this->fmtMoney($sumSeguro);
-        }
 
         return [
             'sumTotalFmt' => $this->fmtMoney($sumTotal),
             'sumCapitalFmt' => $this->fmtMoney($sumCapital),
             'sumUtilidadFmt' => $this->fmtMoney(0),
-            'subtotales' => $subtotales,
+            'sumInteresFmt' => $this->fmtMoney($sumInteres),
         ];
     }
 

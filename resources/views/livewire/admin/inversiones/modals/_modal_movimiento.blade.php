@@ -4,6 +4,7 @@
     <x-ui.modal wire:key="inversion-movimientos-{{ $openMovimientosModal ? 'open' : 'closed' }}"
         model="openMovimientosModal" title="Movimientos de inversión" maxWidth="sm:max-w-2xl md:max-w-7xl"
         onClose="closeMovimientos">
+
         <div class="space-y-3">
 
             {{-- ===================== HEADER / RESUMEN ===================== --}}
@@ -222,7 +223,7 @@
                 </div>
             </div>
 
-            {{-- ===================== TABLA MOVIMIENTOS (COLUMNAS SIEMPRE COINCIDEN) ===================== --}}
+            {{-- ===================== TABLA MOVIMIENTOS ===================== --}}
             <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-[13px] min-w-[1200px] align-middle">
@@ -241,16 +242,15 @@
                                     <th class="p-3 w-[120px]">Estado</th>
                                     <th class="p-3 w-[170px]">Acciones</th>
                                 @else
-                                    {{-- BANCO: 9 columnas --}}
+                                    {{-- BANCO: 8 columnas (nuevo orden + acciones) --}}
                                     <th class="p-3 w-[50px]">#</th>
                                     <th class="p-3 w-[120px]">Fecha</th>
-                                    <th class="p-3 min-w-[260px] text-left">Descripción</th>
-                                    <th class="p-3 w-[120px]">Fecha pago</th>
-                                    <th class="p-3 w-[140px]">Comprobante</th>
-                                    <th class="p-3 w-[140px]">Concepto</th>
-                                    <th class="p-3 w-[140px]">Total</th>
-                                    <th class="p-3 w-[220px]">Capital</th>
-                                    <th class="p-3 w-[90px]">Imagen</th>
+                                    <th class="p-3 min-w-[320px] text-left">Descripción</th>
+                                    <th class="p-3 w-[160px]">Comprobante</th>
+                                    <th class="p-3 w-[150px]">Total</th>
+                                    <th class="p-3 w-[150px]">Capital</th>
+                                    <th class="p-3 w-[150px]">Interés</th>
+                                    <th class="p-3 w-[170px]">Acciones</th>
                                 @endif
                             </tr>
                         </thead>
@@ -259,11 +259,11 @@
                             @forelse($movimientos as $m)
                                 <tr
                                     class="hover:bg-gray-50 dark:hover:bg-neutral-900/50 text-center align-middle font-extralight">
-                                    <td class="p-2 text-gray-900 dark:text-neutral-100  align-middle">
+                                    <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
                                         {{ $m['idx'] }}
                                     </td>
 
-                                    <td class="p-2 text-gray-900 dark:text-neutral-100  align-middle">
+                                    <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
                                         {{ $m['fecha'] }}
                                     </td>
 
@@ -279,16 +279,16 @@
                                         @endif
                                     </td>
 
-                                    <td class="p-2 text-gray-900 dark:text-neutral-100  align-middle">
-                                        {{ $m['fecha_pago'] }}
-                                    </td>
-
-                                    <td class="p-2 text-gray-900 dark:text-neutral-100  align-middle">
-                                        {{ $m['comprobante'] }}
-                                    </td>
-
                                     @if (!$isBanco)
-                                        <td class="p-2 text-gray-900 dark:text-neutral-100  align-middle">
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['fecha_pago'] }}
+                                        </td>
+
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['comprobante'] }}
+                                        </td>
+
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['porcentaje_utilidad'] }}
                                         </td>
 
@@ -301,8 +301,8 @@
                                             class="p-2 text-right tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['utilidad'] }}
                                         </td>
-                                  
-                                        <td class="p-2  align-middle">
+
+                                        <td class="p-2 align-middle">
                                             @if ($m['estado'] === 'PENDIENTE')
                                                 <span
                                                     class="text-[10px] font-bold inline-flex items-center px-2 py-1 rounded text-xs
@@ -312,7 +312,7 @@
                                                 </span>
                                             @elseif ($m['estado'] === 'PAGADO')
                                                 <span
-                                                    class="text-[10px] font-bold  inline-flex items-center px-2 py-1 rounded text-xs
+                                                    class="text-[10px] font-bold inline-flex items-center px-2 py-1 rounded text-xs
                                                     bg-emerald-100 text-emerald-700
                                                     dark:bg-emerald-900/30 dark:text-emerald-300">
                                                     PAGADO
@@ -321,7 +321,7 @@
                                                 <span class="text-xs text-gray-400 dark:text-neutral-500">—</span>
                                             @endif
                                         </td>
-                                    
+
                                         <td class="p-2 align-middle">
                                             <div class="flex items-center justify-center gap-2">
                                                 @if (!empty($m['tiene_imagen']))
@@ -345,6 +345,7 @@
                                                     <span
                                                         class="w-8 h-8 inline-flex items-center justify-center text-xs text-gray-400 dark:text-neutral-500">—</span>
                                                 @endif
+
                                                 @if (!empty($m['puede_confirmar']))
                                                     <div x-data class="flex items-center justify-end">
                                                         <button type="button"
@@ -359,7 +360,7 @@
                                                                 icon: 'warning',
                                                                 showCancelButton: true,
                                                                 confirmButtonText: 'Sí, confirmar',
-                                                                cancelButtonText: 'Cancelar',                                                               
+                                                                cancelButtonText: 'Cancelar',
                                                                 reverseButtons: true,
                                                                 confirmButtonColor: '#dc2626',
                                                                 cancelButtonColor: '#6b7280',
@@ -378,11 +379,12 @@
                                                         </button>
                                                     </div>
                                                 @endif
-
+                                            </div>
                                         </td>
                                     @else
-                                        <td class="p-2 text-gray-900 dark:text-neutral-100  align-middle">
-                                            {{ $m['concepto'] }}
+                                        {{-- BANCO --}}
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['comprobante'] }}
                                         </td>
 
                                         <td
@@ -392,46 +394,83 @@
 
                                         <td
                                             class="p-2 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
-                                            <div>{{ $m['capital'] }}</div>
-
-                                            @if (!empty($m['detalles']))
-                                                <div
-                                                    class="mt-1 text-xs font-normal text-gray-600 dark:text-neutral-300 space-y-0.5">
-                                                    @foreach ($m['detalles'] as $d)
-                                                        <div>{{ $d }}</div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
+                                            {{ $m['capital'] }}
                                         </td>
 
-                                        {{--  Imagen --}}
-                                        <td class="p-2 text-center align-middle">
-                                            @if (!empty($m['tiene_imagen']))
-                                                <button type="button"
-                                                    wire:click="verFotoMovimiento({{ $m['id'] }})"
-                                                    class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                    border-gray-300 text-gray-700 hover:bg-gray-100
-                                                    dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700"
-                                                    title="Ver imagen">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="2" stroke-linecap="round"
-                                                        stroke-linejoin="round">
-                                                        <rect x="3" y="3" width="18" height="18"
-                                                            rx="2" ry="2" />
-                                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                                        <path d="M21 15l-5-5L5 21" />
-                                                    </svg>
-                                                </button>
-                                            @else
-                                                <span class="text-xs text-gray-400 dark:text-neutral-500">—</span>
-                                            @endif
+                                        <td
+                                            class="p-2 text-right tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['interes'] }}
+                                        </td>
+
+                                        {{-- ✅ ACCIONES BANCO: Ver imagen + Eliminar último (solo última fila) --}}
+                                        <td class="p-2 align-middle">
+                                            <div class="flex items-center justify-center gap-2">
+                                                @if (!empty($m['tiene_imagen']))
+                                                    <button type="button"
+                                                        wire:click="verFotoMovimiento({{ $m['id'] }})"
+                                                        class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
+                                                               border-gray-300 text-gray-700 hover:bg-gray-100
+                                                               dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                                                        title="Ver imagen">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <rect x="3" y="3" width="18" height="18"
+                                                                rx="2" ry="2" />
+                                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                                            <path d="M21 15l-5-5L5 21" />
+                                                        </svg>
+                                                    </button>
+                                                @else
+                                                    <span
+                                                        class="w-8 h-8 inline-flex items-center justify-center text-xs text-gray-400 dark:text-neutral-500">—</span>
+                                                @endif
+
+                                                @if ($puedeEliminarUltimo && $loop->last)
+                                                    <div x-data class="flex items-center">
+                                                        <button type="button"
+                                                            class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
+                                                                   border-red-300 text-red-700 hover:bg-red-100
+                                                                   dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
+                                                            title="Eliminar último registro"
+                                                            @click.prevent="
+                                                                Swal.fire({
+                                                                    title: '¿Eliminar el último registro?',
+                                                                    text: 'Se revertirá el banco y el saldo de la inversión.',
+                                                                    icon: 'warning',
+                                                                    showCancelButton: true,
+                                                                    confirmButtonText: 'Sí, eliminar',
+                                                                    cancelButtonText: 'Cancelar',
+                                                                    reverseButtons: true,
+                                                                    confirmButtonColor: '#dc2626',
+                                                                    cancelButtonColor: '#6b7280',
+                                                                }).then((r) => {
+                                                                    if (r.isConfirmed) {
+                                                                        $wire.eliminarUltimoPagoBanco();
+                                                                    }
+                                                                });
+                                                            ">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M3 6h18" />
+                                                                <path d="M8 6V4h8v2" />
+                                                                <path d="M6 6l1 16h10l1-16" />
+                                                                <path d="M10 11v6" />
+                                                                <path d="M14 11v6" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                @endif
+                                            </div>
                                         </td>
                                     @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ !$isBanco ? 10 : 9 }}"
+                                    <td colspan="{{ !$isBanco ? 10 : 8 }}"
                                         class="p-6 text-center text-gray-500 dark:text-neutral-400">
                                         No hay movimientos registrados.
                                     </td>
@@ -439,7 +478,7 @@
                             @endforelse
                         </tbody>
 
-                        {{-- FOOTER (no cambia, pero si quieres también puedes poner align-middle en td) --}}
+                        {{-- FOOTER --}}
                         <tfoot class="bg-gray-50 dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-700">
                             @if (!$isBanco)
                                 <tr class="align-middle">
@@ -459,33 +498,33 @@
                                     <td class="p-3 align-middle"></td>
                                 </tr>
                             @else
+                                {{-- BANCO: Totales Total/Capital/Interés (última columna Acciones vacía) --}}
                                 <tr class="align-middle">
-                                    <td colspan="6"
+                                    <td colspan="4"
                                         class="p-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-neutral-300 align-middle">
                                         Totales
                                     </td>
+
                                     <td
                                         class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
                                         {{ $totales['sumTotalFmt'] }}
                                     </td>
+
                                     <td
                                         class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
-                                        <div>{{ $totales['sumCapitalFmt'] }}</div>
-                                        @if (!empty($totales['subtotales']))
-                                            <div
-                                                class="mt-1 text-xs font-normal text-gray-600 dark:text-neutral-300 space-y-0.5">
-                                                @foreach ($totales['subtotales'] as $st)
-                                                    <div>{{ $st }}</div>
-                                                @endforeach
-                                            </div>
-                                        @endif
+                                        {{ $totales['sumCapitalFmt'] }}
                                     </td>
+
+                                    <td
+                                        class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                        {{ $totales['sumInteresFmt'] }}
+                                    </td>
+
                                     <td class="p-3 align-middle"></td>
                                 </tr>
                             @endif
                         </tfoot>
                     </table>
-
                 </div>
             </div>
 
@@ -509,6 +548,7 @@
             subtitle="Pasa el cursor para ampliar y mover" maxWidth="max-w-5xl" />
     </div>
 </div>
+
 <script>
     document.addEventListener('livewire:init', () => {
         Livewire.on('swal', (payload) => {

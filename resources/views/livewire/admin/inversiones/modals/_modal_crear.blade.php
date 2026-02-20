@@ -52,7 +52,7 @@
                         @enderror
                     </div>
 
-                    {{-- Fecha vencimiento --}}
+                    {{-- Fecha vencimiento (editable) --}}
                     <div>
                         <label class="block text-sm mb-1">Fecha vencimiento <span class="text-red-500">*</span></label>
                         <input type="date" wire:model="fecha_vencimiento"
@@ -62,6 +62,12 @@
                         @error('fecha_vencimiento')
                             <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                         @enderror
+                        @if ($showBancoFields)
+                            <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
+                                Se calcula con <span class="font-semibold">fecha inicio + plazo (meses)</span>, pero
+                                puedes editarla.
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Tipo --}}
@@ -80,37 +86,41 @@
                         @enderror
                     </div>
 
-                    {{-- Banco (solo BANCO) --}}
-                    <div>
-                        <label class="block text-sm mb-1">Banco <span class="text-red-500">*</span></label>
-                        <select wire:model.live="banco_id"
-                            class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40">
-                            <option value="">Seleccione…</option>
-                            @foreach ($this->bancos as $b)
-                                <option value="{{ $b->id }}">
-                                    {{ $b->nombre }} — {{ $b->numero_cuenta ?? '—' }} ({{ $b->moneda ?? '' }})
-                                </option>
-                            @endforeach
-                        </select>
-                        @error('banco_id')
-                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    {{-- ✅ Banco (OCULTO hasta elegir tipo) --}}
+                    @if ($showTipoSelectedFields)
+                        <div>
+                            <label class="block text-sm mb-1">Banco <span class="text-red-500">*</span></label>
+                            <select wire:model.live="banco_id"
+                                class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                           focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                                <option value="">Seleccione…</option>
+                                @foreach ($this->bancos as $b)
+                                    <option value="{{ $b->id }}">
+                                        {{ $b->nombre }} — {{ $b->numero_cuenta ?? '—' }} ({{ $b->moneda ?? '' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('banco_id')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    @endif
 
-                    {{-- Capital --}}
-                    <div>
-                        <label class="block text-sm mb-1">Capital <span class="text-red-500">*</span></label>
-                        <input type="text" inputmode="decimal" wire:model.defer="capital_formatted"
-                            wire:blur="formatCapital" placeholder="0,00"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
-                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                        @error('capital')
-                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
+                    {{-- ✅ Capital (OCULTO hasta elegir tipo) --}}
+                    @if ($showTipoSelectedFields)
+                        <div>
+                            <label class="block text-sm mb-1">Capital <span class="text-red-500">*</span></label>
+                            <input type="text" inputmode="decimal" wire:model.defer="capital_formatted"
+                                wire:blur="formatCapital" placeholder="0,00"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            @error('capital')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    @endif
 
                     {{-- % Utilidad (solo PRIVADO) --}}
                     @if ($showPrivadoFields)
@@ -139,6 +149,9 @@
                             @error('plazo_meses')
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
+                            <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
+                                Al escribir plazo, se calculará <span class="font-semibold">Fecha vencimiento</span>.
+                            </div>
                         </div>
 
                         <div>
@@ -220,7 +233,7 @@
             </div>
         </div>
 
-
+        {{-- Impacto banco --}}
         <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
             <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b dark:border-neutral-700">
                 <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto banco</div>
@@ -243,8 +256,7 @@
                     <div
                         class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
                         <div class="text-xs text-gray-500 dark:text-neutral-400">Aumento</div>
-                        <div
-                            class="text-sm text-green-600 font-semibold tabular-nums text-gray-700 dark:text-gray-300">
+                        <div class="text-sm text-green-600 font-semibold tabular-nums">
                             +{{ number_format((float) $saldo_banco_aumento_preview, 2, ',', '.') }}
                             {{ $moneda === 'USD' ? '$' : 'Bs' }}
                         </div>
@@ -262,7 +274,6 @@
                 </div>
             </div>
         </div>
-
 
     </div>
 
@@ -285,7 +296,6 @@
     @endslot
 
 </x-ui.modal>
-
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {

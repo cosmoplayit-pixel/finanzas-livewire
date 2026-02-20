@@ -19,38 +19,44 @@ class Index extends Component
     // =========================
     public string $search = '';
     public string $fTipo = '';
-    public string $fEstado = 'ACTIVA'; // ACTIVA | CERRADA | PENDIENTE (pendiente utilidad)
+    public string $fEstado = 'ACTIVA'; // ACTIVA | CERRADA | PENDIENTE (privado: utilidad pendiente | banco: pago pendiente)
 
     protected $listeners = [
         'inversionUpdated' => '$refresh',
     ];
 
+    // Resetea paginación al buscar
     public function updatingSearch(): void
     {
         $this->resetPage();
     }
 
+    // Resetea paginación al cambiar filtro tipo
     public function updatingFTipo(): void
     {
         $this->resetPage();
     }
 
+    // Resetea paginación al cambiar filtro estado
     public function updatingFEstado(): void
     {
         $this->resetPage();
     }
 
+    // Abre modal crear inversión
     public function openCreate(): void
     {
         $this->dispatch('openCreateInversion');
     }
 
+    // Limpia filtros
     public function resetFilters(): void
     {
         $this->reset(['search', 'fTipo', 'fEstado']);
         $this->resetPage();
     }
 
+    // Render principal con query optimizada
     public function render()
     {
         $empresaId = auth()->user()->empresa_id;
@@ -60,7 +66,11 @@ class Index extends Component
             ->with('banco')
             ->select('inversions.*')
 
-            // ✅ SUMA de utilidad pendiente (PENDIENTE) - PRIVADO
+            // =========================
+            // PRIVADO: agregados
+            // =========================
+
+            // Suma utilidad pendiente
             ->selectSub(
                 InversionMovimiento::query()
                     ->selectRaw('COALESCE(SUM(monto_utilidad),0)')
@@ -70,7 +80,7 @@ class Index extends Component
                 'utilidad_pendiente_sum',
             )
 
-            // ✅ ÚLTIMA utilidad pagada (monto) (PAGADO) - PRIVADO
+            // Última utilidad pagada (monto)
             ->selectSub(
                 InversionMovimiento::query()
                     ->select('monto_utilidad')
@@ -84,7 +94,7 @@ class Index extends Component
                 'ultima_utilidad_pagada',
             )
 
-            // ✅ ÚLTIMO % utilidad pagado (PAGADO) - PRIVADO
+            // Último % utilidad pagado
             ->selectSub(
                 InversionMovimiento::query()
                     ->select('porcentaje_utilidad')
@@ -98,7 +108,7 @@ class Index extends Component
                 'ultima_utilidad_pct',
             )
 
-            // ✅ EXISTE utilidad PENDIENTE (para mostrar "PENDIENTE" en Estado)
+            // Existe utilidad PENDIENTE (flag)
             ->selectSub(
                 InversionMovimiento::query()
                     ->selectRaw('CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END')
@@ -108,47 +118,44 @@ class Index extends Component
                 'tiene_utilidad_pendiente',
             )
 
-            // ✅ BANCO: ÚLTIMO PAGO REALIZADO (TOTAL) (solo cuotas)
+            // =========================
+            // BANCO: agregados
+            // =========================
+
+            // Último pago TOTAL (solo PAGADO)
             ->selectSub(
                 InversionMovimiento::query()
-                    ->selectRaw(
-                        "
-                        COALESCE(
-                            monto_total,
-                            (COALESCE(monto_capital,0) +
-                             COALESCE(monto_interes,0) +
-                             COALESCE(monto_mora,0) +
-                             COALESCE(monto_comision,0) +
-                             COALESCE(monto_seguro,0))
-                        )
-                    ",
-                    )
+                    ->selectRaw('COALESCE(monto_total,0)')
                     ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
                     ->where('tipo', 'BANCO_PAGO')
+                    ->where('estado', 'PAGADO')
                     ->orderByDesc('fecha')
                     ->orderByDesc('id')
                     ->limit(1),
                 'banco_ultimo_pago_total',
             )
 
-            // ✅ BANCO: ÚLTIMO % INTERÉS (interes * 100 / capital) del último pago (solo cuotas)
+            // Último % interés (tasa guardada en porcentaje_utilidad) (solo PAGADO)
             ->selectSub(
                 InversionMovimiento::query()
-                    ->selectRaw(
-                        "
-                        CASE
-                          WHEN COALESCE(monto_capital,0) > 0
-                            THEN ROUND((COALESCE(monto_interes,0) * 100.0) / COALESCE(monto_capital,0), 2)
-                          ELSE 0
-                        END
-                    ",
-                    )
+                    ->selectRaw('COALESCE(porcentaje_utilidad,0)')
                     ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
                     ->where('tipo', 'BANCO_PAGO')
+                    ->where('estado', 'PAGADO')
                     ->orderByDesc('fecha')
                     ->orderByDesc('id')
                     ->limit(1),
                 'banco_ultimo_pago_pct_interes',
+            )
+
+            // ✅ Existe BANCO_PAGO PENDIENTE (flag)
+            ->selectSub(
+                InversionMovimiento::query()
+                    ->selectRaw('CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END')
+                    ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
+                    ->where('tipo', 'BANCO_PAGO')
+                    ->where('estado', 'PENDIENTE'),
+                'tiene_banco_pendiente',
             );
 
         // =========================
@@ -165,20 +172,24 @@ class Index extends Component
             $q->where('tipo', $this->fTipo);
         }
 
-        // ✅ Estado con 3 opciones:
-        // - ACTIVA / CERRADA (estado de inversión)
-        // - PENDIENTE (solo PRIVADO: tiene utilidad pendiente)
+        // Estado:
+        // - ACTIVA / CERRADA: estado real inversión
+        // - PENDIENTE:
+        //     PRIVADO -> tiene PAGO_UTILIDAD pendiente
+        //     BANCO   -> tiene BANCO_PAGO pendiente
         if ($this->fEstado !== '') {
             if ($this->fEstado === 'PENDIENTE') {
-                $q->where('tipo', 'PRIVADO')->whereRaw("
-                        EXISTS (
-                            SELECT 1
-                            FROM inversion_movimientos im
-                            WHERE im.inversion_id = inversions.id
-                              AND im.tipo = 'PAGO_UTILIDAD'
-                              AND im.estado = 'PENDIENTE'
-                        )
-                    ");
+                $q->whereRaw("
+                    EXISTS (
+                        SELECT 1
+                        FROM inversion_movimientos im
+                        WHERE im.inversion_id = inversions.id
+                          AND (
+                                (im.tipo = 'PAGO_UTILIDAD' AND im.estado = 'PENDIENTE')
+                             OR (im.tipo = 'BANCO_PAGO'    AND im.estado = 'PENDIENTE')
+                          )
+                    )
+                ");
             } else {
                 $q->where('estado', $this->fEstado);
             }
@@ -199,30 +210,40 @@ class Index extends Component
         ]);
     }
 
+    // Construye el resumen para cada fila (PRIVADO/BANCO)
     private function buildResumen(Inversion $inv): array
     {
         $isBanco = strtoupper((string) $inv->tipo) === 'BANCO';
 
         $capitalActual = (float) ($inv->capital_actual ?? 0);
 
-        // PRIVADO: pendiente y última pagada
+        // =========================
+        // PRIVADO
+        // =========================
         $utilidadPorPagar = (float) ($inv->utilidad_pendiente_sum ?? 0);
         $ultimaPagada = (float) ($inv->ultima_utilidad_pagada ?? 0);
 
-        // PRIVADO: % del último pago (si existe) si no usa el configurado
         $pctUltimoPago = (float) ($inv->ultima_utilidad_pct ?? 0);
         $pctConfigurado = (float) ($inv->porcentaje_utilidad ?? 0);
         $pctAMostrar = $pctUltimoPago > 0 ? $pctUltimoPago : $pctConfigurado;
 
-        // ✅ estado de utilidad para la columna "Estado" (solo PRIVADO)
-        $tienePendiente = ((int) ($inv->tiene_utilidad_pendiente ?? 0)) === 1;
-        $estadoUtilidad = !$isBanco && $tienePendiente ? 'PENDIENTE' : null;
+        $tienePendientePriv = ((int) ($inv->tiene_utilidad_pendiente ?? 0)) === 1;
 
-        // BANCO: mostrar ÚLTIMO total y ÚLTIMO % interés
+        // =========================
+        // BANCO
+        // =========================
         $ultimoTotal = $isBanco ? (float) ($inv->banco_ultimo_pago_total ?? 0) : 0.0;
         $ultimoPctInteres = $isBanco ? (float) ($inv->banco_ultimo_pago_pct_interes ?? 0) : 0.0;
+        $tienePendienteBanco = ((int) ($inv->tiene_banco_pendiente ?? 0)) === 1;
 
-        $deudaCuotas = $isBanco ? $capitalActual : null;
+        // Estado pendiente (sirve para ambos)
+        $estadoPendiente = null;
+        if (!$isBanco && $tienePendientePriv) {
+            $estadoPendiente = 'PENDIENTE';
+        }
+        if ($isBanco && $tienePendienteBanco) {
+            $estadoPendiente = 'PENDIENTE';
+        }
 
         $hastaFecha = $inv->hasta_fecha ? $inv->hasta_fecha->format('d/m/Y') : '—';
 
@@ -243,19 +264,18 @@ class Index extends Component
                     ? $this->fmtMoney($utilidadPorPagar, $inv->moneda)
                     : '—'),
 
-            'estado_utilidad' => $estadoUtilidad,
+            // ✅ ahora aplica a PRIVADO y BANCO
+            'estado_utilidad' => $estadoPendiente,
 
             // BANCO
-            'deuda_cuotas' => $isBanco ? $this->fmtMoney($deudaCuotas ?? 0, $inv->moneda) : null,
+            'deuda_cuotas' => $isBanco ? $this->fmtMoney($capitalActual, $inv->moneda) : null,
 
-            // ✅ aquí va el ÚLTIMO % interés (ej: 11,11%)
             'interes' => $isBanco
                 ? ($ultimoPctInteres > 0
                     ? $this->fmtPct($ultimoPctInteres)
                     : '—')
                 : null,
 
-            // ✅ aquí va el ÚLTIMO total pagado (ej: 1.000,00 Bs)
             'total_a_pagar' => $isBanco
                 ? ($ultimoTotal > 0
                     ? $this->fmtMoney($ultimoTotal, $inv->moneda)
@@ -267,6 +287,7 @@ class Index extends Component
         ];
     }
 
+    // Formatea dinero según moneda
     private function fmtMoney(float $n, ?string $moneda): string
     {
         $mon = strtoupper((string) ($moneda ?? 'BOB'));
@@ -274,6 +295,7 @@ class Index extends Component
         return $mon === 'USD' ? '$ ' . $v : $v . ' Bs';
     }
 
+    // Formatea porcentaje
     private function fmtPct(float $n): string
     {
         return number_format($n, 2, ',', '.') . '%';

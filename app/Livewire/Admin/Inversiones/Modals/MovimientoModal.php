@@ -6,6 +6,7 @@ use App\Models\Inversion;
 use App\Models\InversionMovimiento;
 use App\Services\InversionService;
 use DomainException;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -25,7 +26,7 @@ class MovimientoModal extends Component
 
     // UI Ready
     public bool $isBanco = false;
-    public bool $bloqueado = true;
+    public bool $bloqueado = true; // bloqueo por estado/capital, NO por pendientes
 
     public int $inversionId = 0;
     public string $moneda = 'BOB';
@@ -48,6 +49,9 @@ class MovimientoModal extends Component
 
     public bool $puedeEliminarUltimo = false; // bancos
     public bool $puedeEliminarUltimoPrivado = false; // privados
+
+    public bool $hayUtilidadPendiente = false; // privados
+    public bool $hayPagoBancoPendiente = false; // bancos
 
     /** @var array<string,mixed> */
     public array $totales = [
@@ -106,6 +110,8 @@ class MovimientoModal extends Component
             'puedeEliminarUltimoPrivado',
             'totales',
             'ultimaUtilidadPctPagadaFmt',
+            'hayUtilidadPendiente',
+            'hayPagoBancoPendiente',
         ]);
 
         $this->totales = [
@@ -116,6 +122,9 @@ class MovimientoModal extends Component
         ];
     }
 
+    // ==========================
+    // PRIVADO: confirmar utilidad
+    // ==========================
     public function confirmarPagoUtilidad(int $movId, InversionService $service): void
     {
         if (!$this->inversion) {
@@ -137,7 +146,36 @@ class MovimientoModal extends Component
         }
     }
 
-    // ✅ ELIMINAR ÚLTIMO PAGO BANCO
+    // ==========================
+    // BANCO: confirmar pago
+    // ==========================
+    public function confirmarPagoBanco(int $movId, InversionService $service): void
+    {
+        if (!$this->inversion) {
+            return;
+        }
+
+        try {
+            $service->confirmarPagoBanco($movId);
+
+            $this->loadData($this->inversion->id);
+            $this->dispatch('inversionUpdated');
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Confirmado',
+                'text' => 'Se confirmó el pago y se debitó el banco.',
+            ]);
+        } catch (DomainException $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'No se pudo confirmar',
+                'text' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    // ✅ ELIMINAR ÚLTIMO PAGO BANCO (pendiente: borra / pagado: revierte)
     public function eliminarUltimoPagoBanco(InversionService $service): void
     {
         if (!$this->inversion) {
@@ -164,7 +202,7 @@ class MovimientoModal extends Component
         }
     }
 
-    // ✅ ELIMINAR ÚLTIMO REGISTRO PRIVADO (solo último: DEVOLUCION_CAPITAL o PAGO_UTILIDAD PENDIENTE)
+    // ✅ ELIMINAR ÚLTIMO REGISTRO PRIVADO (solo último)
     public function eliminarUltimoRegistroPrivado(InversionService $service): void
     {
         if (!$this->inversion) {
@@ -191,7 +229,9 @@ class MovimientoModal extends Component
         }
     }
 
+    // ==========================
     // FOTO
+    // ==========================
     public function verFotoMovimiento(int $movId): void
     {
         if (!$this->inversion) {
@@ -237,8 +277,9 @@ class MovimientoModal extends Component
         $this->fotoUrl = null;
     }
 
-    // CARGA
-    // CARGA
+    // ==========================
+    // LOAD DATA
+    // ==========================
     protected function loadData(int $inversionId): void
     {
         $this->inversion = Inversion::query()
@@ -281,14 +322,32 @@ class MovimientoModal extends Component
         $tasaMensual = $tasaAnual / 12;
         $this->tasaAmortizacionFmt = number_format($tasaMensual, 2, ',', '.') . '%';
 
-        // ✅ BLOQUEO:
-        // - banco: bloqueado si estado != ACTIVA
-        // - privado: bloqueado si estado != ACTIVA o capital_actual <= 0
+        // ✅ BLOQUEO base (NO incluye pendientes)
         $this->bloqueado = $estado !== 'ACTIVA' || (!$this->isBanco && $capitalActual <= 0);
+
+        // ✅ PRIVADO: utilidad pendiente bloquea registrar nuevas (en UI)
+        $this->hayUtilidadPendiente = false;
+        if (!$this->isBanco) {
+            $this->hayUtilidadPendiente = InversionMovimiento::query()
+                ->where('inversion_id', $this->inversionId)
+                ->where('tipo', 'PAGO_UTILIDAD')
+                ->where('estado', 'PENDIENTE')
+                ->exists();
+        }
+
+        // ✅ BANCO: pago pendiente bloquea registrar nuevas (en UI)
+        $this->hayPagoBancoPendiente = false;
+        if ($this->isBanco) {
+            $this->hayPagoBancoPendiente = InversionMovimiento::query()
+                ->where('inversion_id', $this->inversionId)
+                ->where('tipo', 'BANCO_PAGO')
+                ->where('estado', 'PENDIENTE')
+                ->exists();
+        }
 
         $rows = $this->inversion->movimientos()->with('banco')->orderBy('nro')->get();
 
-        $this->movimientos = $this->mapMovimientosForView($rows);
+        $this->movimientos = $this->mapMovimientosForView($rows, $estado);
         $this->totales = $this->calcTotalesForView($rows);
 
         // ✅ Último % utilidad PAGADA (solo PRIVADO)
@@ -316,12 +375,20 @@ class MovimientoModal extends Component
         // ✅ bancos: solo si el último es BANCO_PAGO
         $this->puedeEliminarUltimo = (bool) ($this->isBanco && $last && $lastTipo === 'BANCO_PAGO');
 
-        // ✅ privados: mostrar eliminar SIEMPRE que sea la ÚLTIMA FILA y el último movimiento sea:
+        // ✅ privados: permitir eliminar si el ÚLTIMO es:
+        // - INGRESO_CAPITAL
         // - DEVOLUCION_CAPITAL
-        // - PAGO_UTILIDAD (PENDIENTE O PAGADO)
+        // - PAGO_UTILIDAD (pendiente o pagado)
         $this->puedeEliminarUltimoPrivado = false;
+
         if (!$this->isBanco && $last) {
-            if (in_array($lastTipo, ['DEVOLUCION_CAPITAL', 'PAGO_UTILIDAD'], true)) {
+            if (
+                in_array(
+                    $lastTipo,
+                    ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL', 'PAGO_UTILIDAD'],
+                    true,
+                )
+            ) {
                 $this->puedeEliminarUltimoPrivado = true;
             }
         }
@@ -331,7 +398,7 @@ class MovimientoModal extends Component
      * @param \Illuminate\Support\Collection<int, \App\Models\InversionMovimiento> $rows
      * @return array<int, array<string,mixed>>
      */
-    protected function mapMovimientosForView($rows): array
+    protected function mapMovimientosForView($rows, string $estadoInversion): array
     {
         $out = [];
         $idx = 1;
@@ -345,29 +412,44 @@ class MovimientoModal extends Component
             }
 
             $tipoRaw = strtoupper((string) ($m->tipo ?? ''));
-
             $estado = strtoupper((string) ($m->estado ?? ''));
+
+            // defaults de estado
             if ($estado === '') {
-                if ($tipoRaw === 'PAGO_UTILIDAD') {
-                    $estado = empty($m->comprobante) ? 'PENDIENTE' : 'PAGADO';
+                if ($tipoRaw === 'PAGO_UTILIDAD' || $tipoRaw === 'BANCO_PAGO') {
+                    $estado = 'PENDIENTE';
+                } elseif (
+                    in_array(
+                        $tipoRaw,
+                        ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL', 'CAPITAL_INICIAL'],
+                        true,
+                    )
+                ) {
+                    $estado = 'PAGADO';
                 } else {
                     $estado = '';
                 }
             }
 
-            $puedeConfirmar =
+            // Confirmables
+            $puedeConfirmarPrivado =
                 !$this->isBanco &&
                 $tipoRaw === 'PAGO_UTILIDAD' &&
                 $estado === 'PENDIENTE' &&
                 !$this->bloqueado;
 
-            // ✅ BANCO: si solo existe PAGO DE CUOTA, entonces todo BANCO_PAGO se muestra como "salida"
+            $puedeConfirmarBanco =
+                $this->isBanco &&
+                $tipoRaw === 'BANCO_PAGO' &&
+                $estado === 'PENDIENTE' &&
+                strtoupper($estadoInversion) === 'ACTIVA';
+
+            // BANCO visual: BANCO_PAGO como salida
             $esPagoCuota = $tipoRaw === 'BANCO_PAGO';
 
             $capNum = (float) ($m->monto_capital ?? 0);
             $intNum = (float) ($m->monto_interes ?? 0);
 
-            // ✅ si es pago de cuota y el monto viene positivo, lo mostramos negativo (solo visual)
             $capitalNegativo = $esPagoCuota && $capNum > 0;
             $interesNegativo = $esPagoCuota && $intNum > 0;
 
@@ -377,12 +459,13 @@ class MovimientoModal extends Component
             $capitalDisplay = $capitalNegativo ? '- ' . $capitalFmt : $capitalFmt;
             $interesDisplay = $interesNegativo ? '- ' . $interesFmt : $interesFmt;
 
-            $pctInteres = null;
-            $capDen = abs($capNum);
-            $intCalc = abs($intNum);
-
-            if ($capDen > 0 && $intCalc >= 0) {
-                $pctInteres = round(($intCalc * 100) / $capDen, 2);
+            // ✅ % INTERÉS "igual que privado"
+            // BANCO_PAGO: tomamos porcentaje_utilidad (tasa mensual guardada)
+            $pctInteresFmt = '—';
+            if ($tipoRaw === 'BANCO_PAGO') {
+                $pct = $m->porcentaje_utilidad;
+                $pctInteresFmt =
+                    $pct !== null ? number_format((float) $pct, 2, ',', '.') . '%' : '—';
             }
 
             $out[] = [
@@ -403,8 +486,11 @@ class MovimientoModal extends Component
                 'banco_linea' => $bancoLinea,
 
                 'estado' => $estado,
-                'puede_confirmar' => $puedeConfirmar,
 
+                'puede_confirmar_privado' => $puedeConfirmarPrivado,
+                'puede_confirmar_banco' => $puedeConfirmarBanco,
+
+                // PRIVADO: porcentaje_utilidad del movimiento (ya lo usabas)
                 'porcentaje_utilidad' =>
                     $m->porcentaje_utilidad !== null
                         ? number_format((float) $m->porcentaje_utilidad, 2, ',', '.') . '%'
@@ -419,10 +505,8 @@ class MovimientoModal extends Component
                 'interes' => $interesDisplay,
                 'interes_is_negative' => $interesNegativo,
 
-                'pct_interes' =>
-                    $pctInteres !== null
-                        ? number_format((float) $pctInteres, 2, ',', '.') . '%'
-                        : '—',
+                // ✅ BANCO: aquí mostrarás el % interés (tasa mensual)
+                'pct_interes' => $pctInteresFmt,
 
                 'tiene_imagen' => !empty($imgPath),
             ];

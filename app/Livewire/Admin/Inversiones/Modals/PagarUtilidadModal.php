@@ -76,6 +76,8 @@ class PagarUtilidadModal extends Component
     public string $impacto_texto = 'Seleccione un banco.';
     public ?string $impacto_detalle = null;
 
+    public string $fecha_inicio_ref = '';
+
     public function mount(): void
     {
         $this->fecha = now()->toDateString();
@@ -96,6 +98,17 @@ class PagarUtilidadModal extends Component
 
         // ✅ si el impacto dice que está mal (capital/saldo insuficiente), NO dejar guardar
         if (!$this->impacto_ok) {
+            return false;
+        }
+
+        // ✅ si hay utilidad pendiente, NO dejar guardar ningún tipo
+        $hayPendiente = InversionMovimiento::query()
+            ->where('inversion_id', $this->inversion->id)
+            ->where('tipo', 'PAGO_UTILIDAD')
+            ->where('estado', 'PENDIENTE')
+            ->exists();
+
+        if ($hayPendiente) {
             return false;
         }
 
@@ -240,6 +253,8 @@ class PagarUtilidadModal extends Component
             'impacto_ok',
             'impacto_texto',
             'impacto_detalle',
+            'fecha_inicio_ref',
+            'fechaPagoTouched',
         ]);
     }
 
@@ -341,35 +356,48 @@ class PagarUtilidadModal extends Component
     {
         $tipo = strtoupper(trim($tipo));
 
-        // cada vez que cambias tipo, consideramos que puede resetearse el "touched"
-        $this->fechaPagoTouched = false;
+        // ✅ referencia (últ. movimiento) siempre se recalcula cuando cambias tipo
+        // (aquí ya tienes $this->inversion cargada porque se llama desde open())
+        $this->fecha_inicio_ref = $this->fechaInicioAuto();
+
+        // si el usuario NO tocó fecha_pago, podemos sugerirla
+        $touched = $this->fechaPagoTouched === true;
 
         if ($tipo === 'INGRESO_CAPITAL') {
-            // ✅ fecha fija: última fecha (no se debe mover)
-            $this->fecha = $this->fechaInicioAuto();
+            // ✅ fecha contable fija (referencia)
+            $this->fecha = $this->fecha_inicio_ref;
 
-            // ✅ fecha_pago editable: default hoy
-            $this->fecha_pago = now()->toDateString();
+            // ✅ sugerencia para fecha_pago (editable)
+            if (!$touched) {
+                $this->fecha_pago = $this->fecha_inicio_ref;
+            }
+
             return;
         }
 
         if ($tipo === 'DEVOLUCION_CAPITAL') {
-            $this->fecha = $this->fechaInicioAuto();
-            $this->fecha_pago = now()->toDateString();
+            $this->fecha = $this->fecha_inicio_ref;
+
+            if (!$touched) {
+                $this->fecha_pago = $this->fecha_inicio_ref;
+            }
+
             return;
         }
 
         // ===== PAGO_UTILIDAD =====
-        $this->utilidad_fecha_inicio = $this->fechaInicioAuto();
+        // inicio de utilidad = referencia
+        $this->utilidad_fecha_inicio = $this->fecha_inicio_ref;
 
-        // ✅ Fecha final = inicio + 1 mes
+        // fecha final = inicio + 1 mes
         $this->fecha = Carbon::parse($this->utilidad_fecha_inicio)
             ->addMonthNoOverflow()
             ->toDateString();
 
-        // ✅ Solo seteo fecha_pago por defecto si el usuario NO la tocó
-        $this->fecha_pago = $this->fecha; // default
-        $this->fechaPagoTouched = false;
+        // default fecha_pago = fecha final (solo si no tocó)
+        if (!$touched) {
+            $this->fecha_pago = $this->fecha;
+        }
 
         $this->recalcUtilidadPago();
     }
@@ -599,31 +627,32 @@ class PagarUtilidadModal extends Component
     {
         $this->resetErrorBag();
         $this->resetValidation();
-        $this->validate();
 
         if (!$this->inversion) {
             return;
         }
 
+        // ✅ BLOQUEO GLOBAL (SweetAlert): si hay utilidad PENDIENTE, no permitir nada
+        $hayPendiente = InversionMovimiento::query()
+            ->where('inversion_id', $this->inversion->id)
+            ->where('tipo', 'PAGO_UTILIDAD')
+            ->where('estado', 'PENDIENTE')
+            ->exists();
+
+        if ($hayPendiente) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'Utilidad pendiente',
+                'text' =>
+                    'No puedes registrar INGRESO, DEVOLUCIÓN ni otra UTILIDAD porque tienes una utilidad PENDIENTE por confirmar.',
+            ]);
+            return;
+        }
+
+        // validación normal
+        $this->validate();
+
         try {
-            if ($this->tipo_pago === 'PAGO_UTILIDAD') {
-                $hayPendiente = InversionMovimiento::query()
-                    ->where('inversion_id', $this->inversion->id)
-                    ->where('tipo', 'PAGO_UTILIDAD')
-                    ->where('estado', 'PENDIENTE')
-                    ->exists();
-
-                if ($hayPendiente) {
-                    $this->dispatch('swal', [
-                        'icon' => 'warning',
-                        'title' => 'Utilidad pendiente',
-                        'text' =>
-                            'No puedes registrar otra utilidad porque tienes una utilidad PENDIENTE por confirmar.',
-                    ]);
-                    return;
-                }
-            }
-
             $path = null;
             if ($this->comprobante_imagen) {
                 $path = $this->comprobante_imagen->store('inversiones/pagos', 'public');
@@ -658,7 +687,7 @@ class PagarUtilidadModal extends Component
             } else {
                 $service->registrarMovimiento($this->inversion, [
                     'tipo' => $this->tipo_pago,
-                    'fecha' => $this->fecha,
+                    'fecha' => $this->fecha_inicio_ref, // contable fija
                     'fecha_pago' => $this->fecha_pago,
                     'monto' => (float) ($this->monto_capital ?? 0),
                     'banco_id' => (int) $this->banco_id,
@@ -679,13 +708,18 @@ class PagarUtilidadModal extends Component
         } catch (DomainException $e) {
             $msg = $e->getMessage();
 
+            // ✅ SweetAlert de error
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Error',
                 'text' => $msg,
             ]);
 
-            if (str_contains($msg, 'Capital insuficiente')) {
+            // ✅ Mapeo a errores de formulario (por si quieres marcas rojas)
+            if (str_contains($msg, 'PENDIENTE')) {
+                // lo dejamos como error general en fecha (o puedes crear uno "tipo_pago")
+                $this->addError('tipo_pago', $msg);
+            } elseif (str_contains($msg, 'Capital insuficiente')) {
                 $this->addError('monto_capital', $msg);
             } elseif (str_contains($msg, 'Saldo insuficiente')) {
                 $this->addError('banco_id', $msg);

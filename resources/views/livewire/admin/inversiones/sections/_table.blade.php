@@ -87,88 +87,134 @@
                             </div>
                         </td>
 
-                        {{-- RESUMEN --}}
                         <td class="p-3">
+                            @php
+                                $r = $inv->resumen ?? [];
+
+                                // Helpers (sin funciones globales)
+                                $has = function ($key) use ($r) {
+                                    if (!array_key_exists($key, $r)) {
+                                        return false;
+                                    }
+                                    $v = $r[$key];
+                                    if ($v === null) {
+                                        return false;
+                                    }
+                                    $v = is_string($v) ? trim($v) : $v;
+                                    return $v !== '' && $v !== '—';
+                                };
+
+                                // Estilos unificados (mismo color en ambos tipos)
+                                $pillBase = 'inline-flex items-center gap-2 rounded-md px-2 py-1 text-[13px]';
+                                $pillGray =
+                                    $pillBase .
+                                    ' bg-gray-100 text-gray-700 dark:bg-neutral-900/40 dark:text-neutral-200';
+                                $pillSlate =
+                                    $pillBase . ' bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200';
+
+                                // ✅ MISMO COLOR PARA "Utilidad" (PRIVADO) y "Interés" (BANCO)
+                                $pillPrimary =
+                                    $pillBase .
+                                    ' bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200';
+
+                                // ✅ MISMO COLOR PARA "Pagada / Últ. Pago"
+                                $pillSuccess =
+                                    $pillBase .
+                                    ' bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200';
+
+                                // ✅ MISMO COLOR PARA "Por pagar"
+                                $pillWarn =
+                                    $pillBase . ' bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200';
+
+                                $valStrong = 'tabular-nums font-semibold text-gray-900 dark:text-neutral-100';
+                                $valPrimary = 'tabular-nums font-semibold text-indigo-900 dark:text-indigo-100';
+                                $valSuccess = 'tabular-nums font-semibold text-emerald-900 dark:text-emerald-100';
+                                $valWarn = 'tabular-nums font-semibold text-amber-900 dark:text-amber-100';
+                                $valSlate = 'tabular-nums font-semibold text-slate-900 dark:text-slate-100';
+                            @endphp
+
                             @if ($inv->tipo === 'PRIVADO')
-                                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px]">
-                                    <span
-                                        class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
-                                        <span class="font-semibold">Capital:</span>
-                                        <span class="tabular-nums font-semibold text-slate-900 dark:text-slate-100">
-                                            {{ $inv->resumen['capital'] ?? '—' }}
-                                        </span>
-                                    </span>
+                                <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
 
-                                    <span
-                                        class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200">
-                                        <span class="font-semibold">% Utilidad:</span>
-                                        <span class="tabular-nums font-semibold text-indigo-900 dark:text-indigo-100">
-                                            {{ $inv->resumen['pct_utilidad_actual'] ?? '—' }}
+                                    {{-- Capital --}}
+                                    @if ($has('capital'))
+                                        <span class="{{ $pillSlate }}">
+                                            <span class="font-semibold">Capital:</span>
+                                            <span class="{{ $valSlate }}">{{ $r['capital'] }}</span>
                                         </span>
-                                    </span>
+                                    @endif
 
-                                    <span
-                                        class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
-                                        <span class="font-semibold">Utilidad pagada:</span>
-                                        <span class="tabular-nums font-semibold text-emerald-900 dark:text-emerald-100">
-                                            {{ $inv->resumen['utilidad_pagada'] ?? '—' }}
+                                    {{-- % Utilidad (mismo color que Interés en BANCO) --}}
+                                    @if ($has('pct_utilidad_actual'))
+                                        <span class="{{ $pillPrimary }}">
+                                            <span class="font-semibold">% Utilidad:</span>
+                                            <span class="{{ $valPrimary }}">{{ $r['pct_utilidad_actual'] }}</span>
                                         </span>
-                                    </span>
+                                    @endif
 
-                                    <span
-                                        class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
-                                        <span class="font-semibold">Utilidad por pagar:</span>
-                                        <span class="tabular-nums font-semibold text-amber-900 dark:text-amber-100">
-                                            {{ $inv->resumen['utilidad_por_pagar'] ?? '—' }}
+                                    {{-- Utilidad pagada (mismo color que Ult. Pago en BANCO) --}}
+                                    @if ($has('utilidad_pagada'))
+                                        <span class="{{ $pillSuccess }}">
+                                            <span class="font-semibold">Utilidad pagada:</span>
+                                            <span class="{{ $valSuccess }}">{{ $r['utilidad_pagada'] }}</span>
                                         </span>
-                                    </span>
+                                    @endif
 
-                                    <span
-                                        class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-gray-100 text-gray-700 dark:bg-neutral-900/40 dark:text-neutral-200">
-                                        <span class="font-semibold">Hasta:</span>
-                                        <span class="font-semibold text-gray-900 dark:text-neutral-100">
-                                            {{ $inv->resumen['hasta_fecha'] ?? '—' }}
+                                    {{-- Utilidad por pagar (mismo color en ambos) --}}
+                                    @if ($has('utilidad_por_pagar'))
+                                        <span class="{{ $pillWarn }}">
+                                            <span class="font-semibold">Utilidad por pagar:</span>
+                                            <span class="{{ $valWarn }}">{{ $r['utilidad_por_pagar'] }}</span>
                                         </span>
-                                    </span>
+                                    @endif
+
+                                    {{-- Hasta --}}
+                                    @if ($has('hasta_fecha'))
+                                        <span class="{{ $pillGray }}">
+                                            <span class="font-semibold">Hasta:</span>
+                                            <span class="{{ $valStrong }}">{{ $r['hasta_fecha'] }}</span>
+                                        </span>
+                                    @endif
+
                                 </div>
                             @else
-                                <div class="flex flex-wrap items-center gap-x-3 gap-y-2 text-[13px]">
-                                    <span
-                                        class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
-                                        <span class="font-semibold">Capital:</span>
-                                        <span class="tabular-nums font-semibold text-slate-900 dark:text-slate-100">
-                                            {{ $inv->resumen['deuda_cuotas'] ?? '—' }}
-                                        </span>
-                                    </span>
+                                <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
 
-                                    <span
-                                        class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-200">
-                                        <span class="font-semibold">Ult. Interés:</span>
-                                        <span class="tabular-nums font-semibold text-rose-900 dark:text-rose-100">
-                                            {{ $inv->resumen['interes'] ?? '—' }}
+                                    {{-- Capital / deuda --}}
+                                    @if ($has('deuda_cuotas'))
+                                        <span class="{{ $pillSlate }}">
+                                            <span class="font-semibold">Capital:</span>
+                                            <span class="{{ $valSlate }}">{{ $r['deuda_cuotas'] }}</span>
                                         </span>
-                                    </span>
+                                    @endif
 
-                                    <span
-                                        class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-200">
-                                        <span class="font-semibold">Ult. Pago:</span>
-                                        <span class="tabular-nums font-semibold text-violet-900 dark:text-violet-100">
-                                            {{ $inv->resumen['total_a_pagar'] ?? '—' }}
+                                    {{-- Ult. Interés (mismo color que % Utilidad en PRIVADO) --}}
+                                    @if ($has('interes'))
+                                        <span class="{{ $pillPrimary }}">
+                                            <span class="font-semibold">Ult. Interés:</span>
+                                            <span class="{{ $valPrimary }}">{{ $r['interes'] }}</span>
                                         </span>
-                                    </span>
+                                    @endif
 
-                                    <span
-                                        class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-gray-100 text-gray-700 dark:bg-neutral-900/40 dark:text-neutral-200">
-                                        <span class="font-semibold">Hasta:</span>
-                                        <span class="font-semibold text-gray-900 dark:text-neutral-100">
-                                            {{ $inv->resumen['hasta_fecha'] ?? '—' }}
+                                    {{-- Ult. Pago (mismo color que Utilidad pagada en PRIVADO) --}}
+                                    @if ($has('total_a_pagar'))
+                                        <span class="{{ $pillSuccess }}">
+                                            <span class="font-semibold">Ult. Pago:</span>
+                                            <span class="{{ $valSuccess }}">{{ $r['total_a_pagar'] }}</span>
                                         </span>
-                                    </span>
+                                    @endif
+
+                                    {{-- Hasta --}}
+                                    @if ($has('hasta_fecha'))
+                                        <span class="{{ $pillGray }}">
+                                            <span class="font-semibold">Hasta:</span>
+                                            <span class="{{ $valStrong }}">{{ $r['hasta_fecha'] }}</span>
+                                        </span>
+                                    @endif
+
                                 </div>
                             @endif
                         </td>
-
-
 
                         {{-- FECHAS --}}
                         <td class="p-3 text-center">
@@ -207,12 +253,12 @@
 
                         {{-- ESTADO --}}
                         <td class="p-3 text-center">
-                            @if ($inv->tipo === 'PRIVADO' && ($inv->resumen['estado_utilidad'] ?? null) === 'PENDIENTE')
+                            @if (($inv->resumen['estado_utilidad'] ?? null) === 'PENDIENTE')
                                 <span
                                     class="inline-flex items-center gap-1 px-2 py-1 rounded
                                     bg-amber-100 text-amber-700
                                     dark:bg-amber-900/30 dark:text-amber-300">
-                                    {{-- icon clock/alert --}}
+                                    {{-- icon clock --}}
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round">
@@ -253,7 +299,6 @@
                                 @endif
                             @endif
                         </td>
-
 
                         {{-- ACCIONES --}}
                         <td class="p-3 text-center">

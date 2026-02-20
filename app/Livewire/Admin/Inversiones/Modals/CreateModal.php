@@ -5,11 +5,12 @@ namespace App\Livewire\Admin\Inversiones\Modals;
 use App\Models\Banco;
 use App\Services\InversionService;
 use DomainException;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 
 class CreateModal extends Component
 {
@@ -29,7 +30,7 @@ class CreateModal extends Component
     public string $porcentaje_utilidad_formatted = '';
 
     public string $moneda = 'BOB';
-    public string $tipo = ''; // PRIVADO | BANCO
+    public string $tipo = ''; // '' | PRIVADO | BANCO
 
     public $banco_id = null;
     public bool $moneda_locked = false;
@@ -39,7 +40,7 @@ class CreateModal extends Component
     public ?int $dia_pago = null;
     public ?float $tasa_anual = null;
 
-    // ✅ SOLO 1 OPCIÓN
+    // Solo 1 opción
     public string $sistema = 'FRANCESA';
 
     public string $tasa_anual_formatted = '';
@@ -52,17 +53,22 @@ class CreateModal extends Component
     public float $saldo_banco_aumento_preview = 0.0;
     public float $saldo_banco_despues_preview = 0.0;
 
-    // =====================
-    // ✅ Getters para la vista (sin @php)
-    // =====================
+    // Getter: mostrar campos BANCO
     public function getShowBancoFieldsProperty(): bool
     {
         return (string) $this->tipo === 'BANCO';
     }
 
+    // Getter: mostrar campos PRIVADO
     public function getShowPrivadoFieldsProperty(): bool
     {
         return (string) $this->tipo === 'PRIVADO';
+    }
+
+    // Getter: mostrar campos comunes (solo cuando ya eligió tipo)
+    public function getShowTipoSelectedFieldsProperty(): bool
+    {
+        return trim((string) $this->tipo) !== '';
     }
 
     public function mount(): void
@@ -121,6 +127,8 @@ class CreateModal extends Component
         ]);
 
         $this->fecha_inicio = now()->toDateString();
+        $this->fecha_vencimiento = null;
+
         $this->moneda = '';
         $this->tipo = '';
 
@@ -130,12 +138,11 @@ class CreateModal extends Component
         $this->capital_formatted = $this->fmtNumber($this->capital, 2);
         $this->porcentaje_utilidad_formatted = $this->fmtNumber($this->porcentaje_utilidad, 2);
 
-        // ✅ defaults BANCO
+        // Defaults BANCO
         $this->plazo_meses = null;
         $this->dia_pago = null;
         $this->tasa_anual = null;
 
-        // ✅ SOLO 1 OPCIÓN
         $this->sistema = 'FRANCESA';
 
         $this->plazo_meses_formatted = '';
@@ -152,15 +159,29 @@ class CreateModal extends Component
     // =====================
     // Hooks / UX
     // =====================
+
+    // Cambio de tipo: limpia campos del otro tipo
     public function updatedTipo($value): void
     {
-        if ((string) $value === 'BANCO') {
+        $value = (string) $value;
+
+        // Si aún no seleccionó tipo, no fuerces nada
+        if ($value === '') {
+            $this->resetErrorBag();
+            $this->resetValidation();
+            return;
+        }
+
+        if ($value === 'BANCO') {
             $this->porcentaje_utilidad = 0.0;
             $this->porcentaje_utilidad_formatted = $this->fmtNumber(0.0, 2);
 
-            // ✅ fijo
             $this->sistema = 'FRANCESA';
+
+            // Si ya hay plazo, calcula vencimiento
+            $this->recalcFechaVencimientoBanco();
         } else {
+            // PRIVADO
             $this->plazo_meses = null;
             $this->dia_pago = null;
             $this->tasa_anual = null;
@@ -173,6 +194,14 @@ class CreateModal extends Component
 
         $this->resetErrorBag();
         $this->resetValidation();
+    }
+
+    // Si cambia fecha_inicio y es BANCO con plazo, recalcula fecha_vencimiento
+    public function updatedFechaInicio($value): void
+    {
+        if ((string) $this->tipo === 'BANCO') {
+            $this->recalcFechaVencimientoBanco();
+        }
     }
 
     public function updatedBancoId($value): void
@@ -203,6 +232,10 @@ class CreateModal extends Component
         $this->moneda_locked = true;
     }
 
+    // =====================
+    // Formateadores
+    // =====================
+
     public function formatCapital(): void
     {
         $this->capital = $this->parseNumber($this->capital_formatted);
@@ -223,11 +256,14 @@ class CreateModal extends Component
             $this->tasa_anual !== null ? $this->fmtNumber((float) $this->tasa_anual, 2) : '';
     }
 
+    // ✅ Al escribir plazo meses, recalcula vencimiento (BANCO)
     public function formatPlazo(): void
     {
         $v = (int) $this->parseNumber($this->plazo_meses_formatted);
         $this->plazo_meses = $v > 0 ? $v : null;
         $this->plazo_meses_formatted = $this->plazo_meses ? (string) $this->plazo_meses : '';
+
+        $this->recalcFechaVencimientoBanco(); // clave
     }
 
     public function formatDiaPago(): void
@@ -236,6 +272,37 @@ class CreateModal extends Component
         $this->dia_pago = $v >= 1 && $v <= 28 ? $v : null;
         $this->dia_pago_formatted = $this->dia_pago ? (string) $this->dia_pago : '';
     }
+
+    // ✅ Calcula fecha_vencimiento = fecha_inicio + plazo_meses (editable, se recalcula solo cuando cambie plazo/fecha_inicio)
+    private function recalcFechaVencimientoBanco(): void
+    {
+        if ((string) $this->tipo !== 'BANCO') {
+            return;
+        }
+
+        $plazo = (int) ($this->plazo_meses ?? 0);
+        if ($plazo <= 0) {
+            return;
+        }
+
+        $ini = trim((string) $this->fecha_inicio);
+        if ($ini === '') {
+            return;
+        }
+
+        try {
+            $start = Carbon::createFromFormat('Y-m-d', $ini)->startOfDay();
+        } catch (\Throwable $e) {
+            return;
+        }
+
+        // fecha_inicio 01/01 + 2 meses => 01/03
+        $this->fecha_vencimiento = $start->copy()->addMonthsNoOverflow($plazo)->toDateString();
+    }
+
+    // =====================
+    // Impacto banco (preview)
+    // =====================
 
     private function recalcImpactoBanco(): void
     {
@@ -264,8 +331,9 @@ class CreateModal extends Component
     }
 
     // =====================
-    // Validación dinámica
+    // Validación
     // =====================
+
     protected function rules(): array
     {
         $rules = [
@@ -286,16 +354,14 @@ class CreateModal extends Component
             $rules['tasa_anual'] = ['required', 'numeric', 'min:0.0001'];
             $rules['plazo_meses'] = ['required', 'integer', 'min:1', 'max:600'];
             $rules['dia_pago'] = ['required', 'integer', 'min:1', 'max:28'];
-
-            // ✅ SOLO 1 OPCIÓN
             $rules['sistema'] = ['required', Rule::in(['FRANCESA'])];
-
             $rules['porcentaje_utilidad'] = ['nullable', 'numeric', 'min:0'];
         }
 
         return $rules;
     }
 
+    // Crea la inversión
     public function create(InversionService $service): void
     {
         $this->formatCapital();
@@ -311,7 +377,6 @@ class CreateModal extends Component
             $this->porcentaje_utilidad = 0.0;
             $this->porcentaje_utilidad_formatted = $this->fmtNumber(0.0, 2);
 
-            // ✅ fijo
             $this->sistema = 'FRANCESA';
         }
 
@@ -343,7 +408,7 @@ class CreateModal extends Component
                 'plazo_meses' => $this->tipo === 'BANCO' ? (int) $this->plazo_meses : null,
                 'dia_pago' => $this->tipo === 'BANCO' ? (int) $this->dia_pago : null,
 
-                // ✅ FIJO
+                // fijo
                 'sistema' => $this->tipo === 'BANCO' ? 'FRANCESA' : null,
             ]);
 
@@ -359,6 +424,10 @@ class CreateModal extends Component
             session()->flash('error', $e->getMessage());
         }
     }
+
+    // =====================
+    // Helpers
+    // =====================
 
     private function parseNumber(?string $value): float
     {
@@ -399,6 +468,7 @@ class CreateModal extends Component
         return view('livewire.admin.inversiones.modals._modal_crear', [
             'showBancoFields' => $this->showBancoFields,
             'showPrivadoFields' => $this->showPrivadoFields,
+            'showTipoSelectedFields' => $this->showTipoSelectedFields,
         ]);
     }
 }

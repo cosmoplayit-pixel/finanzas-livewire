@@ -20,9 +20,6 @@ class InversionMovimiento extends Model
         'pagado_en',
         'monto_total',
         'monto_interes',
-        'monto_mora',
-        'monto_comision',
-        'monto_seguro',
 
         'monto_capital',
         'monto_utilidad',
@@ -50,9 +47,6 @@ class InversionMovimiento extends Model
 
         'monto_total' => 'decimal:2',
         'monto_interes' => 'decimal:2',
-        'monto_mora' => 'decimal:2',
-        'monto_comision' => 'decimal:2',
-        'monto_seguro' => 'decimal:2',
 
         'monto_capital' => 'decimal:2',
         'monto_utilidad' => 'decimal:2',

@@ -38,9 +38,6 @@ return new class extends Migration {
             // =========================
             $table->decimal('monto_total', 14, 4)->nullable(); // total pagado (moneda base)
             $table->decimal('monto_interes', 14, 4)->nullable();
-            $table->decimal('monto_mora', 14, 4)->nullable();
-            $table->decimal('monto_comision', 14, 4)->nullable();
-            $table->decimal('monto_seguro', 14, 4)->nullable();
 
             // Capital (+ ingreso / - devolución) o (BANCO: capital pagado, guardamos en monto_capital positivo)
             $table->decimal('monto_capital', 14, 4)->nullable();

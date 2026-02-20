@@ -11,18 +11,86 @@
 
         <div class="space-y-4">
 
-            {{-- RESUMEN --}}
+            {{-- RESUMEN  --}}
             <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
                 <div class="px-4 py-3 border-b dark:border-neutral-700">
-                    <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate">
-                        {{ $inversion?->nombre_completo ?? '—' }}
-                    </div>
-                    <div class="mt-1 text-xs text-gray-500 dark:text-neutral-400 flex flex-wrap items-center gap-2">
-                        <span class="font-mono">{{ $inversion?->codigo ?? '—' }}</span>
-                        <span class="text-gray-300 dark:text-neutral-600">•</span>
-                        <span>Base: {{ $inversion?->moneda ?? '—' }}</span>
-                        <span class="text-gray-300 dark:text-neutral-600">•</span>
-                        <span class="truncate max-w-[420px]">{{ $inversion?->banco?->nombre ?? 'Sin banco' }}</span>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+
+                        {{-- IZQUIERDA --}}
+                        <div class="min-w-0">
+                            <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate">
+                                {{ $inversion?->nombre_completo ?? '—' }}
+                            </div>
+
+                            <div
+                                class="mt-1 text-xs text-gray-500 dark:text-neutral-400 flex flex-wrap items-center gap-2">
+                                {{-- Código --}}
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M20 7H4" />
+                                        <path d="M20 11H4" />
+                                        <path d="M20 15H4" />
+                                        <path d="M20 19H4" />
+                                        <path d="M8 3v4" />
+                                        <path d="M16 3v4" />
+                                    </svg>
+                                    <span class="font-mono">{{ $inversion?->codigo ?? '—' }}</span>
+                                </span>
+
+                                <span class="text-gray-300 dark:text-neutral-600">•</span>
+
+                                {{-- Tipo --}}
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M12 3v18" />
+                                        <path d="M3 12h18" />
+                                    </svg>
+                                    <span>{{ $inversion?->tipo ?? '—' }}</span>
+                                </span>
+
+                                <span class="text-gray-300 dark:text-neutral-600">•</span>
+
+                                {{-- Capital actual --}}
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M12 1v22" />
+                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" />
+                                    </svg>
+                                    <span class="tabular-nums">
+                                        {{-- usa el mismo formato que en tu app --}}
+                                        {{ strtoupper((string) ($inversion?->moneda ?? 'BOB')) === 'USD'
+                                            ? '$ ' . number_format((float) ($inversion?->capital_actual ?? 0), 2, ',', '.')
+                                            : number_format((float) ($inversion?->capital_actual ?? 0), 2, ',', '.') . ' Bs' }}
+                                    </span>
+                                </span>
+
+                                <span class="text-gray-300 dark:text-neutral-600">•</span>
+
+                                {{-- Fechas --}}
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                                        <path d="M16 2v4" />
+                                        <path d="M8 2v4" />
+                                        <path d="M3 10h18" />
+                                    </svg>
+                                    <span>
+                                        {{ $inversion?->fecha_inicio ? $inversion->fecha_inicio->format('d/m/Y') : '—' }}
+                                        -
+                                        {{ $inversion?->fecha_vencimiento ? $inversion->fecha_vencimiento->format('d/m/Y') : '—' }}
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -97,9 +165,11 @@
                                 <label class="block text-sm mb-1">
                                     Fecha de inicio (últ. movimiento) <span class="text-red-500">*</span>
                                 </label>
-                                <input type="date" wire:model.live="fecha" disabled
+
+                                <input wire:ignore type="date" value="{{ $fecha_inicio_ref }}" readonly disabled
                                     class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
+                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
+
                                 @error('fecha')
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
@@ -109,10 +179,12 @@
                                 <label class="block text-sm mb-1">
                                     Fecha pago <span class="text-red-500">*</span>
                                 </label>
+
                                 <input type="date" wire:model.live="fecha_pago"
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                           focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                    focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+
                                 @error('fecha_pago')
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
@@ -340,13 +412,14 @@
                            hover:bg-gray-50 dark:hover:bg-neutral-800">
                     Cancelar
                 </button>
-
-                <button type="button" wire:click="save" wire:loading.attr="disabled"
-                    wire:target="save,comprobante_imagen" @disabled(!$this->canSave)
+                <button type="button" wire:click="save" wire:target="save,comprobante_imagen"
+                    wire:loading.attr="disabled" @disabled(!$this->canSave)
                     class="px-4 py-2 cursor-pointer rounded-lg text-white
-                    {{ $this->canSave ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600/60 cursor-not-allowed' }}">
-                    <span wire:loading.remove wire:target="save">Guardar</span>
-                    <span wire:loading wire:target="save">Guardando…</span>
+                    {{ $this->canSave ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600/60 cursor-not-allowed' }}
+                    disabled:opacity-50 disabled:cursor-not-allowed">
+
+                    <span wire:loading.remove wire:target="save,comprobante_imagen">Guardar</span>
+                    <span wire:loading wire:target="save,comprobante_imagen">Procesando…</span>
                 </button>
             </div>
 

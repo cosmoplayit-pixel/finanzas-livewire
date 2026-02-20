@@ -10,18 +10,119 @@
 
         <div class="space-y-4">
 
-            {{-- RESUMEN --}}
+            {{-- RESUMEN (igual a Movimientos BANCO) --}}
             <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
                 <div class="px-4 py-3 border-b dark:border-neutral-700">
-                    <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate">
-                        {{ $inv?->nombre_completo ?? '—' }}
-                    </div>
-                    <div class="mt-1 text-xs text-gray-500 dark:text-neutral-400 flex flex-wrap items-center gap-2">
-                        <span class="font-mono">{{ $inv?->codigo ?? '—' }}</span>
-                        <span class="text-gray-300 dark:text-neutral-600">•</span>
-                        <span>Tipo: {{ $inv?->tipo ?? '—' }}</span>
-                        <span class="text-gray-300 dark:text-neutral-600">•</span>
-                        <span>Base: {{ $invMon }}</span>
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+
+                        {{-- IZQUIERDA --}}
+                        <div class="min-w-0">
+                            <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate">
+                                {{ $inv?->nombre_completo ?? '—' }}
+                            </div>
+
+                            <div
+                                class="mt-1 text-xs text-gray-500 dark:text-neutral-400 flex flex-wrap items-center gap-2">
+                                {{-- Código --}}
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M20 7H4" />
+                                        <path d="M20 11H4" />
+                                        <path d="M20 15H4" />
+                                        <path d="M20 19H4" />
+                                        <path d="M8 3v4" />
+                                        <path d="M16 3v4" />
+                                    </svg>
+                                    <span class="font-mono">{{ $inv?->codigo ?? '—' }}</span>
+                                </span>
+
+                                <span class="text-gray-300 dark:text-neutral-600">•</span>
+
+                                {{-- Tipo --}}
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M12 3v18" />
+                                        <path d="M3 12h18" />
+                                    </svg>
+                                    <span>{{ $inv?->tipo ?? '—' }}</span>
+                                </span>
+
+                                <span class="text-gray-300 dark:text-neutral-600">•</span>
+
+                                {{-- Saldo deuda (capital_actual) --}}
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M3 10h18" />
+                                        <path d="M5 10V20" />
+                                        <path d="M19 10V20" />
+                                        <path d="M2 20h20" />
+                                        <path d="M12 2 2 7h20L12 2z" />
+                                    </svg>
+                                    <span class="tabular-nums">
+                                        {{ $invMon === 'USD'
+                                            ? '$ ' . number_format((float) ($inv?->capital_actual ?? 0), 2, ',', '.')
+                                            : number_format((float) ($inv?->capital_actual ?? 0), 2, ',', '.') . ' Bs' }}
+                                    </span>
+                                </span>
+
+                                <span class="text-gray-300 dark:text-neutral-600">•</span>
+
+                                {{-- Plazo --}}
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="9" />
+                                        <path d="M12 7v5l3 3" />
+                                    </svg>
+                                    <span>{{ (int) ($inv?->plazo_meses ?? 0) }} meses</span>
+                                </span>
+
+                                <span class="text-gray-300 dark:text-neutral-600">•</span>
+
+                                {{-- Día pago --}}
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                                        <path d="M16 2v4" />
+                                        <path d="M8 2v4" />
+                                        <path d="M3 10h18" />
+                                        <path d="M8 14h.01" />
+                                        <path d="M12 14h.01" />
+                                        <path d="M16 14h.01" />
+                                    </svg>
+                                    <span>Día pago: {{ (int) ($inv?->dia_pago ?? 0) }}</span>
+                                </span>
+
+                                <span class="text-gray-300 dark:text-neutral-600">•</span>
+
+                                {{-- Fechas --}}
+                                <span class="inline-flex items-center gap-1.5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" />
+                                        <path d="M16 2v4" />
+                                        <path d="M8 2v4" />
+                                        <path d="M3 10h18" />
+                                    </svg>
+                                    <span>
+                                        {{ $inv?->fecha_inicio ? $inv->fecha_inicio->format('d/m/Y') : '—' }}
+                                        -
+                                        {{ $inv?->fecha_vencimiento ? $inv->fecha_vencimiento->format('d/m/Y') : '—' }}
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -133,7 +234,8 @@
 
                         {{-- CAPITAL --}}
                         <div class="md:col-span-1">
-                            <label class="block text-sm mb-1">Capital (base) <span class="text-red-500">*</span></label>
+                            <label class="block text-sm mb-1">Capital (base) <span
+                                    class="text-red-500">*</span></label>
                             <input type="text" wire:model.blur="monto_capital_formatted" placeholder="0,00"
                                 class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
@@ -145,7 +247,8 @@
 
                         {{-- INTERÉS (BLOQUEADO = TOTAL - CAPITAL) --}}
                         <div class="md:col-span-1">
-                            <label class="block text-sm mb-1">Interés (auto) <span class="text-red-500">*</span></label>
+                            <label class="block text-sm mb-1">Interés (auto) <span
+                                    class="text-red-500">*</span></label>
                             <input type="text" wire:model="monto_interes_formatted" readonly
                                 class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800 text-right tabular-nums
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
@@ -170,8 +273,8 @@
                                         flex items-center justify-center shrink-0">
                                         <svg xmlns="http://www.w3.org/2000/svg"
                                             class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
+                                            fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                             <polyline points="17 8 12 3 7 8" />
                                             <line x1="12" y1="3" x2="12" y2="15" />
@@ -282,7 +385,7 @@
                     class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:opacity-90 cursor-pointer
                            disabled:opacity-50 disabled:cursor-not-allowed">
                     <span wire:loading.remove wire:target="save,comprobante_imagen">Guardar</span>
-                    <span wire:loading wire:target="save,comprobante_imagen">Guardando…</span>
+                    <span wire:loading wire:target="save,comprobante_imagen">Procesando…</span>
                 </button>
             </div>
         @endslot

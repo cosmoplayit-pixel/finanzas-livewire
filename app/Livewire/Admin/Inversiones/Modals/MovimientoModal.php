@@ -40,6 +40,7 @@ class MovimientoModal extends Component
     public string $fechaInicioFmt = '—';
     public string $fechaVencFmt = '—';
     public string $porcentajeUtilidadFmt = '0,00%';
+    public string $ultimaUtilidadPctPagadaFmt = '—';
 
     public int $plazoMeses = 0;
     public int $diaPago = 0;
@@ -104,6 +105,7 @@ class MovimientoModal extends Component
             'puedeEliminarUltimo',
             'puedeEliminarUltimoPrivado',
             'totales',
+            'ultimaUtilidadPctPagadaFmt',
         ]);
 
         $this->totales = [
@@ -289,6 +291,25 @@ class MovimientoModal extends Component
         $this->movimientos = $this->mapMovimientosForView($rows);
         $this->totales = $this->calcTotalesForView($rows);
 
+        // ✅ Último % utilidad PAGADA (solo PRIVADO)
+        $this->ultimaUtilidadPctPagadaFmt = '—';
+
+        if (!$this->isBanco) {
+            $lastPctPaid = $rows
+                ->filter(
+                    fn($x) => strtoupper((string) ($x->tipo ?? '')) === 'PAGO_UTILIDAD' &&
+                        strtoupper((string) ($x->estado ?? '')) === 'PAGADO' &&
+                        $x->porcentaje_utilidad !== null,
+                )
+                ->sortByDesc('nro')
+                ->first();
+
+            if ($lastPctPaid) {
+                $this->ultimaUtilidadPctPagadaFmt =
+                    number_format((float) $lastPctPaid->porcentaje_utilidad, 2, ',', '.') . '%';
+            }
+        }
+
         $last = $rows->last();
         $lastTipo = $last ? strtoupper((string) ($last->tipo ?? '')) : '';
 
@@ -324,7 +345,6 @@ class MovimientoModal extends Component
             }
 
             $tipoRaw = strtoupper((string) ($m->tipo ?? ''));
-            $concepto = strtoupper((string) ($m->concepto ?? ''));
 
             $estado = strtoupper((string) ($m->estado ?? ''));
             if ($estado === '') {
@@ -341,16 +361,15 @@ class MovimientoModal extends Component
                 $estado === 'PENDIENTE' &&
                 !$this->bloqueado;
 
-            // BANCO: negativos en cuotas
-            $esCuotaOAbono =
-                $tipoRaw === 'BANCO_PAGO' &&
-                in_array($concepto, ['PAGO_CUOTA', 'ABONO_CAPITAL'], true);
+            // ✅ BANCO: si solo existe PAGO DE CUOTA, entonces todo BANCO_PAGO se muestra como "salida"
+            $esPagoCuota = $tipoRaw === 'BANCO_PAGO';
 
             $capNum = (float) ($m->monto_capital ?? 0);
             $intNum = (float) ($m->monto_interes ?? 0);
 
-            $capitalNegativo = $esCuotaOAbono && $capNum > 0;
-            $interesNegativo = $esCuotaOAbono && $intNum > 0;
+            // ✅ si es pago de cuota y el monto viene positivo, lo mostramos negativo (solo visual)
+            $capitalNegativo = $esPagoCuota && $capNum > 0;
+            $interesNegativo = $esPagoCuota && $intNum > 0;
 
             $capitalFmt = $this->fmtMoney($capNum);
             $interesFmt = $this->fmtMoney($intNum);
@@ -370,7 +389,13 @@ class MovimientoModal extends Component
                 'id' => (int) $m->id,
                 'idx' => $idx++,
 
-                'fecha_contable' => $m->fecha ? $m->fecha->format('d/m/Y') : '—',
+                'tipo' => $m->tipo ?? '—',
+
+                'fecha_inicio' => $m->utilidad_fecha_inicio
+                    ? $m->utilidad_fecha_inicio->format('d/m/Y')
+                    : '—',
+
+                'fecha' => $m->fecha ? $m->fecha->format('d/m/Y') : '—',
                 'fecha_pago' => $m->fecha_pago ? $m->fecha_pago->format('d/m/Y') : '—',
 
                 'descripcion' => (string) ($m->descripcion ?? '—'),
@@ -389,7 +414,6 @@ class MovimientoModal extends Component
                 'capital_is_negative' => $capitalNegativo,
 
                 'utilidad' => $this->fmtMoney((float) ($m->monto_utilidad ?? 0)),
-
                 'total' => $this->fmtMoney((float) ($m->monto_total ?? 0)),
 
                 'interes' => $interesDisplay,

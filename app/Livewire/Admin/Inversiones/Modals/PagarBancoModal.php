@@ -34,9 +34,6 @@ class PagarBancoModal extends Component
     public ?string $tipo_cambio_formatted = null;
     public bool $needs_tc = false;
 
-    // Concepto fijo
-    public string $concepto = 'PAGO_CUOTA';
-
     // Montos (BASE)
     public ?float $monto_total = 0.0;
     public ?string $monto_total_formatted = '0,00';
@@ -108,8 +105,6 @@ class PagarBancoModal extends Component
         $this->banco_id = null;
         $this->mov_moneda = null;
 
-        $this->concepto = 'PAGO_CUOTA';
-
         $this->nro_comprobante = null;
         $this->comprobante_imagen = null;
 
@@ -149,7 +144,6 @@ class PagarBancoModal extends Component
             'tipo_cambio',
             'tipo_cambio_formatted',
             'needs_tc',
-            'concepto',
             'monto_total',
             'monto_total_formatted',
             'monto_capital',
@@ -357,8 +351,6 @@ class PagarBancoModal extends Component
                 'banco_id' => (int) $this->banco_id,
                 'nro_comprobante' => trim((string) $this->nro_comprobante) ?: null,
                 'imagen' => $path,
-                'concepto' => 'PAGO_CUOTA',
-
                 'monto_total' => (float) $this->monto_total,
                 'monto_capital' => (float) ($this->monto_capital ?? 0),
                 'monto_interes' => (float) ($this->monto_interes ?? 0),

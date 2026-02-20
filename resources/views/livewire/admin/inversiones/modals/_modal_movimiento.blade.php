@@ -4,51 +4,53 @@
     <x-ui.modal wire:key="inversion-movimientos-{{ $openMovimientosModal ? 'open' : 'closed' }}"
         model="openMovimientosModal" title="Movimientos de inversión" maxWidth="sm:max-w-2xl md:max-w-7xl"
         onClose="closeMovimientos">
-
         <div class="space-y-3">
 
-            {{-- ===================== HEADER / RESUMEN ===================== --}}
-            <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
-                <div class="px-4 py-3 border-b dark:border-neutral-700">
-                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            {{-- =========================================================
+                HEADER / RESUMEN  (SEPARADO)
+            ========================================================= --}}
+            @if (!$isBanco)
+                {{-- ===================== HEADER PRIVADO ===================== --}}
+                <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
+                    <div class="px-4 py-3 border-b dark:border-neutral-700">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 
-                        {{-- IZQUIERDA --}}
-                        <div class="min-w-0">
-                            <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate">
-                                {{ $inversionNombre }}
-                            </div>
+                            {{-- IZQUIERDA --}}
+                            <div class="min-w-0">
+                                <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate">
+                                    {{ $inversionNombre }}
+                                </div>
 
-                            <div
-                                class="mt-1 text-xs text-gray-500 dark:text-neutral-400 flex flex-wrap items-center gap-2">
-                                {{-- Código --}}
-                                <span class="inline-flex items-center gap-1.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M20 7H4" />
-                                        <path d="M20 11H4" />
-                                        <path d="M20 15H4" />
-                                        <path d="M20 19H4" />
-                                        <path d="M8 3v4" />
-                                        <path d="M16 3v4" />
-                                    </svg>
-                                    <span>{{ $inversionCodigo }}</span>
-                                </span>
+                                <div
+                                    class="mt-1 text-xs text-gray-500 dark:text-neutral-400 flex flex-wrap items-center gap-2">
+                                    {{-- Código --}}
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M20 7H4" />
+                                            <path d="M20 11H4" />
+                                            <path d="M20 15H4" />
+                                            <path d="M20 19H4" />
+                                            <path d="M8 3v4" />
+                                            <path d="M16 3v4" />
+                                        </svg>
+                                        <span>{{ $inversionCodigo }}</span>
+                                    </span>
 
-                                <span class="text-gray-300 dark:text-neutral-600">•</span>
+                                    <span class="text-gray-300 dark:text-neutral-600">•</span>
 
-                                {{-- Tipo --}}
-                                <span class="inline-flex items-center gap-1.5">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M12 3v18" />
-                                        <path d="M3 12h18" />
-                                    </svg>
-                                    <span>{{ $inversionTipo }}</span>
-                                </span>
+                                    {{-- Tipo --}}
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M12 3v18" />
+                                            <path d="M3 12h18" />
+                                        </svg>
+                                        <span>{{ $inversionTipo }}</span>
+                                    </span>
 
-                                @if (!$isBanco)
                                     <span class="text-gray-300 dark:text-neutral-600">•</span>
 
                                     {{-- Capital --}}
@@ -76,28 +78,85 @@
                                         </svg>
                                         <span>{{ $fechaInicioFmt }} - {{ $fechaVencFmt }}</span>
                                     </span>
+                                </div>
+                            </div>
 
-                                    <span class="text-gray-300 dark:text-neutral-600">•</span>
+                            {{-- DERECHA: ACCIONES PRIVADO --}}
+                            <div class="shrink-0 w-full sm:w-auto">
+                                <div class="w-full sm:w-auto flex flex-wrap justify-end gap-2">
+                                    <button type="button"
+                                        wire:click="$dispatch('openPagarUtilidad', { inversionId: {{ $inversionId }} })"
+                                        @disabled($bloqueado || !$inversionId)
+                                        class="h-9 px-3 cursor-pointer rounded-lg text-sm font-semibold inline-flex items-center gap-2
+                                            bg-emerald-600 text-white hover:opacity-90
+                                            disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="Registrar utilidad">
+                                        <span
+                                            class="inline-flex items-center justify-center w-5 h-5 rounded-md bg-white/15">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                                fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M12 1v22" />
+                                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" />
+                                            </svg>
+                                        </span>
+                                        <span>Registrar Pago</span>
+                                    </button>
+                                </div>
+                            </div>
 
-                                    {{-- % utilidad --}}
+                        </div>
+                    </div>
+                </div>
+            @else
+                {{-- ===================== HEADER BANCO ===================== --}}
+                <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
+                    <div class="px-4 py-3 border-b dark:border-neutral-700">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+
+                            {{-- IZQUIERDA --}}
+                            <div class="min-w-0">
+                                <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate">
+                                    {{ $inversionNombre }}
+                                </div>
+
+                                <div
+                                    class="mt-1 text-xs text-gray-500 dark:text-neutral-400 flex flex-wrap items-center gap-2">
+                                    {{-- Código --}}
                                     <span class="inline-flex items-center gap-1.5">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                             stroke-linejoin="round">
-                                            <path d="M19 5L5 19" />
-                                            <circle cx="6.5" cy="6.5" r="2.5" />
-                                            <circle cx="17.5" cy="17.5" r="2.5" />
+                                            <path d="M20 7H4" />
+                                            <path d="M20 11H4" />
+                                            <path d="M20 15H4" />
+                                            <path d="M20 19H4" />
+                                            <path d="M8 3v4" />
+                                            <path d="M16 3v4" />
                                         </svg>
-                                        <span class="tabular-nums">{{ $porcentajeUtilidadFmt }}</span>
+                                        <span>{{ $inversionCodigo }}</span>
                                     </span>
-                                @else
+
+                                    <span class="text-gray-300 dark:text-neutral-600">•</span>
+
+                                    {{-- Tipo --}}
+                                    <span class="inline-flex items-center gap-1.5">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M12 3v18" />
+                                            <path d="M3 12h18" />
+                                        </svg>
+                                        <span>{{ $inversionTipo }}</span>
+                                    </span>
+
                                     <span class="text-gray-300 dark:text-neutral-600">•</span>
 
                                     {{-- Saldo deuda --}}
                                     <span class="inline-flex items-center gap-1.5">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
+                                            fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M3 10h18" />
                                             <path d="M5 10V20" />
                                             <path d="M19 10V20" />
@@ -111,9 +170,9 @@
 
                                     {{-- Plazo --}}
                                     <span class="inline-flex items-center gap-1.5">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <circle cx="12" cy="12" r="9" />
                                             <path d="M12 7v5l3 3" />
                                         </svg>
@@ -124,9 +183,9 @@
 
                                     {{-- Día pago --}}
                                     <span class="inline-flex items-center gap-1.5">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <rect x="3" y="4" width="18" height="18" rx="2" />
                                             <path d="M16 2v4" />
                                             <path d="M8 2v4" />
@@ -136,19 +195,6 @@
                                             <path d="M16 14h.01" />
                                         </svg>
                                         <span>{{ $diaPago }}</span>
-                                    </span>
-
-                                    <span class="text-gray-300 dark:text-neutral-600">•</span>
-
-                                    {{-- Tasa/Amort --}}
-                                    <span class="inline-flex items-center gap-1.5">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M3 3v18h18" />
-                                            <path d="M7 14l3-3 3 2 5-6" />
-                                        </svg>
-                                        <span class="tabular-nums">{{ $tasaAmortizacionFmt }}</span>
                                     </span>
 
                                     <span class="text-gray-300 dark:text-neutral-600">•</span>
@@ -165,33 +211,12 @@
                                         </svg>
                                         <span>{{ $fechaInicioFmt }} - {{ $fechaVencFmt }}</span>
                                     </span>
-                                @endif
+                                </div>
                             </div>
-                        </div>
 
-                        {{-- DERECHA: ACCIONES --}}
-                        <div class="shrink-0 w-full sm:w-auto">
-                            <div class="w-full sm:w-auto flex flex-wrap justify-end gap-2">
-                                @if (!$isBanco)
-                                    <button type="button"
-                                        wire:click="$dispatch('openPagarUtilidad', { inversionId: {{ $inversionId }} })"
-                                        @disabled($bloqueado || !$inversionId)
-                                        class="h-9 px-3 cursor-pointer rounded-lg text-sm font-semibold inline-flex items-center gap-2
-                                            bg-emerald-600 text-white hover:opacity-90
-                                            disabled:opacity-50 disabled:cursor-not-allowed"
-                                        title="Registrar utilidad">
-                                        <span
-                                            class="inline-flex items-center justify-center w-5 h-5 rounded-md bg-white/15">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M12 1v22" />
-                                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" />
-                                            </svg>
-                                        </span>
-                                        <span>Registrar Pago</span>
-                                    </button>
-                                @else
+                            {{-- DERECHA: ACCIONES BANCO --}}
+                            <div class="shrink-0 w-full sm:w-auto">
+                                <div class="w-full sm:w-auto flex flex-wrap justify-end gap-2">
                                     <button type="button"
                                         wire:click="$dispatch('openPagarBanco', { inversionId: {{ $inversionId }} })"
                                         @disabled($bloqueado)
@@ -215,97 +240,78 @@
                                         </span>
                                         <span>Registrar pago</span>
                                     </button>
-                                @endif
+                                </div>
                             </div>
-                        </div>
 
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endif
 
-            {{-- ===================== TABLA MOVIMIENTOS ===================== --}}
-            <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-[13px] min-w-[1200px] align-middle">
-                        <thead class="bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700">
-                            <tr class="text-center text-[12px] tracking-wide text-gray-600 dark:text-neutral-300">
-                                @if (!$isBanco)
-                                    {{-- PRIVADO: 10 columnas --}}
+
+            {{-- =========================================================
+                TABLA MOVIMIENTOS (SEPARADO)
+            ========================================================= --}}
+            @if (!$isBanco)
+                {{-- ===================== TABLA PRIVADO ===================== --}}
+                <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-[13px] min-w-[1200px] align-middle">
+                            <thead
+                                class="bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700">
+                                <tr class="text-center text-[12px] tracking-wide text-gray-600 dark:text-neutral-300">
                                     <th class="p-3 w-[50px]">#</th>
                                     <th class="p-3 w-[120px]">Fecha</th>
-                                    <th class="p-3 min-w-[260px] text-left">Descripción</th>
                                     <th class="p-3 w-[120px]">Fecha pago</th>
+                                    <th class="p-3 min-w-[260px] text-left">Descripción</th>
                                     <th class="p-3 w-[140px]">Comprobante</th>
-                                    <th class="p-3 w-[110px]">% utilidad</th>
                                     <th class="p-3 w-[150px]">Capital</th>
                                     <th class="p-3 w-[150px]">Utilidad</th>
+                                    <th class="p-3 w-[110px]">% utilidad</th>
                                     <th class="p-3 w-[120px]">Estado</th>
                                     <th class="p-3 w-[170px]">Acciones</th>
-                                @else
-                                    {{-- BANCO: 10 columnas (2 fechas + % interés + acciones) --}}
-                                    <th class="p-3 w-[50px]">#</th>
-                                    <th class="p-3 w-[120px]">Fecha contable</th>
-                                    <th class="p-3 w-[120px]">Fecha pago</th>
-                                    <th class="p-3 min-w-[320px] text-left">Descripción</th>
-                                    <th class="p-3 w-[160px]">Comprobante</th>
-                                    <th class="p-3 w-[150px]">Total</th>
-                                    <th class="p-3 w-[150px]">Capital</th>
-                                    <th class="p-3 w-[150px]">Interés</th>
-                                    <th class="p-3 w-[120px]">% Interés</th>
-                                    <th class="p-3 w-[170px]">Acciones</th>
-                                @endif
-                            </tr>
-                        </thead>
+                                </tr>
+                            </thead>
 
-                        <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
-                            @forelse($movimientos as $m)
-                                <tr
-                                    class="hover:bg-gray-50 dark:hover:bg-neutral-900/50 text-center align-middle font-extralight">
-                                    <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
-                                        {{ $m['idx'] }}
-                                    </td>
-
-                                    @if ($isBanco)
+                            <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                                @forelse($movimientos as $m)
+                                    <tr
+                                        class="hover:bg-gray-50 dark:hover:bg-neutral-900/50 text-center align-middle font-extralight">
                                         <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
-                                            {{ $m['fecha_contable'] }}
+                                            {{ $m['idx'] }}
+                                        </td>
+
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['fecha_inicio'] }} {{ $m['fecha'] }}
                                         </td>
 
                                         <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['fecha_pago'] }}
                                         </td>
-                                    @else
-                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
-                                            {{ $m['fecha_contable'] }}
-                                        </td>
-                                    @endif
 
-                                    <td class="p-2 text-left align-middle">
-                                        <div class="text-gray-900 dark:text-neutral-100">
-                                            {{ $m['descripcion'] }}
-                                        </div>
-
-                                        @if (!empty($m['banco_linea']))
-                                            <div class="mt-1 text-xs text-gray-500 dark:text-neutral-400">
-                                                {{ $m['banco_linea'] }}
+                                        <td class="p-2 text-left align-middle">
+                                            <div class="text-gray-900 dark:text-neutral-100">
+                                                {{ $m['descripcion'] }}
                                             </div>
-                                        @endif
-                                    </td>
 
-                                    @if (!$isBanco)
-                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
-                                            {{ $m['fecha_pago'] }}
+                                            @if (!empty($m['banco_linea']))
+                                                <div class="mt-1 text-xs text-gray-500 dark:text-neutral-400">
+                                                    {{ $m['banco_linea'] }}
+                                                </div>
+                                            @endif
                                         </td>
 
                                         <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['comprobante'] }}
                                         </td>
 
-                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
-                                            {{ $m['porcentaje_utilidad'] }}
-                                        </td>
-
                                         <td
-                                            class="p-2 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                            class="p-2 text-right font-semibold tabular-nums align-middle
+                                            {{ ($m['tipo'] ?? '') === 'INGRESO_CAPITAL'
+                                                ? 'text-emerald-600 dark:text-emerald-400'
+                                                : (($m['tipo'] ?? '') === 'DEVOLUCION_CAPITAL'
+                                                    ? 'text-red-600 dark:text-red-400'
+                                                    : 'text-gray-900 dark:text-neutral-100') }}">
                                             {{ $m['capital'] }}
                                         </td>
 
@@ -314,21 +320,49 @@
                                             {{ $m['utilidad'] }}
                                         </td>
 
-                                        <td class="p-2 align-middle">
-                                            @if ($m['estado'] === 'PENDIENTE')
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['porcentaje_utilidad'] }}
+                                        </td>
+
+                                        <td class="p-2 align-middle text-[10px] font-bold ">
+
+                                            {{-- PAGO UTILIDAD --}}
+                                            @if ($m['tipo'] === 'PAGO_UTILIDAD')
+                                                @if ($m['estado'] === 'PENDIENTE')
+                                                    <span
+                                                        class=" inline-flex items-center px-2 py-1 rounded
+                                                        bg-amber-100 text-amber-700
+                                                        dark:bg-amber-900/30 dark:text-amber-300">
+                                                        PENDIENTE
+                                                    </span>
+                                                @else
+                                                    <span
+                                                        class=" inline-flex items-center px-2 py-1 rounded
+                                                        bg-sky-100 text-sky-700
+                                                        dark:bg-sky-900/30 dark:text-sky-300">
+                                                        UTILIDAD
+                                                    </span>
+                                                @endif
+
+                                                {{-- INGRESO CAPITAL --}}
+                                            @elseif ($m['tipo'] === 'INGRESO_CAPITAL')
                                                 <span
-                                                    class="text-[10px] font-bold inline-flex items-center px-2 py-1 rounded text-xs
-                                                    bg-amber-100 text-amber-700
-                                                    dark:bg-amber-900/30 dark:text-amber-300">
-                                                    PENDIENTE
-                                                </span>
-                                            @elseif ($m['estado'] === 'PAGADO')
-                                                <span
-                                                    class="text-[10px] font-bold inline-flex items-center px-2 py-1 rounded text-xs
+                                                    class=" inline-flex items-center px-2 py-1 rounded
                                                     bg-emerald-100 text-emerald-700
                                                     dark:bg-emerald-900/30 dark:text-emerald-300">
-                                                    PAGADO
+                                                    INGRESO
                                                 </span>
+
+                                                {{-- DEVOLUCIÓN CAPITAL --}}
+                                            @elseif ($m['tipo'] === 'DEVOLUCION_CAPITAL')
+                                                <span
+                                                    class=" inline-flex items-center px-2 py-1 rounded
+                                                    bg-red-100 text-red-700
+                                                    dark:bg-red-900/30 dark:text-red-300">
+                                                    DEVOLUCIÓN
+                                                </span>
+
+                                                {{-- OTRO --}}
                                             @else
                                                 <span class="text-xs text-gray-400 dark:text-neutral-500">—</span>
                                             @endif
@@ -336,6 +370,8 @@
 
                                         <td class="p-2 align-middle">
                                             <div class="flex items-center justify-center gap-2">
+
+                                                {{-- Ver imagen --}}
                                                 @if (!empty($m['tiene_imagen']))
                                                     <button type="button"
                                                         wire:click="verFotoMovimiento({{ $m['id'] }})"
@@ -358,7 +394,7 @@
                                                         class="w-8 h-8 inline-flex items-center justify-center text-xs text-gray-400 dark:text-neutral-500">—</span>
                                                 @endif
 
-                                                {{-- ✅ CONFIRMAR UTILIDAD --}}
+                                                {{-- Confirmar utilidad --}}
                                                 @if (!empty($m['puede_confirmar']))
                                                     <div x-data class="flex items-center justify-end">
                                                         <button type="button"
@@ -367,21 +403,21 @@
                                                                 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             @disabled($bloqueado) title="Confirmar pago"
                                                             @click.prevent="
-                                                              Swal.fire({
-                                                                title: '¿Confirmar pago?',
-                                                                text: 'Esto debitará el banco y marcará la utilidad como PAGADA.',
-                                                                icon: 'warning',
-                                                                showCancelButton: true,
-                                                                confirmButtonText: 'Sí, confirmar',
-                                                                cancelButtonText: 'Cancelar',
-                                                                reverseButtons: true,
-                                                                confirmButtonColor: '#16a34a',
-                                                                cancelButtonColor: '#6b7280',
-                                                              }).then((r) => {
-                                                                if (r.isConfirmed) {
-                                                                    $wire.confirmarPagoUtilidad({{ (int) $m['id'] }});
-                                                                }
-                                                              });
+                                                                Swal.fire({
+                                                                    title: '¿Confirmar pago?',
+                                                                    text: 'Esto debitará el banco y marcará la utilidad como PAGADA.',
+                                                                    icon: 'warning',
+                                                                    showCancelButton: true,
+                                                                    confirmButtonText: 'Sí, confirmar',
+                                                                    cancelButtonText: 'Cancelar',
+                                                                    reverseButtons: true,
+                                                                    confirmButtonColor: '#16a34a',
+                                                                    cancelButtonColor: '#6b7280',
+                                                                }).then((r) => {
+                                                                    if (r.isConfirmed) {
+                                                                        $wire.confirmarPagoUtilidad({{ (int) $m['id'] }});
+                                                                    }
+                                                                });
                                                             ">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
@@ -393,7 +429,7 @@
                                                     </div>
                                                 @endif
 
-                                                {{-- ✅ ELIMINAR ÚLTIMO REGISTRO PRIVADO (solo última fila) --}}
+                                                {{-- Eliminar último privado --}}
                                                 @if ($puedeEliminarUltimoPrivado && $loop->last)
                                                     <div x-data class="flex items-center">
                                                         <button type="button"
@@ -431,10 +467,94 @@
                                                         </button>
                                                     </div>
                                                 @endif
+
                                             </div>
                                         </td>
-                                    @else
-                                        {{-- BANCO --}}
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="10"
+                                            class="p-6 text-center text-gray-500 dark:text-neutral-400">
+                                            No hay movimientos registrados.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+
+                            <tfoot
+                                class="bg-gray-50 dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-700">
+                                <tr class="align-middle">
+                                    <td colspan="5"
+                                        class="p-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-neutral-300 align-middle">
+                                        Totales
+                                    </td>
+                                    <td
+                                        class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                        {{ $totales['sumCapitalFmt'] }}
+                                    </td>
+                                    <td
+                                        class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                        {{ $totales['sumUtilidadFmt'] }}
+                                    </td>
+                                    <td
+                                        class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                        {{ $ultimaUtilidadPctPagadaFmt }}
+                                    </td>
+                                    <td class="p-3 align-middle"></td>
+                                    <td class="p-3 align-middle"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            @else
+                {{-- ===================== TABLA BANCO ===================== --}}
+                <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-[13px] min-w-[1200px] align-middle">
+                            <thead
+                                class="bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700">
+                                <tr class="text-center text-[12px] tracking-wide text-gray-600 dark:text-neutral-300">
+                                    <th class="p-3 w-[50px]">#</th>
+                                    <th class="p-3 w-[120px]">Fecha contable</th>
+                                    <th class="p-3 w-[120px]">Fecha pago</th>
+                                    <th class="p-3 min-w-[320px] text-left">Descripción</th>
+                                    <th class="p-3 w-[160px]">Comprobante</th>
+                                    <th class="p-3 w-[150px]">Total</th>
+                                    <th class="p-3 w-[150px]">Capital</th>
+                                    <th class="p-3 w-[150px]">Interés</th>
+                                    <th class="p-3 w-[120px]">% Interés</th>
+                                    <th class="p-3 w-[170px]">Acciones</th>
+                                </tr>
+                            </thead>
+
+                            <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                                @forelse($movimientos as $m)
+                                    <tr
+                                        class="hover:bg-gray-50 dark:hover:bg-neutral-900/50 text-center align-middle font-extralight">
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['idx'] }}
+                                        </td>
+
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['fecha_inicio'] }} {{ $m['fecha'] }}
+                                        </td>
+
+                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                            {{ $m['fecha_pago'] }}
+                                        </td>
+
+                                        <td class="p-2 text-left align-middle">
+                                            <div class="text-gray-900 dark:text-neutral-100">
+                                                {{ $m['descripcion'] }}
+                                            </div>
+                                            @if (!empty($m['banco_linea']))
+                                                <div class="mt-1 text-xs text-gray-500 dark:text-neutral-400">
+                                                    {{ $m['banco_linea'] }}
+                                                </div>
+                                            @endif
+                                        </td>
+
                                         <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['comprobante'] }}
                                         </td>
@@ -461,9 +581,10 @@
                                             {{ $m['pct_interes'] }}
                                         </td>
 
-                                        {{-- ACCIONES BANCO: Ver imagen + Eliminar último (solo última fila) --}}
                                         <td class="p-2 align-middle">
                                             <div class="flex items-center justify-center gap-2">
+
+                                                {{-- Ver imagen --}}
                                                 @if (!empty($m['tiene_imagen']))
                                                     <button type="button"
                                                         wire:click="verFotoMovimiento({{ $m['id'] }})"
@@ -486,6 +607,7 @@
                                                         class="w-8 h-8 inline-flex items-center justify-center text-xs text-gray-400 dark:text-neutral-500">—</span>
                                                 @endif
 
+                                                {{-- Eliminar último banco --}}
                                                 @if ($puedeEliminarUltimo && $loop->last)
                                                     <div x-data class="flex items-center">
                                                         <button type="button"
@@ -523,41 +645,22 @@
                                                         </button>
                                                     </div>
                                                 @endif
+
                                             </div>
                                         </td>
-                                    @endif
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="{{ !$isBanco ? 10 : 10 }}"
-                                        class="p-6 text-center text-gray-500 dark:text-neutral-400">
-                                        No hay movimientos registrados.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="10"
+                                            class="p-6 text-center text-gray-500 dark:text-neutral-400">
+                                            No hay movimientos registrados.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
 
-                        {{-- FOOTER --}}
-                        <tfoot class="bg-gray-50 dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-700">
-                            @if (!$isBanco)
-                                <tr class="align-middle">
-                                    <td colspan="6"
-                                        class="p-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-neutral-300 align-middle">
-                                        Totales
-                                    </td>
-                                    <td
-                                        class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
-                                        {{ $totales['sumCapitalFmt'] }}
-                                    </td>
-                                    <td
-                                        class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
-                                        {{ $totales['sumUtilidadFmt'] }}
-                                    </td>
-                                    <td class="p-3 align-middle"></td>
-                                    <td class="p-3 align-middle"></td>
-                                </tr>
-                            @else
-                                {{-- BANCO: Totales (dejamos vacías % interés y acciones) --}}
+                            <tfoot
+                                class="bg-gray-50 dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-700">
                                 <tr class="align-middle">
                                     <td colspan="5"
                                         class="p-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-neutral-300 align-middle">
@@ -582,11 +685,11 @@
                                     <td class="p-3 align-middle"></td>
                                     <td class="p-3 align-middle"></td>
                                 </tr>
-                            @endif
-                        </tfoot>
-                    </table>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
-            </div>
+            @endif
 
         </div>
 

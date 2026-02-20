@@ -8,6 +8,7 @@ use App\Models\InversionMovimiento;
 use DomainException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Carbon;
 
 class InversionService
 {
@@ -198,7 +199,7 @@ class InversionService
                 $nuevo = (float) $invLocked->capital_actual + $deltaCapital; // delta negativo
                 if ($nuevo <= 0.01) {
                     $nuevo = 0.0;
-                    $invLocked->estado = 'FINALIZADA'; // ✅ CIERRE cuando llega a 0
+                    $invLocked->estado = 'CERRADA'; // ✅ CIERRE cuando llega a 0
                 }
 
                 $invLocked->capital_actual = $nuevo;
@@ -310,28 +311,81 @@ class InversionService
                 throw new DomainException('Tipo de cambio obligatorio.');
             }
 
-            // ✅ En tu modal envías 'monto' (debito banco) y/o 'monto_utilidad'
-            $monto = (float) ($data['monto_utilidad'] ?? ($data['monto'] ?? 0));
-            if ($monto <= 0) {
+            // ✅ monto en MONEDA BASE (moneda inversión)
+            $montoBase = (float) ($data['monto_utilidad'] ?? ($data['monto'] ?? 0));
+            if ($montoBase <= 0) {
                 throw new DomainException('El monto de utilidad es obligatorio.');
             }
 
+            // =========================
+            // ✅ DÍAS PAGADOS (fecha - fecha_inicio)
+            // =========================
+            $fechaFinal = trim((string) ($data['fecha'] ?? ''));
+            if ($fechaFinal === '') {
+                throw new DomainException('La fecha final es obligatoria.');
+            }
+
+            $fechaInicio = trim((string) ($data['fecha_inicio'] ?? ''));
+            if ($fechaInicio === '') {
+                // fallback: última fecha (hasta_fecha) o fecha_inicio inversión
+                $fechaInicio = (string) ($invLocked->hasta_fecha ?: $invLocked->fecha_inicio);
+            }
+
+            try {
+                $ini = Carbon::createFromFormat('Y-m-d', $fechaInicio)->startOfDay();
+                $fin = Carbon::createFromFormat('Y-m-d', $fechaFinal)->startOfDay();
+            } catch (\Throwable $e) {
+                throw new DomainException('Fechas inválidas para calcular días de utilidad.');
+            }
+
+            if ($fin->lessThan($ini)) {
+                throw new DomainException('La fecha final no puede ser menor que la fecha inicio.');
+            }
+
+            // inclusive
+            $diff = $ini->diffInDays($fin);
+
+            // regla: 28–31 => 30
+            $diasPagados = $diff >= 28 && $diff <= 31 ? 30 : $diff;
+
+            // =========================
+            // ✅ correlativos + descripción
+            // =========================
+            // nro correlativo global
             $nro = (int) $invLocked->movimientos()->max('nro');
             $nro = $nro > 0 ? $nro + 1 : 1;
+
+            // correlativo por tipo (para #01, #02, #03)
+            $seqTipo = (int) $invLocked->movimientos()->where('tipo', 'PAGO_UTILIDAD')->count() + 1;
+
+            // descripción: "Pago de Utilidad #03 - 20 D"
+            $descripcionAuto = sprintf('Pago de Utilidad #%02d - %d D', $seqTipo, $diasPagados);
 
             $invLocked->movimientos()->create([
                 'nro' => $nro,
                 'tipo' => 'PAGO_UTILIDAD',
-                'fecha' => $data['fecha'],
-                'fecha_pago' => $data['fecha_pago'] ?? $data['fecha'],
-                'descripcion' => $data['descripcion'] ?? 'Pago de Utilidad',
+                'concepto' => 'PAGO_UTILIDAD',
 
-                'monto_utilidad' => $monto,
-                'porcentaje_utilidad' =>
-                    (float) ($data['porcentaje_utilidad'] ?? $invLocked->porcentaje_utilidad),
+                'fecha' => $fechaFinal,
+                'fecha_pago' => $data['fecha_pago'] ?? $fechaFinal,
 
-                'utilidad_fecha_inicio' => $data['fecha_inicio'] ?? null,
-                'utilidad_dias' => isset($data['dias']) ? (int) $data['dias'] : null,
+                // ✅ si mandas descripcion manual la respetamos; si no, usamos la auto con días
+                'descripcion' =>
+                    isset($data['descripcion']) && trim((string) $data['descripcion']) !== ''
+                        ? (string) $data['descripcion']
+                        : $descripcionAuto,
+
+                // ✅ monto utilidad en base (moneda inversión)
+                'monto_utilidad' => $montoBase,
+
+                'porcentaje_utilidad' => isset($data['porcentaje_utilidad'])
+                    ? (float) $data['porcentaje_utilidad']
+                    : (float) ($invLocked->porcentaje_utilidad ?? 0),
+
+                // ✅ guardamos inicio y días calculados
+                'utilidad_fecha_inicio' => $fechaInicio,
+                'utilidad_dias' => (int) $diasPagados,
+
                 'utilidad_monto_mes' => isset($data['utilidad_monto_mes'])
                     ? (float) $data['utilidad_monto_mes']
                     : null,
@@ -344,7 +398,7 @@ class InversionService
                 'comprobante_imagen_path' =>
                     $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
 
-                // ✅ se crea como pendiente (luego confirmas desde Movimientos)
+                // ✅ se crea como pendiente (luego confirmas)
                 'estado' => 'PENDIENTE',
                 'pagado_en' => null,
             ]);
@@ -529,7 +583,7 @@ class InversionService
 
             if ($saldo <= 0.01) {
                 $saldo = 0.0;
-                $invLocked->estado = 'FINALIZADA';
+                $invLocked->estado = 'CERRADA';
             }
 
             $invLocked->capital_actual = $saldo;
@@ -680,13 +734,13 @@ class InversionService
                 ? (string) $prev->fecha
                 : (string) $invLocked->fecha_inicio;
 
-            // 4) Estado: si estaba FINALIZADA por llegar a 0, puede volver a ACTIVA
+            // 4) Estado: si estaba CERRADA por llegar a 0, puede volver a ACTIVA
             // (tu regla en registrarPagoBanco cierra si saldo <= 0.01)
             if ($saldo > 0.01) {
                 $invLocked->estado = 'ACTIVA';
             } else {
                 $saldo = 0.0;
-                $invLocked->estado = 'FINALIZADA';
+                $invLocked->estado = 'CERRADA';
             }
 
             $invLocked->capital_actual = $saldo;
@@ -819,7 +873,7 @@ class InversionService
                 $nuevo = (float) ($invLocked->capital_actual ?? 0) + (float) $baseAbs;
                 $invLocked->capital_actual = round($nuevo, 2);
 
-                // ✅ volver ACTIVA si estaba FINALIZADA por llegar a 0
+                // ✅ volver ACTIVA si estaba CERRADA por llegar a 0
                 if ((float) $invLocked->capital_actual > 0.01) {
                     $invLocked->estado = 'ACTIVA';
                 }

@@ -8,6 +8,7 @@ use App\Models\InversionMovimiento;
 use App\Services\InversionService;
 use DomainException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -16,6 +17,8 @@ use Livewire\WithFileUploads;
 class PagarUtilidadModal extends Component
 {
     use WithFileUploads;
+
+    public bool $fechaPagoTouched = false;
 
     public bool $open = false;
     public ?Inversion $inversion = null;
@@ -79,6 +82,49 @@ class PagarUtilidadModal extends Component
         $this->fecha_pago = now()->toDateString();
         $this->utilidad_fecha_inicio = now()->toDateString();
         $this->recalcImpacto();
+    }
+
+    /**
+     * ✅ Bloquear Guardar si no está válido el formulario
+     * En Blade lo usarás como: $this->canSave
+     */
+    public function getCanSaveProperty(): bool
+    {
+        if (!$this->open || !$this->inversion) {
+            return false;
+        }
+
+        // ✅ si el impacto dice que está mal (capital/saldo insuficiente), NO dejar guardar
+        if (!$this->impacto_ok) {
+            return false;
+        }
+
+        // (opcional) exige banco seleccionado
+        if (empty($this->banco_id)) {
+            return false;
+        }
+
+        $validator = Validator::make($this->dataForValidation(), $this->rules());
+        return $validator->passes();
+    }
+
+    protected function dataForValidation(): array
+    {
+        return [
+            'tipo_pago' => $this->tipo_pago,
+            'fecha' => $this->fecha,
+            'fecha_pago' => $this->fecha_pago,
+            'banco_id' => $this->banco_id,
+            'nro_comprobante' => $this->nro_comprobante,
+
+            'monto_capital' => $this->monto_capital,
+            'tipo_cambio' => $this->tipo_cambio,
+
+            'utilidad_a_pagar' => $this->utilidad_a_pagar,
+            'utilidad_monto_mes' => $this->utilidad_monto_mes,
+
+            'comprobante_imagen' => $this->comprobante_imagen,
+        ];
     }
 
     public function updatedUtilidadMontoMesFormatted($value): void
@@ -199,6 +245,7 @@ class PagarUtilidadModal extends Component
 
     public function updatedTipoPago(): void
     {
+        // reset comunes
         $this->monto_capital = null;
         $this->monto_capital_formatted = null;
 
@@ -207,7 +254,24 @@ class PagarUtilidadModal extends Component
 
         $this->monto_base_preview = null;
 
+        $this->utilidad_monto_mes = 0.0;
+        $this->utilidad_monto_mes_formatted = null;
+
+        $this->utilidad_pct_calc = 0.0;
+        $this->utilidad_dias = 0;
+
+        $this->utilidad_a_pagar = 0.0;
+        $this->utilidad_a_pagar_formatted = null;
+
+        $this->utilidad_debito_banco = 0.0;
+        $this->utilidad_debito_banco_formatted = null;
+
         $this->applyDefaultsByTipo($this->tipo_pago);
+
+        if ($this->tipo_pago === 'PAGO_UTILIDAD') {
+            $this->recalcUtilidadPago();
+        }
+
         $this->recalcTcPreview();
         $this->recalcImpacto();
 
@@ -225,6 +289,7 @@ class PagarUtilidadModal extends Component
         $this->tipo_cambio_formatted = null;
         $this->monto_base_preview = null;
 
+        $this->recalcUtilidadDebitoBanco(); // ✅ importante
         $this->recalcTcPreview();
         $this->recalcImpacto();
 
@@ -248,6 +313,7 @@ class PagarUtilidadModal extends Component
         $this->tipo_cambio = $n > 0 ? $n : null;
         $this->tipo_cambio_formatted = $n > 0 ? number_format($n, 2, ',', '.') : null;
 
+        $this->recalcUtilidadDebitoBanco(); // ✅ importante
         $this->recalcTcPreview();
         $this->recalcImpacto();
     }
@@ -256,16 +322,33 @@ class PagarUtilidadModal extends Component
     {
         if ($this->tipo_pago === 'PAGO_UTILIDAD') {
             $this->recalcUtilidadPago();
+
+            // ✅ si el usuario NO tocó fecha_pago, puedes mantener el default = fecha final
+            if (!$this->fechaPagoTouched) {
+                $this->fecha_pago = $this->fecha;
+            }
         }
+
         $this->recalcImpacto();
     }
 
+    /**
+     * ✅ AQUÍ está el cambio principal:
+     * En PAGO_UTILIDAD, la fecha final ($this->fecha) se autocompleta como:
+     * utilidad_fecha_inicio + 1 mes (no overflow).
+     */
     protected function applyDefaultsByTipo(string $tipo): void
     {
         $tipo = strtoupper(trim($tipo));
 
+        // cada vez que cambias tipo, consideramos que puede resetearse el "touched"
+        $this->fechaPagoTouched = false;
+
         if ($tipo === 'INGRESO_CAPITAL') {
+            // ✅ fecha fija: última fecha (no se debe mover)
             $this->fecha = $this->fechaInicioAuto();
+
+            // ✅ fecha_pago editable: default hoy
             $this->fecha_pago = now()->toDateString();
             return;
         }
@@ -276,13 +359,34 @@ class PagarUtilidadModal extends Component
             return;
         }
 
+        // ===== PAGO_UTILIDAD =====
         $this->utilidad_fecha_inicio = $this->fechaInicioAuto();
-        $this->fecha = now()->toDateString();
-        $this->fecha_pago = now()->toDateString();
+
+        // ✅ Fecha final = inicio + 1 mes
+        $this->fecha = Carbon::parse($this->utilidad_fecha_inicio)
+            ->addMonthNoOverflow()
+            ->toDateString();
+
+        // ✅ Solo seteo fecha_pago por defecto si el usuario NO la tocó
+        $this->fecha_pago = $this->fecha; // default
+        $this->fechaPagoTouched = false;
 
         $this->recalcUtilidadPago();
     }
 
+    public function updatedFechaPago($value): void
+    {
+        // ✅ el usuario ya tocó la fecha pago
+        $this->fechaPagoTouched = true;
+
+        // normaliza null/empty
+        $v = trim((string) $value);
+        $this->fecha_pago = $v !== '' ? $v : null;
+
+        // ✅ NO tocar $this->fecha aquí
+        // solo recalcular impacto por si tu lógica lo usa
+        $this->recalcImpacto();
+    }
     protected function fechaInicioAuto(): string
     {
         if (!$this->inversion) {
@@ -319,7 +423,7 @@ class PagarUtilidadModal extends Component
 
         $dias = 0;
         if ($inicio && $final && $final->greaterThanOrEqualTo($inicio)) {
-            $diff = $inicio->diffInDays($final) + 1; // inclusive
+            $diff = $inicio->diffInDays($final);
             $dias = $diff >= 28 && $diff <= 31 ? 30 : min($diff, 30);
         }
 
@@ -365,9 +469,7 @@ class PagarUtilidadModal extends Component
         }
 
         $debito = 0.0;
-        // Inverso de tu convención (bank->base):
-        // base=BOB bank=USD => base = bank * tc  => bank = base / tc
-        // base=USD bank=BOB => base = bank / tc  => bank = base * tc
+
         if ($invMon === 'BOB' && $bankMon === 'USD') {
             $debito = $montoBase / $tc;
         } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
@@ -415,9 +517,9 @@ class PagarUtilidadModal extends Component
 
         $baseAmount = null;
         if ($invMon === 'BOB' && $bankMon === 'USD') {
-            $baseAmount = $monto * $tc; // bank USD -> base BOB
+            $baseAmount = $monto * $tc;
         } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
-            $baseAmount = $monto / $tc; // bank BOB -> base USD
+            $baseAmount = $monto / $tc;
         }
 
         $this->monto_base_preview =
@@ -465,7 +567,7 @@ class PagarUtilidadModal extends Component
             $rules['monto_capital'] = ['required', 'numeric', 'min:0.01'];
         } else {
             $rules['fecha_pago'] = [
-                'nullable',
+                'required',
                 'date_format:Y-m-d',
                 function ($attr, $value, $fail) {
                     if (
@@ -504,7 +606,6 @@ class PagarUtilidadModal extends Component
         }
 
         try {
-            // ✅ UX: validar antes (sin transacción) para evitar que el usuario “pierda tiempo”
             if ($this->tipo_pago === 'PAGO_UTILIDAD') {
                 $hayPendiente = InversionMovimiento::query()
                     ->where('inversion_id', $this->inversion->id)
@@ -513,7 +614,6 @@ class PagarUtilidadModal extends Component
                     ->exists();
 
                 if ($hayPendiente) {
-                    // SweetAlert (frontend)
                     $this->dispatch('swal', [
                         'icon' => 'warning',
                         'title' => 'Utilidad pendiente',
@@ -550,7 +650,6 @@ class PagarUtilidadModal extends Component
                     'utilidad_monto_mes' => (float) $this->utilidad_monto_mes,
                 ]);
 
-                // ✅ SweetAlert OK
                 $this->dispatch('swal', [
                     'icon' => 'success',
                     'title' => 'Registrado',
@@ -580,14 +679,12 @@ class PagarUtilidadModal extends Component
         } catch (DomainException $e) {
             $msg = $e->getMessage();
 
-            // ✅ SweetAlert error
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Error',
                 'text' => $msg,
             ]);
 
-            // Tus errores por campo (igual que ya lo tienes)
             if (str_contains($msg, 'Capital insuficiente')) {
                 $this->addError('monto_capital', $msg);
             } elseif (str_contains($msg, 'Saldo insuficiente')) {
@@ -656,7 +753,6 @@ class PagarUtilidadModal extends Component
             return;
         }
 
-        // Capital: monto en moneda banco; capital se impacta en base
         $montoBanco = (float) ($this->monto_capital ?? 0);
         if ($montoBanco <= 0) {
             $this->impacto_texto = 'Ingrese el monto.';
@@ -686,7 +782,6 @@ class PagarUtilidadModal extends Component
             $this->preview_banco_despues = $saldoBank + $montoBanco;
             $this->impacto_texto = 'Se incrementará capital y banco.';
         } else {
-            // DEVOLUCION_CAPITAL
             $this->preview_capital_despues = $this->preview_capital_actual - $montoBase;
             $this->preview_banco_despues = $saldoBank - $montoBanco;
 

@@ -220,50 +220,49 @@
             </div>
         </div>
 
-        {{-- IMPACTO EN BANCO (solo BANCO) --}}
-        @if ($showBancoFields)
-            <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
-                <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b dark:border-neutral-700">
-                    <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto banco</div>
-                    <div class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
-                        Previsualización del saldo del banco con el capital ingresado.
-                    </div>
+
+        <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
+            <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b dark:border-neutral-700">
+                <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto banco</div>
+                <div class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
+                    Previsualización del saldo del banco con el capital ingresado.
                 </div>
+            </div>
 
-                <div class="p-3 sm:p-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div
-                            class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
-                            <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo actual</div>
-                            <div class="text-sm font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
-                                {{ number_format((float) $saldo_banco_actual_preview, 2, ',', '.') }}
-                                {{ $moneda === 'USD' ? '$' : 'Bs' }}
-                            </div>
+            <div class="p-3 sm:p-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div
+                        class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
+                        <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo actual</div>
+                        <div class="text-sm font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                            {{ number_format((float) $saldo_banco_actual_preview, 2, ',', '.') }}
+                            {{ $moneda === 'USD' ? '$' : 'Bs' }}
                         </div>
+                    </div>
 
+                    <div
+                        class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
+                        <div class="text-xs text-gray-500 dark:text-neutral-400">Aumento</div>
                         <div
-                            class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
-                            <div class="text-xs text-gray-500 dark:text-neutral-400">Aumento</div>
-                            <div
-                                class="text-sm text-green-600 font-semibold tabular-nums text-gray-700 dark:text-gray-300">
-                                +{{ number_format((float) $saldo_banco_aumento_preview, 2, ',', '.') }}
-                                {{ $moneda === 'USD' ? '$' : 'Bs' }}
-                            </div>
+                            class="text-sm text-green-600 font-semibold tabular-nums text-gray-700 dark:text-gray-300">
+                            +{{ number_format((float) $saldo_banco_aumento_preview, 2, ',', '.') }}
+                            {{ $moneda === 'USD' ? '$' : 'Bs' }}
                         </div>
+                    </div>
 
+                    <div
+                        class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
+                        <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo después</div>
                         <div
-                            class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
-                            <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo después</div>
-                            <div
-                                class="text-sm text-red-600 font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
-                                {{ number_format((float) $saldo_banco_despues_preview, 2, ',', '.') }}
-                                {{ $moneda === 'USD' ? '$' : 'Bs' }}
-                            </div>
+                            class="text-sm text-red-600 font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                            {{ number_format((float) $saldo_banco_despues_preview, 2, ',', '.') }}
+                            {{ $moneda === 'USD' ? '$' : 'Bs' }}
                         </div>
                     </div>
                 </div>
             </div>
-        @endif
+        </div>
+
 
     </div>
 

@@ -29,7 +29,7 @@
 
     {{-- ===================== SIDEBAR ===================== --}}
     <flux:sidebar sticky stashable
-        class="border-e border-zinc-200 bg-zinc-100/85 backdrop-blur-xl
+        class="border-e border-zinc-200 bg-white backdrop-blur-xl
                dark:border-zinc-700 dark:bg-zinc-900/70">
         <flux:sidebar.toggle class="lg:hidden" icon="x-mark" />
         <x-app-logo />

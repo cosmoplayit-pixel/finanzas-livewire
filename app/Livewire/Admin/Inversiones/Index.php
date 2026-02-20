@@ -125,7 +125,6 @@ class Index extends Component
                     )
                     ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
                     ->where('tipo', 'BANCO_PAGO')
-                    ->where('concepto', 'PAGO_CUOTA')
                     ->orderByDesc('fecha')
                     ->orderByDesc('id')
                     ->limit(1),
@@ -146,7 +145,6 @@ class Index extends Component
                     )
                     ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
                     ->where('tipo', 'BANCO_PAGO')
-                    ->where('concepto', 'PAGO_CUOTA')
                     ->orderByDesc('fecha')
                     ->orderByDesc('id')
                     ->limit(1),

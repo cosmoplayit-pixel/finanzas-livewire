@@ -13,23 +13,17 @@ class InversionMovimiento extends Model
         'inversion_id',
         'nro',
         'tipo',
-        'concepto',
         'fecha',
         'fecha_pago',
         'descripcion',
-
-        // ✅ CONTROL ESTADO
         'estado',
         'pagado_en',
-
-        // BANCO
         'monto_total',
         'monto_interes',
         'monto_mora',
         'monto_comision',
         'monto_seguro',
 
-        // PRIVADO / BANCO
         'monto_capital',
         'monto_utilidad',
         'porcentaje_utilidad',
@@ -52,7 +46,6 @@ class InversionMovimiento extends Model
         'utilidad_fecha_inicio' => 'date',
         'utilidad_dias' => 'integer',
 
-        // ✅ CONTROL ESTADO
         'pagado_en' => 'datetime',
 
         'monto_total' => 'decimal:2',

@@ -19,9 +19,8 @@ return new class extends Migration {
             $table->string('tipo', 30);
 
             // =========================
-            // SOLO PARA BANCO (concepto)
+            // SOLO PARA BANCO
             // =========================
-            $table->string('concepto', 30)->nullable(); // PAGO_CUOTA, ABONO_CAPITAL, CARGO, AJUSTE, etc.
 
             $table->date('fecha'); // Capital: fecha mov | Utilidad: fecha final | Banco: fecha contable
             $table->date('fecha_pago')->nullable(); // fecha prevista / fecha pagada según tu flujo
@@ -71,7 +70,6 @@ return new class extends Migration {
 
             $table->index(['inversion_id', 'fecha']);
             $table->index(['tipo']);
-            $table->index(['concepto']);
             $table->index(['banco_id']);
             $table->index(['fecha_pago']);
             $table->index(['estado']);

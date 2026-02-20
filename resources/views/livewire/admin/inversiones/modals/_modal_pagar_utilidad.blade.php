@@ -3,6 +3,7 @@
 <div>
     <x-ui.modal wire:key="pago-inversion-{{ $open ? 'open' : 'closed' }}" model="open" title="Registrar pago"
         maxWidth="sm:max-w-2xl md:max-w-3xl" onClose="close">
+
         @php
             $isUtilidad = $tipo_pago === 'PAGO_UTILIDAD';
             $hasTC = (bool) $needs_tc;
@@ -50,16 +51,18 @@
                         {{-- FECHAS --}}
                         @if ($isUtilidad)
                             <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Fecha inicio (auto) <span
-                                        class="text-red-500">*</span></label>
+                                <label class="block text-sm mb-1">
+                                    Fecha inicio (auto) <span class="text-red-500">*</span>
+                                </label>
                                 <input type="date" value="{{ $utilidad_fecha_inicio }}" disabled
                                     class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
                             </div>
 
                             <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Fecha final <span
-                                        class="text-red-500">*</span></label>
+                                <label class="block text-sm mb-1">
+                                    Fecha final <span class="text-red-500">*</span>
+                                </label>
                                 <input type="date" wire:model.live="fecha"
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
@@ -70,7 +73,9 @@
                             </div>
 
                             <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Fecha pago</label>
+                                <label class="block text-sm mb-1">
+                                    Fecha pago <span class="text-red-500">*</span>
+                                </label>
                                 <input type="date" wire:model.live="fecha_pago"
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
@@ -89,8 +94,9 @@
                             </div>
                         @else
                             <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Fecha de inicio (último movimiento) <span
-                                        class="text-red-500">*</span></label>
+                                <label class="block text-sm mb-1">
+                                    Fecha de inicio (últ. movimiento) <span class="text-red-500">*</span>
+                                </label>
                                 <input type="date" wire:model.live="fecha" disabled
                                     class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
@@ -100,7 +106,9 @@
                             </div>
 
                             <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Fecha pago <span class="text-red-500">*</span></label>
+                                <label class="block text-sm mb-1">
+                                    Fecha pago <span class="text-red-500">*</span>
+                                </label>
                                 <input type="date" wire:model.live="fecha_pago"
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
@@ -113,8 +121,9 @@
 
                         {{-- BANCO --}}
                         <div class="md:col-span-1">
-                            <label class="block text-sm mb-1">Debitar del banco <span
-                                    class="text-red-500">*</span></label>
+                            <label class="block text-sm mb-1">
+                                Debitar del banco <span class="text-red-500">*</span>
+                            </label>
                             <select wire:model.live="banco_id"
                                 class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
@@ -151,8 +160,9 @@
                         {{-- TIPO DE CAMBIO (si aplica) --}}
                         @if ($hasTC)
                             <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Tipo de cambio <span
-                                        class="text-red-500">*</span></label>
+                                <label class="block text-sm mb-1">
+                                    Tipo de cambio <span class="text-red-500">*</span>
+                                </label>
                                 <input type="text" wire:model.live="tipo_cambio_formatted" placeholder="Ej: 6,96"
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
@@ -184,13 +194,14 @@
                             </div>
 
                             <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Monto utilidad mes <span
-                                        class="text-red-500">*</span></label>
-                                <input type="text" wire:model.blur="utilidad_monto_mes_formatted"
-                                    placeholder="Ej: 5.000,00"
+                                <label class="block text-sm mb-1">
+                                    Monto utilidad mes <span class="text-red-500">*</span>
+                                </label>
+                                <input wire:key="utilidad-mes-{{ $tipo_pago }}" type="text"
+                                    wire:model.blur="utilidad_monto_mes_formatted" placeholder="Ej: 0,00"
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                           focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                    focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
                                 @error('utilidad_monto_mes')
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
@@ -207,28 +218,28 @@
                             </div>
                         @else
                             <div class="md:col-span-1">
-                                <label class="block text-sm mb-1">Monto (capital) <span
-                                        class="text-red-500">*</span></label>
-                                <input type="text" wire:model.blur="monto_capital_formatted"
-                                    placeholder="Ej: 10.000,00"
+                                <label class="block text-sm mb-1">
+                                    Monto (capital) <span class="text-red-500">*</span>
+                                </label>
+                                <input wire:key="capital-monto-{{ $tipo_pago }}" type="text"
+                                    wire:model.blur="monto_capital_formatted" placeholder="Ej: 0,00"
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                           focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                    focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
                                 @error('monto_capital')
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
                         @endif
 
-                        {{-- FOTO DEL COMPROBANTE (ahora arriba, antes del impacto financiero) --}}
+                        {{-- FOTO DEL COMPROBANTE --}}
                         <div class="md:col-span-1">
                             <label class="block text-sm mb-1">Foto del comprobante (opcional)</label>
 
                             <label
-                                class="group  h-11 flex items-center justify-between w-full rounded-lg border border-dashed
+                                class="group h-11 flex items-center justify-between w-full rounded-lg border border-dashed
                                        border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900
                                        px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
-
                                 <div class="flex items-center gap-3 min-w-0">
                                     <div
                                         class="w-7 h-7 rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800
@@ -265,7 +276,7 @@
                             @enderror
                         </div>
 
-                        {{-- IMPACTO FINANCIERO (siempre ocupa 3 columnas) --}}
+                        {{-- IMPACTO FINANCIERO --}}
                         <div class="md:col-span-3">
                             <div class="rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-700 p-4">
                                 <div class="font-semibold text-sm text-gray-900 dark:text-neutral-100">Impacto
@@ -317,30 +328,28 @@
                             </div>
                         </div>
 
-                    </div>
+                    </div> {{-- grid --}}
                 </div>
             </div>
 
-        </div>
-
-        @slot('footer')
-            <div class="flex justify-end gap-2">
+            {{-- FOOTER BOTONES --}}
+            <div class="flex items-center justify-end gap-2 pt-2">
                 <button type="button" wire:click="close"
-                    class="px-4 py-2 rounded-lg border cursor-pointer
-                           border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200
-                           hover:bg-gray-100 dark:hover:bg-neutral-800">
+                    class="px-4 py-2 cursor-pointer rounded-lg border border-gray-300 dark:border-neutral-700
+                           bg-white dark:bg-neutral-900 text-gray-700 dark:text-neutral-200
+                           hover:bg-gray-50 dark:hover:bg-neutral-800">
                     Cancelar
                 </button>
 
                 <button type="button" wire:click="save" wire:loading.attr="disabled"
-                    wire:target="save,comprobante_imagen"
-                    class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:opacity-90 cursor-pointer
-                           disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span wire:loading.remove wire:target="save,comprobante_imagen">Guardar</span>
-                    <span wire:loading wire:target="save,comprobante_imagen">Guardando…</span>
+                    wire:target="save,comprobante_imagen" @disabled(!$this->canSave)
+                    class="px-4 py-2 cursor-pointer rounded-lg text-white
+                    {{ $this->canSave ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600/60 cursor-not-allowed' }}">
+                    <span wire:loading.remove wire:target="save">Guardar</span>
+                    <span wire:loading wire:target="save">Guardando…</span>
                 </button>
             </div>
-        @endslot
 
+        </div> {{-- space-y --}}
     </x-ui.modal>
 </div>

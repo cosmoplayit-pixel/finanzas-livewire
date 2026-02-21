@@ -131,19 +131,6 @@ class InversionService
                 throw new DomainException('La inversión está cerrada.');
             }
 
-            // Bloqueo global por utilidad pendiente
-            $hayPendiente = InversionMovimiento::query()
-                ->where('inversion_id', $invLocked->id)
-                ->where('tipo', 'PAGO_UTILIDAD')
-                ->where('estado', 'PENDIENTE')
-                ->exists();
-
-            if ($hayPendiente) {
-                throw new DomainException(
-                    'No puedes registrar movimientos porque tienes una utilidad PENDIENTE por confirmar.',
-                );
-            }
-
             $tipo = strtoupper((string) ($data['tipo'] ?? ''));
             $tiposValidos = ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL', 'PAGO_UTILIDAD'];
             if (!in_array($tipo, $tiposValidos, true)) {
@@ -321,19 +308,6 @@ class InversionService
 
             if ($invLocked->estado !== 'ACTIVA') {
                 throw new DomainException('La inversión está cerrada.');
-            }
-
-            // Bloqueo: no permitir nueva utilidad si hay PENDIENTE
-            $hayPendiente = InversionMovimiento::query()
-                ->where('inversion_id', $invLocked->id)
-                ->where('tipo', 'PAGO_UTILIDAD')
-                ->where('estado', 'PENDIENTE')
-                ->exists();
-
-            if ($hayPendiente) {
-                throw new DomainException(
-                    'No puedes registrar una nueva utilidad: tienes una utilidad PENDIENTE por confirmar.',
-                );
             }
 
             if (empty($data['banco_id'])) {
@@ -529,19 +503,6 @@ class InversionService
                 throw new DomainException('La inversión ya está finalizada.');
             }
 
-            // Bloqueo: no permitir nuevo pago si existe PENDIENTE
-            $hayPendiente = InversionMovimiento::query()
-                ->where('inversion_id', $invLocked->id)
-                ->where('tipo', 'BANCO_PAGO')
-                ->where('estado', 'PENDIENTE')
-                ->exists();
-
-            if ($hayPendiente) {
-                throw new DomainException(
-                    'No puedes registrar otro pago: tienes un pago BANCO PENDIENTE por confirmar.',
-                );
-            }
-
             if (empty($data['banco_id'])) {
                 throw new DomainException('Debe seleccionar un banco.');
             }
@@ -578,6 +539,12 @@ class InversionService
                 );
             }
 
+            // ✅ % interés REAL (igual que privado): interes / capital
+            $pctInteres = 0.0;
+            if ($cap > 0 && $int > 0) {
+                $pctInteres = round(($int / $cap) * 100, 2);
+            }
+
             // Valida saldo banco (sin debitar todavía)
             $debitoBanco = $totalBase;
             $tc = null;
@@ -612,10 +579,6 @@ class InversionService
 
             $descripcion = sprintf('Pago banco #%02d', $seq);
 
-            // Guarda tasa mensual en porcentaje_utilidad
-            $tasaAnual = (float) ($invLocked->tasa_anual ?? 0);
-            $tasaMensual = $tasaAnual / 12;
-
             $invLocked->movimientos()->create([
                 'nro' => $nro,
                 'tipo' => 'BANCO_PAGO',
@@ -630,7 +593,8 @@ class InversionService
 
                 'monto_utilidad' => null,
 
-                'porcentaje_utilidad' => round($tasaMensual, 6),
+                // ✅ aquí queda el % REAL (no tasa fija)
+                'porcentaje_utilidad' => $pctInteres,
 
                 'utilidad_fecha_inicio' => null,
                 'utilidad_dias' => null,

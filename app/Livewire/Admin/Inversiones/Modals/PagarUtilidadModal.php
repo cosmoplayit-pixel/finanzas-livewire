@@ -101,17 +101,6 @@ class PagarUtilidadModal extends Component
             return false;
         }
 
-        // ✅ si hay utilidad pendiente, NO dejar guardar ningún tipo
-        $hayPendiente = InversionMovimiento::query()
-            ->where('inversion_id', $this->inversion->id)
-            ->where('tipo', 'PAGO_UTILIDAD')
-            ->where('estado', 'PENDIENTE')
-            ->exists();
-
-        if ($hayPendiente) {
-            return false;
-        }
-
         // (opcional) exige banco seleccionado
         if (empty($this->banco_id)) {
             return false;
@@ -629,23 +618,6 @@ class PagarUtilidadModal extends Component
         $this->resetValidation();
 
         if (!$this->inversion) {
-            return;
-        }
-
-        // ✅ BLOQUEO GLOBAL (SweetAlert): si hay utilidad PENDIENTE, no permitir nada
-        $hayPendiente = InversionMovimiento::query()
-            ->where('inversion_id', $this->inversion->id)
-            ->where('tipo', 'PAGO_UTILIDAD')
-            ->where('estado', 'PENDIENTE')
-            ->exists();
-
-        if ($hayPendiente) {
-            $this->dispatch('swal', [
-                'icon' => 'warning',
-                'title' => 'Utilidad pendiente',
-                'text' =>
-                    'No puedes registrar INGRESO, DEVOLUCIÓN ni otra UTILIDAD porque tienes una utilidad PENDIENTE por confirmar.',
-            ]);
             return;
         }
 

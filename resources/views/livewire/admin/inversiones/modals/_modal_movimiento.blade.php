@@ -83,11 +83,11 @@
                                 <div class="w-full sm:w-auto flex flex-wrap justify-end gap-2">
                                     <button type="button"
                                         wire:click="$dispatch('openPagarUtilidad', { inversionId: {{ $inversionId }} })"
-                                        @disabled($bloqueado || !$inversionId || $hayUtilidadPendiente)
+                                        @disabled($bloqueado || !$inversionId)
                                         class="h-9 px-3 cursor-pointer rounded-lg text-sm font-semibold inline-flex items-center gap-2
                                         bg-emerald-600 text-white hover:opacity-90
                                         disabled:opacity-50 disabled:cursor-not-allowed"
-                                        title="{{ $hayUtilidadPendiente ? 'Tienes una utilidad PENDIENTE. Confírmala o elimínala para continuar.' : 'Registrar utilidad' }}">
+                                        title="{{ 'Registrar utilidad' }}">
                                         <span
                                             class="inline-flex items-center justify-center w-5 h-5 rounded-md bg-white/15">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
@@ -163,6 +163,22 @@
                                     <span class="text-gray-300 dark:text-neutral-600">•</span>
 
                                     <span class="inline-flex items-center gap-1.5">
+                                        <!-- icon: porcentaje / interés -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="9" />
+                                            <line x1="15" y1="9" x2="9" y2="15" />
+                                            <circle cx="9.5" cy="9.5" r="1" />
+                                            <circle cx="14.5" cy="14.5" r="1" />
+                                        </svg>
+
+                                        <span>% Mensual: {{ $tasaAmortizacionFmt }} </span>
+                                    </span>
+
+                                    <span class="text-gray-300 dark:text-neutral-600">•</span>
+
+                                    <span class="inline-flex items-center gap-1.5">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -210,11 +226,11 @@
                                 <div class="w-full sm:w-auto flex flex-wrap justify-end gap-2">
                                     <button type="button"
                                         wire:click="$dispatch('openPagarBanco', { inversionId: {{ $inversionId }} })"
-                                        @disabled($bloqueado || $hayPagoBancoPendiente)
+                                        @disabled($bloqueado)
                                         class="h-9 px-3 cursor-pointer rounded-lg text-sm font-semibold inline-flex items-center gap-2
                                             bg-indigo-600 text-white hover:opacity-90
                                             disabled:opacity-50 disabled:cursor-not-allowed"
-                                        title="{{ $hayPagoBancoPendiente ? 'Tienes un pago BANCO PENDIENTE. Confírmalo o elimínalo para continuar.' : 'Registrar pago banco' }}">
+                                        title="{{ 'Registrar pago banco' }}">
                                         <span
                                             class="inline-flex items-center justify-center w-5 h-5 rounded-md bg-white/15">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
@@ -366,14 +382,13 @@
                                         <td class="p-2 align-middle">
                                             <div class="flex items-center justify-center gap-2">
 
-                                                {{-- Confirmar utilidad --}}
+                                                {{-- onfirmar arriba si pendiente --}}
                                                 @if (!empty($m['puede_confirmar_privado']))
-                                                    <div x-data class="flex items-center justify-end">
+                                                    <div x-data class="flex items-center">
                                                         <button type="button"
                                                             class="h-7 px-2 cursor-pointer rounded-lg text-xs font-semibold inline-flex items-center gap-2
-                                                                bg-green-600 text-white hover:bg-green-700
-                                                                disabled:opacity-50 disabled:cursor-not-allowed"
-                                                            @disabled($bloqueado) title="Confirmar pago"
+                                                                bg-green-600 text-white hover:bg-green-700"
+                                                            title="Confirmar pago"
                                                             @click.prevent="
                                                                 Swal.fire({
                                                                     title: '¿Confirmar pago?',
@@ -401,13 +416,33 @@
                                                     </div>
                                                 @endif
 
-                                                {{-- Eliminar último privado --}}
+                                                {{-- Ver imagen (se queda al medio) --}}
+                                                @if (!empty($m['tiene_imagen']))
+                                                    <button type="button"
+                                                        wire:click="verFotoMovimiento({{ $m['id'] }})"
+                                                        class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
+                                                        border-gray-300 text-gray-700 hover:bg-gray-100
+                                                        dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                                                        title="Ver imagen">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <rect x="3" y="3" width="18" height="18"
+                                                                rx="2" ry="2" />
+                                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                                            <path d="M21 15l-5-5L5 21" />
+                                                        </svg>
+                                                    </button>
+                                                @endif
+
+                                                {{-- Eliminar SIEMPRE abajo (solo último) --}}
                                                 @if ($puedeEliminarUltimoPrivado && $loop->last)
                                                     <div x-data class="flex items-center">
                                                         <button type="button"
                                                             class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                                   border-red-300 text-red-700 hover:bg-red-100
-                                                                   dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
+                                                            border-red-300 text-red-700 hover:bg-red-100
+                                                            dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
                                                             title="Eliminar último registro"
                                                             @click.prevent="
                                                                 Swal.fire({
@@ -438,26 +473,6 @@
                                                             </svg>
                                                         </button>
                                                     </div>
-                                                @endif
-
-                                                {{-- Ver imagen --}}
-                                                @if (!empty($m['tiene_imagen']))
-                                                    <button type="button"
-                                                        wire:click="verFotoMovimiento({{ $m['id'] }})"
-                                                        class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                            border-gray-300 text-gray-700 hover:bg-gray-100
-                                                            dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700"
-                                                        title="Ver imagen">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="2" stroke-linecap="round"
-                                                            stroke-linejoin="round">
-                                                            <rect x="3" y="3" width="18" height="18"
-                                                                rx="2" ry="2" />
-                                                            <circle cx="8.5" cy="8.5" r="1.5" />
-                                                            <path d="M21 15l-5-5L5 21" />
-                                                        </svg>
-                                                    </button>
                                                 @endif
 
                                             </div>
@@ -526,18 +541,23 @@
                                 @forelse($movimientos as $m)
                                     <tr
                                         class="hover:bg-gray-50 dark:hover:bg-neutral-900/50 text-center align-middle font-extralight">
+
+                                        {{-- ID --}}
                                         <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['idx'] }}
                                         </td>
 
+                                        {{-- FECHA CONTABLE --}}
                                         <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['fecha'] }}
                                         </td>
 
+                                        {{-- FECHA PAGO --}}
                                         <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['fecha_pago'] }}
                                         </td>
 
+                                        {{-- DESCRIPCION --}}
                                         <td class="p-2 text-left align-middle">
                                             <div class="text-gray-900 dark:text-neutral-100">
                                                 {{ $m['descripcion'] }}
@@ -549,32 +569,38 @@
                                             @endif
                                         </td>
 
+                                        {{-- NRO COMPROBANTE --}}
                                         <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['comprobante'] }}
                                         </td>
 
+                                        {{-- TOTAL = CAPITAL + INTERES --}}
                                         <td
                                             class="p-2 text-right tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['total'] }}
                                         </td>
 
+                                        {{-- CAPITAL --}}
                                         <td
                                             class="p-2 text-right tabular-nums align-middle
                                             {{ !empty($m['capital_is_negative']) ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-neutral-100' }}">
                                             {{ $m['capital'] }}
                                         </td>
 
+                                        {{-- INTERES --}}
                                         <td
                                             class="p-2 text-right tabular-nums align-middle
                                             {{ !empty($m['interes_is_negative']) ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-neutral-100' }}">
                                             {{ $m['interes'] }}
                                         </td>
 
+                                        {{-- % INTERES --}}
                                         <td
                                             class="p-2 text-right tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['pct_interes'] }}
                                         </td>
 
+                                        {{-- ESTADO --}}
                                         <td class="p-2 align-middle text-[10px] font-bold">
                                             @if (($m['estado'] ?? '') === 'PENDIENTE')
                                                 <span
@@ -593,16 +619,17 @@
                                             @endif
                                         </td>
 
+                                        {{-- ACCIONES --}}
                                         <td class="p-2 align-middle">
                                             <div class="flex items-center justify-center gap-2">
 
-                                                {{-- Ver imagen --}}
+                                                {{-- Ver imagen (al medio) --}}
                                                 @if (!empty($m['tiene_imagen']))
                                                     <button type="button"
                                                         wire:click="verFotoMovimiento({{ $m['id'] }})"
                                                         class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                               border-gray-300 text-gray-700 hover:bg-gray-100
-                                                               dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                                                        border-gray-300 text-gray-700 hover:bg-gray-100
+                                                        dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700"
                                                         title="Ver imagen">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -619,30 +646,14 @@
                                                         class="w-8 h-8 inline-flex items-center justify-center text-xs text-gray-400 dark:text-neutral-500">—</span>
                                                 @endif
 
-                                                {{-- Confirmar BANCO (si pendiente) --}}
+                                                {{-- Confirmar arriba (abre modal con datos) --}}
                                                 @if (!empty($m['puede_confirmar_banco']))
-                                                    <div x-data class="flex items-center">
+                                                    <div class="flex items-center">
                                                         <button type="button"
                                                             class="h-7 px-2 cursor-pointer rounded-lg text-xs font-semibold inline-flex items-center gap-2
-                                                                bg-green-600 text-white hover:bg-green-700"
-                                                            title="Confirmar pago banco"
-                                                            @click.prevent="
-                                                                Swal.fire({
-                                                                    title: '¿Confirmar pago banco?',
-                                                                    text: 'Esto debitará el banco y bajará el saldo de la inversión.',
-                                                                    icon: 'warning',
-                                                                    showCancelButton: true,
-                                                                    confirmButtonText: 'Sí, confirmar',
-                                                                    cancelButtonText: 'Cancelar',
-                                                                    reverseButtons: true,
-                                                                    confirmButtonColor: '#16a34a',
-                                                                    cancelButtonColor: '#6b7280',
-                                                                }).then((r) => {
-                                                                    if (r.isConfirmed) {
-                                                                        $wire.confirmarPagoBanco({{ (int) $m['id'] }});
-                                                                    }
-                                                                });
-                                                            ">
+                                                            bg-green-600 text-white hover:bg-green-700"
+                                                            title="Abrir para confirmar / editar"
+                                                            wire:click="openConfirmarBanco({{ (int) $m['id'] }})">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
@@ -653,13 +664,13 @@
                                                     </div>
                                                 @endif
 
-                                                {{-- Eliminar último banco --}}
+                                                {{-- Eliminar SIEMPRE abajo (solo último) --}}
                                                 @if ($puedeEliminarUltimo && $loop->last)
                                                     <div x-data class="flex items-center">
                                                         <button type="button"
                                                             class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                                   border-red-300 text-red-700 hover:bg-red-100
-                                                                   dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
+                                                                    border-red-300 text-red-700 hover:bg-red-100
+                                                                    dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
                                                             title="Eliminar último registro"
                                                             @click.prevent="
                                                                 Swal.fire({
@@ -705,6 +716,7 @@
                                 @endforelse
                             </tbody>
 
+                            {{-- TOTALES --}}
                             <tfoot
                                 class="bg-gray-50 dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-700">
                                 <tr class="align-middle">
@@ -755,13 +767,14 @@
         @endslot
     </x-ui.modal>
 
-    {{-- ===================== VISOR FOTO ===================== --}}
+    {{-- VISOR FOTO --}}
     <div wire:key="foto-inv-{{ $openFotoModal ? '1' : '0' }}-{{ md5($fotoUrl ?? '') }}">
         <x-ui.foto-zoom-modal :open="$openFotoModal" :url="$fotoUrl" onClose="closeFoto" title="Comprobante adjunto"
             subtitle="Pasa el cursor para ampliar y mover" maxWidth="max-w-5xl" />
     </div>
 </div>
 
+{{-- SWEET ALERT --}}
 <script>
     document.addEventListener('livewire:init', () => {
         Livewire.on('swal', (payload) => {

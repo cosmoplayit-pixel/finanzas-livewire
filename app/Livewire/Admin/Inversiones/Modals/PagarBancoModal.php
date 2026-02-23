@@ -297,7 +297,11 @@ class PagarBancoModal extends Component
                 'tipo_cambio' => $this->needs_tc ? (float) ($this->tipo_cambio ?? 0) : null,
             ]);
 
-            session()->flash('success', 'Pago banco registrado como PENDIENTE.');
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Registrado',
+                'text' => 'Pago banco registrado como PENDIENTE.',
+            ]);
             $this->dispatch('inversionUpdated');
             $this->close();
         } catch (DomainException $e) {

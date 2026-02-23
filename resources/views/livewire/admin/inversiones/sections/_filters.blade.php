@@ -55,7 +55,8 @@
         <div class="md:hidden space-y-3">
             <div>
                 <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
-                <input type="text" wire:model.live="search" placeholder="Código o titular…"
+                <input type="text" wire:model.live="search" placeholder="Código o titular…" autocomplete="off"
+                    name="inv_search"
                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                            focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
@@ -94,10 +95,11 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
                 <div class="sm:col-span-3 lg:col-span-3">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
-                    <input type="text" wire:model.live="search" placeholder="Código o titular…"
+                    <input type="text" wire:model.live="search" placeholder="Código o titular…" name="inv_search"
+                        autocomplete="new-password"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                               border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                               focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                        focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                 </div>
 
                 <div></div>

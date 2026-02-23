@@ -25,6 +25,12 @@ class Index extends Component
         'inversionUpdated' => '$refresh',
     ];
 
+    public function mount(): void
+    {
+        $this->search = '';
+        $this->fTipo = '';
+        $this->fEstado = 'ACTIVA';
+    }
     // Resetea paginación al buscar
     public function updatingSearch(): void
     {

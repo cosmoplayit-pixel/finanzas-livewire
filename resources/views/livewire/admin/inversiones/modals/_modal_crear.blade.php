@@ -52,22 +52,17 @@
                         @enderror
                     </div>
 
-                    {{-- Fecha vencimiento (editable) --}}
+                    {{-- Fecha vencimiento (AUTO, OCULTA al inicio y DESHABILITADA) --}}
                     <div>
                         <label class="block text-sm mb-1">Fecha vencimiento <span class="text-red-500">*</span></label>
-                        <input type="date" wire:model="fecha_vencimiento"
-                            class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                        <input type="date" wire:model="fecha_vencimiento" disabled
+                            class="w-full cursor-not-allowed rounded-lg border px-3 py-2
+                                       bg-gray-50 dark:bg-neutral-800
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       opacity-80 focus:outline-none" />
                         @error('fecha_vencimiento')
                             <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                         @enderror
-                        @if ($showBancoFields)
-                            <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
-                                Se calcula con <span class="font-semibold">fecha inicio + plazo (meses)</span>, pero
-                                puedes editarla.
-                            </div>
-                        @endif
                     </div>
 
                     {{-- Tipo --}}
@@ -86,7 +81,7 @@
                         @enderror
                     </div>
 
-                    {{-- ✅ Banco (OCULTO hasta elegir tipo) --}}
+                    {{-- Banco (OCULTO hasta elegir tipo) --}}
                     @if ($showTipoSelectedFields)
                         <div>
                             <label class="block text-sm mb-1">Banco <span class="text-red-500">*</span></label>
@@ -107,7 +102,7 @@
                         </div>
                     @endif
 
-                    {{-- ✅ Capital (OCULTO hasta elegir tipo) --}}
+                    {{-- Capital (OCULTO hasta elegir tipo) --}}
                     @if ($showTipoSelectedFields)
                         <div>
                             <label class="block text-sm mb-1">Capital <span class="text-red-500">*</span></label>
@@ -135,10 +130,22 @@
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
                         </div>
+                    @else
+                        <div>
+                            <label class="block text-sm mb-1">Tasa anual (%) <span class="text-red-500">*</span></label>
+                            <input type="text" inputmode="decimal" wire:model.defer="tasa_anual_formatted"
+                                wire:blur="formatTasaAnual" placeholder="18,00"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
+                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            @error('tasa_anual')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
                     @endif
 
-                    {{-- Datos BANCO (solo BANCO) --}}
-                    @if ($showBancoFields)
+                    {{-- PLAN (PRIVADO y BANCO): plazo/día/tasa --}}
+                    @if ($showTipoSelectedFields)
                         <div>
                             <label class="block text-sm mb-1">Plazo (meses) <span class="text-red-500">*</span></label>
                             <input type="text" inputmode="numeric" wire:model.defer="plazo_meses_formatted"
@@ -149,9 +156,6 @@
                             @error('plazo_meses')
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
-                            <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
-                                Al escribir plazo, se calculará <span class="font-semibold">Fecha vencimiento</span>.
-                            </div>
                         </div>
 
                         <div>
@@ -166,19 +170,9 @@
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
                         </div>
-
-                        <div>
-                            <label class="block text-sm mb-1">Tasa anual (%) <span class="text-red-500">*</span></label>
-                            <input type="text" inputmode="decimal" wire:model.defer="tasa_anual_formatted"
-                                wire:blur="formatTasaAnual" placeholder="18,00"
-                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
-                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                            @error('tasa_anual')
-                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
                     @endif
+
+
 
                     {{-- Foto --}}
                     <div class="lg:col-span-1">

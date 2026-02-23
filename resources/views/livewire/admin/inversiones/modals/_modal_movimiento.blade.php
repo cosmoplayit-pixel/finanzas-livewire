@@ -5,6 +5,7 @@
         model="openMovimientosModal" title="Movimientos de inversión" maxWidth="sm:max-w-2xl md:max-w-7xl"
         onClose="closeMovimientos">
 
+
         <div class="space-y-3">
 
             {{-- =========================================================
@@ -283,7 +284,7 @@
                             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                                 @forelse($movimientos as $m)
                                     <tr
-                                        class="text-center hover:bg-gray-50 dark:hover:bg-neutral-900/50 text-center align-middle font-extralight">
+                                        class="hover:bg-gray-50 dark:hover:bg-neutral-900/50 text-center align-middle font-extralight">
 
                                         {{-- ÍNDICE --}}
                                         <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
@@ -318,7 +319,7 @@
                                             {{ $m['comprobante'] }}
                                         </td>
 
-                                        {{-- CAPITAL --}}
+                                        {{-- CAPITAL (mantener colores de ingreso/devolución) --}}
                                         <td
                                             class="p-2 text-center font-semibold tabular-nums align-middle
                                             {{ ($m['tipo'] ?? '') === 'INGRESO_CAPITAL'
@@ -331,7 +332,12 @@
 
                                         {{-- UTILIDAD --}}
                                         <td
-                                            class="p-2 text-center tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                            class="p-2 text-center font-semibold tabular-nums align-middle font-medium
+                                            {{ ($m['tipo'] ?? '') === 'PAGO_UTILIDAD'
+                                                ? (($m['estado'] ?? '') === 'PENDIENTE'
+                                                    ? 'text-amber-700 dark:text-amber-300'
+                                                    : 'text-sky-700 dark:text-sky-300')
+                                                : 'text-gray-900 dark:text-neutral-100' }}">
                                             {{ $m['utilidad'] }}
                                         </td>
 
@@ -341,10 +347,17 @@
                                             {{ $m['porcentaje_utilidad'] }}
                                         </td>
 
-                                        {{-- ESTADO --}}
+                                        {{-- ESTADO (mismo estilo pro: INICIAL / PENDIENTE amber / PAGADO sky) --}}
                                         <td class="p-2 align-middle text-[10px] font-bold">
-                                            @if ($m['tipo'] === 'PAGO_UTILIDAD')
-                                                @if ($m['estado'] === 'PENDIENTE')
+                                            @if (($m['tipo'] ?? '') === 'CAPITAL_INICIAL')
+                                                <span
+                                                    class="inline-flex items-center px-2 py-1 rounded
+                                                    bg-gray-100 text-gray-700
+                                                    dark:bg-neutral-800 dark:text-neutral-200">
+                                                    INICIAL
+                                                </span>
+                                            @elseif (($m['tipo'] ?? '') === 'PAGO_UTILIDAD')
+                                                @if (($m['estado'] ?? '') === 'PENDIENTE')
                                                     <span
                                                         class="inline-flex items-center px-2 py-1 rounded
                                                         bg-amber-100 text-amber-700
@@ -359,14 +372,14 @@
                                                         PAGADO
                                                     </span>
                                                 @endif
-                                            @elseif ($m['tipo'] === 'INGRESO_CAPITAL')
+                                            @elseif (($m['tipo'] ?? '') === 'INGRESO_CAPITAL')
                                                 <span
                                                     class="inline-flex items-center px-2 py-1 rounded
                                                     bg-emerald-100 text-emerald-700
                                                     dark:bg-emerald-900/30 dark:text-emerald-300">
                                                     INGRESO
                                                 </span>
-                                            @elseif ($m['tipo'] === 'DEVOLUCION_CAPITAL')
+                                            @elseif (($m['tipo'] ?? '') === 'DEVOLUCION_CAPITAL')
                                                 <span
                                                     class="inline-flex items-center px-2 py-1 rounded
                                                     bg-red-100 text-red-700
@@ -378,16 +391,16 @@
                                             @endif
                                         </td>
 
-                                        {{-- ACCIONES --}}
+                                        {{-- ACCIONES (PRIVADO) --}}
                                         <td class="p-2 align-middle">
-                                            <div class="flex items-center justify-center gap-2">
+                                            <div class="flex items-center justify-end gap-2 w-full">
 
-                                                {{-- onfirmar arriba si pendiente --}}
+                                                {{-- Confirmar (SOLO primer pendiente) --}}
                                                 @if (!empty($m['puede_confirmar_privado']))
                                                     <div x-data class="flex items-center">
                                                         <button type="button"
                                                             class="h-7 px-2 cursor-pointer rounded-lg text-xs font-semibold inline-flex items-center gap-2
-                                                                bg-green-600 text-white hover:bg-green-700"
+                                                            bg-green-600 text-white hover:bg-green-700"
                                                             title="Confirmar pago"
                                                             @click.prevent="
                                                                 Swal.fire({
@@ -400,11 +413,7 @@
                                                                     reverseButtons: true,
                                                                     confirmButtonColor: '#16a34a',
                                                                     cancelButtonColor: '#6b7280',
-                                                                }).then((r) => {
-                                                                    if (r.isConfirmed) {
-                                                                        $wire.confirmarPagoUtilidad({{ (int) $m['id'] }});
-                                                                    }
-                                                                });
+                                                                }).then((r) => { if (r.isConfirmed) { $wire.confirmarPagoUtilidad({{ (int) $m['id'] }}); } });
                                                             ">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
@@ -416,7 +425,7 @@
                                                     </div>
                                                 @endif
 
-                                                {{-- Ver imagen (se queda al medio) --}}
+                                                {{-- Ver imagen --}}
                                                 @if (!empty($m['tiene_imagen']))
                                                     <button type="button"
                                                         wire:click="verFotoMovimiento({{ $m['id'] }})"
@@ -436,18 +445,18 @@
                                                     </button>
                                                 @endif
 
-                                                {{-- Eliminar SIEMPRE abajo (solo último) --}}
-                                                @if ($puedeEliminarUltimoPrivado && $loop->last)
+                                                {{-- Eliminar por fila (excepto CAPITAL_INICIAL) --}}
+                                                @if (!empty($m['puede_eliminar_fila']))
                                                     <div x-data class="flex items-center">
                                                         <button type="button"
                                                             class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                            border-red-300 text-red-700 hover:bg-red-100
-                                                            dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
-                                                            title="Eliminar último registro"
+                                                                border-red-300 text-red-700 hover:bg-red-100
+                                                                dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
+                                                            title="Eliminar registro"
                                                             @click.prevent="
                                                                 Swal.fire({
-                                                                    title: '¿Eliminar el último registro?',
-                                                                    text: 'Se revertirá el capital/banco según corresponda.',
+                                                                    title: '¿Eliminar este registro?',
+                                                                    text: 'Esta acción revertirá banco/capital según corresponda.',
                                                                     icon: 'warning',
                                                                     showCancelButton: true,
                                                                     confirmButtonText: 'Sí, eliminar',
@@ -455,12 +464,31 @@
                                                                     reverseButtons: true,
                                                                     confirmButtonColor: '#dc2626',
                                                                     cancelButtonColor: '#6b7280',
-                                                                }).then((r) => {
-                                                                    if (r.isConfirmed) {
-                                                                        $wire.eliminarUltimoRegistroPrivado();
-                                                                    }
-                                                                });
+                                                                }).then((r) => { if (r.isConfirmed) { $wire.eliminarMovimientoFila({{ (int) $m['id'] }}); } });
                                                             ">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M3 6h18" />
+                                                                <path d="M8 6V4h8v2" />
+                                                                <path d="M6 6l1 16h10l1-16" />
+                                                                <path d="M10 11v6" />
+                                                                <path d="M14 11v6" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                @endif
+
+                                                {{-- Eliminar TODO (Capital inicial) => Modal contraseña --}}
+                                                @if (!empty($m['es_capital_inicial']))
+                                                    <div class="flex items-center">
+                                                        <button type="button"
+                                                            class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
+                                                            border-red-400 text-red-800 hover:bg-red-100
+                                                            dark:border-red-700 dark:text-red-300 dark:hover:bg-red-500/20"
+                                                            title="Eliminar inversión completa"
+                                                            wire:click="abrirEliminarTodoModal">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
@@ -488,28 +516,116 @@
                                 @endforelse
                             </tbody>
 
-                            {{-- FILA DE TOTALES --}}
+                            {{-- TOTALES (mismo estilo pro: pagado sky / pendiente amber) --}}
                             <tfoot
                                 class="bg-gray-50 dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-700">
-                                <tr class="align-middle ">
-                                    <td colspan="5"
-                                        class="p-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-neutral-300 align-middle">
-                                        Totales
+                                {{-- PAGADOS --}}
+                                <tr class="align-middle">
+                                    <td colspan="5" class="p-3">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <span
+                                                class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wide uppercase
+                                                bg-sky-100 text-sky-800 border border-sky-200
+                                                dark:bg-sky-900/25 dark:text-sky-200 dark:border-sky-800/40">
+                                                <span class="inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                                                Pagos realizados
+                                            </span>
+                                        </div>
                                     </td>
-                                    <td
-                                        class="p-3 text-center font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
-                                        {{ $totales['sumCapitalFmt'] }}
+
+                                    {{-- Capital --}}
+                                    <td class="p-3 text-center">
+                                        <div class="flex flex-col items-center leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Capital</span>
+                                            <span
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $totales['pagado']['sumCapitalFmt'] }}
+                                            </span>
+                                        </div>
                                     </td>
-                                    <td
-                                        class="p-3 text-center font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
-                                        {{ $totales['sumUtilidadFmt'] }}
+
+                                    {{-- Utilidad --}}
+                                    <td class="p-3 text-center">
+                                        <div class="flex flex-col items-center leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Utilidad</span>
+                                            <span
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $totales['pagado']['sumUtilidadFmt'] }}
+                                            </span>
+                                        </div>
                                     </td>
-                                    <td
-                                        class="p-3 text-center font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
-                                        {{ $ultimaUtilidadPctPagadaFmt }}
+
+                                    {{-- Último % --}}
+                                    <td class="p-3 text-center">
+                                        <div class="flex flex-col items-center leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Último
+                                                %</span>
+                                            <span class="font-semibold tabular-nums text-sky-900 dark:text-sky-200">
+                                                {{ $totales['pagado']['lastPctFmt'] }}
+                                            </span>
+                                        </div>
                                     </td>
-                                    <td class="p-3 align-middle"></td>
-                                    <td class="p-3 align-middle"></td>
+
+                                    <td class="p-3"></td>
+                                    <td class="p-3"></td>
+                                </tr>
+
+                                {{-- PENDIENTES --}}
+                                <tr class="align-middle border-t border-gray-200 dark:border-neutral-700">
+                                    <td colspan="5" class="p-3">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <span
+                                                class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wide uppercase
+                                                bg-amber-100 text-amber-800 border border-amber-200
+                                                dark:bg-amber-900/25 dark:text-amber-200 dark:border-amber-800/40">
+                                                <span class="inline-flex w-2 h-2 rounded-full bg-amber-500"></span>
+                                                Pagos pendientes
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Capital --}}
+                                    <td class="p-3 text-center">
+                                        <div class="flex flex-col items-center leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Capital</span>
+                                            <span
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $totales['pendiente']['sumCapitalFmt'] }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Utilidad --}}
+                                    <td class="p-3 text-center">
+                                        <div class="flex flex-col items-center leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Utilidad</span>
+                                            <span
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $totales['pendiente']['sumUtilidadFmt'] }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Último % --}}
+                                    <td class="p-3 text-center">
+                                        <div class="flex flex-col items-center leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Último
+                                                %</span>
+                                            <span
+                                                class="font-semibold tabular-nums text-amber-900 dark:text-amber-200">
+                                                {{ $totales['pendiente']['lastPctFmt'] }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <td class="p-3"></td>
+                                    <td class="p-3"></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -526,11 +642,11 @@
                                     <th class="p-3 w-[50px]">#</th>
                                     <th class="p-3 w-[120px]">Fecha contable</th>
                                     <th class="p-3 w-[120px]">Fecha pago</th>
-                                    <th class="p-3 min-w-[280px] text-left">Descripción</th>
+                                    <th class="p-3 min-w-[210px] text-left">Descripción</th>
                                     <th class="p-3 w-[160px]">Comprobante</th>
-                                    <th class="p-3 w-[150px]">Total</th>
-                                    <th class="p-3 w-[150px]">Capital</th>
-                                    <th class="p-3 w-[150px]">Interés</th>
+                                    <th class="p-3 w-[180px]">Total</th>
+                                    <th class="p-3 w-[180px]">Capital</th>
+                                    <th class="p-3 w-[180px]">Interés</th>
                                     <th class="p-3 w-[120px]">% Interés</th>
                                     <th class="p-3 w-[120px]">Estado</th>
                                     <th class="p-3 w-[170px]">Acciones</th>
@@ -540,7 +656,7 @@
                             <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                                 @forelse($movimientos as $m)
                                     <tr
-                                        class="hover:bg-gray-50 dark:hover:bg-neutral-900/50 text-center align-middle font-extralight">
+                                        class="hover:bg-gray-50 dark:hover:bg-neutral-900/50 align-middle font-extralight">
 
                                         {{-- ID --}}
                                         <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
@@ -570,39 +686,51 @@
                                         </td>
 
                                         {{-- NRO COMPROBANTE --}}
-                                        <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
+                                        <td class="p-2 text-center text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['comprobante'] }}
                                         </td>
 
                                         {{-- TOTAL = CAPITAL + INTERES --}}
                                         <td
-                                            class="p-2 text-right tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                            class="p-2 text-center font-semibold tabular-nums align-middle
+                                            {{ ($m['tipo'] ?? '') === 'CAPITAL_INICIAL'
+                                                ? 'text-gray-900 dark:text-neutral-100'
+                                                : (($m['estado'] ?? '') === 'PAGADO'
+                                                    ? 'text-sky-600 dark:text-sky-400'
+                                                    : (($m['estado'] ?? '') === 'PENDIENTE'
+                                                        ? 'text-amber-600 dark:text-amber-300'
+                                                        : 'text-gray-900 dark:text-neutral-100')) }}">
                                             {{ $m['total'] }}
                                         </td>
 
                                         {{-- CAPITAL --}}
                                         <td
-                                            class="p-2 text-right tabular-nums align-middle
-                                            {{ !empty($m['capital_is_negative']) ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-neutral-100' }}">
+                                            class="p-2 text-center tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['capital'] }}
                                         </td>
 
                                         {{-- INTERES --}}
                                         <td
-                                            class="p-2 text-right tabular-nums align-middle
-                                            {{ !empty($m['interes_is_negative']) ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-neutral-100' }}">
+                                            class="p-2 text-center tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['interes'] }}
                                         </td>
 
                                         {{-- % INTERES --}}
                                         <td
-                                            class="p-2 text-right tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
+                                            class="p-2 text-center tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
                                             {{ $m['pct_interes'] }}
                                         </td>
 
                                         {{-- ESTADO --}}
-                                        <td class="p-2 align-middle text-[10px] font-bold">
-                                            @if (($m['estado'] ?? '') === 'PENDIENTE')
+                                        <td class="p-2 text-center align-middle text-[10px] font-bold">
+                                            @if (($m['tipo'] ?? '') === 'CAPITAL_INICIAL')
+                                                <span
+                                                    class="inline-flex items-center px-2 py-1 rounded
+                                                    bg-gray-100 text-gray-700
+                                                    dark:bg-neutral-800 dark:text-neutral-200">
+                                                    INICIAL
+                                                </span>
+                                            @elseif (($m['estado'] ?? '') === 'PENDIENTE')
                                                 <span
                                                     class="inline-flex items-center px-2 py-1 rounded
                                                     bg-amber-100 text-amber-700
@@ -619,11 +747,11 @@
                                             @endif
                                         </td>
 
-                                        {{-- ACCIONES --}}
+                                        {{-- ACCIONES (BANCO) --}}
                                         <td class="p-2 align-middle">
-                                            <div class="flex items-center justify-center gap-2">
+                                            <div class="flex items-center justify-end gap-2 w-full">
 
-                                                {{-- Ver imagen (al medio) --}}
+                                                {{-- Ver imagen --}}
                                                 @if (!empty($m['tiene_imagen']))
                                                     <button type="button"
                                                         wire:click="verFotoMovimiento({{ $m['id'] }})"
@@ -641,12 +769,9 @@
                                                             <path d="M21 15l-5-5L5 21" />
                                                         </svg>
                                                     </button>
-                                                @else
-                                                    <span
-                                                        class="w-8 h-8 inline-flex items-center justify-center text-xs text-gray-400 dark:text-neutral-500">—</span>
                                                 @endif
 
-                                                {{-- Confirmar arriba (abre modal con datos) --}}
+                                                {{-- Confirmar (se queda igual: abre modal editar/confirmar) --}}
                                                 @if (!empty($m['puede_confirmar_banco']))
                                                     <div class="flex items-center">
                                                         <button type="button"
@@ -664,18 +789,18 @@
                                                     </div>
                                                 @endif
 
-                                                {{-- Eliminar SIEMPRE abajo (solo último) --}}
-                                                @if ($puedeEliminarUltimo && $loop->last)
+                                                {{-- Eliminar por fila (excepto CAPITAL_INICIAL) --}}
+                                                @if (!empty($m['puede_eliminar_fila']))
                                                     <div x-data class="flex items-center">
                                                         <button type="button"
                                                             class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                                    border-red-300 text-red-700 hover:bg-red-100
-                                                                    dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
-                                                            title="Eliminar último registro"
+                                                                border-red-300 text-red-700 hover:bg-red-100
+                                                                dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
+                                                            title="Eliminar registro"
                                                             @click.prevent="
                                                                 Swal.fire({
-                                                                    title: '¿Eliminar el último registro?',
-                                                                    text: 'Si está PAGADO se revertirá el banco y el saldo de la inversión. Si está PENDIENTE solo se borrará.',
+                                                                    title: '¿Eliminar este registro?',
+                                                                    text: 'Si está PAGADO se revertirá el banco y el saldo. Si está PENDIENTE solo se borrará.',
                                                                     icon: 'warning',
                                                                     showCancelButton: true,
                                                                     confirmButtonText: 'Sí, eliminar',
@@ -683,12 +808,31 @@
                                                                     reverseButtons: true,
                                                                     confirmButtonColor: '#dc2626',
                                                                     cancelButtonColor: '#6b7280',
-                                                                }).then((r) => {
-                                                                    if (r.isConfirmed) {
-                                                                        $wire.eliminarUltimoPagoBanco();
-                                                                    }
-                                                                });
+                                                                }).then((r) => { if (r.isConfirmed) { $wire.eliminarMovimientoFila({{ (int) $m['id'] }}); } });
                                                             ">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M3 6h18" />
+                                                                <path d="M8 6V4h8v2" />
+                                                                <path d="M6 6l1 16h10l1-16" />
+                                                                <path d="M10 11v6" />
+                                                                <path d="M14 11v6" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                @endif
+
+                                                {{-- Eliminar TODO (Capital inicial) => Modal contraseña --}}
+                                                @if (!empty($m['es_capital_inicial']))
+                                                    <div class="flex items-center">
+                                                        <button type="button"
+                                                            class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
+                                                            border-red-400 text-red-800 hover:bg-red-100
+                                                            dark:border-red-700 dark:text-red-300 dark:hover:bg-red-500/20"
+                                                            title="Eliminar inversión completa"
+                                                            wire:click="abrirEliminarTodoModal">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
@@ -719,33 +863,142 @@
                             {{-- TOTALES --}}
                             <tfoot
                                 class="bg-gray-50 dark:bg-neutral-900 border-t border-gray-200 dark:border-neutral-700">
+                                {{-- PAGADOS --}}
                                 <tr class="align-middle">
-                                    <td colspan="5"
-                                        class="p-3 text-right text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-neutral-300 align-middle">
-                                        Totales
+                                    {{-- Etiqueta --}}
+                                    <td colspan="5" class="p-3">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <span
+                                                class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wide uppercase
+                                                bg-sky-100 text-sky-800 border border-sky-200
+                                                dark:bg-sky-900/25 dark:text-sky-200 dark:border-sky-800/40">
+                                                <span class="inline-flex w-2 h-2 rounded-full bg-sky-500"></span>
+                                                Pagos realizados
+                                            </span>
+                                        </div>
                                     </td>
 
-                                    <td
-                                        class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
-                                        {{ $totales['sumTotalFmt'] }}
+                                    {{-- Total --}}
+                                    <td class="p-3 text-center">
+                                        <div class="flex flex-col items-end leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Total</span>
+                                            <span class="font-semibold tabular-nums text-sky-900 dark:text-sky-200">
+                                                {{ $totales['pagado']['sumTotalFmt'] }}
+                                            </span>
+                                        </div>
                                     </td>
 
-                                    <td
-                                        class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
-                                        {{ $saldoDeudaFmt }}
+                                    {{-- Capital --}}
+                                    <td class="p-3 text-center">
+                                        <div class="flex flex-col items-end leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Capital</span>
+                                            <span
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $totales['pagado']['sumCapitalFmt'] }}
+                                            </span>
+                                        </div>
                                     </td>
 
-                                    <td
-                                        class="p-3 text-right font-semibold tabular-nums text-gray-900 dark:text-neutral-100 align-middle">
-                                        {{ $totales['sumInteresFmt'] }}
+                                    {{-- Interés --}}
+                                    <td class="p-3 text-center">
+                                        <div class="flex flex-col items-end leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Interés</span>
+                                            <span
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $totales['pagado']['sumInteresFmt'] }}
+                                            </span>
+                                        </div>
                                     </td>
 
-                                    {{-- % interés --}}
-                                    <td class="p-3 align-middle"></td>
-                                    {{-- estado --}}
-                                    <td class="p-3 align-middle"></td>
-                                    {{-- acciones --}}
-                                    <td class="p-3 align-middle"></td>
+                                    {{-- Último % --}}
+                                    <td class="p-3 text-center">
+                                        <div class="flex flex-col items-end leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Último
+                                                %</span>
+                                            <span
+                                                class="font-semibold tabular-nums
+                                                text-sky-900 dark:text-sky-200">
+                                                {{ $totales['pagado']['lastPctFmt'] }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Celdas extra (si tu tabla las tiene) --}}
+                                    <td class="p-3"></td>
+                                    <td class="p-3"></td>
+                                </tr>
+
+                                {{-- PENDIENTES --}}
+                                <tr class="align-middle border-t border-gray-200 dark:border-neutral-700">
+                                    {{-- Etiqueta --}}
+                                    <td colspan="5" class="p-3">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <span
+                                                class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wide uppercase
+                                                bg-amber-100 text-amber-800 border border-amber-200
+                                                dark:bg-amber-900/25 dark:text-amber-200 dark:border-amber-800/40">
+                                                <span class="inline-flex w-2 h-2 rounded-full bg-amber-500"></span>
+                                                Pagos pendientes
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Total --}}
+                                    <td class="p-3 text-right">
+                                        <div class="flex flex-col items-end leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Total</span>
+                                            <span
+                                                class="font-semibold tabular-nums text-amber-900 dark:text-amber-200">
+                                                {{ $totales['pendiente']['sumTotalFmt'] }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Capital --}}
+                                    <td class="p-3 text-right">
+                                        <div class="flex flex-col items-end leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Capital</span>
+                                            <span
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $totales['pendiente']['sumCapitalFmt'] }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Interés --}}
+                                    <td class="p-3 text-right">
+                                        <div class="flex flex-col items-end leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Interés</span>
+                                            <span
+                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                                {{ $totales['pendiente']['sumInteresFmt'] }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Último % --}}
+                                    <td class="p-3 text-right">
+                                        <div class="flex flex-col items-end leading-tight">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Último
+                                                %</span>
+                                            <span
+                                                class="font-semibold tabular-nums text-amber-900 dark:text-amber-200">
+                                                {{ $totales['pendiente']['lastPctFmt'] }}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Celdas extra (si tu tabla las tiene) --}}
+                                    <td class="p-3"></td>
+                                    <td class="p-3"></td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -772,18 +1025,61 @@
         <x-ui.foto-zoom-modal :open="$openFotoModal" :url="$fotoUrl" onClose="closeFoto" title="Comprobante adjunto"
             subtitle="Pasa el cursor para ampliar y mover" maxWidth="max-w-5xl" />
     </div>
-</div>
 
-{{-- SWEET ALERT --}}
-<script>
-    document.addEventListener('livewire:init', () => {
-        Livewire.on('swal', (payload) => {
-            const data = Array.isArray(payload) ? payload[0] : payload;
-            Swal.fire({
-                icon: data.icon ?? 'info',
-                title: data.title ?? '',
-                text: data.text ?? '',
+    {{-- MODAL: Eliminar inversión completa (requiere contraseña) --}}
+    <x-ui.modal wire:key="delete-all-{{ $openEliminarTodoModal ? 'open' : 'closed' }}" model="openEliminarTodoModal"
+        title="Eliminar inversión completa" maxWidth="sm:max-w-xl" onClose="closeEliminarTodoModal">
+
+        <div class="space-y-3">
+            <div
+                class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
+                Esta acción eliminará <b>TODO</b> el registro de la inversión y revertirá bancos/operaciones.
+                Es una acción irreversible.
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 dark:text-neutral-200 mb-1">
+                    Confirme con su contraseña
+                </label>
+
+                <flux:input wire:model.defer="deleteAllPassword" name="deleteAllPassword" type="password" required
+                    autocomplete="current-password" :placeholder="__('Ingresa tu contraseña')" viewable />
+                @error('deleteAllPassword')
+                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                @enderror
+            </div>
+        </div>
+
+        @slot('footer')
+            <div class="flex justify-end gap-2">
+                <button type="button" wire:click="closeEliminarTodoModal"
+                    class="px-4 py-2 rounded-lg border cursor-pointer
+                       border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200
+                       hover:bg-gray-100 dark:hover:bg-neutral-800">
+                    Cancelar
+                </button>
+
+                <button type="button" wire:click="confirmarEliminarTodo"
+                    class="px-4 py-2 rounded-lg cursor-pointer
+                       bg-red-600 text-white hover:bg-red-700">
+                    Eliminar todo
+                </button>
+            </div>
+        @endslot
+    </x-ui.modal>
+
+    {{-- SWEET ALERT --}}
+    <script>
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('swal', (payload) => {
+                const data = Array.isArray(payload) ? payload[0] : payload;
+                Swal.fire({
+                    icon: data.icon ?? 'info',
+                    title: data.title ?? '',
+                    text: data.text ?? '',
+                });
             });
         });
-    });
-</script>
+    </script>
+
+</div>

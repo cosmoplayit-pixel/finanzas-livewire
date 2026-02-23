@@ -165,32 +165,43 @@ class CreateModal extends Component
     {
         $value = (string) $value;
 
-        // Si aún no seleccionó tipo, no fuerces nada
         if ($value === '') {
             $this->resetErrorBag();
             $this->resetValidation();
             return;
         }
 
+        // Ambos tipos usarán cálculo automático de vencimiento (por plazo)
+        // y guardarán los campos del "plan" (plazo/día/tasa/sistema)
+
+        // Defaults comunes (si no estaban seteados)
+        $this->sistema = 'FRANCESA';
+
+        // Si vienes cambiando de tipo, asegúrate que existan valores (UX)
+        // (no obligo nada aquí, solo preparo)
+        $this->plazo_meses ??= 12;
+        $this->dia_pago ??= 1;
+        $this->tasa_anual ??= 0.0;
+
+        $this->plazo_meses_formatted = $this->plazo_meses ? (string) $this->plazo_meses : '';
+        $this->dia_pago_formatted = $this->dia_pago ? (string) $this->dia_pago : '';
+        $this->tasa_anual_formatted =
+            $this->tasa_anual !== null ? $this->fmtNumber((float) $this->tasa_anual, 2) : '';
+
+        // PRIVADO: permite % utilidad
+        if ($value === 'PRIVADO') {
+            // no resetees los campos banco, ahora también se usan en privado
+            // solo aseguro que % utilidad siga visible
+        }
+
+        // BANCO: % utilidad en 0
         if ($value === 'BANCO') {
             $this->porcentaje_utilidad = 0.0;
             $this->porcentaje_utilidad_formatted = $this->fmtNumber(0.0, 2);
-
-            $this->sistema = 'FRANCESA';
-
-            // Si ya hay plazo, calcula vencimiento
-            $this->recalcFechaVencimientoBanco();
-        } else {
-            // PRIVADO
-            $this->plazo_meses = null;
-            $this->dia_pago = null;
-            $this->tasa_anual = null;
-            $this->sistema = 'FRANCESA';
-
-            $this->plazo_meses_formatted = '';
-            $this->dia_pago_formatted = '';
-            $this->tasa_anual_formatted = '';
         }
+
+        // Recalcular vencimiento en ambos
+        $this->recalcFechaVencimientoPorPlazo();
 
         $this->resetErrorBag();
         $this->resetValidation();
@@ -199,9 +210,8 @@ class CreateModal extends Component
     // Si cambia fecha_inicio y es BANCO con plazo, recalcula fecha_vencimiento
     public function updatedFechaInicio($value): void
     {
-        if ((string) $this->tipo === 'BANCO') {
-            $this->recalcFechaVencimientoBanco();
-        }
+        // Ambos tipos recalculan vencimiento si hay plazo
+        $this->recalcFechaVencimientoPorPlazo();
     }
 
     public function updatedBancoId($value): void
@@ -256,14 +266,13 @@ class CreateModal extends Component
             $this->tasa_anual !== null ? $this->fmtNumber((float) $this->tasa_anual, 2) : '';
     }
 
-    // ✅ Al escribir plazo meses, recalcula vencimiento (BANCO)
     public function formatPlazo(): void
     {
         $v = (int) $this->parseNumber($this->plazo_meses_formatted);
         $this->plazo_meses = $v > 0 ? $v : null;
         $this->plazo_meses_formatted = $this->plazo_meses ? (string) $this->plazo_meses : '';
 
-        $this->recalcFechaVencimientoBanco(); // clave
+        $this->recalcFechaVencimientoPorPlazo();
     }
 
     public function formatDiaPago(): void
@@ -273,30 +282,32 @@ class CreateModal extends Component
         $this->dia_pago_formatted = $this->dia_pago ? (string) $this->dia_pago : '';
     }
 
-    // ✅ Calcula fecha_vencimiento = fecha_inicio + plazo_meses (editable, se recalcula solo cuando cambie plazo/fecha_inicio)
-    private function recalcFechaVencimientoBanco(): void
+    private function recalcFechaVencimientoPorPlazo(): void
     {
-        if ((string) $this->tipo !== 'BANCO') {
+        // Solo si ya eligió tipo
+        if (trim((string) $this->tipo) === '') {
             return;
         }
 
         $plazo = (int) ($this->plazo_meses ?? 0);
         if ($plazo <= 0) {
+            $this->fecha_vencimiento = null;
             return;
         }
 
         $ini = trim((string) $this->fecha_inicio);
         if ($ini === '') {
+            $this->fecha_vencimiento = null;
             return;
         }
 
         try {
             $start = Carbon::createFromFormat('Y-m-d', $ini)->startOfDay();
-        } catch (\Throwable $e) {
+        } catch (\Throwable) {
+            $this->fecha_vencimiento = null;
             return;
         }
 
-        // fecha_inicio 01/01 + 2 meses => 01/03
         $this->fecha_vencimiento = $start->copy()->addMonthsNoOverflow($plazo)->toDateString();
     }
 
@@ -366,18 +377,17 @@ class CreateModal extends Component
     {
         $this->formatCapital();
         $this->syncMonedaByBanco();
+        $this->formatTasaAnual();
+        $this->formatPlazo();
+        $this->formatDiaPago();
+        $this->sistema = 'FRANCESA';
+        $this->recalcFechaVencimientoPorPlazo();
 
         if ($this->tipo === 'PRIVADO') {
             $this->formatPorcentaje();
         } else {
-            $this->formatTasaAnual();
-            $this->formatPlazo();
-            $this->formatDiaPago();
-
             $this->porcentaje_utilidad = 0.0;
             $this->porcentaje_utilidad_formatted = $this->fmtNumber(0.0, 2);
-
-            $this->sistema = 'FRANCESA';
         }
 
         $this->validate();
@@ -394,6 +404,7 @@ class CreateModal extends Component
                 'nombre_completo' => trim($this->nombre_completo),
                 'fecha_inicio' => $this->fecha_inicio,
                 'fecha_vencimiento' => $this->fecha_vencimiento,
+
                 'capital' => (float) $this->capital,
                 'porcentaje_utilidad' => (float) $this->porcentaje_utilidad,
 
@@ -403,13 +414,10 @@ class CreateModal extends Component
                 'comprobante' => $path,
                 'responsable_id' => auth()->id(),
 
-                // SOLO BANCO
-                'tasa_anual' => $this->tipo === 'BANCO' ? (float) $this->tasa_anual : null,
-                'plazo_meses' => $this->tipo === 'BANCO' ? (int) $this->plazo_meses : null,
-                'dia_pago' => $this->tipo === 'BANCO' ? (int) $this->dia_pago : null,
-
-                // fijo
-                'sistema' => $this->tipo === 'BANCO' ? 'FRANCESA' : null,
+                'tasa_anual' => (float) $this->tasa_anual,
+                'plazo_meses' => (int) $this->plazo_meses,
+                'dia_pago' => (int) $this->dia_pago,
+                'sistema' => 'FRANCESA',
             ]);
 
             session()->flash('success', 'Inversión creada correctamente.');

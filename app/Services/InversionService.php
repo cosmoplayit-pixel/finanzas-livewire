@@ -8,6 +8,7 @@ use App\Models\InversionMovimiento;
 use DomainException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class InversionService
 {
@@ -487,7 +488,7 @@ class InversionService
 
     /**
      * BANCO: registra BANCO_PAGO como PENDIENTE (no debita banco ni baja saldo hasta confirmar).
-     * También guarda porcentaje_utilidad = tasa_mensual (tasa_anual / 12) para mostrar % como privado.
+     * Guarda porcentaje_utilidad = % REAL (interes/capital).
      */
     public function registrarPagoBanco(Inversion $inv, array $data): void
     {
@@ -539,7 +540,7 @@ class InversionService
                 );
             }
 
-            // ✅ % interés REAL (igual que privado): interes / capital
+            // % interés REAL: interes / capital
             $pctInteres = 0.0;
             if ($cap > 0 && $int > 0) {
                 $pctInteres = round(($int / $cap) * 100, 2);
@@ -593,7 +594,6 @@ class InversionService
 
                 'monto_utilidad' => null,
 
-                // ✅ aquí queda el % REAL (no tasa fija)
                 'porcentaje_utilidad' => $pctInteres,
 
                 'utilidad_fecha_inicio' => null,
@@ -1071,6 +1071,397 @@ class InversionService
                     'El estado del último pago de utilidad no es válido para eliminar.',
                 );
             }
+        });
+    }
+
+    /**
+     * ✅ ELIMINAR INVERSIÓN COMPLETA (requiere contraseña)
+     * Revierte impactos en bancos (según movimientos PAGADOS) y elimina movimientos + inversión.
+     *
+     * IMPORTANTE:
+     * - PENDIENTE no afectó banco => no revierte.
+     * - CAPITAL_INICIAL si tuvo banco_id => en crear() se SUMÓ al banco => aquí se RESTA.
+     */
+    public function eliminarInversionCompleta(Inversion $inv, string $password): void
+    {
+        DB::transaction(function () use ($inv, $password) {
+            $user = auth()->user();
+
+            if (!$user || !Hash::check($password, (string) $user->password)) {
+                throw new DomainException('Contraseña incorrecta.');
+            }
+
+            /** @var Inversion $invLocked */
+            $invLocked = Inversion::query()->lockForUpdate()->findOrFail($inv->id);
+
+            // Cargar movimientos (incluye banco), ordenados
+            $rows = InversionMovimiento::query()
+                ->where('inversion_id', $invLocked->id)
+                ->orderBy('fecha')
+                ->orderBy('nro')
+                ->lockForUpdate()
+                ->get();
+
+            // Revertir bancos por movimientos que realmente impactaron banco
+            foreach ($rows as $m) {
+                $tipo = strtoupper((string) ($m->tipo ?? ''));
+                $estado = strtoupper((string) ($m->estado ?? ''));
+
+                // PENDIENTE no revierte
+                if ($estado === 'PENDIENTE') {
+                    continue;
+                }
+
+                // Movimientos que no usan banco
+                if (empty($m->banco_id)) {
+                    continue;
+                }
+
+                /** @var Banco $banco */
+                $banco = Banco::query()->lockForUpdate()->findOrFail((int) $m->banco_id);
+
+                $monInv = strtoupper((string) ($invLocked->moneda ?? 'BOB'));
+                $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
+                $tc = (float) ($m->tipo_cambio ?? 0);
+
+                // helper para convertir “monto base” a “moneda banco”
+                $toBank = function (float $montoBase) use ($monInv, $monBank, $tc): float {
+                    $out = $montoBase;
+
+                    if ($monInv !== $monBank) {
+                        if ($tc <= 0) {
+                            throw new DomainException('Tipo de cambio inválido para revertir.');
+                        }
+
+                        // En confirmaciones: si invMon=BOB & bankMon=USD => debito = base/TC
+                        // si invMon=USD & bankMon=BOB => debito = base*TC
+                        if ($monInv === 'BOB' && $monBank === 'USD') {
+                            $out = $montoBase / $tc;
+                        } elseif ($monInv === 'USD' && $monBank === 'BOB') {
+                            $out = $montoBase * $tc;
+                        } else {
+                            throw new DomainException('Conversión no soportada para revertir.');
+                        }
+
+                        $out = round($out, 2);
+                    }
+
+                    return $out;
+                };
+
+                // ===== Reversiones =====
+
+                if ($tipo === 'CAPITAL_INICIAL') {
+                    // En crear(): si tuvo banco, se SUMÓ monto_total al banco
+                    $monto = (float) ($m->monto_total ?? 0);
+                    if ($monto > 0) {
+                        $banco->monto = (float) ($banco->monto ?? 0) - $monto;
+                        $banco->save();
+                    }
+                    continue;
+                }
+
+                if ($tipo === 'INGRESO_CAPITAL') {
+                    // En registrarMovimiento(): banco SUMA monto_total
+                    $monto = (float) ($m->monto_total ?? 0);
+                    if ($monto > 0) {
+                        $banco->monto = (float) ($banco->monto ?? 0) - $monto;
+                        $banco->save();
+                    }
+                    continue;
+                }
+
+                if ($tipo === 'DEVOLUCION_CAPITAL') {
+                    // En registrarMovimiento(): banco RESTA monto_total
+                    $monto = (float) ($m->monto_total ?? 0);
+                    if ($monto > 0) {
+                        $banco->monto = (float) ($banco->monto ?? 0) + $monto;
+                        $banco->save();
+                    }
+                    continue;
+                }
+
+                if ($tipo === 'PAGO_UTILIDAD') {
+                    // En confirmarPagoUtilidad(): banco DEBITA monto_utilidad (convertido si aplica)
+                    $montoBase = (float) ($m->monto_utilidad ?? 0);
+                    if ($montoBase > 0) {
+                        $reembolso = $toBank($montoBase);
+                        $banco->monto = (float) ($banco->monto ?? 0) + $reembolso;
+                        $banco->save();
+                    }
+                    continue;
+                }
+
+                if ($tipo === 'BANCO_PAGO') {
+                    // En confirmarPagoBanco(): banco DEBITA monto_total (convertido si aplica)
+                    $montoBase = (float) ($m->monto_total ?? 0);
+                    if ($montoBase > 0) {
+                        $reembolso = $toBank($montoBase);
+                        $banco->monto = (float) ($banco->monto ?? 0) + $reembolso;
+                        $banco->save();
+                    }
+                    continue;
+                }
+            }
+
+            // Eliminar movimientos + inversión
+            InversionMovimiento::query()->where('inversion_id', $invLocked->id)->delete();
+            $invLocked->delete();
+        });
+    }
+
+    /**
+     * ✅ Eliminar UNA FILA (movimiento) por ID (Banco y Privado)
+     * - NO permite borrar CAPITAL_INICIAL aquí (eso es "eliminar inversión completa" con contraseña).
+     * - Revierte impactos (banco + capital_actual) SOLO si el movimiento estaba PAGADO (o si fue de impacto inmediato).
+     */
+    public function eliminarMovimientoFila(Inversion $inv, int $movId): void
+    {
+        DB::transaction(function () use ($inv, $movId) {
+            /** @var Inversion $invLocked */
+            $invLocked = Inversion::query()->lockForUpdate()->findOrFail($inv->id);
+
+            /** @var InversionMovimiento $mov */
+            $mov = InversionMovimiento::query()
+                ->where('inversion_id', $invLocked->id)
+                ->lockForUpdate()
+                ->findOrFail($movId);
+
+            $tipoInv = strtoupper((string) ($invLocked->tipo ?? 'PRIVADO'));
+            $tipo = strtoupper((string) ($mov->tipo ?? ''));
+            $estado = strtoupper((string) ($mov->estado ?? ''));
+
+            // No permitir borrar capital inicial por fila (solo por "eliminar inversión completa" con contraseña)
+            if ($tipo === 'CAPITAL_INICIAL') {
+                throw new DomainException(
+                    'No se puede eliminar CAPITAL INICIAL desde una fila. Use "Eliminar inversión completa" (con contraseña).',
+                );
+            }
+
+            // Helper: actualizar hasta_fecha al "último" movimiento restante (por fecha/nro)
+            $updateHastaFecha = function () use ($invLocked) {
+                $last = InversionMovimiento::query()
+                    ->where('inversion_id', $invLocked->id)
+                    ->orderByDesc('fecha')
+                    ->orderByDesc('nro')
+                    ->orderByDesc('id')
+                    ->first(['fecha']);
+
+                $invLocked->hasta_fecha = $last?->fecha
+                    ? (string) $last->fecha
+                    : (string) $invLocked->fecha_inicio;
+
+                $invLocked->save();
+            };
+
+            // =========================
+            // BANCO
+            // =========================
+            if ($tipoInv === 'BANCO') {
+                if ($tipo !== 'BANCO_PAGO') {
+                    throw new DomainException(
+                        'En inversiones BANCO solo se puede eliminar filas de tipo BANCO_PAGO.',
+                    );
+                }
+
+                // PENDIENTE: no impactó nada, solo borrar
+                if ($estado === 'PENDIENTE' || $estado === '') {
+                    $mov->delete();
+                    $updateHastaFecha();
+                    return;
+                }
+
+                // PAGADO: revertir banco + revertir saldo inversión (devolver capital)
+                if ($estado === 'PAGADO') {
+                    if (empty($mov->banco_id)) {
+                        throw new DomainException('El movimiento no tiene banco asignado.');
+                    }
+
+                    /** @var Banco $banco */
+                    $banco = Banco::query()->lockForUpdate()->findOrFail((int) $mov->banco_id);
+
+                    $monInv = strtoupper((string) ($invLocked->moneda ?? 'BOB'));
+                    $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
+                    $tc = (float) ($mov->tipo_cambio ?? 0);
+
+                    $totalBase = (float) ($mov->monto_total ?? 0); // base moneda inversión
+                    $capBase = (float) ($mov->monto_capital ?? 0); // base moneda inversión
+
+                    if ($totalBase <= 0) {
+                        throw new DomainException('Monto total inválido en el movimiento.');
+                    }
+
+                    // convertir el monto base a moneda banco (igual que confirmarPagoBanco pero inverso)
+                    $reembolsoBanco = $totalBase;
+
+                    if ($monInv !== $monBank) {
+                        if ($tc <= 0) {
+                            throw new DomainException('Tipo de cambio inválido en el movimiento.');
+                        }
+
+                        if ($monInv === 'BOB' && $monBank === 'USD') {
+                            $reembolsoBanco = $totalBase / $tc;
+                        } elseif ($monInv === 'USD' && $monBank === 'BOB') {
+                            $reembolsoBanco = $totalBase * $tc;
+                        } else {
+                            throw new DomainException(
+                                'Conversión no soportada para este par de monedas.',
+                            );
+                        }
+
+                        $reembolsoBanco = round((float) $reembolsoBanco, 2);
+                    }
+
+                    // reembolsar banco
+                    $banco->monto = (float) ($banco->monto ?? 0) + (float) $reembolsoBanco;
+                    $banco->save();
+
+                    // devolver capital a la deuda (capital_actual)
+                    $invLocked->capital_actual = round(
+                        (float) ($invLocked->capital_actual ?? 0) + (float) $capBase,
+                        2,
+                    );
+                    if ((float) $invLocked->capital_actual > 0.01) {
+                        $invLocked->estado = 'ACTIVA';
+                    }
+
+                    $mov->delete();
+                    $updateHastaFecha();
+                    return;
+                }
+
+                throw new DomainException('Estado inválido para eliminar este movimiento.');
+            }
+
+            // =========================
+            // PRIVADO
+            // =========================
+            $tiposOk = ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL', 'PAGO_UTILIDAD'];
+            if (!in_array($tipo, $tiposOk, true)) {
+                throw new DomainException(
+                    'Tipo de movimiento no permitido para eliminar por fila.',
+                );
+            }
+
+            // PAGO_UTILIDAD PENDIENTE: solo borrar
+            if ($tipo === 'PAGO_UTILIDAD' && ($estado === 'PENDIENTE' || $estado === '')) {
+                $mov->delete();
+                $updateHastaFecha();
+                return;
+            }
+
+            // Para movimientos que impactaron inmediatamente (INGRESO/DEVOLUCION) o utilidad PAGADA:
+            if (empty($mov->banco_id)) {
+                throw new DomainException('El movimiento no tiene banco asignado.');
+            }
+
+            /** @var Banco $banco */
+            $banco = Banco::query()->lockForUpdate()->findOrFail((int) $mov->banco_id);
+
+            $monInv = strtoupper((string) ($invLocked->moneda ?? 'BOB'));
+            $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
+            $tc = (float) ($mov->tipo_cambio ?? 0);
+
+            // ---- INGRESO_CAPITAL (impacto inmediato): banco +, capital_actual +
+            if ($tipo === 'INGRESO_CAPITAL') {
+                $montoBanco = (float) ($mov->monto_total ?? 0); // moneda banco
+                $baseAbs = abs((float) ($mov->monto_capital ?? 0)); // base moneda inversión
+
+                if ($montoBanco <= 0 || $baseAbs <= 0) {
+                    throw new DomainException('Monto inválido en el movimiento.');
+                }
+
+                // revertir banco (resta)
+                if ((float) $banco->monto < (float) $montoBanco) {
+                    throw new DomainException('No se puede revertir: saldo insuficiente en banco.');
+                }
+                $banco->monto = (float) ($banco->monto ?? 0) - (float) $montoBanco;
+                $banco->save();
+
+                // revertir capital (resta)
+                $nuevo = (float) ($invLocked->capital_actual ?? 0) - (float) $baseAbs;
+                if ($nuevo <= 0.01) {
+                    $nuevo = 0.0;
+                    $invLocked->estado = 'CERRADA';
+                } else {
+                    $invLocked->estado = 'ACTIVA';
+                }
+                $invLocked->capital_actual = round(max(0.0, $nuevo), 2);
+
+                $mov->delete();
+                $updateHastaFecha();
+                return;
+            }
+
+            // ---- DEVOLUCION_CAPITAL (impacto inmediato): banco -, capital_actual -
+            if ($tipo === 'DEVOLUCION_CAPITAL') {
+                $montoBanco = (float) ($mov->monto_total ?? 0); // moneda banco
+                $baseAbs = abs((float) ($mov->monto_capital ?? 0)); // base moneda inversión
+
+                if ($montoBanco <= 0 || $baseAbs <= 0) {
+                    throw new DomainException('Monto inválido en el movimiento.');
+                }
+
+                // revertir banco (suma)
+                $banco->monto = (float) ($banco->monto ?? 0) + (float) $montoBanco;
+                $banco->save();
+
+                // revertir capital (suma)
+                $invLocked->capital_actual = round(
+                    (float) ($invLocked->capital_actual ?? 0) + (float) $baseAbs,
+                    2,
+                );
+                if ((float) $invLocked->capital_actual > 0.01) {
+                    $invLocked->estado = 'ACTIVA';
+                }
+
+                $mov->delete();
+                $updateHastaFecha();
+                return;
+            }
+
+            // ---- PAGO_UTILIDAD PAGADO: reembolsa banco
+            if ($tipo === 'PAGO_UTILIDAD') {
+                if ($estado !== 'PAGADO') {
+                    throw new DomainException(
+                        'Solo se puede eliminar utilidad si está PENDIENTE o PAGADO.',
+                    );
+                }
+
+                $montoBase = (float) ($mov->monto_utilidad ?? 0); // base moneda inversión
+                if ($montoBase <= 0) {
+                    throw new DomainException('Monto de utilidad inválido.');
+                }
+
+                $reembolsoBanco = $montoBase;
+
+                if ($monInv !== $monBank) {
+                    if ($tc <= 0) {
+                        throw new DomainException('Tipo de cambio inválido en el movimiento.');
+                    }
+
+                    if ($monInv === 'BOB' && $monBank === 'USD') {
+                        $reembolsoBanco = $montoBase / $tc;
+                    } elseif ($monInv === 'USD' && $monBank === 'BOB') {
+                        $reembolsoBanco = $montoBase * $tc;
+                    } else {
+                        throw new DomainException(
+                            'Conversión no soportada para este par de monedas.',
+                        );
+                    }
+
+                    $reembolsoBanco = round((float) $reembolsoBanco, 2);
+                }
+
+                $banco->monto = (float) ($banco->monto ?? 0) + (float) $reembolsoBanco;
+                $banco->save();
+
+                $mov->delete();
+                $updateHastaFecha();
+                return;
+            }
+
+            throw new DomainException('No se pudo eliminar el movimiento.');
         });
     }
 }

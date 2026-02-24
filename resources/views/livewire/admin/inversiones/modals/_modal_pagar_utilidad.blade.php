@@ -122,9 +122,11 @@
                                 <label class="block text-sm mb-1">
                                     Fecha inicio (auto) <span class="text-red-500">*</span>
                                 </label>
-                                <input type="date" value="{{ $utilidad_fecha_inicio }}" disabled
+                                <input type="date"
+                                    wire:key="utilidad-fecha-inicio-{{ $inversion?->id ?? 0 }}-{{ $tipo_pago }}"
+                                    value="{{ $utilidad_fecha_inicio }}" disabled
                                     class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
+                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
                             </div>
 
                             <div class="md:col-span-1">

@@ -18,50 +18,55 @@ class PagarUtilidadModal extends Component
 {
     use WithFileUploads;
 
+    // Flags de UI
+    public bool $open = false;
     public bool $fechaPagoTouched = false;
 
-    public bool $open = false;
+    // Inversión actual
     public ?Inversion $inversion = null;
 
+    // Form
     public string $tipo_pago = 'PAGO_UTILIDAD';
-
     public array $bancos = [];
 
-    public string $fecha = '';
-    public ?string $fecha_pago = null;
+    // Fechas
+    public string $fecha = ''; // fecha final (cierre del periodo para utilidad) o contable para ingreso/devolución
+    public ?string $fecha_pago = null; // fecha del pago real
 
+    // Banco y comprobante
     public ?int $banco_id = null;
     public ?string $nro_comprobante = null;
-
     public ?string $mov_moneda = null;
 
+    // Capital / TC
     public ?string $monto_capital_formatted = null;
-    public ?string $tipo_cambio_formatted = null;
-
     public ?float $monto_capital = null;
+
+    public ?string $tipo_cambio_formatted = null;
     public ?float $tipo_cambio = null;
 
     public bool $needs_tc = false;
     public ?string $monto_base_preview = null;
 
+    // Utilidad
     public string $utilidad_fecha_inicio = '';
     public int $utilidad_dias = 0;
 
     public float $utilidad_pct_mensual = 0.0;
     public float $utilidad_monto_mes = 0.0;
-    public float $utilidad_pct_calc = 0.0;
+    public ?string $utilidad_monto_mes_formatted = null;
 
+    public float $utilidad_pct_calc = 0.0;
     public float $utilidad_a_pagar = 0.0;
     public ?string $utilidad_a_pagar_formatted = null;
 
-    public ?string $utilidad_monto_mes_formatted = null;
-
-    public ?string $utilidad_debito_banco_formatted = null;
     public float $utilidad_debito_banco = 0.0;
+    public ?string $utilidad_debito_banco_formatted = null;
 
+    // Comprobante
     public $comprobante_imagen = null;
 
-    // Impacto financiero
+    // Impacto financiero (preview)
     public float $preview_banco_actual = 0.0;
     public float $preview_banco_despues = 0.0;
     public float $preview_capital_actual = 0.0;
@@ -76,8 +81,10 @@ class PagarUtilidadModal extends Component
     public string $impacto_texto = 'Seleccione un banco.';
     public ?string $impacto_detalle = null;
 
+    // Referencia para ingreso/devolución
     public string $fecha_inicio_ref = '';
 
+    // mount: inicializa valores base
     public function mount(): void
     {
         $this->fecha = now()->toDateString();
@@ -86,22 +93,17 @@ class PagarUtilidadModal extends Component
         $this->recalcImpacto();
     }
 
-    /**
-     * ✅ Bloquear Guardar si no está válido el formulario
-     * En Blade lo usarás como: $this->canSave
-     */
+    // canSave: habilita Guardar solo cuando el formulario y el impacto estén OK
     public function getCanSaveProperty(): bool
     {
         if (!$this->open || !$this->inversion) {
             return false;
         }
 
-        // ✅ si el impacto dice que está mal (capital/saldo insuficiente), NO dejar guardar
         if (!$this->impacto_ok) {
             return false;
         }
 
-        // (opcional) exige banco seleccionado
         if (empty($this->banco_id)) {
             return false;
         }
@@ -110,6 +112,7 @@ class PagarUtilidadModal extends Component
         return $validator->passes();
     }
 
+    // dataForValidation: payload consistente para validator manual y validate()
     protected function dataForValidation(): array
     {
         return [
@@ -129,15 +132,7 @@ class PagarUtilidadModal extends Component
         ];
     }
 
-    public function updatedUtilidadMontoMesFormatted($value): void
-    {
-        $m = $this->toFloatDecimal((string) $value);
-        $this->utilidad_monto_mes = $m > 0 ? $m : 0.0;
-        $this->utilidad_monto_mes_formatted = $m > 0 ? number_format($m, 2, ',', '.') : null;
-        $this->recalcUtilidadPago();
-        $this->recalcImpacto();
-    }
-
+    // open: carga inversión, resetea estado del modal y aplica defaults según tipo
     #[On('openPagarUtilidad')]
     public function open(int $inversionId, string $tipo_pago = 'PAGO_UTILIDAD'): void
     {
@@ -148,6 +143,10 @@ class PagarUtilidadModal extends Component
             ->where('empresa_id', auth()->user()->empresa_id)
             ->with('banco')
             ->findOrFail($inversionId);
+
+        // Importante: limpiar "touched" para que no se arrastre fecha_pago anterior
+        $this->fechaPagoTouched = false;
+        $this->fecha_pago = null;
 
         $empresaId = auth()->user()->empresa_id;
         $this->bancos = Banco::query()
@@ -174,6 +173,7 @@ class PagarUtilidadModal extends Component
             ? $tipo_pago
             : 'PAGO_UTILIDAD';
 
+        // Reset de campos del formulario
         $this->banco_id = null;
         $this->mov_moneda = null;
         $this->nro_comprobante = null;
@@ -192,12 +192,14 @@ class PagarUtilidadModal extends Component
         $this->utilidad_monto_mes = 0.0;
         $this->utilidad_monto_mes_formatted = null;
 
+        // Aplica sugerencias de fechas (utilidad sin huecos)
         $this->applyDefaultsByTipo($this->tipo_pago);
 
         $this->open = true;
         $this->recalcImpacto();
     }
 
+    // close: cierra modal y limpia estado
     public function close(): void
     {
         $this->open = false;
@@ -214,8 +216,8 @@ class PagarUtilidadModal extends Component
             'mov_moneda',
             'nro_comprobante',
             'monto_capital_formatted',
-            'tipo_cambio_formatted',
             'monto_capital',
+            'tipo_cambio_formatted',
             'tipo_cambio',
             'needs_tc',
             'monto_base_preview',
@@ -230,7 +232,6 @@ class PagarUtilidadModal extends Component
             'utilidad_debito_banco_formatted',
             'utilidad_debito_banco',
             'comprobante_imagen',
-
             'preview_banco_actual',
             'preview_banco_despues',
             'preview_capital_actual',
@@ -247,9 +248,13 @@ class PagarUtilidadModal extends Component
         ]);
     }
 
+    // updatedTipoPago: al cambiar tipo resetea campos y recalcula defaults
     public function updatedTipoPago(): void
     {
-        // reset comunes
+        // Importante: al cambiar tipo, no arrastrar fecha_pago anterior
+        $this->fechaPagoTouched = false;
+        $this->fecha_pago = null;
+
         $this->monto_capital = null;
         $this->monto_capital_formatted = null;
 
@@ -283,6 +288,7 @@ class PagarUtilidadModal extends Component
         $this->resetValidation();
     }
 
+    // updatedBancoId: carga moneda del banco seleccionado y recalcula previews
     public function updatedBancoId($value): void
     {
         $id = (int) $value;
@@ -293,7 +299,7 @@ class PagarUtilidadModal extends Component
         $this->tipo_cambio_formatted = null;
         $this->monto_base_preview = null;
 
-        $this->recalcUtilidadDebitoBanco(); // ✅ importante
+        $this->recalcUtilidadDebitoBanco();
         $this->recalcTcPreview();
         $this->recalcImpacto();
 
@@ -301,6 +307,7 @@ class PagarUtilidadModal extends Component
         $this->resetValidation();
     }
 
+    // updatedMontoCapitalFormatted: parsea string a float y recalcula previews
     public function updatedMontoCapitalFormatted($value): void
     {
         $n = $this->toFloatDecimal((string) $value);
@@ -311,14 +318,26 @@ class PagarUtilidadModal extends Component
         $this->recalcImpacto();
     }
 
+    // updatedTipoCambioFormatted: parsea TC y recalcula conversiones y previews
     public function updatedTipoCambioFormatted($value): void
     {
         $n = $this->toFloatDecimal((string) $value);
         $this->tipo_cambio = $n > 0 ? $n : null;
         $this->tipo_cambio_formatted = $n > 0 ? number_format($n, 2, ',', '.') : null;
 
-        $this->recalcUtilidadDebitoBanco(); // ✅ importante
+        $this->recalcUtilidadDebitoBanco();
         $this->recalcTcPreview();
+        $this->recalcImpacto();
+    }
+
+    // updatedUtilidadMontoMesFormatted: parsea monto mes, recalcula utilidad y previews
+    public function updatedUtilidadMontoMesFormatted($value): void
+    {
+        $m = $this->toFloatDecimal((string) $value);
+        $this->utilidad_monto_mes = $m > 0 ? $m : 0.0;
+        $this->utilidad_monto_mes_formatted = $m > 0 ? number_format($m, 2, ',', '.') : null;
+
+        $this->recalcUtilidadPago();
         $this->recalcImpacto();
     }
 
@@ -327,7 +346,10 @@ class PagarUtilidadModal extends Component
         if ($this->tipo_pago === 'PAGO_UTILIDAD') {
             $this->recalcUtilidadPago();
 
-            // ✅ si el usuario NO tocó fecha_pago, puedes mantener el default = fecha final
+            // Limpia error anterior y revalida solo fecha para mostrar feedback inmediato
+            $this->resetErrorBag('fecha');
+            $this->validateOnly('fecha');
+
             if (!$this->fechaPagoTouched) {
                 $this->fecha_pago = $this->fecha;
             }
@@ -336,54 +358,48 @@ class PagarUtilidadModal extends Component
         $this->recalcImpacto();
     }
 
-    /**
-     * ✅ AQUÍ está el cambio principal:
-     * En PAGO_UTILIDAD, la fecha final ($this->fecha) se autocompleta como:
-     * utilidad_fecha_inicio + 1 mes (no overflow).
-     */
+    // updatedFechaPago: marca touched y recalcula impacto
+    public function updatedFechaPago($value): void
+    {
+        $this->fechaPagoTouched = true;
+
+        $v = trim((string) $value);
+        $this->fecha_pago = $v !== '' ? $v : null;
+
+        $this->recalcImpacto();
+    }
+
+    // applyDefaultsByTipo: setea fechas sugeridas por tipo (utilidad busca huecos).
     protected function applyDefaultsByTipo(string $tipo): void
     {
         $tipo = strtoupper(trim($tipo));
 
-        // ✅ referencia (últ. movimiento) siempre se recalcula cuando cambias tipo
-        // (aquí ya tienes $this->inversion cargada porque se llama desde open())
         $this->fecha_inicio_ref = $this->fechaInicioAuto();
 
-        // si el usuario NO tocó fecha_pago, podemos sugerirla
         $touched = $this->fechaPagoTouched === true;
 
         if ($tipo === 'INGRESO_CAPITAL') {
-            // ✅ fecha contable fija (referencia)
             $this->fecha = $this->fecha_inicio_ref;
-
-            // ✅ sugerencia para fecha_pago (editable)
             if (!$touched) {
-                $this->fecha_pago = $this->fecha_inicio_ref;
+                $this->fecha_pago = now()->toDateString();
             }
-
             return;
         }
 
         if ($tipo === 'DEVOLUCION_CAPITAL') {
             $this->fecha = $this->fecha_inicio_ref;
-
             if (!$touched) {
-                $this->fecha_pago = $this->fecha_inicio_ref;
+                $this->fecha_pago = now()->toDateString();
             }
-
             return;
         }
 
-        // ===== PAGO_UTILIDAD =====
-        // inicio de utilidad = referencia
-        $this->utilidad_fecha_inicio = $this->fecha_inicio_ref;
+        // Utilidad: usar el primer hueco real entre periodos.
+        $p = $this->nextPeriodoUtilidadNoHuecos();
 
-        // fecha final = inicio + 1 mes
-        $this->fecha = Carbon::parse($this->utilidad_fecha_inicio)
-            ->addMonthNoOverflow()
-            ->toDateString();
+        $this->utilidad_fecha_inicio = $p['inicio'];
+        $this->fecha = $p['final'];
 
-        // default fecha_pago = fecha final (solo si no tocó)
         if (!$touched) {
             $this->fecha_pago = $this->fecha;
         }
@@ -391,32 +407,127 @@ class PagarUtilidadModal extends Component
         $this->recalcUtilidadPago();
     }
 
-    public function updatedFechaPago($value): void
+    // nextPeriodoUtilidadNoHuecos: sugerencia de utilidad buscando el primer hueco real entre periodos.
+    protected function nextPeriodoUtilidadNoHuecos(): array
     {
-        // ✅ el usuario ya tocó la fecha pago
-        $this->fechaPagoTouched = true;
+        // return ['inicio' => 'Y-m-d', 'final' => 'Y-m-d']
 
-        // normaliza null/empty
-        $v = trim((string) $value);
-        $this->fecha_pago = $v !== '' ? $v : null;
+        if (!$this->inversion) {
+            $ini = now()->toDateString();
+            return [
+                'inicio' => $ini,
+                'final' => Carbon::parse($ini)->addMonthNoOverflow()->toDateString(),
+            ];
+        }
 
-        // ✅ NO tocar $this->fecha aquí
-        // solo recalcular impacto por si tu lógica lo usa
-        $this->recalcImpacto();
+        // Periodos existentes ordenados por inicio.
+        $rows = InversionMovimiento::query()
+            ->where('inversion_id', $this->inversion->id)
+            ->where('tipo', 'PAGO_UTILIDAD')
+            ->whereNotNull('utilidad_fecha_inicio')
+            ->whereNotNull('fecha')
+            ->orderBy('utilidad_fecha_inicio')
+            ->get(['utilidad_fecha_inicio', 'fecha']);
+
+        // Si no hay utilidad todavía, base = hasta_fecha o fecha_inicio.
+        if ($rows->isEmpty()) {
+            $base =
+                $this->inversion->hasta_fecha ?:
+                ($this->inversion->fecha_inicio ?:
+                now()->toDateString());
+
+            $ini = Carbon::parse($base)->toDateString();
+            return [
+                'inicio' => $ini,
+                'final' => Carbon::parse($ini)->addMonthNoOverflow()->toDateString(),
+            ];
+        }
+
+        // Normaliza a Carbon.
+        $periodos = $rows
+            ->map(function ($r) {
+                return [
+                    'inicio' => Carbon::parse($r->utilidad_fecha_inicio)->startOfDay(),
+                    'final' => Carbon::parse($r->fecha)->startOfDay(),
+                ];
+            })
+            ->values();
+
+        // Busca el primer hueco: final_actual != inicio_siguiente.
+        for ($i = 0; $i < $periodos->count() - 1; $i++) {
+            $currFinal = $periodos[$i]['final']->copy();
+            $nextInicio = $periodos[$i + 1]['inicio']->copy();
+
+            if (!$currFinal->equalTo($nextInicio)) {
+                return [
+                    'inicio' => $currFinal->toDateString(),
+                    'final' => $nextInicio->toDateString(),
+                ];
+            }
+        }
+
+        // Si no hay huecos: siguiente periodo desde el último final.
+        $lastFinal = $periodos->last()['final']->copy();
+
+        return [
+            'inicio' => $lastFinal->toDateString(),
+            'final' => $lastFinal->copy()->addMonthNoOverflow()->toDateString(),
+        ];
     }
+
+    // overlapsPeriodoUtilidad: verifica si [inicio, final] se cruza con algún periodo ya registrado.
+    protected function overlapsPeriodoUtilidad(string $inicio, string $final): bool
+    {
+        if (!$this->inversion) {
+            return false;
+        }
+
+        $ini = $this->parseStrictDate($inicio);
+        $fin = $this->parseStrictDate($final);
+
+        if (!$ini || !$fin) {
+            return false;
+        }
+
+        if ($fin->lessThanOrEqualTo($ini)) {
+            return false;
+        }
+
+        // Detecta solapamiento con periodos existentes.
+        // Un solapamiento existe si:
+        // nuevo_inicio < existente_final  AND  nuevo_final > existente_inicio
+        // Nota: usamos "final exclusivo" para permitir que el siguiente inicie exactamente en el final anterior.
+        return InversionMovimiento::query()
+            ->where('inversion_id', $this->inversion->id)
+            ->where('tipo', 'PAGO_UTILIDAD')
+            ->whereNotNull('utilidad_fecha_inicio')
+            ->whereNotNull('fecha')
+            ->where(function ($q) use ($inicio, $final) {
+                $q->whereDate('utilidad_fecha_inicio', '<', $final)->whereDate(
+                    'fecha',
+                    '>',
+                    $inicio,
+                );
+            })
+            ->exists();
+    }
+
+    // fechaInicioAuto: referencia para ingreso/devolución (último movimiento real)
     protected function fechaInicioAuto(): string
     {
         if (!$this->inversion) {
             return now()->toDateString();
         }
 
-        $lastFecha = InversionMovimiento::query()
+        $last = InversionMovimiento::query()
             ->where('inversion_id', $this->inversion->id)
-            ->orderByDesc('fecha')
-            ->value('fecha');
+            ->orderByDesc('nro')
+            ->orderByDesc('id')
+            ->first(['fecha', 'fecha_pago']);
 
-        if ($lastFecha) {
-            return Carbon::parse($lastFecha)->toDateString();
+        if ($last) {
+            $ref = $last->fecha_pago ?: $last->fecha;
+            return Carbon::parse($ref)->toDateString();
         }
 
         if (!empty($this->inversion->fecha_inicio)) {
@@ -426,6 +537,7 @@ class PagarUtilidadModal extends Component
         return now()->toDateString();
     }
 
+    // recalcUtilidadPago: calcula días y monto a pagar para el periodo seleccionado
     protected function recalcUtilidadPago(): void
     {
         $cap = (float) ($this->inversion?->capital_actual ?? 0);
@@ -439,15 +551,24 @@ class PagarUtilidadModal extends Component
         $final = $this->parseStrictDate($this->fecha);
 
         $dias = 0;
-        if ($inicio && $final && $final->greaterThanOrEqualTo($inicio)) {
+
+        if ($inicio && $final && $final->greaterThan($inicio)) {
             $diff = $inicio->diffInDays($final);
-            $dias = $diff >= 28 && $diff <= 31 ? 30 : min($diff, 30);
+
+            // Regla negocio: si es un "mes" (28 a 31) entonces contar 30
+            if ($diff >= 28 && $diff <= 31) {
+                $dias = 30;
+            } else {
+                $dias = $diff;
+            }
         }
 
-        $this->utilidad_dias = $dias;
+        $this->utilidad_dias = (int) $dias;
 
+        // Prorrateo con mes base 30
         $this->utilidad_a_pagar =
             $montoMes > 0 && $dias > 0 ? round(($montoMes / 30) * $dias, 2) : 0.0;
+
         $this->utilidad_a_pagar_formatted =
             $this->utilidad_a_pagar > 0
                 ? number_format($this->utilidad_a_pagar, 2, ',', '.')
@@ -457,6 +578,7 @@ class PagarUtilidadModal extends Component
         $this->recalcTcPreview();
     }
 
+    // recalcUtilidadDebitoBanco: calcula cuánto se debitará del banco (con TC si aplica)
     protected function recalcUtilidadDebitoBanco(): void
     {
         $this->utilidad_debito_banco = 0.0;
@@ -504,6 +626,7 @@ class PagarUtilidadModal extends Component
         }
     }
 
+    // recalcTcPreview: muestra preview del monto equivalente en moneda base
     protected function recalcTcPreview(): void
     {
         $invMon = strtoupper((string) ($this->inversion?->moneda ?? 'BOB'));
@@ -543,6 +666,7 @@ class PagarUtilidadModal extends Component
             $baseAmount !== null ? number_format((float) $baseAmount, 2, ',', '.') : null;
     }
 
+    // rules: validación por tipo y por necesidad de TC
     protected function rules(): array
     {
         $tipo = strtoupper((string) $this->tipo_pago);
@@ -587,11 +711,7 @@ class PagarUtilidadModal extends Component
                 'required',
                 'date_format:Y-m-d',
                 function ($attr, $value, $fail) {
-                    if (
-                        $value !== null &&
-                        $value !== '' &&
-                        !$this->parseStrictDate((string) $value)
-                    ) {
+                    if (!$this->parseStrictDate((string) $value)) {
                         $fail('Fecha pago inválida.');
                     }
                 },
@@ -600,11 +720,27 @@ class PagarUtilidadModal extends Component
             $rules['utilidad_a_pagar'] = ['required', 'numeric', 'min:0.01'];
             $rules['utilidad_monto_mes'] = ['required', 'numeric', 'min:0.01'];
 
+            // Validación de rango: fecha final no puede ser menor/igual al inicio
             $rules['fecha'][] = function ($attr, $value, $fail) {
                 $inicio = $this->parseStrictDate($this->utilidad_fecha_inicio);
                 $final = $this->parseStrictDate((string) $value);
-                if ($inicio && $final && $final->lessThan($inicio)) {
-                    $fail('La fecha final no puede ser menor que la fecha inicio.');
+
+                if (!$inicio || !$final) {
+                    return;
+                }
+
+                if ($final->lessThanOrEqualTo($inicio)) {
+                    $fail('La fecha final debe ser mayor a la fecha inicio.');
+                    return;
+                }
+
+                // Bloquea si el rango cae dentro de un periodo ya pagado/registrado
+                if (
+                    $this->overlapsPeriodoUtilidad($inicio->toDateString(), $final->toDateString())
+                ) {
+                    $fail(
+                        'Ese rango ya está cubierto por un pago de utilidad. Elija otra fecha final.',
+                    );
                 }
             };
         }
@@ -612,6 +748,7 @@ class PagarUtilidadModal extends Component
         return $rules;
     }
 
+    // save: registra utilidad como pendiente o registra ingreso/devolución como pagado
     public function save(InversionService $service): void
     {
         $this->resetErrorBag();
@@ -621,7 +758,6 @@ class PagarUtilidadModal extends Component
             return;
         }
 
-        // validación normal
         $this->validate();
 
         try {
@@ -659,7 +795,7 @@ class PagarUtilidadModal extends Component
             } else {
                 $service->registrarMovimiento($this->inversion, [
                     'tipo' => $this->tipo_pago,
-                    'fecha' => $this->fecha_inicio_ref, // contable fija
+                    'fecha' => $this->fecha_inicio_ref,
                     'fecha_pago' => $this->fecha_pago,
                     'monto' => (float) ($this->monto_capital ?? 0),
                     'banco_id' => (int) $this->banco_id,
@@ -680,16 +816,13 @@ class PagarUtilidadModal extends Component
         } catch (DomainException $e) {
             $msg = $e->getMessage();
 
-            // ✅ SweetAlert de error
             $this->dispatch('swal', [
                 'icon' => 'error',
                 'title' => 'Error',
                 'text' => $msg,
             ]);
 
-            // ✅ Mapeo a errores de formulario (por si quieres marcas rojas)
             if (str_contains($msg, 'PENDIENTE')) {
-                // lo dejamos como error general en fecha (o puedes crear uno "tipo_pago")
                 $this->addError('tipo_pago', $msg);
             } elseif (str_contains($msg, 'Capital insuficiente')) {
                 $this->addError('monto_capital', $msg);
@@ -710,6 +843,7 @@ class PagarUtilidadModal extends Component
         }
     }
 
+    // recalcImpacto: calcula preview de banco y capital y texto de estado
     protected function recalcImpacto(): void
     {
         $this->preview_capital_actual = (float) ($this->inversion?->capital_actual ?? 0);
@@ -805,6 +939,7 @@ class PagarUtilidadModal extends Component
         $this->formatImpacto($invMon, $bankMon);
     }
 
+    // formatImpacto: formatea montos y detalle de monedas
     protected function formatImpacto(string $invMon, ?string $bankMon): void
     {
         $this->preview_capital_actual_fmt = $this->fmtMoney($this->preview_capital_actual, $invMon);
@@ -825,6 +960,7 @@ class PagarUtilidadModal extends Component
         $this->impacto_detalle = $bankMon ? "Banco: {$bankMon} • Base: {$invMon}" : null;
     }
 
+    // fmtMoney: formatea valores según moneda
     protected function fmtMoney(float $n, string $moneda): string
     {
         $moneda = strtoupper($moneda);
@@ -832,6 +968,7 @@ class PagarUtilidadModal extends Component
         return $moneda === 'USD' ? '$ ' . $val : $val . ' Bs';
     }
 
+    // parseStrictDate: valida string Y-m-d y retorna Carbon o null
     protected function parseStrictDate(string $value): ?Carbon
     {
         try {
@@ -842,6 +979,7 @@ class PagarUtilidadModal extends Component
         }
     }
 
+    // toFloatDecimal: convierte "1.234,56" a 1234.56
     protected function toFloatDecimal(string $value): float
     {
         $v = trim($value);
@@ -856,6 +994,7 @@ class PagarUtilidadModal extends Component
         return is_numeric($v) ? (float) $v : 0.0;
     }
 
+    // render: retorna vista del modal
     public function render()
     {
         return view('livewire.admin.inversiones.modals._modal_pagar_utilidad');

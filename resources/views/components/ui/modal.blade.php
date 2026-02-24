@@ -2,6 +2,7 @@
     'title' => 'Modal',
     'model' => null,
     'maxWidth' => 'md:max-w-2xl',
+    'maxHeight' => 'sm:max-h-[92vh]',
     'onClose' => null,
     'closeOnBackdrop' => true,
     'busy' => false,
@@ -41,15 +42,15 @@
             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
             x-transition:leave-end="opacity-0 translate-y-2 sm:translate-y-0 sm:scale-95"
             class="w-full
-                   h-[100dvh] sm:h-auto
-                   sm:max-h-[90vh]
-                   sm:max-w-xl {{ $maxWidth }}
-                   bg-white dark:bg-neutral-900
-                   text-gray-700 dark:text-neutral-200
-                   border border-gray-200 dark:border-neutral-800
-                   rounded-none sm:rounded-xl
-                   overflow-hidden shadow-2xl
-                   flex flex-col">
+                h-[100dvh] sm:h-auto
+                {{ $maxHeight }}
+                sm:max-w-xl {{ $maxWidth }}
+                bg-white dark:bg-neutral-900
+                text-gray-700 dark:text-neutral-200
+                border border-gray-200 dark:border-neutral-800
+                rounded-none sm:rounded-xl
+                overflow-hidden shadow-2xl
+                flex flex-col">
             {{-- Header --}}
             <div
                 class="shrink-0 px-4 sm:px-5 py-3 sm:py-4

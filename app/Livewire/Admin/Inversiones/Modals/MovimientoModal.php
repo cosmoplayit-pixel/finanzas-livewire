@@ -62,6 +62,11 @@ class MovimientoModal extends Component
     public bool $openEliminarTodoModal = false;
     public string $deleteAllPassword = '';
 
+    // Eliminar FILA PAGADA con contraseña
+    public bool $openEliminarFilaModal = false;
+    public string $deleteRowPassword = '';
+    public int $deleteRowMovId = 0;
+
     /**
      * Totales separados
      *  - pagado: sum... + lastPct + lastInteres (banco)
@@ -114,6 +119,7 @@ class MovimientoModal extends Component
         $this->openMovimientosModal = false;
         $this->closeFoto();
         $this->closeEliminarTodoModal();
+        $this->closeEliminarFilaModal();
 
         $this->reset([
             'inversion',
@@ -141,6 +147,9 @@ class MovimientoModal extends Component
             'hayUtilidadPendiente',
             'openEliminarTodoModal',
             'deleteAllPassword',
+            'openEliminarFilaModal',
+            'deleteRowPassword',
+            'deleteRowMovId',
         ]);
 
         $this->totales = [
@@ -281,6 +290,76 @@ class MovimientoModal extends Component
             $this->dispatch('inversionUpdated');
             $this->closeEliminarTodoModal();
             $this->closeMovimientos();
+        } catch (DomainException $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'No se pudo eliminar',
+                'text' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    // =========================
+    // Eliminar FILA PAGADA con contraseña
+    // =========================
+    public function abrirEliminarFilaModal(int $movId): void
+    {
+        $this->resetErrorBag('deleteRowPassword');
+        $this->deleteRowPassword = '';
+        $this->deleteRowMovId = (int) $movId;
+        $this->openEliminarFilaModal = true;
+    }
+
+    public function closeEliminarFilaModal(): void
+    {
+        $this->openEliminarFilaModal = false;
+        $this->resetErrorBag('deleteRowPassword');
+        $this->deleteRowPassword = '';
+        $this->deleteRowMovId = 0;
+    }
+
+    public function confirmarEliminarFilaConPassword(InversionService $service): void
+    {
+        if (!$this->inversion) {
+            return;
+        }
+
+        $this->resetErrorBag('deleteRowPassword');
+
+        if ($this->deleteRowMovId <= 0) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'Error',
+                'text' => 'Movimiento inválido.',
+            ]);
+            return;
+        }
+
+        if (trim($this->deleteRowPassword) === '') {
+            $this->addError('deleteRowPassword', 'Ingrese su contraseña.');
+            return;
+        }
+
+        $user = auth()->user();
+        if (!$user || !Hash::check($this->deleteRowPassword, (string) $user->password)) {
+            $this->addError('deleteRowPassword', 'Contraseña incorrecta.');
+            return;
+        }
+
+        try {
+            // Usa tu delete existente
+            $service->eliminarMovimientoFila($this->inversion, $this->deleteRowMovId);
+
+            $this->loadData((int) $this->inversion->id);
+            $this->dispatch('inversionUpdated');
+
+            $this->dispatch('swal', [
+                'icon' => 'success',
+                'title' => 'Eliminado',
+                'text' => 'Se eliminó el registro correctamente.',
+            ]);
+
+            $this->closeEliminarFilaModal();
         } catch (DomainException $e) {
             $this->dispatch('swal', [
                 'icon' => 'error',
@@ -570,7 +649,6 @@ class MovimientoModal extends Component
     {
         $isBanco = (bool) $this->isBanco;
 
-        // Helpers locales: 0 => "—"
         $moneyOrDash = function (float $n): string {
             return abs($n) < 0.000001 ? '—' : $this->fmtMoney($n);
         };
@@ -608,33 +686,25 @@ class MovimientoModal extends Component
         $pagado = $rows->filter(fn($m) => $getEstado($m) === 'PAGADO');
         $pendiente = $rows->filter(fn($m) => $getEstado($m) === 'PENDIENTE');
 
-        // =========================
-        // PRIVADO
-        // =========================
         $buildPrivado = function ($set) use ($moneyOrDash, $pctOrDash) {
-            // excluye capital inicial de totales
-            $movs = $set->filter(
-                fn($m) => strtoupper((string) ($m->tipo ?? '')) !== 'CAPITAL_INICIAL',
-            );
+            // En PRIVADO sí quieres incluir CAPITAL_INICIAL en el resumen de PAGADOS como “capital”
+            // pero OJO: NO entra como “utilidad” (obvio) y no existe “total/interés” aquí.
 
-            // Capital: solo ingreso/devolución
-            $sumCapital = (float) $movs
+            $sumCapital = (float) $set
                 ->filter(
                     fn($m) => in_array(
                         strtoupper((string) ($m->tipo ?? '')),
-                        ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL'],
+                        ['CAPITAL_INICIAL', 'INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL'],
                         true,
                     ),
                 )
                 ->sum(fn($m) => (float) ($m->monto_capital ?? 0));
 
-            // Utilidad: solo pago utilidad
-            $sumUtilidad = (float) $movs
+            $sumUtilidad = (float) $set
                 ->filter(fn($m) => strtoupper((string) ($m->tipo ?? '')) === 'PAGO_UTILIDAD')
                 ->sum(fn($m) => (float) ($m->monto_utilidad ?? 0));
 
-            // Último % (solo pagos de utilidad)
-            $lastPctMov = $movs
+            $lastPctMov = $set
                 ->filter(
                     fn($m) => strtoupper((string) ($m->tipo ?? '')) === 'PAGO_UTILIDAD' &&
                         $m->porcentaje_utilidad !== null,
@@ -642,51 +712,60 @@ class MovimientoModal extends Component
                 ->sortByDesc(fn($m) => $m->fecha?->timestamp ?? 0)
                 ->first();
 
-            $lastPctFmt = $pctOrDash($lastPctMov?->porcentaje_utilidad);
-
             return [
-                // en privado no usas total/interés => siempre "—"
                 'sumTotalFmt' => '—',
                 'sumCapitalFmt' => $moneyOrDash($sumCapital),
                 'sumUtilidadFmt' => $moneyOrDash($sumUtilidad),
                 'sumInteresFmt' => '—',
-                'lastPctFmt' => $lastPctFmt,
+                'lastPctFmt' => $pctOrDash($lastPctMov?->porcentaje_utilidad),
                 'lastInteresFmt' => '—',
             ];
         };
 
-        // =========================
-        // BANCO
-        // =========================
-        $buildBanco = function ($set) use ($moneyOrDash, $pctOrDash) {
+        $buildBanco = function ($set, string $estado) use ($moneyOrDash, $pctOrDash) {
+            // Solo cuotas BANCO_PAGO cuentan como “pagos” (CAPITAL_INICIAL NO entra)
             $pagos = $set->filter(fn($m) => strtoupper((string) ($m->tipo ?? '')) === 'BANCO_PAGO');
 
-            $sumTotal = (float) $pagos->sum(fn($m) => (float) ($m->monto_total ?? 0));
-            $sumCapital = (float) $pagos->sum(fn($m) => (float) ($m->monto_capital ?? 0));
-            $sumInteres = (float) $pagos->sum(fn($m) => (float) ($m->monto_interes ?? 0));
+            // Totales de pagos (si en filas muestras negativos, aquí mostramos positivo)
+            $sumTotal = (float) $pagos->sum(fn($m) => abs((float) ($m->monto_total ?? 0)));
+            $sumCapitalPagado = (float) $pagos->sum(
+                fn($m) => abs((float) ($m->monto_capital ?? 0)),
+            );
+            $sumInteres = (float) $pagos->sum(fn($m) => abs((float) ($m->monto_interes ?? 0)));
 
+            // Último % por estado (PAGADO/PENDIENTE) tomando la última cuota de ese estado
             $lastPago = $pagos->sortByDesc(fn($m) => $m->fecha?->timestamp ?? 0)->first();
-
             $lastPctFmt = $pctOrDash($lastPago?->porcentaje_utilidad);
 
-            $lastInteresFmt =
-                $lastPago && $lastPago->monto_interes !== null
-                    ? $moneyOrDash((float) $lastPago->monto_interes)
-                    : '—';
+            // En tu UI quieres:
+            // - Para PAGADOS: CAPITAL = saldo/deuda actual (capital_actual de la inversión)
+            // - Para PENDIENTES: CAPITAL = capital pendiente (sumatoria de cuotas pendientes)
+            $capitalDisplay = '—';
+            if ($estado === 'PAGADO') {
+                $saldoActual = abs((float) ($this->inversion?->capital_actual ?? 0));
+                $capitalDisplay = $moneyOrDash($saldoActual);
+            } else {
+                $capitalDisplay = $moneyOrDash($sumCapitalPagado);
+            }
 
             return [
                 'sumTotalFmt' => $moneyOrDash($sumTotal),
-                'sumCapitalFmt' => $moneyOrDash($sumCapital),
+                'sumCapitalFmt' => $capitalDisplay,
                 'sumUtilidadFmt' => '—',
                 'sumInteresFmt' => $moneyOrDash($sumInteres),
                 'lastPctFmt' => $lastPctFmt,
-                'lastInteresFmt' => $lastInteresFmt,
+                'lastInteresFmt' =>
+                    $lastPago && $lastPago->monto_interes !== null
+                        ? $moneyOrDash(abs((float) $lastPago->monto_interes))
+                        : '—',
             ];
         };
 
         return [
-            'pagado' => $isBanco ? $buildBanco($pagado) : $buildPrivado($pagado),
-            'pendiente' => $isBanco ? $buildBanco($pendiente) : $buildPrivado($pendiente),
+            'pagado' => $isBanco ? $buildBanco($pagado, 'PAGADO') : $buildPrivado($pagado),
+            'pendiente' => $isBanco
+                ? $buildBanco($pendiente, 'PENDIENTE')
+                : $buildPrivado($pendiente),
         ];
     }
 

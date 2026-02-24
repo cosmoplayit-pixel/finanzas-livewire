@@ -68,16 +68,64 @@ class PagarBancoModal extends Component
 
     protected function calcPctInteres(): float
     {
-        $capital = (float) ($this->monto_capital ?? 0);
         $interes = (float) ($this->monto_interes ?? 0);
-
-        if ($capital <= 0 || $interes <= 0) {
+        if ($interes <= 0 || !$this->inversion) {
             return 0.0;
         }
 
-        return round(($interes / $capital) * 100, 2);
-    }
+        $invId = (int) $this->inversion->id;
 
+        // 1) Capital inicial (saldo de arranque)
+        $capInicial = (float) InversionMovimiento::query()
+            ->where('inversion_id', $invId)
+            ->where('tipo', 'CAPITAL_INICIAL')
+            ->orderBy('nro')
+            ->orderBy('id')
+            ->value('monto_capital');
+
+        if ($capInicial <= 0.000001) {
+            $capInicial = (float) InversionMovimiento::query()
+                ->where('inversion_id', $invId)
+                ->where('tipo', 'CAPITAL_INICIAL')
+                ->orderBy('nro')
+                ->orderBy('id')
+                ->value('monto_total');
+        }
+
+        if ($capInicial <= 0.000001) {
+            // fallback duro (evita división por cero)
+            $capInicial = (float) ($this->inversion->capital_actual ?? 0);
+        }
+
+        if ($capInicial <= 0.000001) {
+            return 0.0;
+        }
+
+        // 2) Sumatoria de capital de cuotas anteriores (PAGADO y PENDIENTE) según fecha
+        //    para obtener el saldo "antes" de esta cuota.
+        $fecha = (string) ($this->fecha ?? '');
+        if ($fecha === '') {
+            $fecha = now()->toDateString();
+        }
+
+        $sumPrevCapital = (float) InversionMovimiento::query()
+            ->where('inversion_id', $invId)
+            ->where('tipo', 'BANCO_PAGO')
+            ->whereNotNull('fecha')
+            // solo anteriores por fecha (estricto)
+            ->where('fecha', '<', $fecha)
+            // si estás editando un pendiente, excluye el mismo id
+            ->when($this->movimientoId, fn($q) => $q->where('id', '!=', (int) $this->movimientoId))
+            ->sum('monto_capital');
+
+        $capitalBase = max(0.0, $capInicial - $sumPrevCapital);
+
+        if ($capitalBase <= 0.000001) {
+            return 0.0;
+        }
+
+        return round(($interes * 100) / $capitalBase, 2);
+    }
     #[On('openPagarBanco')]
     public function openPagarBanco(int $inversionId): void
     {

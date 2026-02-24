@@ -528,7 +528,6 @@ class InversionService
             $cap = max(0.0, (float) ($data['monto_capital'] ?? 0));
             $int = max(0.0, (float) ($data['monto_interes'] ?? 0));
 
-            // Reglas de negocio (capital/total)
             if ($totalBase + 0.000001 < $cap) {
                 throw new DomainException('El monto total no puede ser menor al capital.');
             }
@@ -538,12 +537,6 @@ class InversionService
                 throw new DomainException(
                     'El capital no puede ser superior al saldo de la inversión.',
                 );
-            }
-
-            // % interés REAL: interes / capital
-            $pctInteres = 0.0;
-            if ($cap > 0 && $int > 0) {
-                $pctInteres = round(($int / $cap) * 100, 2);
             }
 
             // Valida saldo banco (sin debitar todavía)
@@ -594,7 +587,8 @@ class InversionService
 
                 'monto_utilidad' => null,
 
-                'porcentaje_utilidad' => $pctInteres,
+                // se recalcula al final para TODAS las filas
+                'porcentaje_utilidad' => 0.0,
 
                 'utilidad_fecha_inicio' => null,
                 'utilidad_dias' => null,
@@ -611,6 +605,9 @@ class InversionService
                 'estado' => 'PENDIENTE',
                 'pagado_en' => null,
             ]);
+
+            // ✅ RECALCULAR TODO (PAGADO + PENDIENTE)
+            $this->recalcularPctInteresBanco($invLocked);
         });
     }
 
@@ -661,7 +658,6 @@ class InversionService
                 throw new DomainException('Monto total inválido.');
             }
 
-            // Debito real en moneda banco
             $debitoBanco = $totalBase;
 
             if ($monInv !== $monBank) {
@@ -684,11 +680,9 @@ class InversionService
                 throw new DomainException('Saldo insuficiente en banco.');
             }
 
-            // Debita banco
             $banco->monto = (float) $banco->monto - (float) $debitoBanco;
             $banco->save();
 
-            // Baja deuda por capital
             $saldo = (float) ($inv->capital_actual ?? 0);
 
             if ($cap > $saldo + 0.000001) {
@@ -708,10 +702,12 @@ class InversionService
             $inv->hasta_fecha = (string) $mov->fecha;
             $inv->save();
 
-            // Marca pagado
             $mov->estado = 'PAGADO';
             $mov->pagado_en = now();
             $mov->save();
+
+            // ✅ RECALCULAR TODO (PAGADO + PENDIENTE) para que quede coherente
+            $this->recalcularPctInteresBanco($inv);
         });
     }
 
@@ -763,6 +759,10 @@ class InversionService
                 $invLocked->save();
 
                 $last->delete();
+
+                // ✅ RECALCULAR % (PAGADO + PENDIENTE)
+                $this->recalcularPctInteresBanco($invLocked);
+
                 return;
             }
 
@@ -826,6 +826,9 @@ class InversionService
             $invLocked->save();
 
             $last->delete();
+
+            // ✅ RECALCULAR % (PAGADO + PENDIENTE)
+            $this->recalcularPctInteresBanco($invLocked);
         });
     }
 
@@ -1268,6 +1271,10 @@ class InversionService
                 if ($estado === 'PENDIENTE' || $estado === '') {
                     $mov->delete();
                     $updateHastaFecha();
+
+                    // ✅ RECALCULAR % (PAGADO + PENDIENTE)
+                    $this->recalcularPctInteresBanco($invLocked);
+
                     return;
                 }
 
@@ -1327,6 +1334,10 @@ class InversionService
 
                     $mov->delete();
                     $updateHastaFecha();
+
+                    // ✅ RECALCULAR % (PAGADO + PENDIENTE)
+                    $this->recalcularPctInteresBanco($invLocked);
+
                     return;
                 }
 
@@ -1463,5 +1474,61 @@ class InversionService
 
             throw new DomainException('No se pudo eliminar el movimiento.');
         });
+    }
+
+    protected function recalcularPctInteresBanco(Inversion $invLocked): void
+    {
+        // Solo aplica a inversiones BANCO
+        if (strtoupper((string) ($invLocked->tipo ?? '')) !== 'BANCO') {
+            return;
+        }
+
+        // Capital inicial (saldo de arranque)
+        $capInicial = (float) InversionMovimiento::query()
+            ->where('inversion_id', $invLocked->id)
+            ->where('tipo', 'CAPITAL_INICIAL')
+            ->orderBy('nro')
+            ->orderBy('id')
+            ->value('monto_capital');
+
+        if ($capInicial <= 0.000001) {
+            $capInicial = (float) InversionMovimiento::query()
+                ->where('inversion_id', $invLocked->id)
+                ->where('tipo', 'CAPITAL_INICIAL')
+                ->orderBy('nro')
+                ->orderBy('id')
+                ->value('monto_total');
+        }
+
+        if ($capInicial <= 0.000001) {
+            return;
+        }
+
+        $saldo = (float) $capInicial;
+
+        // Trae todos los pagos banco (PAGADO + PENDIENTE) en orden estable
+        $pagos = InversionMovimiento::query()
+            ->where('inversion_id', $invLocked->id)
+            ->where('tipo', 'BANCO_PAGO')
+            ->orderBy('fecha')
+            ->orderBy('nro')
+            ->orderBy('id')
+            ->lockForUpdate()
+            ->get();
+
+        foreach ($pagos as $m) {
+            $interes = (float) ($m->monto_interes ?? 0);
+            $pct = 0.0;
+
+            if ($saldo > 0.000001 && $interes > 0.000001) {
+                $pct = round(($interes * 100) / $saldo, 2);
+            }
+
+            $m->porcentaje_utilidad = $pct;
+            $m->save();
+
+            $cap = (float) ($m->monto_capital ?? 0);
+            $saldo = max(0.0, $saldo - $cap);
+        }
     }
 }

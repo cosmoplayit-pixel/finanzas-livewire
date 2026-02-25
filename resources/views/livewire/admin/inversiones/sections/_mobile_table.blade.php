@@ -1,37 +1,70 @@
-{{-- MOBILE: TABLA INVERSIONES (<= md) --}}
+{{-- MOBILE: TABLA INVERSIONES (<= md) - PRO UI --}}
 <div class="md:hidden space-y-3">
     @forelse ($inversiones as $inv)
-        <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
 
-            {{-- TOP: Código + Estado --}}
-            <div class="px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
+        @php
+            $isPrivado = $inv->tipo === 'PRIVADO';
+
+            // Acentos por tipo
+            $accentBar = $isPrivado ? 'bg-blue-500 dark:bg-green-400' : 'bg-teal-500 dark:bg-teal-400';
+
+            $cardBg = $isPrivado
+                ? 'bg-gradient-to-b from-blue-50/60 to-white dark:from-blue-900/10 dark:to-neutral-900/30'
+                : 'bg-gradient-to-b from-teal-50/60 to-white dark:from-teal-900/10 dark:to-neutral-900/30';
+
+            $typeBadge = $isPrivado
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200'
+                : 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-200';
+
+            // Estado (utilidad pendiente solo aplica a PRIVADO)
+            $utilPendiente = $isPrivado && ($inv->resumen['estado_utilidad'] ?? null) === 'PENDIENTE';
+        @endphp
+
+        <div class="rounded-2xl border border-gray-200 dark:border-neutral-700 overflow-hidden {{ $cardBg }}">
+
+            {{-- Accent bar --}}
+            <div class="h-1.5 {{ $accentBar }}"></div>
+
+            {{-- TOP: Código + estado --}}
+            <div class="px-4 pt-3 pb-2">
                 <div class="flex items-start justify-between gap-3">
+
+                    {{-- Left: Codigo + meta --}}
                     <div class="min-w-0">
-                        <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                            {{ $inv->codigo }}
+                        <div class="flex items-center gap-2 min-w-0">
+                            <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate">
+                                {{ $inv->codigo }}
+                            </div>
+
+                            {{-- Tipo badge --}}
+                            <span
+                                class="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold {{ $typeBadge }}">
+                                {{-- icon tag --}}
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path
+                                        d="M20.59 13.41 11 3.83V2h-2v2.59l9.59 9.58a2 2 0 0 1 0 2.83l-2.34 2.34a2 2 0 0 1-2.83 0L3.83 13.41a2 2 0 0 1 0-2.83l2.34-2.34" />
+                                    <path d="M7 7h.01" />
+                                </svg>
+                                {{ $inv->tipo }}
+                            </span>
                         </div>
 
-                        <div class="mt-1 text-xs text-gray-500 dark:text-neutral-400 inline-flex items-center gap-1">
-                            {{-- icon tag --}}
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path
-                                    d="M20.59 13.41 11 3.83V2h-2v2.59l9.59 9.58a2 2 0 0 1 0 2.83l-2.34 2.34a2 2 0 0 1-2.83 0L3.83 13.41a2 2 0 0 1 0-2.83l2.34-2.34" />
-                                <path d="M7 7h.01" />
-                            </svg>
-                            <span>{{ $inv->tipo }}</span>
-                            <span class="text-gray-300 dark:text-neutral-600">•</span>
-                            <span>{{ $inv->moneda }}</span>
+                        <div class="mt-1 text-sm text-gray-500 dark:text-neutral-400 inline-flex items-center gap-2">
+                            <span class="truncate">
+                                Titular: {{ $inv->nombre_completo }}
+                            </span>
                         </div>
                     </div>
 
-                    {{-- Estado --}}
+                    {{-- Right: Estado --}}
                     <div class="shrink-0">
-                        @if ($inv->tipo === 'PRIVADO' && ($inv->resumen['estado_utilidad'] ?? null) === 'PENDIENTE')
+                        @if ($utilPendiente)
                             <span
-                                class="inline-flex items-center gap-1 px-2 py-1 rounded
-                                       bg-amber-100 text-amber-700
-                                       dark:bg-amber-900/30 dark:text-amber-300 text-[12px]">
+                                class="inline-flex items-center gap-1 px-2 py-1 rounded-lg
+                                         bg-amber-100 text-amber-700
+                                         dark:bg-amber-900/30 dark:text-amber-300 text-[12px] font-semibold">
                                 {{-- icon clock --}}
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -44,9 +77,9 @@
                         @else
                             @if ($inv->estado === 'ACTIVA')
                                 <span
-                                    class="inline-flex items-center gap-1 px-2 py-1 rounded
-                                           bg-emerald-100 text-emerald-700
-                                           dark:bg-emerald-900/30 dark:text-emerald-300 text-[12px]">
+                                    class="inline-flex items-center gap-1 px-2 py-1 rounded-lg
+                                             bg-emerald-100 text-emerald-700
+                                             dark:bg-emerald-900/30 dark:text-emerald-300 text-[12px] font-semibold">
                                     {{-- icon check --}}
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -57,9 +90,9 @@
                                 </span>
                             @else
                                 <span
-                                    class="inline-flex items-center gap-1 px-2 py-1 rounded
-                                           bg-gray-200 text-gray-700
-                                           dark:bg-neutral-700 dark:text-neutral-200 text-[12px]">
+                                    class="inline-flex items-center gap-1 px-2 py-1 rounded-lg
+                                             bg-gray-200 text-gray-700
+                                             dark:bg-neutral-700 dark:text-neutral-200 text-[12px] font-semibold">
                                     {{-- icon lock --}}
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -77,64 +110,77 @@
             </div>
 
             {{-- BODY --}}
-            <div class="px-4 py-3 space-y-3">
+            <div class="px-3 pb-3 space-y-3">
 
-                {{-- Titular --}}
-                <div>
-                    <div class="text-xs text-gray-500 dark:text-neutral-400">Titular</div>
-                    <div class="text-sm text-gray-900 dark:text-neutral-100">
-                        {{ $inv->nombre_completo }}
-                    </div>
-                </div>
-
-                {{-- Banco --}}
+                {{-- Banco box --}}
                 <div
-                    class="rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900/40 px-3 py-2">
+                    class="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white/70 dark:bg-neutral-900/40 px-3 py-2.5">
                     <div class="flex items-start gap-2">
-                        {{-- icon bank --}}
-                        <svg xmlns="http://www.w3.org/2000/svg"
-                            class="w-4 h-4 mt-0.5 text-gray-600 dark:text-neutral-300" viewBox="0 0 24 24"
-                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round">
-                            <path d="M3 10h18" />
-                            <path d="M5 10V20" />
-                            <path d="M19 10V20" />
-                            <path d="M9 10V20" />
-                            <path d="M15 10V20" />
-                            <path d="M2 20h20" />
-                            <path d="M12 2 2 7h20L12 2z" />
-                        </svg>
-
+                        {{-- Contenido --}}
                         <div class="min-w-0 flex-1">
-                            <div class="text-sm text-gray-900 dark:text-neutral-100 truncate">
-                                {{ $inv->banco->nombre }}
+                            {{-- Nombre banco --}}
+                            <div
+                                class="flex items-center text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate">
+                                {{-- Icono banco --}}
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                    class="w-4 h-4 mt-0.5 shrink-0 text-gray-700 dark:text-neutral-200"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 10h18" />
+                                    <path d="M5 10V20" />
+                                    <path d="M19 10V20" />
+                                    <path d="M9 10V20" />
+                                    <path d="M15 10V20" />
+                                    <path d="M2 20h20" />
+                                    <path d="M12 2 2 7h20L12 2z" />
+                                </svg>
+                                <span class="mx-1  shrink-0 text-gray-300 dark:text-neutral-600"></span>
+                                {{ $inv->banco->nombre ?? '—' }}
                             </div>
 
-                            <div class="mt-0.5 inline-flex items-center text-xs text-gray-500 dark:text-neutral-400">
-                                {{-- icon # (sin empujar texto) --}}
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 mr-1" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <line x1="4" y1="9" x2="20" y2="9" />
-                                    <line x1="4" y1="15" x2="20" y2="15" />
-                                    <line x1="10" y1="3" x2="8" y2="21" />
-                                    <line x1="16" y1="3" x2="14" y2="21" />
-                                </svg>
-                                <span class="truncate">{{ $inv->banco->numero_cuenta ?? '—' }}</span>
+                            {{-- Cuenta + Moneda (compacto, sin “TAB”) --}}
+                            <div class="mt-0.5  min-w-0 text-xs text-gray-500 dark:text-neutral-400 leading-none">
+
+                                {{-- Cuenta --}}
+                                <span class="inline-flex items-center min-w-0 truncate">
+                                    {{-- icon # --}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0 mr-1"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="4" y1="9" x2="20" y2="9" />
+                                        <line x1="4" y1="15" x2="20" y2="15" />
+                                        <line x1="10" y1="3" x2="8" y2="21" />
+                                        <line x1="16" y1="3" x2="14" y2="21" />
+                                    </svg>
+
+                                    <span class="truncate">{{ $inv->banco->numero_cuenta ?? '—' }}</span>
+                                    {{-- Separador --}}
+                                    <span class="mx-1 shrink-0 text-gray-300 dark:text-neutral-600">•</span>
+
+                                    {{-- Moneda --}}
+                                    <span class="inline-flex items-center shrink-0">
+
+                                        <span class="font-medium">{{ $inv->moneda }}</span>
+                                    </span>
+                                </span>
+
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Resumen --}}
+                {{-- Resumen chips --}}
                 <div class="space-y-2">
-                    <div class="text-xs text-gray-500 dark:text-neutral-400">Resumen</div>
+                    <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
+                        Resumen
+                    </div>
 
-                    @if ($inv->tipo === 'PRIVADO')
+                    @if ($isPrivado)
                         <div class="flex flex-wrap items-center gap-2 text-[13px]">
 
                             <span
-                                class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
+                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
+                                         bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
                                 <span class="font-semibold">Capital:</span>
                                 <span class="tabular-nums font-semibold text-slate-900 dark:text-slate-100">
                                     {{ $inv->resumen['capital'] ?? '—' }}
@@ -142,31 +188,35 @@
                             </span>
 
                             <span
-                                class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200">
-                                <span class="font-semibold">% Utilidad:</span>
+                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
+                                         bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200">
+                                <span class="font-semibold">%:</span>
                                 <span class="tabular-nums font-semibold text-indigo-900 dark:text-indigo-100">
                                     {{ $inv->resumen['pct_utilidad_actual'] ?? '—' }}
                                 </span>
                             </span>
 
                             <span
-                                class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
-                                <span class="font-semibold">Utilidad pagada:</span>
+                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
+                                         bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
+                                <span class="font-semibold">Util. Pagada:</span>
                                 <span class="tabular-nums font-semibold text-emerald-900 dark:text-emerald-100">
                                     {{ $inv->resumen['utilidad_pagada'] ?? '—' }}
                                 </span>
                             </span>
 
                             <span
-                                class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
-                                <span class="font-semibold">Utilidad por pagar:</span>
+                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
+                                         bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
+                                <span class="font-semibold">Util. por Pagar:</span>
                                 <span class="tabular-nums font-semibold text-amber-900 dark:text-amber-100">
                                     {{ $inv->resumen['utilidad_por_pagar'] ?? '—' }}
                                 </span>
                             </span>
 
                             <span
-                                class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-gray-100 text-gray-700 dark:bg-neutral-900/40 dark:text-neutral-200">
+                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
+                                         bg-gray-100 text-gray-700 dark:bg-neutral-900/40 dark:text-neutral-200">
                                 <span class="font-semibold">Hasta:</span>
                                 <span class="font-semibold text-gray-900 dark:text-neutral-100">
                                     {{ $inv->resumen['hasta_fecha'] ?? '—' }}
@@ -178,7 +228,8 @@
                         <div class="flex flex-wrap items-center gap-2 text-[13px]">
 
                             <span
-                                class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
+                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
+                                         bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
                                 <span class="font-semibold">Capital:</span>
                                 <span class="tabular-nums font-semibold text-slate-900 dark:text-slate-100">
                                     {{ $inv->resumen['deuda_cuotas'] ?? '—' }}
@@ -186,15 +237,17 @@
                             </span>
 
                             <span
-                                class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-200">
-                                <span class="font-semibold">Interés:</span>
+                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
+                                         bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-200">
+                                <span class="font-semibold">%:</span>
                                 <span class="tabular-nums font-semibold text-rose-900 dark:text-rose-100">
                                     {{ $inv->resumen['interes'] ?? '—' }}
                                 </span>
                             </span>
 
                             <span
-                                class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-200">
+                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
+                                         bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-200">
                                 <span class="font-semibold">Total a pagar:</span>
                                 <span class="tabular-nums font-semibold text-violet-900 dark:text-violet-100">
                                     {{ $inv->resumen['total_a_pagar'] ?? '—' }}
@@ -202,7 +255,8 @@
                             </span>
 
                             <span
-                                class="inline-flex items-center gap-2 rounded-md px-2 py-1 bg-gray-100 text-gray-700 dark:bg-neutral-900/40 dark:text-neutral-200">
+                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
+                                         bg-gray-100 text-gray-700 dark:bg-neutral-900/40 dark:text-neutral-200">
                                 <span class="font-semibold">Hasta:</span>
                                 <span class="font-semibold text-gray-900 dark:text-neutral-100">
                                     {{ $inv->resumen['hasta_fecha'] ?? '—' }}
@@ -213,11 +267,13 @@
                     @endif
                 </div>
 
-                {{-- Fechas --}}
+                {{-- Fechas + acciones --}}
                 <div
-                    class="rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900/20 px-3 py-2">
-                    <div class="flex items-start justify-between gap-3">
-                        <div class="min-w-0">
+                    class="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white/70 dark:bg-neutral-900/30 px-3 py-2.5">
+                    <div class="flex items-center justify-between ">
+
+                        {{-- Fechas (izquierda) --}}
+                        <div class="min-w-0 space-y-1">
                             <div class="inline-flex items-center gap-1.5 text-gray-800 dark:text-neutral-100">
                                 {{-- icon calendar --}}
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
@@ -234,7 +290,9 @@
                                 </span>
                             </div>
 
-                            <div class="mt-1 inline-flex items-center gap-1.5 text-gray-800 dark:text-neutral-100">
+                            <span class="mx-2 shrink-0 text-gray-300 dark:text-neutral-600"></span>
+
+                            <div class="inline-flex items-center gap-1.5 text-gray-800 dark:text-neutral-100">
                                 {{-- icon flag --}}
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -250,15 +308,13 @@
                         </div>
 
                         {{-- Acciones (derecha) --}}
-                        <div class="shrink-0 inline-flex items-center gap-1">
+                        <div class="shrink-0 inline-flex items-center gap-1.5">
                             @can('inversiones.movimiento')
                                 <button type="button"
                                     wire:click="$dispatch('openMovimientosInversion', [{{ $inv->id }}])"
-                                    class="w-9 h-9 cursor-pointer inline-flex items-center justify-center
-                                           rounded-lg border border-gray-300 text-gray-700
-                                           hover:bg-gray-100
-                                           dark:border-neutral-700 dark:text-neutral-200
-                                           dark:hover:bg-neutral-700"
+                                    class="w-9 h-9 inline-flex items-center justify-center rounded-lg border
+                                           border-gray-300 text-gray-700 hover:bg-gray-100
+                                           dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700"
                                     title="Ver movimientos">
                                     {{-- icon list --}}
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
@@ -277,11 +333,12 @@
                             <button type="button"
                                 wire:click="$dispatch('openFotoComprobanteInversion',[{{ $inv->id }}])"
                                 @disabled(!$inv->comprobante)
-                                class="w-9 h-9 cursor-pointer inline-flex items-center justify-center rounded-lg border
+                                class="w-9 h-9 inline-flex items-center justify-center rounded-lg border
                                 {{ $inv->comprobante
                                     ? 'border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700'
                                     : 'border-gray-200 text-gray-300 cursor-not-allowed dark:border-neutral-700 dark:text-neutral-600' }}"
                                 title="Ver imagen">
+                                {{-- icon image --}}
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round">
@@ -296,6 +353,7 @@
 
             </div>
         </div>
+
     @empty
         <div class="p-6 text-center text-gray-500 dark:text-neutral-400">
             No hay inversiones registradas.

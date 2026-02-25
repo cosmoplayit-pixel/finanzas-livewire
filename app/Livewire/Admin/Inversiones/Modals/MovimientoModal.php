@@ -494,6 +494,23 @@ class MovimientoModal extends Component
         $lastRow = $rows->last();
         $lastId = $lastRow ? (int) $lastRow->id : 0;
 
+        // ✅ Para PRIVADO: running capital desde CAPITAL_INICIAL
+        $runningCapital = null;
+
+        if (!$this->isBanco) {
+            $capIniMov = $rows->first(
+                fn($x) => strtoupper((string) ($x->tipo ?? '')) === 'CAPITAL_INICIAL',
+            );
+            $capIni = (float) ($capIniMov?->monto_capital ?? 0);
+
+            if ($capIni <= 0.000001) {
+                $capIni = (float) ($capIniMov?->monto_total ?? 0);
+            }
+
+            $runningCapital = $capIni > 0 ? $capIni : 0.0;
+            $runningCapital = round(max(0.0, $runningCapital), 2);
+        }
+
         foreach ($rows as $m) {
             $imgPath = $m->comprobante_imagen_path ?? ($m->imagen ?? null);
 
@@ -519,9 +536,7 @@ class MovimientoModal extends Component
                 }
             }
 
-            // ✅ Confirmar PRIVADO: solo primer PENDIENTE
-            // 🔥 Importante: NO depender de $this->bloqueado porque ahora $bloqueado también bloquea "Registrar Pago"
-            //               cuando capital_actual==0 por devolución, pero igual se debe poder confirmar pendientes.
+            // ✅ Confirmar PRIVADO: solo primer PENDIENTE (NO depende de $this->bloqueado)
             $puedeConfirmarPrivado =
                 !$this->isBanco &&
                 $tipoRaw === 'PAGO_UTILIDAD' &&
@@ -555,7 +570,7 @@ class MovimientoModal extends Component
                 $puedeEliminarFila = $puedeEliminarFila && (int) $m->id === $lastId;
             }
 
-            // Visual negativos banco
+            // Visual negativos banco (solo BANCO)
             $esPagoCuota = $tipoRaw === 'BANCO_PAGO';
             $capNum = (float) ($m->monto_capital ?? 0);
             $intNum = (float) ($m->monto_interes ?? 0);
@@ -580,6 +595,47 @@ class MovimientoModal extends Component
             }
 
             $utilNum = (float) ($m->monto_utilidad ?? 0);
+
+            // ==========================================================
+            // ✅ PRIVADO: "Actual" por fila CORRECTO (AFTER APPLY)
+            // ==========================================================
+            $capitalActualLinea = null;
+
+            if (!$this->isBanco && $runningCapital !== null) {
+                // Calculamos "after" solo para filas que modifican capital y están PAGADAS
+                $after = $runningCapital;
+
+                if ($estado === 'PAGADO') {
+                    if ($tipoRaw === 'INGRESO_CAPITAL') {
+                        // en tu DB normalmente es positivo, pero por seguridad usamos abs
+                        $after = $runningCapital + abs((float) ($m->monto_capital ?? 0));
+                    } elseif ($tipoRaw === 'DEVOLUCION_CAPITAL') {
+                        // en tu DB normalmente es negativo; si vino positivo igual lo restamos
+                        $val = (float) ($m->monto_capital ?? 0);
+                        $after = $runningCapital + ($val < 0 ? $val : -abs($val));
+                    } elseif ($tipoRaw === 'CAPITAL_INICIAL') {
+                        // ya está en runningCapital
+                        $after = $runningCapital;
+                    }
+                }
+
+                $after = round(max(0.0, (float) $after), 2);
+
+                // Línea verde (siempre muestra el AFTER)
+                $capitalActualLinea =
+                    '   Act. :' .
+                    ($this->moneda === 'USD'
+                        ? '$ ' . number_format($after, 2, ',', '.')
+                        : number_format($after, 2, ',', '.') . ' Bs');
+
+                // Persistimos el runningCapital ya aplicado (solo si la fila cambió capital y está PAGADA)
+                if (
+                    $estado === 'PAGADO' &&
+                    in_array($tipoRaw, ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL'], true)
+                ) {
+                    $runningCapital = $after;
+                }
+            }
 
             $out[] = [
                 'id' => (int) $m->id,
@@ -611,6 +667,9 @@ class MovimientoModal extends Component
 
                 'capital' => $capitalDisplay,
                 'capital_is_negative' => $capitalNegativo,
+
+                // ✅ consume tu TD (línea verde)
+                'capital_actual_linea' => $capitalActualLinea,
 
                 'utilidad' => $utilNum > 0 ? $this->fmtMoney($utilNum) : '—',
                 'total' => $this->fmtMoney((float) ($m->monto_total ?? 0)),

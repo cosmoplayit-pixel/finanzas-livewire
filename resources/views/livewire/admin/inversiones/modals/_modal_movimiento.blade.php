@@ -326,7 +326,17 @@
                                                 : (($m['tipo'] ?? '') === 'DEVOLUCION_CAPITAL'
                                                     ? 'text-red-600 dark:text-red-400'
                                                     : 'text-gray-900 dark:text-neutral-100') }}">
-                                            {{ $m['capital'] }}
+
+                                            <div class="flex flex-col items-center leading-tight">
+                                                <span>{{ $m['capital'] }}</span>
+
+                                                @if (!empty($m['capital_actual_linea']))
+                                                    <span
+                                                        class="mt-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                                        {{ $m['capital_actual_linea'] }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                         </td>
 
                                         {{-- UTILIDAD --}}

@@ -143,7 +143,139 @@ class InversionService
                 ->lockForUpdate()
                 ->get();
 
-            // Revertir bancos por movimientos que realmente impactaron banco
+            // Helper: convierte “monto base” (moneda inversión) a “moneda banco” usando el TC guardado en el movimiento
+            $toBank = function (
+                float $montoBase,
+                string $monInv,
+                string $monBank,
+                float $tc,
+            ): float {
+                $out = $montoBase;
+
+                if ($monInv !== $monBank) {
+                    if ($tc <= 0) {
+                        throw new DomainException('Tipo de cambio inválido para revertir.');
+                    }
+
+                    // En confirmaciones: si invMon=BOB & bankMon=USD => debito = base/TC
+                    // si invMon=USD & bankMon=BOB => debito = base*TC
+                    if ($monInv === 'BOB' && $monBank === 'USD') {
+                        $out = $montoBase / $tc;
+                    } elseif ($monInv === 'USD' && $monBank === 'BOB') {
+                        $out = $montoBase * $tc;
+                    } else {
+                        throw new DomainException('Conversión no soportada para revertir.');
+                    }
+
+                    $out = round($out, 2);
+                }
+
+                return $out;
+            };
+
+            // =========================
+            // 1) PRE-CHECK: simular reversiones y asegurar que ningún banco quedará negativo
+            // =========================
+            $deltaPorBanco = []; // [banco_id => delta (float)] donde delta es lo que se aplicará al banco al eliminar
+            foreach ($rows as $m) {
+                $tipo = strtoupper((string) ($m->tipo ?? ''));
+                $estado = strtoupper((string) ($m->estado ?? ''));
+
+                // PENDIENTE no revierte (no impactó banco)
+                if ($estado === 'PENDIENTE') {
+                    continue;
+                }
+
+                if (empty($m->banco_id)) {
+                    continue;
+                }
+
+                $bancoId = (int) $m->banco_id;
+
+                $monInv = strtoupper((string) ($invLocked->moneda ?? 'BOB'));
+                $tc = (float) ($m->tipo_cambio ?? 0);
+
+                // OJO: aquí NO lockeamos el banco todavía (solo sumamos deltas); el lock va en el chequeo final
+                // Necesitamos moneda del banco para conversiones; si no existe, fallar
+                $bancoMon = strtoupper(
+                    (string) (Banco::query()->whereKey($bancoId)->value('moneda') ?? $monInv),
+                );
+
+                $delta = 0.0;
+
+                // CAPITAL_INICIAL: en crear() se SUMÓ al banco -> al eliminar se RESTA (delta negativo)
+                if ($tipo === 'CAPITAL_INICIAL') {
+                    $monto = (float) ($m->monto_total ?? 0);
+                    if ($monto > 0) {
+                        $delta = -$monto;
+                    }
+                }
+
+                // INGRESO_CAPITAL: en registrarMovimiento() banco SUMA -> al eliminar se RESTA (delta negativo)
+                if ($tipo === 'INGRESO_CAPITAL') {
+                    $monto = (float) ($m->monto_total ?? 0);
+                    if ($monto > 0) {
+                        $delta = -$monto;
+                    }
+                }
+
+                // DEVOLUCION_CAPITAL: en registrarMovimiento() banco RESTA -> al eliminar se SUMA (delta positivo)
+                if ($tipo === 'DEVOLUCION_CAPITAL') {
+                    $monto = (float) ($m->monto_total ?? 0);
+                    if ($monto > 0) {
+                        $delta = +$monto;
+                    }
+                }
+
+                // PAGO_UTILIDAD (PAGADO): en confirmarPagoUtilidad() banco DEBITA utilidad -> al eliminar REEMBOLSA (delta positivo)
+                if ($tipo === 'PAGO_UTILIDAD') {
+                    $montoBase = (float) ($m->monto_utilidad ?? 0);
+                    if ($montoBase > 0) {
+                        $delta = +$toBank($montoBase, $monInv, $bancoMon, $tc);
+                    }
+                }
+
+                // BANCO_PAGO (PAGADO): en confirmarPagoBanco() banco DEBITA total -> al eliminar REEMBOLSA (delta positivo)
+                if ($tipo === 'BANCO_PAGO') {
+                    $montoBase = (float) ($m->monto_total ?? 0);
+                    if ($montoBase > 0) {
+                        $delta = +$toBank($montoBase, $monInv, $bancoMon, $tc);
+                    }
+                }
+
+                if (abs($delta) > 0.000001) {
+                    $deltaPorBanco[$bancoId] = (float) ($deltaPorBanco[$bancoId] ?? 0) + $delta;
+                }
+            }
+
+            // Verificar saldos finales por banco con LOCK (para no tener race conditions)
+            foreach ($deltaPorBanco as $bancoId => $delta) {
+                /** @var Banco $bancoLocked */
+                $bancoLocked = Banco::query()->lockForUpdate()->findOrFail((int) $bancoId);
+
+                $saldoActual = (float) ($bancoLocked->monto ?? 0);
+                $saldoFinal = round($saldoActual + (float) $delta, 2);
+
+                if ($saldoFinal < -0.000001) {
+                    $montoFaltante = round(abs($saldoFinal), 2);
+
+                    $nombre = (string) ($bancoLocked->nombre ?? 'Banco');
+                    $cuenta = (string) ($bancoLocked->numero_cuenta ?? '');
+                    $mon = strtoupper((string) ($bancoLocked->moneda ?? ''));
+                    $monTxt = $mon !== '' ? $mon : '—';
+
+                    throw new DomainException(
+                        "No se puede eliminar: al revertir movimientos, el {$nombre}" .
+                            ($cuenta !== '' ? " ({$cuenta})" : '') .
+                            " quedaría en negativo. Faltan {$montoFaltante} {$monTxt}. " .
+                            'Esto pasa si ya usaste ese saldo en otras operaciones/inversiones.',
+                    );
+                }
+            }
+
+            // =========================
+            // 2) APLICAR REVERSIONES (ya es seguro)
+            // =========================
             foreach ($rows as $m) {
                 $tipo = strtoupper((string) ($m->tipo ?? ''));
                 $estado = strtoupper((string) ($m->estado ?? ''));
@@ -165,35 +297,7 @@ class InversionService
                 $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
                 $tc = (float) ($m->tipo_cambio ?? 0);
 
-                // helper para convertir “monto base” a “moneda banco”
-                $toBank = function (float $montoBase) use ($monInv, $monBank, $tc): float {
-                    $out = $montoBase;
-
-                    if ($monInv !== $monBank) {
-                        if ($tc <= 0) {
-                            throw new DomainException('Tipo de cambio inválido para revertir.');
-                        }
-
-                        // En confirmaciones: si invMon=BOB & bankMon=USD => debito = base/TC
-                        // si invMon=USD & bankMon=BOB => debito = base*TC
-                        if ($monInv === 'BOB' && $monBank === 'USD') {
-                            $out = $montoBase / $tc;
-                        } elseif ($monInv === 'USD' && $monBank === 'BOB') {
-                            $out = $montoBase * $tc;
-                        } else {
-                            throw new DomainException('Conversión no soportada para revertir.');
-                        }
-
-                        $out = round($out, 2);
-                    }
-
-                    return $out;
-                };
-
-                // ===== Reversiones =====
-
                 if ($tipo === 'CAPITAL_INICIAL') {
-                    // En crear(): si tuvo banco, se SUMÓ monto_total al banco
                     $monto = (float) ($m->monto_total ?? 0);
                     if ($monto > 0) {
                         $banco->monto = (float) ($banco->monto ?? 0) - $monto;
@@ -203,7 +307,6 @@ class InversionService
                 }
 
                 if ($tipo === 'INGRESO_CAPITAL') {
-                    // En registrarMovimiento(): banco SUMA monto_total
                     $monto = (float) ($m->monto_total ?? 0);
                     if ($monto > 0) {
                         $banco->monto = (float) ($banco->monto ?? 0) - $monto;
@@ -213,7 +316,6 @@ class InversionService
                 }
 
                 if ($tipo === 'DEVOLUCION_CAPITAL') {
-                    // En registrarMovimiento(): banco RESTA monto_total
                     $monto = (float) ($m->monto_total ?? 0);
                     if ($monto > 0) {
                         $banco->monto = (float) ($banco->monto ?? 0) + $monto;
@@ -223,10 +325,9 @@ class InversionService
                 }
 
                 if ($tipo === 'PAGO_UTILIDAD') {
-                    // En confirmarPagoUtilidad(): banco DEBITA monto_utilidad (convertido si aplica)
                     $montoBase = (float) ($m->monto_utilidad ?? 0);
                     if ($montoBase > 0) {
-                        $reembolso = $toBank($montoBase);
+                        $reembolso = $toBank($montoBase, $monInv, $monBank, $tc);
                         $banco->monto = (float) ($banco->monto ?? 0) + $reembolso;
                         $banco->save();
                     }
@@ -234,10 +335,9 @@ class InversionService
                 }
 
                 if ($tipo === 'BANCO_PAGO') {
-                    // En confirmarPagoBanco(): banco DEBITA monto_total (convertido si aplica)
                     $montoBase = (float) ($m->monto_total ?? 0);
                     if ($montoBase > 0) {
-                        $reembolso = $toBank($montoBase);
+                        $reembolso = $toBank($montoBase, $monInv, $monBank, $tc);
                         $banco->monto = (float) ($banco->monto ?? 0) + $reembolso;
                         $banco->save();
                     }

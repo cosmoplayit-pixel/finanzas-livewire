@@ -169,56 +169,51 @@
                     </div>
                 </div>
 
-                {{-- Resumen chips --}}
+                {{-- Resumen chips (todos con color de Capital) --}}
                 <div class="space-y-2">
                     <div class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
                         Resumen
                     </div>
 
+                    @php
+                        $chipBase = 'bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200';
+                        $chipValue = 'text-slate-900 dark:text-slate-100';
+                    @endphp
+
                     @if ($isPrivado)
                         <div class="flex flex-wrap items-center gap-2 text-[13px]">
 
-                            <span
-                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
-                                         bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
+                            <span class="inline-flex items-center gap-2 rounded-lg px-2 py-1 {{ $chipBase }}">
                                 <span class="font-semibold">Capital:</span>
-                                <span class="tabular-nums font-semibold text-slate-900 dark:text-slate-100">
+                                <span class="tabular-nums font-semibold {{ $chipValue }}">
                                     {{ $inv->resumen['capital'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span
-                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
-                                         bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200">
+                            <span class="inline-flex items-center gap-2 rounded-lg px-2 py-1 {{ $chipBase }}">
                                 <span class="font-semibold">%:</span>
-                                <span class="tabular-nums font-semibold text-indigo-900 dark:text-indigo-100">
+                                <span class="tabular-nums font-semibold {{ $chipValue }}">
                                     {{ $inv->resumen['pct_utilidad_actual'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span
-                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
-                                         bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200">
+                            <span class="inline-flex items-center gap-2 rounded-lg px-2 py-1 {{ $chipBase }}">
                                 <span class="font-semibold">Util. Pagada:</span>
-                                <span class="tabular-nums font-semibold text-emerald-900 dark:text-emerald-100">
+                                <span class="tabular-nums font-semibold {{ $chipValue }}">
                                     {{ $inv->resumen['utilidad_pagada'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span
-                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
-                                         bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
+                            <span class="inline-flex items-center gap-2 rounded-lg px-2 py-1 {{ $chipBase }}">
                                 <span class="font-semibold">Util. por Pagar:</span>
-                                <span class="tabular-nums font-semibold text-amber-900 dark:text-amber-100">
+                                <span class="tabular-nums font-semibold {{ $chipValue }}">
                                     {{ $inv->resumen['utilidad_por_pagar'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span
-                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
-                                         bg-gray-100 text-gray-700 dark:bg-neutral-900/40 dark:text-neutral-200">
+                            <span class="inline-flex items-center gap-2 rounded-lg px-2 py-1 {{ $chipBase }}">
                                 <span class="font-semibold">Hasta:</span>
-                                <span class="font-semibold text-gray-900 dark:text-neutral-100">
+                                <span class="font-semibold {{ $chipValue }}">
                                     {{ $inv->resumen['hasta_fecha'] ?? '—' }}
                                 </span>
                             </span>
@@ -227,38 +222,30 @@
                     @else
                         <div class="flex flex-wrap items-center gap-2 text-[13px]">
 
-                            <span
-                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
-                                         bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200">
+                            <span class="inline-flex items-center gap-2 rounded-lg px-2 py-1 {{ $chipBase }}">
                                 <span class="font-semibold">Capital:</span>
-                                <span class="tabular-nums font-semibold text-slate-900 dark:text-slate-100">
+                                <span class="tabular-nums font-semibold {{ $chipValue }}">
                                     {{ $inv->resumen['deuda_cuotas'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span
-                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
-                                         bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-200">
+                            <span class="inline-flex items-center gap-2 rounded-lg px-2 py-1 {{ $chipBase }}">
                                 <span class="font-semibold">%:</span>
-                                <span class="tabular-nums font-semibold text-rose-900 dark:text-rose-100">
+                                <span class="tabular-nums font-semibold {{ $chipValue }}">
                                     {{ $inv->resumen['interes'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span
-                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
-                                         bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-200">
+                            <span class="inline-flex items-center gap-2 rounded-lg px-2 py-1 {{ $chipBase }}">
                                 <span class="font-semibold">Total a pagar:</span>
-                                <span class="tabular-nums font-semibold text-violet-900 dark:text-violet-100">
+                                <span class="tabular-nums font-semibold {{ $chipValue }}">
                                     {{ $inv->resumen['total_a_pagar'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span
-                                class="inline-flex items-center gap-2 rounded-lg px-2 py-1
-                                         bg-gray-100 text-gray-700 dark:bg-neutral-900/40 dark:text-neutral-200">
+                            <span class="inline-flex items-center gap-2 rounded-lg px-2 py-1 {{ $chipBase }}">
                                 <span class="font-semibold">Hasta:</span>
-                                <span class="font-semibold text-gray-900 dark:text-neutral-100">
+                                <span class="font-semibold {{ $chipValue }}">
                                     {{ $inv->resumen['hasta_fecha'] ?? '—' }}
                                 </span>
                             </span>

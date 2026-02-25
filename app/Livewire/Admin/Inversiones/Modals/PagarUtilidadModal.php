@@ -18,71 +18,73 @@ class PagarUtilidadModal extends Component
 {
     use WithFileUploads;
 
-    // Flags de UI
-    public bool $open = false;
-    public bool $fechaPagoTouched = false;
+    // MODAL / FLAGS UI
+    public bool $open = false; // Controla si el modal está abierto
+    public bool $fechaPagoTouched = false; // Evita que el sistema sobreescriba fecha_pago si el usuario ya la tocó
 
-    // Inversión actual
-    public ?Inversion $inversion = null;
+    // CONTEXTO ACTUAL
+    public ?Inversion $inversion = null; // Inversión cargada en el modal
 
-    // Form
-    public string $tipo_pago = 'PAGO_UTILIDAD';
-    public array $bancos = [];
+    // FORM: TIPO Y DATA DE SOPORTE
+    public string $tipo_pago = 'PAGO_UTILIDAD'; // Tipo de operación: PAGO_UTILIDAD / INGRESO_CAPITAL / DEVOLUCION_CAPITAL
+    public array $bancos = []; // Lista de bancos disponibles (para el select)
 
-    // Fechas
-    public string $fecha = ''; // fecha final (cierre del periodo para utilidad) o contable para ingreso/devolución
-    public ?string $fecha_pago = null; // fecha del pago real
+    // FORM: FECHAS
+    public string $fecha = ''; // Utilidad: fecha final del periodo; Ingreso/Devolución: fecha contable
+    public ?string $fecha_pago = null; // Fecha real del pago (input)
 
-    // Banco y comprobante
-    public ?int $banco_id = null;
-    public ?string $nro_comprobante = null;
-    public ?string $mov_moneda = null;
+    // FORM: BANCO / COMPROBANTE
+    public ?int $banco_id = null; // Banco seleccionado
+    public ?string $nro_comprobante = null; // Nro de comprobante
+    public ?string $mov_moneda = null; // Moneda del banco seleccionado
 
-    // Capital / TC
-    public ?string $monto_capital_formatted = null;
-    public ?float $monto_capital = null;
+    // FORM: CAPITAL (INGRESO/DEVOLUCIÓN) / TIPO DE CAMBIO
+    public ?string $monto_capital_formatted = null; // Monto capital formateado (input)
+    public ?float $monto_capital = null; // Monto capital numérico (base en moneda banco, luego se convierte)
 
-    public ?string $tipo_cambio_formatted = null;
-    public ?float $tipo_cambio = null;
+    public ?string $tipo_cambio_formatted = null; // Tipo de cambio formateado (input)
+    public ?float $tipo_cambio = null; // Tipo de cambio numérico
 
-    public bool $needs_tc = false;
-    public ?string $monto_base_preview = null;
+    public bool $needs_tc = false; // Flag si requiere TC (moneda inv != moneda banco)
+    public ?string $monto_base_preview = null; // Preview del monto convertido a moneda base de la inversión
 
-    // Utilidad
-    public string $utilidad_fecha_inicio = '';
-    public int $utilidad_dias = 0;
+    // UTILIDAD: PERIODO / DÍAS
+    public string $utilidad_fecha_inicio = ''; // Fecha inicio del periodo de utilidad (tramo)
+    public int $utilidad_dias = 0; // Días calculados del periodo
 
-    public float $utilidad_pct_mensual = 0.0;
-    public float $utilidad_monto_mes = 0.0;
-    public ?string $utilidad_monto_mes_formatted = null;
+    // UTILIDAD: MONTO MENSUAL Y % (CÁLCULO)
+    public float $utilidad_pct_mensual = 0.0; // % mensual configurado en la inversión (referencial)
+    public float $utilidad_monto_mes = 0.0; // Monto mensual ingresado (base para prorrateo)
+    public ?string $utilidad_monto_mes_formatted = null; // Monto mensual formateado (input)
 
-    public float $utilidad_pct_calc = 0.0;
-    public float $utilidad_a_pagar = 0.0;
-    public ?string $utilidad_a_pagar_formatted = null;
+    public float $utilidad_pct_calc = 0.0; // % calculado (monto_mes / capital_base_tramo)
+    public float $utilidad_a_pagar = 0.0; // Monto a pagar prorrateado (monto_mes/30*días)
+    public ?string $utilidad_a_pagar_formatted = null; // Monto a pagar formateado (UI)
 
-    public float $utilidad_debito_banco = 0.0;
-    public ?string $utilidad_debito_banco_formatted = null;
+    // UTILIDAD: DÉBITO REAL AL BANCO (CON TC)
+    public float $utilidad_debito_banco = 0.0; // Monto que se debitaría del banco (conversión incluida)
+    public ?string $utilidad_debito_banco_formatted = null; // Débito formateado (UI)
 
-    // Comprobante
-    public $comprobante_imagen = null;
+    // COMPROBANTE (UPLOAD)
+    public $comprobante_imagen = null; // Archivo de comprobante (upload)
 
-    // Impacto financiero (preview)
-    public float $preview_banco_actual = 0.0;
-    public float $preview_banco_despues = 0.0;
-    public float $preview_capital_actual = 0.0;
-    public float $preview_capital_despues = 0.0;
+    // PREVIEW / IMPACTO FINANCIERO (UI)
+    public float $preview_banco_actual = 0.0; // Saldo actual del banco seleccionado
+    public float $preview_banco_despues = 0.0; // Saldo banco después del débito/crédito
+    public float $preview_capital_actual = 0.0; // Capital actual de la inversión
+    public float $preview_capital_despues = 0.0; // Capital después del movimiento (ingreso/devolución)
 
-    public string $preview_banco_actual_fmt = '0,00';
-    public string $preview_banco_despues_fmt = '0,00';
-    public string $preview_capital_actual_fmt = '0,00';
-    public string $preview_capital_despues_fmt = '0,00';
+    public string $preview_banco_actual_fmt = '0,00'; // Formato UI banco actual
+    public string $preview_banco_despues_fmt = '0,00'; // Formato UI banco después
+    public string $preview_capital_actual_fmt = '0,00'; // Formato UI capital actual
+    public string $preview_capital_despues_fmt = '0,00'; // Formato UI capital después
 
-    public bool $impacto_ok = true;
-    public string $impacto_texto = 'Seleccione un banco.';
-    public ?string $impacto_detalle = null;
+    public bool $impacto_ok = true; // Flag para permitir guardar (saldo/TC/validaciones ok)
+    public string $impacto_texto = 'Seleccione un banco.'; // Mensaje UI del estado del impacto
+    public ?string $impacto_detalle = null; // Detalle UI (Banco: X • Base: Y)
 
-    // Referencia para ingreso/devolución
-    public string $fecha_inicio_ref = '';
+    // REFERENCIA PARA INGRESO / DEVOLUCIÓN
+    public string $fecha_inicio_ref = ''; // Última fecha de movimiento usada como referencia/auto-fecha para ingreso/devolución
 
     // mount: inicializa valores base
     public function mount(): void
@@ -191,6 +193,9 @@ class PagarUtilidadModal extends Component
 
         $this->utilidad_monto_mes = 0.0;
         $this->utilidad_monto_mes_formatted = null;
+
+        $this->fechaPagoTouched = false;
+        $this->fecha_pago = null;
 
         // Aplica sugerencias de fechas (utilidad sin huecos)
         $this->applyDefaultsByTipo($this->tipo_pago);
@@ -374,27 +379,25 @@ class PagarUtilidadModal extends Component
     {
         $tipo = strtoupper(trim($tipo));
 
+        // --- referencia: última fecha ---
         $this->fecha_inicio_ref = $this->fechaInicioAuto();
 
+        // Si el usuario ya tocó fecha_pago manualmente, no la pisamos
         $touched = $this->fechaPagoTouched === true;
 
-        if ($tipo === 'INGRESO_CAPITAL') {
+        if ($tipo === 'INGRESO_CAPITAL' || $tipo === 'DEVOLUCION_CAPITAL') {
+            // Mostrar “Fecha de inicio (últ. movimiento)”
             $this->fecha = $this->fecha_inicio_ref;
+
+            // ✅ Sugerir fecha_pago igual a la fecha inicio (últ movimiento)
             if (!$touched) {
-                $this->fecha_pago = now()->toDateString();
+                $this->fecha_pago = $this->fecha_inicio_ref;
             }
+
             return;
         }
 
-        if ($tipo === 'DEVOLUCION_CAPITAL') {
-            $this->fecha = $this->fecha_inicio_ref;
-            if (!$touched) {
-                $this->fecha_pago = now()->toDateString();
-            }
-            return;
-        }
-
-        // Utilidad: usar el primer hueco real entre periodos.
+        // Utilidad: huecos
         $p = $this->nextPeriodoUtilidadNoHuecos();
 
         $this->utilidad_fecha_inicio = $p['inicio'];
@@ -512,24 +515,30 @@ class PagarUtilidadModal extends Component
             ->exists();
     }
 
-    // fechaInicioAuto: referencia para ingreso/devolución (último movimiento real)
     protected function fechaInicioAuto(): string
     {
         if (!$this->inversion) {
             return now()->toDateString();
         }
 
+        // Último movimiento real (por fecha contable, luego nro, luego id)
         $last = InversionMovimiento::query()
             ->where('inversion_id', $this->inversion->id)
+            ->orderByDesc('fecha')
             ->orderByDesc('nro')
             ->orderByDesc('id')
             ->first(['fecha', 'fecha_pago']);
 
         if ($last) {
-            $ref = $last->fecha_pago ?: $last->fecha;
-            return Carbon::parse($ref)->toDateString();
+            // Prioridad: fecha contable; si no hay, fecha_pago
+            $ref = $last->fecha ?: $last->fecha_pago;
+
+            if (!empty($ref)) {
+                return Carbon::parse($ref)->toDateString();
+            }
         }
 
+        // Si no hay movimientos, usar fecha_inicio de la inversión
         if (!empty($this->inversion->fecha_inicio)) {
             return Carbon::parse($this->inversion->fecha_inicio)->toDateString();
         }
@@ -540,13 +549,73 @@ class PagarUtilidadModal extends Component
     // recalcUtilidadPago: calcula días y monto a pagar para el periodo seleccionado
     protected function recalcUtilidadPago(): void
     {
-        $cap = (float) ($this->inversion?->capital_actual ?? 0);
+        // ===== 1) Capital BASE del TRAMO (al inicio del periodo) =====
+        $capBase = 0.0;
+
+        if ($this->inversion && $this->utilidad_fecha_inicio !== '') {
+            try {
+                $ini = Carbon::createFromFormat(
+                    'Y-m-d',
+                    $this->utilidad_fecha_inicio,
+                )->startOfDay();
+
+                // Capital inicial
+                $capInicial = (float) InversionMovimiento::query()
+                    ->where('inversion_id', $this->inversion->id)
+                    ->where('tipo', 'CAPITAL_INICIAL')
+                    ->orderBy('nro')
+                    ->orderBy('id')
+                    ->value('monto_capital');
+
+                if ($capInicial <= 0.000001) {
+                    $capInicial = (float) InversionMovimiento::query()
+                        ->where('inversion_id', $this->inversion->id)
+                        ->where('tipo', 'CAPITAL_INICIAL')
+                        ->orderBy('nro')
+                        ->orderBy('id')
+                        ->value('monto_total');
+                }
+
+                $capBase = max(0.0, (float) $capInicial);
+
+                // Aplicar movimientos de capital HASTA el inicio del tramo (incluye ese día)
+                $movsCapital = InversionMovimiento::query()
+                    ->where('inversion_id', $this->inversion->id)
+                    ->whereIn('tipo', ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL'])
+                    ->whereIn('estado', ['PAGADO']) // impacto real
+                    ->whereDate('fecha', '<=', $ini->toDateString())
+                    ->orderBy('fecha')
+                    ->orderBy('nro')
+                    ->orderBy('id')
+                    ->get(['tipo', 'monto_capital']);
+
+                foreach ($movsCapital as $m) {
+                    // En tu service:
+                    // - INGRESO_CAPITAL guarda monto_capital POSITIVO
+                    // - DEVOLUCION_CAPITAL guarda monto_capital NEGATIVO
+                    $capBase += (float) ($m->monto_capital ?? 0);
+                }
+
+                $capBase = max(0.0, round($capBase, 2));
+            } catch (\Throwable $e) {
+                // Si algo falla, cae a capital_actual como fallback (pero idealmente no pasa)
+                $capBase = (float) ($this->inversion?->capital_actual ?? 0);
+            }
+        } else {
+            $capBase = (float) ($this->inversion?->capital_actual ?? 0);
+        }
+
+        // ===== 2) % mensual "esperado" y monto mes ingresado =====
+        // (Tu % mensual de la inversión lo sigues mostrando si quieres, pero el cálculo usa capBase)
         $this->utilidad_pct_mensual = (float) ($this->inversion?->porcentaje_utilidad ?? 0);
 
         $montoMes = (float) ($this->utilidad_monto_mes ?? 0);
-        $this->utilidad_pct_calc =
-            $cap > 0 && $montoMes > 0 ? round(($montoMes / $cap) * 100, 2) : 0.0;
 
+        // ✅ Ahora el % se calcula contra el capital BASE DEL TRAMO, no contra capital_actual global
+        $this->utilidad_pct_calc =
+            $capBase > 0 && $montoMes > 0 ? round(($montoMes / $capBase) * 100, 2) : 0.0;
+
+        // ===== 3) Días del tramo (inicio -> fecha final) =====
         $inicio = $this->parseStrictDate($this->utilidad_fecha_inicio);
         $final = $this->parseStrictDate($this->fecha);
 
@@ -565,7 +634,7 @@ class PagarUtilidadModal extends Component
 
         $this->utilidad_dias = (int) $dias;
 
-        // Prorrateo con mes base 30
+        // ===== 4) Prorrateo con mes base 30 =====
         $this->utilidad_a_pagar =
             $montoMes > 0 && $dias > 0 ? round(($montoMes / 30) * $dias, 2) : 0.0;
 
@@ -574,6 +643,7 @@ class PagarUtilidadModal extends Component
                 ? number_format($this->utilidad_a_pagar, 2, ',', '.')
                 : null;
 
+        // ===== 5) Recalcular débito banco y previews =====
         $this->recalcUtilidadDebitoBanco();
         $this->recalcTcPreview();
     }
@@ -843,7 +913,7 @@ class PagarUtilidadModal extends Component
         }
     }
 
-    // recalcImpacto: calcula preview de banco y capital y texto de estado
+    // recalcImpacto: calcula preview de banco y capital y texto de estado (y setea errores UI en campos clave)
     protected function recalcImpacto(): void
     {
         $this->preview_capital_actual = (float) ($this->inversion?->capital_actual ?? 0);
@@ -855,6 +925,13 @@ class PagarUtilidadModal extends Component
         $this->impacto_ok = true;
         $this->impacto_texto = $this->banco_id ? 'Listo para registrar.' : 'Seleccione un banco.';
         $this->impacto_detalle = null;
+
+        // ✅ Limpia errores "de impacto" para que no queden pegados cuando el usuario corrige
+        $this->resetErrorBag('banco_id');
+
+        // Campos donde quieres ver el error según el tipo:
+        $this->resetErrorBag('utilidad_monto_mes'); // para PAGO_UTILIDAD
+        $this->resetErrorBag('monto_capital'); // para INGRESO/DEVOLUCION
 
         $invMon = strtoupper((string) ($this->inversion?->moneda ?? 'BOB'));
 
@@ -870,6 +947,9 @@ class PagarUtilidadModal extends Component
         $this->preview_banco_actual = $saldoBank;
         $this->preview_banco_despues = $saldoBank;
 
+        // =========================
+        // PAGO UTILIDAD
+        // =========================
         if ($this->tipo_pago === 'PAGO_UTILIDAD') {
             $debito = $this->needs_tc
                 ? (float) ($this->utilidad_debito_banco ?? 0)
@@ -881,6 +961,9 @@ class PagarUtilidadModal extends Component
                 if ($this->preview_banco_despues < 0) {
                     $this->impacto_ok = false;
                     $this->impacto_texto = 'Saldo insuficiente en banco.';
+
+                    // ✅ Aquí es donde lo quieres: debajo de "Monto utilidad mes"
+                    $this->addError('utilidad_monto_mes', 'Saldo insuficiente en banco.');
                 } else {
                     $this->impacto_texto = 'Se debitará el banco.';
                 }
@@ -893,6 +976,9 @@ class PagarUtilidadModal extends Component
             return;
         }
 
+        // =========================
+        // INGRESO / DEVOLUCION
+        // =========================
         $montoBanco = (float) ($this->monto_capital ?? 0);
         if ($montoBanco <= 0) {
             $this->impacto_texto = 'Ingrese el monto.';
@@ -901,11 +987,16 @@ class PagarUtilidadModal extends Component
         }
 
         $montoBase = $montoBanco;
+
         if ($invMon !== $bankMon) {
             $tc = (float) ($this->tipo_cambio ?? 0);
             if ($tc <= 0) {
                 $this->impacto_ok = false;
                 $this->impacto_texto = 'Tipo de cambio requerido.';
+
+                // (Opcional) si quieres también marcar error en tipo_cambio cuando falta
+                // $this->addError('tipo_cambio', 'Tipo de cambio requerido.');
+
                 $this->formatImpacto($invMon, $bankMon);
                 return;
             }
@@ -931,6 +1022,9 @@ class PagarUtilidadModal extends Component
             } elseif ($this->preview_banco_despues < 0) {
                 $this->impacto_ok = false;
                 $this->impacto_texto = 'Saldo insuficiente en banco.';
+
+                // ✅ Aquí es donde lo quieres: debajo de "Monto (capital)"
+                $this->addError('monto_capital', 'Saldo insuficiente en banco.');
             } else {
                 $this->impacto_texto = 'Se reducirá capital y banco.';
             }

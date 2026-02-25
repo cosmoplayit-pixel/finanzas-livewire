@@ -445,47 +445,16 @@
                                                 @endif
 
                                                 {{-- Eliminar por fila (excepto CAPITAL_INICIAL) --}}
-                                                @if (!empty($m['puede_eliminar_fila']))
-                                                    @if (($m['estado'] ?? '') === 'PAGADO')
-                                                        {{-- PAGADO => pide contraseña (modal) --}}
-                                                        <button type="button"
-                                                            class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                border-red-300 text-red-700 hover:bg-red-100
-                dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
-                                                            title="Eliminar (requiere contraseña)"
-                                                            wire:click="abrirEliminarFilaModal({{ (int) $m['id'] }})">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                                viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2"
-                                                                stroke-linecap="round" stroke-linejoin="round">
-                                                                <path d="M3 6h18" />
-                                                                <path d="M8 6V4h8v2" />
-                                                                <path d="M6 6l1 16h10l1-16" />
-                                                                <path d="M10 11v6" />
-                                                                <path d="M14 11v6" />
-                                                            </svg>
-                                                        </button>
-                                                    @else
-                                                        {{-- PENDIENTE => SweetAlert como estaba --}}
-                                                        <div x-data class="flex items-center">
+                                                @if (($m['tipo'] ?? '') !== 'CAPITAL_INICIAL')
+                                                    @if (!empty($m['puede_eliminar_fila']))
+                                                        {{-- (Tu lógica actual de borrado, igualita) --}}
+                                                        @if (($m['estado'] ?? '') === 'PAGADO')
                                                             <button type="button"
                                                                 class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                                    border-red-300 text-red-700 hover:bg-red-100
-                                                                    dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
-                                                                title="Eliminar registro"
-                                                                @click.prevent="
-                                                                    Swal.fire({
-                                                                        title: '¿Eliminar este registro?',
-                                                                        text: 'Esta acción revertirá banco/capital según corresponda.',
-                                                                        icon: 'warning',
-                                                                        showCancelButton: true,
-                                                                        confirmButtonText: 'Sí, eliminar',
-                                                                        cancelButtonText: 'Cancelar',
-                                                                        reverseButtons: true,
-                                                                        confirmButtonColor: '#dc2626',
-                                                                        cancelButtonColor: '#6b7280',
-                                                                    }).then((r) => { if (r.isConfirmed) { $wire.eliminarMovimientoFila({{ (int) $m['id'] }}); } });
-                                                                ">
+                                                                border-red-300 text-red-700 hover:bg-red-100
+                                                                dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
+                                                                title="Eliminar (requiere contraseña)"
+                                                                wire:click="abrirEliminarFilaModal({{ (int) $m['id'] }})">
                                                                 <svg xmlns="http://www.w3.org/2000/svg"
                                                                     class="w-4 h-4" viewBox="0 0 24 24"
                                                                     fill="none" stroke="currentColor"
@@ -498,7 +467,62 @@
                                                                     <path d="M14 11v6" />
                                                                 </svg>
                                                             </button>
-                                                        </div>
+                                                        @else
+                                                            <div x-data class="flex items-center">
+                                                                <button type="button"
+                                                                    class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
+                                                                        border-red-300 text-red-700 hover:bg-red-100
+                                                                        dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
+                                                                    title="Eliminar registro"
+                                                                    @click.prevent="
+                                                                        Swal.fire({
+                                                                            title: '¿Eliminar este registro?',
+                                                                            text: 'Esta acción revertirá banco/capital según corresponda.',
+                                                                            icon: 'warning',
+                                                                            showCancelButton: true,
+                                                                            confirmButtonText: 'Sí, eliminar',
+                                                                            cancelButtonText: 'Cancelar',
+                                                                            reverseButtons: true,
+                                                                            confirmButtonColor: '#dc2626',
+                                                                            cancelButtonColor: '#6b7280',
+                                                                        }).then((r) => { if (r.isConfirmed) { $wire.eliminarMovimientoFila({{ (int) $m['id'] }}); } });
+                                                                    ">
+                                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                                        class="w-4 h-4" viewBox="0 0 24 24"
+                                                                        fill="none" stroke="currentColor"
+                                                                        stroke-width="2" stroke-linecap="round"
+                                                                        stroke-linejoin="round">
+                                                                        <path d="M3 6h18" />
+                                                                        <path d="M8 6V4h8v2" />
+                                                                        <path d="M6 6l1 16h10l1-16" />
+                                                                        <path d="M10 11v6" />
+                                                                        <path d="M14 11v6" />
+                                                                    </svg>
+                                                                </button>
+                                                            </div>
+                                                        @endif
+                                                    @else
+                                                        {{-- ✅ Bloqueado SOLO para INGRESO/DEVOLUCIÓN que no son el último --}}
+                                                        @if (in_array($m['tipo'] ?? '', ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL'], true))
+                                                            <button type="button"
+                                                                class="w-8 h-8 inline-flex items-center justify-center rounded-lg border
+                                                                border-gray-200 text-gray-400 cursor-not-allowed
+                                                                dark:border-neutral-700 dark:text-neutral-500"
+                                                                title="No se puede eliminar porque existen movimientos posteriores. Solo se permite eliminar si es el último registro."
+                                                                disabled>
+                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                    class="w-4 h-4" viewBox="0 0 24 24"
+                                                                    fill="none" stroke="currentColor"
+                                                                    stroke-width="2" stroke-linecap="round"
+                                                                    stroke-linejoin="round">
+                                                                    <path d="M3 6h18" />
+                                                                    <path d="M8 6V4h8v2" />
+                                                                    <path d="M6 6l1 16h10l1-16" />
+                                                                    <path d="M10 11v6" />
+                                                                    <path d="M14 11v6" />
+                                                                </svg>
+                                                            </button>
+                                                        @endif
                                                     @endif
                                                 @endif
 
@@ -614,7 +638,7 @@
                                     <td class="p-3 text-center">
                                         <div class="flex flex-col items-center leading-tight">
                                             <span
-                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Capital</span>
+                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">—</span>
                                             <span
                                                 class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
                                                 {{ $totales['pendiente']['sumCapitalFmt'] }}

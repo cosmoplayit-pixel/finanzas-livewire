@@ -368,18 +368,18 @@
                 @if ($modoConfirmar && $movimientoId)
                     {{-- Confirmar (guarda cambios + confirma) --}}
                     <button type="button" wire:click="confirmar" wire:loading.attr="disabled"
-                        wire:target="confirmar,save,comprobante_imagen"
+                        wire:target="confirmar,save,comprobante_imagen" @disabled(!$this->canSubmit)
                         class="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 cursor-pointer
-                        disabled:opacity-50 disabled:cursor-not-allowed">
+                disabled:opacity-50 disabled:cursor-not-allowed">
                         <span wire:loading.remove wire:target="confirmar,save,comprobante_imagen">Confirmar</span>
                         <span wire:loading wire:target="confirmar,save,comprobante_imagen">Confirmando…</span>
                     </button>
                 @else
                     {{-- Guardar (crea pendiente) --}}
                     <button type="button" wire:click="save" wire:loading.attr="disabled"
-                        wire:target="save,comprobante_imagen"
+                        wire:target="save,comprobante_imagen" @disabled(!$this->canSubmit)
                         class="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:opacity-90 cursor-pointer
-                        disabled:opacity-50 disabled:cursor-not-allowed">
+                disabled:opacity-50 disabled:cursor-not-allowed">
                         <span wire:loading.remove wire:target="save,comprobante_imagen">Guardar</span>
                         <span wire:loading wire:target="save,comprobante_imagen">Procesando…</span>
                     </button>

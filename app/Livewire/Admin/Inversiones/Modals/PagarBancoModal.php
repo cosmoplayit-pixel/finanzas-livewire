@@ -17,115 +17,65 @@ class PagarBancoModal extends Component
 {
     use WithFileUploads;
 
-    public bool $open = false;
-    public ?Inversion $inversion = null;
+    // MODAL / CONTEXTO
 
+    public bool $open = false; // Controla si el modal está abierto
+    public ?Inversion $inversion = null; // Inversión BANCO cargada en el modal
+
+    // DATA DE SOPORTE (LISTAS)
     /** @var array<int, array{id:int,nombre:string,numero_cuenta:?string,moneda:?string,monto:float}> */
-    public array $bancos = [];
+    public array $bancos = []; // Lista de bancos disponibles (para el select)
 
-    public string $fecha = '';
-    public ?string $fecha_pago = null;
-    public ?string $banco_id = '';
-    public ?string $nro_comprobante = null;
-    public $comprobante_imagen = null;
+    // FORM: FECHAS / BANCO / COMPROBANTE
+    public string $fecha = ''; // Fecha contable del pago banco
+    public ?string $fecha_pago = null; // Fecha real del pago
+    public ?string $banco_id = ''; // Banco seleccionado (string por Livewire/select)
+    public ?string $nro_comprobante = null; // Nro de comprobante (opcional)
+    public $comprobante_imagen = null; // Archivo de comprobante (upload)
 
-    public ?string $mov_moneda = null;
-    public ?float $tipo_cambio = null;
-    public ?string $tipo_cambio_formatted = null;
-    public bool $needs_tc = false;
+    // MONEDAS / TIPO DE CAMBIO
+    public ?string $mov_moneda = null; // Moneda del banco seleccionado
+    public ?float $tipo_cambio = null; // Tipo de cambio ingresado
+    public ?string $tipo_cambio_formatted = null; // TC formateado para input
+    public bool $needs_tc = false; // Flag si requiere TC (moneda inv != moneda banco)
 
-    public ?float $monto_total = 0.0;
-    public ?string $monto_total_formatted = '0,00';
+    // FORM: MONTOS (INPUTS)
+    public ?float $monto_total = 0.0; // Total de la cuota
+    public ?string $monto_total_formatted = '0,00'; // Total formateado
 
-    public ?float $monto_capital = 0.0;
-    public ?string $monto_capital_formatted = '0,00';
+    public ?float $monto_capital = 0.0; // Capital de la cuota
+    public ?string $monto_capital_formatted = '0,00'; // Capital formateado
 
-    public ?float $monto_interes = 0.0;
-    public ?string $monto_interes_formatted = '0,00';
+    public ?float $monto_interes = 0.0; // Interés (derivado: total - capital)
+    public ?string $monto_interes_formatted = '0,00'; // Interés formateado
 
-    public float $preview_banco_actual = 0.0;
-    public float $preview_banco_despues = 0.0;
-    public float $preview_deuda_actual = 0.0;
-    public float $preview_deuda_despues = 0.0;
+    // PREVIEW / IMPACTO FINANCIERO (UI)
+    public float $preview_banco_actual = 0.0; // Saldo actual del banco seleccionado
+    public float $preview_banco_despues = 0.0; // Saldo del banco luego del débito (según TC si aplica)
+    public float $preview_deuda_actual = 0.0; // Deuda actual (capital_actual de la inversión)
+    public float $preview_deuda_despues = 0.0; // Deuda después (deuda - capital)
 
-    public string $preview_banco_actual_fmt = '0,00';
-    public string $preview_banco_despues_fmt = '0,00';
-    public string $preview_deuda_actual_fmt = '0,00';
-    public string $preview_deuda_despues_fmt = '0,00';
+    public string $preview_banco_actual_fmt = '0,00'; // Formato UI banco actual
+    public string $preview_banco_despues_fmt = '0,00'; // Formato UI banco después
+    public string $preview_deuda_actual_fmt = '0,00'; // Formato UI deuda actual
+    public string $preview_deuda_despues_fmt = '0,00'; // Formato UI deuda después
 
-    public bool $impacto_ok = true;
-    public string $impacto_texto = 'Seleccione un banco.';
-    public ?string $impacto_detalle = null;
+    public bool $impacto_ok = true; // Flag: permite guardar/confirmar según saldo/TC
+    public string $impacto_texto = 'Seleccione un banco.'; // Mensaje UI del estado del impacto
+    public ?string $impacto_detalle = null; // Detalle UI (Banco: X • Base: Y)
 
-    public ?int $movimientoId = null;
-    public bool $modoConfirmar = false;
+    // MODO EDICIÓN / CONFIRMACIÓN
+    public ?int $movimientoId = null; // ID del BANCO_PAGO PENDIENTE cuando editas/confirmas
+    public bool $modoConfirmar = false; // true = estás confirmando/editando un pendiente; false = registrando nuevo
 
+    //inicializa fechas por defecto
     public function mount(): void
     {
         $this->fecha = now()->toDateString();
         $this->fecha_pago = now()->toDateString();
     }
 
-    protected function calcPctInteres(): float
-    {
-        $interes = (float) ($this->monto_interes ?? 0);
-        if ($interes <= 0 || !$this->inversion) {
-            return 0.0;
-        }
-
-        $invId = (int) $this->inversion->id;
-
-        // 1) Capital inicial (saldo de arranque)
-        $capInicial = (float) InversionMovimiento::query()
-            ->where('inversion_id', $invId)
-            ->where('tipo', 'CAPITAL_INICIAL')
-            ->orderBy('nro')
-            ->orderBy('id')
-            ->value('monto_capital');
-
-        if ($capInicial <= 0.000001) {
-            $capInicial = (float) InversionMovimiento::query()
-                ->where('inversion_id', $invId)
-                ->where('tipo', 'CAPITAL_INICIAL')
-                ->orderBy('nro')
-                ->orderBy('id')
-                ->value('monto_total');
-        }
-
-        if ($capInicial <= 0.000001) {
-            // fallback duro (evita división por cero)
-            $capInicial = (float) ($this->inversion->capital_actual ?? 0);
-        }
-
-        if ($capInicial <= 0.000001) {
-            return 0.0;
-        }
-
-        // 2) Sumatoria de capital de cuotas anteriores (PAGADO y PENDIENTE) según fecha
-        //    para obtener el saldo "antes" de esta cuota.
-        $fecha = (string) ($this->fecha ?? '');
-        if ($fecha === '') {
-            $fecha = now()->toDateString();
-        }
-
-        $sumPrevCapital = (float) InversionMovimiento::query()
-            ->where('inversion_id', $invId)
-            ->where('tipo', 'BANCO_PAGO')
-            ->whereNotNull('fecha')
-            // solo anteriores por fecha (estricto)
-            ->where('fecha', '<', $fecha)
-            // si estás editando un pendiente, excluye el mismo id
-            ->when($this->movimientoId, fn($q) => $q->where('id', '!=', (int) $this->movimientoId))
-            ->sum('monto_capital');
-
-        $capitalBase = max(0.0, $capInicial - $sumPrevCapital);
-
-        if ($capitalBase <= 0.000001) {
-            return 0.0;
-        }
-
-        return round(($interes * 100) / $capitalBase, 2);
-    }
+    // abre modal en modo registrar, carga inversión/bancos y aplica fechas sugeridas
     #[On('openPagarBanco')]
     public function openPagarBanco(int $inversionId): void
     {
@@ -136,7 +86,7 @@ class PagarBancoModal extends Component
         $this->resetErrorBag();
         $this->resetValidation();
 
-        // modo registrar
+        // Modo registrar
         $this->movimientoId = null;
         $this->modoConfirmar = false;
 
@@ -152,6 +102,7 @@ class PagarBancoModal extends Component
         $this->recalcImpacto();
     }
 
+    // abre modal en modo confirmar/editando un BANCO_PAGO pendiente
     #[On('openPagarBancoConfirmar')]
     public function openPagarBancoConfirmar(int $inversionId, int $movimientoId): void
     {
@@ -214,9 +165,20 @@ class PagarBancoModal extends Component
         $this->recalcInteresFromTotalCapital();
 
         $this->open = true;
+
+        // 6) Preview/estado
         $this->recalcImpacto();
+
+        // ✅ 7) Validación inmediata al abrir (para que salgan @error debajo de los inputs)
+        $this->validateBusinessRulesLive();
+
+        // ✅ 8) Si requiere TC y no hay, mostrar error ya al abrir
+        if ($this->needs_tc && ((float) ($this->tipo_cambio ?? 0)) <= 0) {
+            $this->addError('tipo_cambio', 'Tipo de cambio requerido.');
+        }
     }
 
+    // cierra modal y resetea estado/errores del formulario
     public function close(): void
     {
         $this->open = false;
@@ -264,6 +226,57 @@ class PagarBancoModal extends Component
         ]);
     }
 
+    // canSubmit: habilita Guardar/Confirmar solo si el formulario está completo, válido y sin inconsistencias de negocio
+    public function getCanSubmitProperty(): bool
+    {
+        if (!$this->open || !$this->inversion) {
+            return false;
+        }
+
+        $mTotal = (float) ($this->monto_total ?? 0);
+        $mCap = (float) ($this->monto_capital ?? 0);
+        $tcVal = (float) ($this->tipo_cambio ?? 0);
+        $saldo = (float) ($this->inversion->capital_actual ?? 0);
+
+        // Requeridos mínimos
+        if (
+            empty($this->fecha) ||
+            empty($this->fecha_pago) ||
+            empty($this->banco_id) ||
+            $mTotal <= 0
+        ) {
+            return false;
+        }
+
+        // TC requerido
+        if ($this->needs_tc && $tcVal <= 0) {
+            return false;
+        }
+
+        // Reglas de negocio clave (las mismas que te generan el error rojo)
+        if ($mTotal + 0.000001 < $mCap) {
+            // total no puede ser menor al capital
+            return false;
+        }
+        if ($mCap > $saldo + 0.000001) {
+            // capital no puede ser mayor al saldo/deuda
+            return false;
+        }
+
+        // Preview/impacto (saldo banco, tc faltante, etc.)
+        if (!$this->impacto_ok) {
+            return false;
+        }
+
+        // Si hay errores “formales” también bloquea (extra)
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // guarda pago banco (edita pendiente o registra nuevo pendiente) y valida impacto/reglas
     public function save(InversionService $service): void
     {
         if (!$this->inversion) {
@@ -273,10 +286,56 @@ class PagarBancoModal extends Component
         $this->resetErrorBag();
         $this->resetValidation();
 
+        // ✅ 0) Sync de valores aunque uses wire:model.blur (toma lo último escrito)
+        $this->monto_total = max(
+            0.0,
+            $this->toFloatDecimal((string) ($this->monto_total_formatted ?? '')),
+        );
+        $this->monto_total_formatted = number_format((float) $this->monto_total, 2, ',', '.');
+
+        $this->monto_capital = max(
+            0.0,
+            $this->toFloatDecimal((string) ($this->monto_capital_formatted ?? '')),
+        );
+        $this->monto_capital_formatted = number_format((float) $this->monto_capital, 2, ',', '.');
+
+        if (!empty($this->tipo_cambio_formatted)) {
+            $tcParsed = $this->toFloatDecimal((string) $this->tipo_cambio_formatted);
+            $this->tipo_cambio = $tcParsed > 0 ? $tcParsed : null;
+            $this->tipo_cambio_formatted = $this->tipo_cambio
+                ? number_format((float) $this->tipo_cambio, 2, ',', '.')
+                : null;
+        }
+
+        // ✅ 1) Normaliza moneda banco / TC requerido / interés derivado
         $this->syncMovMonedaFromBancoId();
         $this->recalcTcNeed();
         $this->recalcInteresFromTotalCapital();
 
+        // ✅ 2) Preview + reglas de negocio ANTES del service
+        $this->recalcImpacto();
+        $this->validateBusinessRulesLive();
+
+        // TC requerido => error debajo de tipo_cambio
+        if ($this->needs_tc && ((float) ($this->tipo_cambio ?? 0)) <= 0) {
+            $this->addError('tipo_cambio', 'Tipo de cambio requerido.');
+        }
+
+        // ✅ Saldo insuficiente en banco => ERROR debajo de MONTO TOTAL (lo que pediste)
+        // (recalcImpacto ya pone impacto_ok=false y el texto en rojo, aquí lo “vinculamos” al campo)
+        if (
+            !$this->impacto_ok &&
+            str_contains((string) $this->impacto_texto, 'Saldo insuficiente')
+        ) {
+            $this->addError('monto_total', 'Saldo insuficiente en banco.');
+        }
+
+        // Si ya hay errores o el impacto no está OK, NO pasar al service
+        if (!$this->impacto_ok || $this->getErrorBag()->isNotEmpty()) {
+            return;
+        }
+
+        // ✅ 3) Validación formal + regla dura
         $this->validate();
         $this->assertBusinessRulesOrFail();
 
@@ -286,10 +345,9 @@ class PagarBancoModal extends Component
                 $path = $this->comprobante_imagen->store('inversiones/pagos_banco', 'public');
             }
 
-            // % interés real para guardar en el movimiento (igual que utilidad)
             $pctInteres = $this->calcPctInteres();
 
-            // ✅ EDITAR PENDIENTE
+            // Editar pendiente
             if ($this->movimientoId && $this->modoConfirmar) {
                 $mov = InversionMovimiento::query()
                     ->where('inversion_id', $this->inversion->id)
@@ -309,7 +367,6 @@ class PagarBancoModal extends Component
                 $mov->monto_capital = (float) ($this->monto_capital ?? 0);
                 $mov->monto_interes = (float) ($this->monto_interes ?? 0);
 
-                // ✅ aquí guardamos % interés REAL
                 $mov->porcentaje_utilidad = $pctInteres;
 
                 $mov->moneda_banco = $this->mov_moneda ? strtoupper($this->mov_moneda) : null;
@@ -327,7 +384,7 @@ class PagarBancoModal extends Component
                 return;
             }
 
-            // ✅ REGISTRAR NUEVO PENDIENTE
+            // Registrar nuevo pendiente
             $service->registrarPagoBanco($this->inversion, [
                 'fecha' => $this->fecha,
                 'fecha_pago' => $this->fecha_pago,
@@ -339,28 +396,28 @@ class PagarBancoModal extends Component
                 'monto_capital' => (float) ($this->monto_capital ?? 0),
                 'monto_interes' => (float) ($this->monto_interes ?? 0),
 
-                // ✅ % interés REAL (igual que utilidad)
                 'porcentaje_utilidad' => $pctInteres,
-
                 'tipo_cambio' => $this->needs_tc ? (float) ($this->tipo_cambio ?? 0) : null,
             ]);
 
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => 'Registrado',
-                'text' => 'Pago banco registrado como PENDIENTE.',
-            ]);
             $this->dispatch('inversionUpdated');
             $this->close();
         } catch (DomainException $e) {
             $msg = $e->getMessage();
-            session()->flash('error', $msg);
 
+            // Mapear a campos (incluye saldo insuficiente en monto_total)
             if (str_contains($msg, 'Saldo insuficiente')) {
-                $this->addError('banco_id', $msg);
+                $this->addError('monto_total', $msg); // 👈 clave: monto_total
+                $this->addError('banco_id', $msg); // opcional: también debajo del banco
             } elseif (str_contains($msg, 'Tipo de cambio')) {
                 $this->addError('tipo_cambio', $msg);
-            } elseif (str_contains($msg, 'monto') || str_contains($msg, 'capital')) {
+            } elseif (str_contains($msg, 'Capital') || str_contains($msg, 'capital')) {
+                $this->addError('monto_capital', $msg);
+            } elseif (
+                str_contains($msg, 'monto') ||
+                str_contains($msg, 'Monto') ||
+                str_contains($msg, 'Total')
+            ) {
                 $this->addError('monto_total', $msg);
             } else {
                 $this->addError('fecha', $msg);
@@ -370,34 +427,70 @@ class PagarBancoModal extends Component
         }
     }
 
+    // persiste cambios del pendiente y luego confirma el pago (debita banco) en el service
     public function confirmar(InversionService $service): void
     {
         if (!$this->inversion || !$this->movimientoId || !$this->modoConfirmar) {
             return;
         }
 
-        // 1) guardar cambios del pendiente (sin cerrar)
+        // 1) Guardar cambios del pendiente (si hay error, save() ya setea addError)
         $this->save($service);
 
-        if ($this->getErrorBag()->isNotEmpty()) {
+        // 2) Si hay errores, NO confirmar (ya se muestran debajo)
+        if (!$this->impacto_ok || $this->getErrorBag()->isNotEmpty()) {
+            // ✅ Asegurar error bajo monto_total si el impacto es saldo insuficiente
+            if (
+                !$this->impacto_ok &&
+                str_contains((string) $this->impacto_texto, 'Saldo insuficiente')
+            ) {
+                $this->addError('monto_total', 'Saldo insuficiente en banco.');
+            }
+            $this->recalcImpacto();
             return;
         }
 
-        // 2) confirmar y debitar
-        $service->confirmarPagoBanco((int) $this->movimientoId);
+        // 3) Confirmar en el service (validación dura)
+        try {
+            $service->confirmarPagoBanco((int) $this->movimientoId);
 
-        session()->flash('success', 'Pago confirmado y banco debitado.');
-        $this->dispatch('inversionUpdated');
-        $this->close();
+            session()->flash('success', 'Pago confirmado y banco debitado.');
+            $this->dispatch('inversionUpdated');
+            $this->close();
+        } catch (DomainException $e) {
+            $msg = $e->getMessage();
+
+            // ✅ Mapear error del service a campos (incluye monto_total cuando falta saldo)
+            if (str_contains($msg, 'Saldo insuficiente')) {
+                $this->addError('monto_total', $msg); // 👈 clave: monto_total
+                $this->addError('banco_id', $msg); // opcional: también debajo del banco
+            } elseif (str_contains($msg, 'Tipo de cambio')) {
+                $this->addError('tipo_cambio', $msg);
+            } elseif (str_contains($msg, 'Capital') || str_contains($msg, 'capital')) {
+                $this->addError('monto_capital', $msg);
+            } elseif (
+                str_contains($msg, 'monto') ||
+                str_contains($msg, 'Monto') ||
+                str_contains($msg, 'Total')
+            ) {
+                $this->addError('monto_total', $msg);
+            } else {
+                $this->addError('fecha', $msg);
+            }
+
+            $this->recalcImpacto();
+        }
     }
 
+    // al cambiar banco, sincroniza moneda, resetea TC y recalcula impacto
     public function updatedBancoId($value): void
     {
         $this->banco_id = $value !== null && $value !== '' ? (string) $value : null;
 
+        // Sincroniza moneda del banco seleccionado
         $this->syncMovMonedaFromBancoId();
 
-        // si el banco cambia, resetea TC
+        // Si cambia banco, resetea TC
         $this->tipo_cambio = null;
         $this->tipo_cambio_formatted = null;
 
@@ -408,6 +501,7 @@ class PagarBancoModal extends Component
         $this->resetValidation();
     }
 
+    // parsea TC formateado y recalcula impacto
     public function updatedTipoCambioFormatted($value): void
     {
         $n = $this->toFloatDecimal((string) $value);
@@ -419,6 +513,7 @@ class PagarBancoModal extends Component
         $this->recalcImpacto();
     }
 
+    // parsea total, valida reglas, recalcula interés y recalcula impacto
     public function updatedMontoTotalFormatted($value): void
     {
         $n = $this->toFloatDecimal((string) $value);
@@ -430,6 +525,7 @@ class PagarBancoModal extends Component
         $this->recalcImpacto();
     }
 
+    // parsea capital, valida reglas, recalcula interés y recalcula impacto
     public function updatedMontoCapitalFormatted($value): void
     {
         $n = $this->toFloatDecimal((string) $value);
@@ -441,6 +537,7 @@ class PagarBancoModal extends Component
         $this->recalcImpacto();
     }
 
+    // reglas de validación del formulario (incluye TC requerido si needs_tc)
     protected function rules(): array
     {
         $rules = [
@@ -473,24 +570,79 @@ class PagarBancoModal extends Component
         return $rules;
     }
 
+    // valida en vivo que capital <= saldo y total >= capital
+    // valida en vivo: capital <= saldo inversión, total >= capital y saldo banco suficiente para el total (con TC si aplica)
     protected function validateBusinessRulesLive(): void
     {
         $this->resetErrorBag('monto_capital');
         $this->resetErrorBag('monto_total');
+        $this->resetErrorBag('tipo_cambio');
 
         $capital = (float) ($this->monto_capital ?? 0);
         $total = (float) ($this->monto_total ?? 0);
-        $saldo = (float) ($this->inversion?->capital_actual ?? 0);
+        $saldoInv = (float) ($this->inversion?->capital_actual ?? 0);
 
-        if ($this->inversion && $capital > $saldo + 0.000001) {
+        // 1) Capital no puede ser mayor al saldo de la inversión
+        if ($this->inversion && $capital > $saldoInv + 0.000001) {
             $this->addError('monto_capital', 'El capital no puede ser superior al Saldo');
         }
 
+        // 2) Total no puede ser menor al capital
         if ($total + 0.000001 < $capital) {
             $this->addError('monto_total', 'El monto total no puede ser menor al capital.');
         }
+
+        // 3) Saldo banco suficiente para debitar el TOTAL (mismo criterio que recalcImpacto)
+        if (!$this->inversion) {
+            return;
+        }
+
+        $bancoId = (string) ($this->banco_id ?? '');
+        if ($bancoId === '' || $total <= 0) {
+            return;
+        }
+
+        $banco = Banco::query()->find($bancoId);
+        if (!$banco) {
+            return;
+        }
+
+        $invMon = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
+        $bankMon = strtoupper((string) ($banco->moneda ?? $invMon));
+
+        // Debito en moneda banco
+        $debitoBanco = $total;
+
+        if ($invMon !== $bankMon) {
+            $tc = (float) ($this->tipo_cambio ?? 0);
+
+            // Si requiere TC y no hay, marcamos el campo y no seguimos
+            if ($tc <= 0) {
+                $this->addError('tipo_cambio', 'Tipo de cambio requerido.');
+                return;
+            }
+
+            if ($invMon === 'BOB' && $bankMon === 'USD') {
+                $debitoBanco = $total / $tc;
+            } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
+                $debitoBanco = $total * $tc;
+            } else {
+                // Si tu sistema no soporta otros pares
+                $this->addError('monto_total', 'Conversión no soportada para este par de monedas.');
+                return;
+            }
+        }
+
+        $debitoBanco = round((float) $debitoBanco, 2);
+        $saldoBank = (float) ($banco->monto ?? 0);
+
+        if ($saldoBank + 0.000001 < $debitoBanco) {
+            // ✅ aquí está lo que te faltaba: el error cae en Monto total
+            $this->addError('monto_total', 'Saldo insuficiente en banco.');
+        }
     }
 
+    // valida reglas de negocio y lanza excepción si falla
     protected function assertBusinessRulesOrFail(): void
     {
         $capital = (float) ($this->monto_capital ?? 0);
@@ -511,6 +663,66 @@ class PagarBancoModal extends Component
         }
     }
 
+    // calcula % interés real (interés/saldo previo) según capital inicial y cuotas anteriores
+    protected function calcPctInteres(): float
+    {
+        $interes = (float) ($this->monto_interes ?? 0);
+        if ($interes <= 0 || !$this->inversion) {
+            return 0.0;
+        }
+
+        $invId = (int) $this->inversion->id;
+
+        // Capital inicial (saldo de arranque)
+        $capInicial = (float) InversionMovimiento::query()
+            ->where('inversion_id', $invId)
+            ->where('tipo', 'CAPITAL_INICIAL')
+            ->orderBy('nro')
+            ->orderBy('id')
+            ->value('monto_capital');
+
+        if ($capInicial <= 0.000001) {
+            $capInicial = (float) InversionMovimiento::query()
+                ->where('inversion_id', $invId)
+                ->where('tipo', 'CAPITAL_INICIAL')
+                ->orderBy('nro')
+                ->orderBy('id')
+                ->value('monto_total');
+        }
+
+        if ($capInicial <= 0.000001) {
+            // Fallback duro (evita división por cero)
+            $capInicial = (float) ($this->inversion->capital_actual ?? 0);
+        }
+
+        if ($capInicial <= 0.000001) {
+            return 0.0;
+        }
+
+        // Suma capital de cuotas anteriores para obtener saldo previo a esta cuota
+        $fecha = (string) ($this->fecha ?? '');
+        if ($fecha === '') {
+            $fecha = now()->toDateString();
+        }
+
+        $sumPrevCapital = (float) InversionMovimiento::query()
+            ->where('inversion_id', $invId)
+            ->where('tipo', 'BANCO_PAGO')
+            ->whereNotNull('fecha')
+            ->where('fecha', '<', $fecha)
+            ->when($this->movimientoId, fn($q) => $q->where('id', '!=', (int) $this->movimientoId))
+            ->sum('monto_capital');
+
+        $capitalBase = max(0.0, $capInicial - $sumPrevCapital);
+
+        if ($capitalBase <= 0.000001) {
+            return 0.0;
+        }
+
+        return round(($interes * 100) / $capitalBase, 2);
+    }
+
+    // carga inversión BANCO y lista de bancos activos de la empresa
     protected function loadInversionAndBancos(int $inversionId): void
     {
         $this->inversion = Inversion::query()
@@ -532,7 +744,7 @@ class PagarBancoModal extends Component
             ->get(['id', 'nombre', 'numero_cuenta', 'moneda', 'monto'])
             ->map(
                 fn($b) => [
-                    'id' => (string) $b->id, // 🔥 CLAVE
+                    'id' => (string) $b->id,
                     'nombre' => (string) $b->nombre,
                     'numero_cuenta' => $b->numero_cuenta,
                     'moneda' => $b->moneda,
@@ -542,6 +754,7 @@ class PagarBancoModal extends Component
             ->all();
     }
 
+    // resetea campos del formulario a valores iniciales
     protected function resetFormFields(): void
     {
         $this->banco_id = null;
@@ -568,25 +781,26 @@ class PagarBancoModal extends Component
         $this->impacto_detalle = null;
     }
 
+    // sugiere próxima fecha según día pago y último BANCO_PAGO registrado
     protected function setFechasSugeridasPorDiaPago(): void
     {
         $diaPago = (int) ($this->inversion?->dia_pago ?? 0);
 
-        // Si no hay día de pago configurado, usa hoy
+        // Sin día de pago configurado: hoy
         if ($diaPago < 1) {
             $this->fecha = now()->toDateString();
             $this->fecha_pago = now()->toDateString();
             return;
         }
 
-        // Base por defecto: hasta_fecha (normalmente solo refleja PAGADOS) o fecha_inicio o hoy
+        // Base contable: hasta_fecha o fecha_inicio o hoy
         $base = $this->inversion?->hasta_fecha
             ? Carbon::parse($this->inversion->hasta_fecha)->startOfDay()
             : ($this->inversion?->fecha_inicio
                 ? Carbon::parse($this->inversion->fecha_inicio)->startOfDay()
                 : Carbon::today());
 
-        // Base real: tomar la última fecha registrada de BANCO_PAGO (incluye PENDIENTE)
+        // Base real: última fecha registrada de BANCO_PAGO (incluye PENDIENTE)
         $lastMov = InversionMovimiento::query()
             ->where('inversion_id', (int) $this->inversion->id)
             ->where('tipo', 'BANCO_PAGO')
@@ -596,19 +810,17 @@ class PagarBancoModal extends Component
 
         if ($lastMov?->fecha) {
             $lastMovDate = Carbon::parse($lastMov->fecha)->startOfDay();
-
-            // Si el último movimiento (pendiente o pagado) es más reciente que la base contable, úsalo como base
             if ($lastMovDate->greaterThan($base)) {
                 $base = $lastMovDate;
             }
         }
 
-        // Candidato: mismo mes que base, pero en el día de pago
+        // Candidato: mismo mes de base, día pago
         $cand = $base->copy();
         $candDay = min(max(1, $diaPago), $cand->daysInMonth);
         $cand->day($candDay);
 
-        // Si el candidato no es posterior a la base, saltar al siguiente mes
+        // Si no es posterior, salta al siguiente mes
         if ($cand->lessThanOrEqualTo($base)) {
             $cand = $base->copy()->addMonthNoOverflow();
             $candDay2 = min(max(1, $diaPago), $cand->daysInMonth);
@@ -619,6 +831,7 @@ class PagarBancoModal extends Component
         $this->fecha_pago = $cand->toDateString();
     }
 
+    // asigna mov_moneda según el banco seleccionado en el formulario
     protected function syncMovMonedaFromBancoId(): void
     {
         $id = (string) ($this->banco_id ?? '');
@@ -632,6 +845,7 @@ class PagarBancoModal extends Component
         $this->mov_moneda = $b['moneda'] ?? null;
     }
 
+    // calcula interés como (total - capital) y lo formatea
     protected function recalcInteresFromTotalCapital(): void
     {
         $total = (float) ($this->monto_total ?? 0);
@@ -646,6 +860,7 @@ class PagarBancoModal extends Component
         $this->monto_interes_formatted = number_format((float) $this->monto_interes, 2, ',', '.');
     }
 
+    // determina si requiere tipo de cambio por diferencia de monedas inversión/banco
     protected function recalcTcNeed(): void
     {
         $invMon = strtoupper((string) ($this->inversion?->moneda ?? 'BOB'));
@@ -653,6 +868,7 @@ class PagarBancoModal extends Component
         $this->needs_tc = $bankMon !== '' && $bankMon !== $invMon;
     }
 
+    // calcula previews de débito banco y reducción de deuda, y flags de impacto
     protected function recalcImpacto(): void
     {
         $this->impacto_ok = true;
@@ -744,6 +960,7 @@ class PagarBancoModal extends Component
         $this->formatImpacto();
     }
 
+    // formatea previews de banco/deuda según moneda correspondiente
     protected function formatImpacto(): void
     {
         $invMon = strtoupper((string) ($this->inversion?->moneda ?? 'BOB'));
@@ -756,6 +973,7 @@ class PagarBancoModal extends Component
         $this->preview_banco_despues_fmt = $this->fmtMoney($this->preview_banco_despues, $bankMon);
     }
 
+    // formatea un monto según moneda (USD con $ y BOB con Bs)
     protected function fmtMoney(float $n, string $moneda): string
     {
         $moneda = strtoupper($moneda);
@@ -763,6 +981,7 @@ class PagarBancoModal extends Component
         return $moneda === 'USD' ? '$ ' . $val : $val . ' Bs';
     }
 
+    // valida fecha Y-m-d y retorna Carbon o null
     protected function parseStrictDate(string $value): ?Carbon
     {
         try {
@@ -773,6 +992,7 @@ class PagarBancoModal extends Component
         }
     }
 
+    // convierte string con separadores (1.234,56) a float (1234.56)
     protected function toFloatDecimal(string $value): float
     {
         $v = trim($value);
@@ -787,6 +1007,7 @@ class PagarBancoModal extends Component
         return is_numeric($v) ? (float) $v : 0.0;
     }
 
+    // retorna la vista del modal
     public function render()
     {
         return view('livewire.admin.inversiones.modals._modal_pagar_banco');

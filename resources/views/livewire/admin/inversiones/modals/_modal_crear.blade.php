@@ -16,6 +16,22 @@
             <div class="p-3 sm:p-4">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 
+                    {{-- Tipo --}}
+                    <div>
+                        <label class="block text-sm mb-1">Tipo <span class="text-red-500">*</span></label>
+                        <select wire:model.live="tipo"
+                            class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                            <option value="">Ninguno</option>
+                            <option value="PRIVADO">Privado</option>
+                            <option value="BANCO">Banco</option>
+                        </select>
+                        @error('tipo')
+                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     {{-- Código --}}
                     <div>
                         <label class="block text-sm mb-1">Código <span class="text-red-500">*</span></label>
@@ -65,21 +81,7 @@
                         @enderror
                     </div>
 
-                    {{-- Tipo --}}
-                    <div>
-                        <label class="block text-sm mb-1">Tipo <span class="text-red-500">*</span></label>
-                        <select wire:model.live="tipo"
-                            class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40">
-                            <option value="">Ninguno</option>
-                            <option value="PRIVADO">Privado</option>
-                            <option value="BANCO">Banco</option>
-                        </select>
-                        @error('tipo')
-                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
+
 
                     {{-- Banco (OCULTO hasta elegir tipo) --}}
                     @if ($showTipoSelectedFields)
@@ -130,7 +132,9 @@
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
                         </div>
-                    @else
+                    @endif
+
+                    @if ($showBancoFields)
                         <div>
                             <label class="block text-sm mb-1">Tasa anual (%) <span class="text-red-500">*</span></label>
                             <input type="text" inputmode="decimal" wire:model.defer="tasa_anual_formatted"
@@ -144,7 +148,7 @@
                         </div>
                     @endif
 
-                    {{-- PLAN (PRIVADO y BANCO): plazo/día/tasa --}}
+                    {{-- PLAN (PRIVADO y BANCO): plazo/día --}}
                     @if ($showTipoSelectedFields)
                         <div>
                             <label class="block text-sm mb-1">Plazo (meses) <span class="text-red-500">*</span></label>
@@ -157,7 +161,9 @@
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
                         </div>
+                    @endif
 
+                    @if ($showBancoFields)
                         <div>
                             <label class="block text-sm mb-1">Día de pago (1–28) <span
                                     class="text-red-500">*</span></label>

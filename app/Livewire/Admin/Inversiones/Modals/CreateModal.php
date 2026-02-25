@@ -350,23 +350,34 @@ class CreateModal extends Component
         $rules = [
             'codigo' => ['required', 'string', 'max:150'],
             'nombre_completo' => ['required', 'string', 'max:150'],
+
             'fecha_inicio' => ['required', 'date'],
+            // Si SIEMPRE lo pides en UI, mantenlo required; si alguna vez puede ser vacío, cambia a nullable.
             'fecha_vencimiento' => ['required', 'date', 'after_or_equal:fecha_inicio'],
-            'capital' => ['required', 'numeric', 'min:0.01'],
+
+            // decimal(14,4) => evita choques por rango
+            'capital' => ['required', 'numeric', 'min:0.0001', 'max:9999999999.9999'],
+
             'moneda' => ['required', Rule::in(['BOB', 'USD'])],
             'tipo' => ['required', Rule::in(['PRIVADO', 'BANCO'])],
-            'banco_id' => ['required', 'exists:bancos,id'],
+
+            // Tú siempre eliges banco
+            'banco_id' => ['required', 'integer', Rule::exists('bancos', 'id')],
+
             'comprobante' => ['nullable', 'image', 'max:5120'],
         ];
 
         if ($this->tipo === 'PRIVADO') {
-            $rules['porcentaje_utilidad'] = ['required', 'numeric', 'min:0'];
+            // % en rango 0–100
+            $rules['porcentaje_utilidad'] = ['required', 'numeric', 'min:0', 'max:100'];
+            $rules['plazo_meses'] = ['required', 'integer', 'min:1', 'max:600'];
         } else {
-            $rules['tasa_anual'] = ['required', 'numeric', 'min:0.0001'];
+            // tasa_anual decimal(8,4) => si es porcentaje anual, rango lógico 0–100
+            $rules['tasa_anual'] = ['required', 'numeric', 'min:1', 'max:100'];
+
             $rules['plazo_meses'] = ['required', 'integer', 'min:1', 'max:600'];
             $rules['dia_pago'] = ['required', 'integer', 'min:1', 'max:28'];
             $rules['sistema'] = ['required', Rule::in(['FRANCESA'])];
-            $rules['porcentaje_utilidad'] = ['nullable', 'numeric', 'min:0'];
         }
 
         return $rules;

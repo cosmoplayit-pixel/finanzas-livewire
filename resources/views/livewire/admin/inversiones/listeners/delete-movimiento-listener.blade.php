@@ -20,3 +20,16 @@
         });
     });
 </script>
+{{-- SWEET ALERT --}}
+<script>
+    document.addEventListener('livewire:init', () => {
+        Livewire.on('swal', (payload) => {
+            const data = Array.isArray(payload) ? payload[0] : payload;
+            Swal.fire({
+                icon: data.icon ?? 'info',
+                title: data.title ?? '',
+                text: data.text ?? '',
+            });
+        });
+    });
+</script>

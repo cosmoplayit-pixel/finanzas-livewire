@@ -132,7 +132,7 @@
         </div>
 
         {{-- Listado (MOBILE = CARDS) --}}
-        <div class="px-3 py-2  space-y-2">
+        <div class="px-3 py-2 space-y-2">
             @forelse($movimientos as $m)
                 @php
                     $tipo = $m['tipo'] ?? '';
@@ -183,25 +183,49 @@
                     $canDelete = !empty($m['puede_eliminar_fila']);
                     $isCapitalInicial = $tipo === 'CAPITAL_INICIAL';
                     $deleteBlocked = !$canDelete && in_array($tipo, ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL'], true);
+
+                    // ===== SOLO FONDO (degradado tenue) según tipo/estado =====
+                    // Default: neutro tenue
+                    $bgGrad =
+                        'bg-gradient-to-b from-white to-gray-50/50 dark:from-neutral-900/40 dark:to-neutral-900/10';
+
+                    if ($tipo === 'CAPITAL_INICIAL') {
+                        $bgGrad =
+                            'bg-gradient-to-b from-gray-50/80 to-white dark:from-neutral-900/55 dark:to-neutral-900/15';
+                    } elseif ($tipo === 'PAGO_UTILIDAD') {
+                        if ($isPend) {
+                            // ámbar tenue
+                            $bgGrad =
+                                'bg-gradient-to-b from-amber-50/80 to-white ' .
+                                'dark:from-amber-900/15 dark:to-neutral-900/10';
+                        } else {
+                            // sky tenue
+                            $bgGrad =
+                                'bg-gradient-to-b from-sky-50/80 to-white ' .
+                                'dark:from-sky-900/15 dark:to-neutral-900/10';
+                        }
+                    } elseif ($tipo === 'INGRESO_CAPITAL') {
+                        // emerald tenue
+                        $bgGrad =
+                            'bg-gradient-to-b from-emerald-50/80 to-white ' .
+                            'dark:from-emerald-900/15 dark:to-neutral-900/10';
+                    } elseif ($tipo === 'DEVOLUCION_CAPITAL') {
+                        // red tenue
+                        $bgGrad =
+                            'bg-gradient-to-b from-red-50/80 to-white ' . 'dark:from-red-900/15 dark:to-neutral-900/10';
+                    }
                 @endphp
 
-                <div
-                    class="rounded-2xl border border-gray-200 bg-white p-3 dark:border-neutral-700 dark:bg-neutral-900/40">
+                <div class="rounded-2xl border border-gray-200 p-3 dark:border-neutral-700 {{ $bgGrad }}">
 
                     {{-- HEADER (MOBILE CARD) --}}
                     <div class="flex items-start justify-between gap-3">
-
-                        {{-- IZQUIERDA: # + título --}}
+                        {{-- IZQUIERDA: título --}}
                         <div class="min-w-0 flex-1">
-                            <div class="flex items-center gap-2 min-w-0">
-                                {{-- Título en una línea --}}
-                                <div class="text-[14px] font-semibold text-gray-900 dark:text-neutral-100 truncate">
-                                    #{{ $m['idx'] }} {{ $m['descripcion'] }}
-
-                                </div>
+                            <div class="text-[14px] font-semibold text-gray-900 dark:text-neutral-100 truncate">
+                                #{{ $m['idx'] }} {{ $m['descripcion'] }}
                             </div>
 
-                            {{-- Subtítulo --}}
                             @if (!empty($m['banco_linea']))
                                 <div class="mt-1 text-[12px] text-gray-500 dark:text-neutral-400 truncate">
                                     {{ $m['banco_linea'] }}
@@ -211,17 +235,13 @@
 
                         {{-- DERECHA: BADGE --}}
                         <div class="shrink-0">
-                            <span class="{{ $badge }}">
-                                {{ $badgeText }}
-                            </span>
+                            <span class="{{ $badge }}">{{ $badgeText }}</span>
                         </div>
-
                     </div>
 
-                    {{-- BLOQUE 2 FILAS (como tu imagen) --}}
+                    {{-- BLOQUE 2 FILAS --}}
                     <div
-                        class="mt-3 rounded-2xl border border-gray-200 bg-gray-50 overflow-hidden
-                        dark:border-neutral-700 dark:bg-neutral-900/60">
+                        class="mt-3 rounded-2xl border border-gray-200 bg-gray-50 overflow-hidden dark:border-neutral-700 dark:bg-neutral-900/60">
 
                         {{-- FILA 1: Comprobante | Capital | Utilidad --}}
                         <div class="grid grid-cols-3 border-b border-gray-200 dark:border-neutral-700">
@@ -309,20 +329,20 @@
                             <div x-data>
                                 <button type="button"
                                     class="h-8 w-full rounded-lg px-3 text-[13px] font-semibold inline-flex items-center justify-center gap-2
-                                        bg-emerald-600 text-white hover:bg-emerald-700"
+                                   bg-emerald-600 text-white hover:bg-emerald-700"
                                     @click.prevent="
-                                        Swal.fire({
-                                            title: '¿Confirmar pago?',
-                                            text: 'Esto debitará el banco y marcará la utilidad como PAGADA.',
-                                            icon: 'warning',
-                                            showCancelButton: true,
-                                            confirmButtonText: 'Sí, confirmar',
-                                            cancelButtonText: 'Cancelar',
-                                            reverseButtons: true,
-                                            confirmButtonColor: '#16a34a',
-                                            cancelButtonColor: '#6b7280',
-                                        }).then((r) => { if (r.isConfirmed) { $wire.confirmarPagoUtilidad({{ (int) $m['id'] }}); } });
-                                    ">
+                                Swal.fire({
+                                    title: '¿Confirmar pago?',
+                                    text: 'Esto debitará el banco y marcará la utilidad como PAGADA.',
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Sí, confirmar',
+                                    cancelButtonText: 'Cancelar',
+                                    reverseButtons: true,
+                                    confirmButtonColor: '#16a34a',
+                                    cancelButtonColor: '#6b7280',
+                                }).then((r) => { if (r.isConfirmed) { $wire.confirmarPagoUtilidad({{ (int) $m['id'] }}); } });
+                            ">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round">
@@ -375,11 +395,10 @@
 
                         {{-- Eliminar --}}
                         @if ($isCapitalInicial)
-                            {{-- ✅ CAPITAL_INICIAL: eliminar inversión completa --}}
                             <button type="button"
                                 class="h-8 w-full rounded-lg inline-flex items-center justify-center gap-2 border
-                                border-red-300 text-red-700 bg-white hover:bg-red-50
-                                dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
+                               border-red-300 text-red-700 bg-white hover:bg-red-50
+                               dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
                                 title="Eliminar inversión completa" wire:click="abrirEliminarTodoModal">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -393,11 +412,10 @@
                             </button>
                         @elseif ($canDelete)
                             @if ($isPag)
-                                {{-- PAGADO => pide contraseña (modal) --}}
                                 <button type="button" wire:click="abrirEliminarFilaModal({{ (int) $m['id'] }})"
                                     class="h-8 w-full rounded-lg inline-flex items-center justify-center gap-2 border
-                                    border-red-300 text-red-700 bg-white hover:bg-red-50
-                                    dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
+                                   border-red-300 text-red-700 bg-white hover:bg-red-50
+                                   dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
                                     title="Eliminar (requiere contraseña)">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -410,26 +428,25 @@
                                     </svg>
                                 </button>
                             @else
-                                {{-- PENDIENTE => SweetAlert --}}
                                 <div x-data class="w-full">
                                     <button type="button"
                                         class="h-8 w-full rounded-lg inline-flex items-center justify-center gap-2 border
-                                            border-red-300 text-red-700 bg-white hover:bg-red-50
-                                            dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
+                                       border-red-300 text-red-700 bg-white hover:bg-red-50
+                                       dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
                                         title="Eliminar"
                                         @click.prevent="
-                                            Swal.fire({
-                                                title: '¿Eliminar este registro?',
-                                                text: 'Esta acción revertirá banco/capital según corresponda.',
-                                                icon: 'warning',
-                                                showCancelButton: true,
-                                                confirmButtonText: 'Sí, eliminar',
-                                                cancelButtonText: 'Cancelar',
-                                                reverseButtons: true,
-                                                confirmButtonColor: '#dc2626',
-                                                cancelButtonColor: '#6b7280',
-                                            }).then((r) => { if (r.isConfirmed) { $wire.eliminarMovimientoFila({{ (int) $m['id'] }}); } });
-                                        ">
+                                    Swal.fire({
+                                        title: '¿Eliminar este registro?',
+                                        text: 'Esta acción revertirá banco/capital según corresponda.',
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Sí, eliminar',
+                                        cancelButtonText: 'Cancelar',
+                                        reverseButtons: true,
+                                        confirmButtonColor: '#dc2626',
+                                        cancelButtonColor: '#6b7280',
+                                    }).then((r) => { if (r.isConfirmed) { $wire.eliminarMovimientoFila({{ (int) $m['id'] }}); } });
+                                ">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24"
                                             fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
@@ -443,11 +460,10 @@
                                 </div>
                             @endif
                         @else
-                            {{-- Bloqueado / no disponible --}}
                             <button type="button" disabled
                                 class="h-8 w-full rounded-lg inline-flex items-center justify-center gap-2 border
-                                border-red-200 text-red-700 bg-white opacity-40 cursor-not-allowed
-                                dark:border-red-900/40 dark:bg-neutral-900/40 dark:text-red-300"
+                               border-red-200 text-red-700 bg-white opacity-40 cursor-not-allowed
+                               dark:border-red-900/40 dark:bg-neutral-900/40 dark:text-red-300"
                                 title="{{ $deleteBlocked ? 'Solo se permite eliminar si es el último registro.' : 'No disponible' }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -461,6 +477,7 @@
                             </button>
                         @endif
                     </div>
+
                 </div>
             @empty
                 <div class="p-6 text-center text-gray-500 dark:text-neutral-400">
@@ -468,6 +485,7 @@
                 </div>
             @endforelse
         </div>
+
         {{-- ===================== FOOTER TOTALES (MOBILE) ===================== --}}
         <div class="border-t border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-900">
             <div class="px-3 py-2  space-y-2">

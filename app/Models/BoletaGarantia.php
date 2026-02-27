@@ -21,6 +21,7 @@ class BoletaGarantia extends Model
         'fecha_emision',
         'fecha_vencimiento',
         'observacion',
+        'foto_comprobante',
         'estado',
         'active',
     ];

@@ -31,6 +31,7 @@ return new class extends Migration {
             $table->date('fecha_emision')->nullable();
             $table->date('fecha_vencimiento')->nullable();
             $table->text('observacion')->nullable();
+            $table->string('foto_comprobante')->nullable();
 
             // abierta | devuelta
             $table->string('estado', 20)->default('abierta');

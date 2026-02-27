@@ -12,9 +12,9 @@
             </div>
 
             <div class="p-3 sm:p-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Agente de servicio <span class="text-red-500">*</span></label>
                         <select wire:model.live="agente_servicio_id"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -31,7 +31,7 @@
                         @enderror
                     </div>
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Tipo <span class="text-red-500">*</span></label>
                         <select wire:model.live="tipo"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -45,7 +45,7 @@
                         @enderror
                     </div>
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Nro. Boleta <span class="text-red-500">*</span></label>
                         <input wire:model.live="nro_boleta" placeholder="Ej: BG-001"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -56,7 +56,7 @@
                         @enderror
                     </div>
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Entidad <span class="text-red-500">*</span></label>
                         <select wire:model.live="entidad_id"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -72,7 +72,7 @@
                         @enderror
                     </div>
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Proyecto <span class="text-red-500">*</span></label>
                         <select wire:model.live="proyecto_id" @disabled($this->proyectoBloqueado)
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -91,7 +91,7 @@
                         @enderror
                     </div>
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Banco egreso <span class="text-red-500">*</span></label>
                         <select wire:model.live="banco_egreso_id"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -109,7 +109,7 @@
                         @enderror
                     </div>
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Fecha emisión <span class="text-red-500">*</span></label>
                         <input type="date" wire:model.live="fecha_emision"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -120,7 +120,7 @@
                         @enderror
                     </div>
 
-                    <div>
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Fecha vencimiento</label>
                         <input type="date" wire:model="fecha_vencimiento"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -132,22 +132,89 @@
                     </div>
 
 
-                    <div>
-                        <div>
-                            <label class="block text-sm mb-1">Retención <span class="text-red-500">*</span></label>
-                            <input type="text" inputmode="decimal" wire:model.blur="retencion_formatted"
-                                placeholder="0,00"
-                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
-                            @error('retencion')
-                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                            @enderror
+                    <div class="col-span-2 lg:col-span-1">
+                        <label class="block text-sm mb-1">Retención <span class="text-red-500">*</span></label>
+                        <input type="text" inputmode="decimal" wire:model.blur="retencion_formatted"
+                            placeholder="0,00"
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
+                        @error('retencion')
+                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                        @enderror
 
-                            @if ($total_excede_saldo)
-                                <div class="text-xs text-red-600 mt-1">La retención excede el saldo del banco.</div>
-                            @endif
+                        @if ($total_excede_saldo)
+                            <div class="text-xs text-red-600 mt-1">La retención excede el saldo del banco.</div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- OBSERVACIÓN Y ARCHIVO --}}
+                <div class="grid grid-cols-1 gap-3 mt-3">
+                    {{-- Observación --}}
+                    <div>
+                        <label class="block text-sm mb-1">Observación</label>
+                        <textarea rows="3" wire:model.live="observacion" placeholder="Opcional"
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"></textarea>
+                        @error('observacion')
+                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    {{-- Comprobante (Imagen o PDF) --}}
+                    <div>
+                        <label class="block text-sm mb-1">Comprobante (Imagen/PDF)</label>
+                        <label
+                            class="group h-11 flex items-center justify-between w-full rounded-lg border border-dashed
+                            border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900
+                            px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
+
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div
+                                    class="w-7 h-7 rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800
+                                    flex items-center justify-center shrink-0">
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                        <polyline points="17 8 12 3 7 8" />
+                                        <line x1="12" y1="3" x2="12" y2="15" />
+                                    </svg>
+                                </div>
+
+                                <div class="min-w-0">
+                                    <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">Adjuntar
+                                        archivo</div>
+                                    <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
+                                        @if ($foto_comprobante)
+                                            {{ $foto_comprobante->getClientOriginalName() }}
+                                        @else
+                                            JPG, PNG o PDF (máx. 5MB)
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="file" wire:model.live="foto_comprobante" accept=".jpg,.jpeg,.png,.pdf"
+                                class="hidden" />
+                        </label>
+
+                        <div wire:loading wire:target="foto_comprobante" class="text-xs text-emerald-600 font-medium mt-1">
+                            Cargando...
                         </div>
+                        @error('foto_comprobante')
+                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+
+                        @if ($foto_comprobante)
+                            <div class="mt-2 text-xs flex justify-end">
+                                <button type="button" wire:click="$set('foto_comprobante', null)"
+                                    class="text-red-500 hover:text-red-600 font-medium">
+                                    Quitar archivo
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

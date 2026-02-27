@@ -11,9 +11,12 @@ use DomainException;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class CreateModal extends Component
 {
+    use WithFileUploads;
+
     public bool $open = false;
 
     public $agente_servicio_id = '';
@@ -32,6 +35,7 @@ class CreateModal extends Component
 
     public $banco_egreso_id = '';
     public string $observacion = '';
+    public $foto_comprobante = null;
 
     // Preview banco egreso
     public float $saldo_banco_actual_preview = 0;
@@ -80,6 +84,7 @@ class CreateModal extends Component
 
         $this->banco_egreso_id = '';
         $this->observacion = '';
+        $this->foto_comprobante = null;
 
         $this->saldo_banco_actual_preview = 0;
         $this->saldo_banco_despues_preview = 0;
@@ -226,6 +231,7 @@ class CreateModal extends Component
             'fecha_emision' => ['required', 'date'],
             'fecha_vencimiento' => ['nullable', 'date'],
             'observacion' => ['nullable', 'string', 'max:2000'],
+            'foto_comprobante' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
         // seguridad empresa (agente/entidad/banco)
@@ -287,6 +293,19 @@ class CreateModal extends Component
                 ],
                 (int) Auth::id(),
             );
+
+            // Fetch the created Boleta (using nro_boleta since it's unique per company)
+            $boleta = \App\Models\BoletaGarantia::where('empresa_id', $empresaId)
+                ->where('nro_boleta', trim($this->nro_boleta))
+                ->first();
+
+            if ($boleta && $this->foto_comprobante) {
+                // Determine folder path
+                $folder = 'empresas/' . $empresaId . '/boletas-garantia';
+                $path = $this->foto_comprobante->store($folder, 'public');
+                $boleta->foto_comprobante = $path;
+                $boleta->save();
+            }
 
             session()->flash('success', 'Boleta registrada.');
 

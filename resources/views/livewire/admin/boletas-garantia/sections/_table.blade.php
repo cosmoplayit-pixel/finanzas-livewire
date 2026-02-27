@@ -225,6 +225,34 @@
                                     <span>Tipo: {{ $bg->tipo ?? '—' }}</span>
                                 </div>
 
+                                {{-- Comprobante (Si existe) --}}
+                                @if ($bg->foto_comprobante)
+                                    <div class="flex items-center gap-1 mt-1">
+                                        {{-- icon paperclip --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                          <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                                        </svg>
+                                        @php
+                                            $ext = strtolower(pathinfo($bg->foto_comprobante, PATHINFO_EXTENSION));
+                                            $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif']);
+                                        @endphp
+
+                                        @if ($isImage)
+                                            <button type="button" 
+                                                class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                                @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $bg->foto_comprobante) }}' })">
+                                                Ver comprobante
+                                            </button>
+                                        @else
+                                            <a href="{{ asset('storage/' . $bg->foto_comprobante) }}" target="_blank" rel="noopener noreferrer" 
+                                               class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                               @click.stop>
+                                                Ver comprobante (PDF)
+                                            </a>
+                                        @endif
+                                    </div>
+                                @endif
+
                                 {{-- Fechas --}}
                                 <div
                                     class="flex items-center gap-1 truncate text-xs text-gray-500 dark:text-neutral-400">
@@ -327,10 +355,11 @@
                                                 class="bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800">
                                                 <tr class="text-left text-xs text-gray-600 dark:text-neutral-300">
                                                     <th class="p-2 w-[5%]  text-center">#</th>
-                                                    <th class="p-2 w-[35%]">Banco</th>
+                                                    <th class="p-2 w-[30%]">Banco</th>
                                                     <th class="p-2 w-[22%]">Fecha</th>
-                                                    <th class="p-2 w-[18%] text-right">Monto</th>
+                                                    <th class="p-2 w-[15%] text-right">Monto</th>
                                                     <th class="p-2 w-[15%]">Nro Op.</th>
+                                                    <th class="p-2 w-[8%] text-center">Resp.</th>
                                                     <th class="p-2 w-[5%]  text-center">Acc.</th>
                                                 </tr>
                                             </thead>
@@ -419,6 +448,35 @@
                                                                 </svg>
                                                                 <span>{{ $dv->nro_transaccion ?? '—' }}</span>
                                                             </div>
+                                                        </td>
+
+                                                        <td class="p-2 text-center">
+                                                            @if ($dv->foto_comprobante)
+                                                                @php
+                                                                    $ext = strtolower(pathinfo($dv->foto_comprobante, PATHINFO_EXTENSION));
+                                                                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png']);
+                                                                @endphp
+                                                                @if ($isImage)
+                                                                    <button type="button"
+                                                                        class="inline-flex items-center justify-center w-7 h-7 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition"
+                                                                        title="Ver imagen"
+                                                                        @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $dv->foto_comprobante) }}' })">
+                                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                                        </svg>
+                                                                    </button>
+                                                                @else
+                                                                    <a href="{{ asset('storage/' . $dv->foto_comprobante) }}" target="_blank" rel="noopener noreferrer"
+                                                                        class="inline-flex items-center justify-center w-7 h-7 rounded bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 transition"
+                                                                        title="Ver PDF">
+                                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                                        </svg>
+                                                                    </a>
+                                                                @endif
+                                                            @else
+                                                                <span class="text-gray-400 dark:text-neutral-500">—</span>
+                                                            @endif
                                                         </td>
 
                                                         <td class="p-2 text-center">

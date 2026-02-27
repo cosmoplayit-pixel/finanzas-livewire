@@ -23,6 +23,7 @@ return new class extends Migration {
 
             $table->string('nro_transaccion', 100)->nullable();
             $table->text('observacion')->nullable();
+            $table->string('foto_comprobante')->nullable();
 
             // Auditoría del banco destino
             $table->decimal('saldo_banco_antes', 14, 2);

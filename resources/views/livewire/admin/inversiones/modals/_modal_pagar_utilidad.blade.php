@@ -98,10 +98,10 @@
             {{-- FORM --}}
             <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
                 <div class="p-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
 
                         {{-- TIPO PAGO --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-2 md:col-span-1">
                             <label class="block text-sm mb-1">Tipo de pago <span class="text-red-500">*</span></label>
                             <select wire:model.live="tipo_pago"
                                 class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -118,7 +118,7 @@
 
                         {{-- FECHAS --}}
                         @if ($isUtilidad)
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
                                     Fecha inicio (auto) <span class="text-red-500">*</span>
                                 </label>
@@ -129,7 +129,7 @@
                                     border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
                             </div>
 
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
                                     Fecha final <span class="text-red-500">*</span>
                                 </label>
@@ -142,7 +142,7 @@
                                 @enderror
                             </div>
 
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
                                     Fecha pago <span class="text-red-500">*</span>
                                 </label>
@@ -155,7 +155,7 @@
                                 @enderror
                             </div>
 
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">Cantidad días</label>
                                 <input type="text" disabled
                                     value="{{ (int) ($utilidad_dias ?? ' Regla: 28–31 ⇒ 30') }}"
@@ -163,7 +163,7 @@
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
                             </div>
                         @else
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
                                     Fecha de inicio (últ. movimiento) <span class="text-red-500">*</span>
                                 </label>
@@ -177,7 +177,7 @@
                                 @enderror
                             </div>
 
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
                                     Fecha pago <span class="text-red-500">*</span>
                                 </label>
@@ -194,7 +194,7 @@
                         @endif
 
                         {{-- BANCO --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-2 md:col-span-1">
                             <label class="block text-sm mb-1">
                                 Debitar del banco <span class="text-red-500">*</span>
                             </label>
@@ -220,7 +220,7 @@
                         </div>
 
                         {{-- COMPROBANTE --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-1 md:col-span-1">
                             <label class="block text-sm mb-1">Nro comprobante</label>
                             <input type="text" wire:model.live="nro_comprobante" placeholder="Ej: 100"
                                 class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -233,7 +233,7 @@
 
                         {{-- TIPO DE CAMBIO (si aplica) --}}
                         @if ($hasTC)
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
                                     Tipo de cambio <span class="text-red-500">*</span>
                                 </label>
@@ -246,7 +246,7 @@
                                 @enderror
                             </div>
 
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">Monto en moneda base (preview)</label>
                                 <input type="text" disabled value="{{ $monto_base_preview ?: '—' }}"
                                     class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
@@ -259,7 +259,7 @@
 
                         {{-- CAMPOS POR TIPO --}}
                         @if ($isUtilidad)
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">% utilidad (calculado)</label>
                                 <input type="text" disabled
                                     value="{{ number_format((float) ($utilidad_pct_calc ?? 0), 2, ',', '.') }}%"
@@ -267,7 +267,7 @@
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
                             </div>
 
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
                                     Monto utilidad mes <span class="text-red-500">*</span>
                                 </label>
@@ -281,7 +281,7 @@
                                 @enderror
                             </div>
 
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">A pagar (calculado)</label>
                                 <input type="text" disabled value="{{ $utilidad_a_pagar_formatted ?: '0,00' }}"
                                     class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
@@ -291,7 +291,7 @@
                                 @enderror
                             </div>
                         @else
-                            <div class="md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
                                     Monto (capital) <span class="text-red-500">*</span>
                                 </label>
@@ -307,7 +307,7 @@
                         @endif
 
                         {{-- FOTO DEL COMPROBANTE --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-2 md:col-span-1">
                             <label class="block text-sm mb-1">Foto del comprobante (opcional)</label>
 
                             <label
@@ -351,7 +351,7 @@
                         </div>
 
                         {{-- IMPACTO FINANCIERO --}}
-                        <div class="md:col-span-3">
+                        <div class="col-span-2 md:col-span-3">
                             <div class="rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-700 p-4">
                                 <div class="font-semibold text-sm text-gray-900 dark:text-neutral-100">Impacto
                                     financiero</div>

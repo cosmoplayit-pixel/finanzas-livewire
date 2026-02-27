@@ -114,6 +114,7 @@ class BoletaGarantiaService
                 'monto' => $monto,
                 'nro_transaccion' => $data['nro_transaccion'] ?? null,
                 'observacion' => $data['observacion'] ?? null,
+                'foto_comprobante' => $data['foto_comprobante'] ?? null,
                 'saldo_banco_antes' => $antes,
                 'saldo_banco_despues' => $despues,
             ]);

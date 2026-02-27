@@ -15,6 +15,7 @@ class BoletaGarantiaDevolucion extends Model
         'monto',
         'nro_transaccion',
         'observacion',
+        'foto_comprobante',
         'saldo_banco_antes',
         'saldo_banco_despues',
     ];

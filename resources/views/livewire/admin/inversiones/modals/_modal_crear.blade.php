@@ -14,10 +14,10 @@
             </div>
 
             <div class="p-3 sm:p-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
 
                     {{-- Tipo --}}
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm mb-1">Tipo <span class="text-red-500">*</span></label>
                         <select wire:model.live="tipo"
                             class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -33,7 +33,7 @@
                     </div>
 
                     {{-- Código --}}
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm mb-1">Código <span class="text-red-500">*</span></label>
                         <input wire:model.live="codigo" placeholder="Ej: 260101"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -45,7 +45,7 @@
                     </div>
 
                     {{-- Nombre --}}
-                    <div>
+                    <div class="col-span-2 lg:col-span-1">
                         <label class="block text-sm mb-1">Nombre completo <span class="text-red-500">*</span></label>
                         <input wire:model.live="nombre_completo" placeholder="Ej: Willam Rojas Vidal"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -57,7 +57,7 @@
                     </div>
 
                     {{-- Fecha inicio --}}
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm mb-1">Fecha inicio <span class="text-red-500">*</span></label>
                         <input type="date" wire:model.live="fecha_inicio"
                             class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -69,7 +69,7 @@
                     </div>
 
                     {{-- Fecha vencimiento (AUTO, OCULTA al inicio y DESHABILITADA) --}}
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm mb-1">Fecha vencimiento <span class="text-red-500">*</span></label>
                         <input type="date" wire:model="fecha_vencimiento" disabled
                             class="w-full cursor-not-allowed rounded-lg border px-3 py-2
@@ -85,7 +85,7 @@
 
                     {{-- Banco (OCULTO hasta elegir tipo) --}}
                     @if ($showTipoSelectedFields)
-                        <div>
+                        <div class="col-span-1">
                             <label class="block text-sm mb-1">Banco <span class="text-red-500">*</span></label>
                             <select wire:model.live="banco_id"
                                 class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -106,7 +106,7 @@
 
                     {{-- Capital (OCULTO hasta elegir tipo) --}}
                     @if ($showTipoSelectedFields)
-                        <div>
+                        <div class="col-span-1">
                             <label class="block text-sm mb-1">Capital <span class="text-red-500">*</span></label>
                             <input type="text" inputmode="decimal" wire:model.defer="capital_formatted"
                                 wire:blur="formatCapital" placeholder="0,00"
@@ -121,7 +121,7 @@
 
                     {{-- % Utilidad (solo PRIVADO) --}}
                     @if ($showPrivadoFields)
-                        <div>
+                        <div class="col-span-1">
                             <label class="block text-sm mb-1">% Utilidad <span class="text-red-500">*</span></label>
                             <input type="text" inputmode="decimal" wire:model.defer="porcentaje_utilidad_formatted"
                                 wire:blur="formatPorcentaje" placeholder="0,00"
@@ -135,7 +135,7 @@
                     @endif
 
                     @if ($showBancoFields)
-                        <div>
+                        <div class="col-span-1">
                             <label class="block text-sm mb-1">Tasa anual (%) <span class="text-red-500">*</span></label>
                             <input type="text" inputmode="decimal" wire:model.defer="tasa_anual_formatted"
                                 wire:blur="formatTasaAnual" placeholder="18,00"
@@ -150,7 +150,7 @@
 
                     {{-- PLAN (PRIVADO y BANCO): plazo/día --}}
                     @if ($showTipoSelectedFields)
-                        <div>
+                        <div class="col-span-1">
                             <label class="block text-sm mb-1">Plazo (meses) <span class="text-red-500">*</span></label>
                             <input type="text" inputmode="numeric" wire:model.defer="plazo_meses_formatted"
                                 wire:blur="formatPlazo" placeholder="12"
@@ -164,7 +164,7 @@
                     @endif
 
                     @if ($showBancoFields)
-                        <div>
+                        <div class="col-span-1">
                             <label class="block text-sm mb-1">Día de pago (1–28) <span
                                     class="text-red-500">*</span></label>
                             <input type="text" inputmode="numeric" wire:model.defer="dia_pago_formatted"
@@ -181,7 +181,7 @@
 
 
                     {{-- Foto --}}
-                    <div class="lg:col-span-1">
+                    <div class="col-span-2 lg:col-span-3">
                         <label class="block text-sm mb-1">Foto del comprobante (opcional)</label>
 
                         <label
@@ -243,7 +243,7 @@
             </div>
 
             <div class="p-3 sm:p-4">
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     <div
                         class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
                         <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo actual</div>
@@ -263,7 +263,7 @@
                     </div>
 
                     <div
-                        class="rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
+                        class="col-span-2 sm:col-span-1 rounded-lg border bg-white dark:bg-neutral-900 px-3 py-2 border-gray-200 dark:border-neutral-700">
                         <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo después</div>
                         <div
                             class="text-sm text-red-600 font-semibold tabular-nums text-gray-900 dark:text-neutral-100">

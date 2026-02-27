@@ -29,6 +29,10 @@ class Index extends Component
     // UI panel
     public bool $openFilters = false;
 
+    // Foto visor
+    public bool $openFotoModal = false;
+    public ?string $fotoUrl = null;
+
     public function mount(): void
     {
         $this->f_tipo = ['SERIEDAD', 'CUMPLIMIENTO'];
@@ -156,6 +160,22 @@ class Index extends Component
     public function refreshList(): void
     {
         $this->resetPage();
+    }
+
+    // =========================
+    // Foto
+    // =========================
+    #[On('open-image-modal')]
+    public function openFotoComprobante(string $url): void
+    {
+        $this->fotoUrl = $url;
+        $this->openFotoModal = true;
+    }
+
+    public function closeFoto(): void
+    {
+        $this->openFotoModal = false;
+        $this->fotoUrl = null;
     }
 
     // =========================

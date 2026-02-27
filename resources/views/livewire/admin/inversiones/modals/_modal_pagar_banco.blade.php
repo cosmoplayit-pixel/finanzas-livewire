@@ -128,10 +128,10 @@
             {{-- FORM --}}
             <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
                 <div class="p-4">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
 
                         {{-- CONCEPTO --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-2 md:col-span-1">
                             <label class="block text-sm mb-1">Concepto</label>
                             <input type="text" value="Pago cuota" readonly
                                 class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
@@ -140,7 +140,7 @@
                         </div>
 
                         {{-- FECHA CONTABLE --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-1 md:col-span-1">
                             <label class="block text-sm mb-1">Fecha (contable) <span
                                     class="text-red-500">*</span></label>
                             <input type="date" wire:model.live="fecha" @disabled($modoConfirmar)
@@ -154,7 +154,7 @@
                         </div>
 
                         {{-- FECHA PAGO --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-1 md:col-span-1">
                             <label class="block text-sm mb-1">Fecha pago <span class="text-red-500">*</span></label>
                             <input type="date" wire:model.live="fecha_pago" @disabled($modoConfirmar)
                                 class="w-full rounded-lg border px-3 py-2
@@ -167,7 +167,7 @@
                         </div>
 
                         {{-- BANCO --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-2 md:col-span-1">
                             <label class="block text-sm mb-1">Debitar del banco <span
                                     class="text-red-500">*</span></label>
                             <select
@@ -186,7 +186,7 @@
                         </div>
 
                         {{-- COMPROBANTE --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-1 md:col-span-1">
                             <label class="block text-sm mb-1">Nro comprobante</label>
                             <input type="text" wire:model.live="nro_comprobante" placeholder="Ej: 12345"
                                 class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -199,7 +199,7 @@
 
                         {{-- TIPO CAMBIO --}}
                         @if ($hasTC)
-                            <div class="md:col-span-1">
+                            <div class="col-span-2 md:col-span-1">
                                 <label class="block text-sm mb-1">Tipo de cambio <span
                                         class="text-red-500">*</span></label>
                                 <input type="text" wire:model.live="tipo_cambio_formatted" placeholder="Ej: 6,96"
@@ -213,8 +213,8 @@
                         @endif
 
                         {{-- TOTAL --}}
-                        <div class="md:col-span-1">
-                            <label class="block text-sm mb-1">Monto total (base {{ $invMon }}) <span
+                        <div class="col-span-1 md:col-span-1">
+                            <label class="block text-sm mb-1">Monto total <span
                                     class="text-red-500">*</span></label>
                             <input type="text" wire:model.blur="monto_total_formatted" placeholder="0,00"
                                 class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
@@ -226,7 +226,7 @@
                         </div>
 
                         {{-- CAPITAL --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-1 md:col-span-1">
                             <label class="block text-sm mb-1">Capital (base) <span
                                     class="text-red-500">*</span></label>
                             <input type="text" wire:model.blur="monto_capital_formatted" placeholder="0,00"
@@ -239,7 +239,7 @@
                         </div>
 
                         {{-- INTERÉS --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-1 md:col-span-1">
                             <label class="block text-sm mb-1">Interés (auto) <span
                                     class="text-red-500">*</span></label>
                             <input type="text" wire:model="monto_interes_formatted" readonly
@@ -252,7 +252,7 @@
                         </div>
 
                         {{-- FOTO --}}
-                        <div class="md:col-span-1">
+                        <div class="col-span-2 md:col-span-1">
                             <label class="block text-sm mb-1">Foto comprobante (opcional)</label>
 
                             <label
@@ -297,7 +297,7 @@
                         </div>
 
                         {{-- IMPACTO --}}
-                        <div class="md:col-span-3">
+                        <div class="col-span-2 md:col-span-3">
                             <div class="rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-700 p-4">
                                 <div class="font-semibold text-sm text-gray-900 dark:text-neutral-100">Impacto
                                     financiero</div>

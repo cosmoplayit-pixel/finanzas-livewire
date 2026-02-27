@@ -10,9 +10,12 @@ use DomainException;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class DevolucionModal extends Component
 {
+    use WithFileUploads;
+
     public bool $open = false;
 
     public ?int $boletaId = null;
@@ -25,6 +28,7 @@ class DevolucionModal extends Component
     public float $devol_monto = 0;
 
     public string $observacion = '';
+    public $foto_comprobante = null;
 
     /**
      * Moneda detectada para la boleta (ej: BOB / USD).
@@ -141,6 +145,7 @@ class DevolucionModal extends Component
         $this->devol_monto = 0;
         $this->devol_monto_formatted = '';
         $this->observacion = '';
+        $this->foto_comprobante = null;
 
         $this->monedaBoleta = null;
 
@@ -215,6 +220,7 @@ class DevolucionModal extends Component
             'devol_monto' => ['required', 'numeric', 'min:0.01'],
             'nro_transaccion' => ['nullable', 'string', 'max:100'],
             'observacion' => ['nullable', 'string', 'max:2000'],
+            'foto_comprobante' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
         if (!$this->boletaId) {
@@ -244,6 +250,12 @@ class DevolucionModal extends Component
         }
 
         try {
+            $path = null;
+            if ($this->foto_comprobante) {
+                $folder = 'empresas/' . $empresaId . '/boletas-garantia-devoluciones';
+                $path = $this->foto_comprobante->store($folder, 'public');
+            }
+
             $service->devolver(
                 $bg,
                 [
@@ -254,6 +266,7 @@ class DevolucionModal extends Component
                         trim($this->nro_transaccion) !== '' ? trim($this->nro_transaccion) : null,
                     'observacion' =>
                         trim($this->observacion) !== '' ? trim($this->observacion) : null,
+                    'foto_comprobante' => $path,
                 ],
                 (int) Auth::id(),
             );

@@ -272,9 +272,9 @@
                     @endcanany
                 </tr>
             </thead>
-            <tbody wire:key="banco-{{ $b->id }}" class="divide-y divide-gray-200 dark:divide-neutral-200">
+            <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
                 @foreach ($bancos as $b)
-                    <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
+                    <tr wire:key="banco-{{ $b->id }}" class="hover:bg-gray-100 dark:hover:bg-neutral-900">
 
                         {{-- ID --}}
                         <td class="p-2 text-center whitespace-nowrap">

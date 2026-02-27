@@ -15,6 +15,7 @@ class Factura extends Model
         'monto_facturado',
         'retencion', // ✅ Retención
         'observacion',
+        'foto_comprobante',
         'active',
     ];
 

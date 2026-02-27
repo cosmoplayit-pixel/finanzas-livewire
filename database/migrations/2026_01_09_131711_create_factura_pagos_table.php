@@ -27,6 +27,7 @@ return new class extends Migration {
 
             $table->string('nro_operacion', 80)->nullable();
             $table->string('comprobante_path', 255)->nullable();
+            $table->string('foto_comprobante')->nullable();
             $table->text('observacion')->nullable();
 
             // Snapshot destino (auditoría histórica)

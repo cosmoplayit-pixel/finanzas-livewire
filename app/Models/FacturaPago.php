@@ -18,6 +18,7 @@ class FacturaPago extends Model
         'metodo_pago',
         'nro_operacion',
         'comprobante_path',
+        'foto_comprobante',
         'observacion',
 
         'destino_banco_nombre_snapshot',

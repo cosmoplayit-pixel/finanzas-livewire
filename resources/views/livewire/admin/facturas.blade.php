@@ -25,4 +25,9 @@
     @includeWhen($openFacturaModal, 'livewire.admin.facturas._modal_factura')
     @includeWhen($openPagoModal, 'livewire.admin.facturas._modal_pago')
 
+    {{-- VISOR FOTO --}}
+    <div wire:key="foto-bg-{{ $openFotoModal ? '1' : '0' }}-{{ md5($fotoUrl ?? '') }}">
+        <x-ui.foto-zoom-modal :open="$openFotoModal" :url="$fotoUrl" onClose="closeFoto" title="Comprobante adjunto"
+            subtitle="Pasa el cursor para ampliar y mover" maxWidth="max-w-5xl" />
+    </div>
 </div>

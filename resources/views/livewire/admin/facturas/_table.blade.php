@@ -223,6 +223,29 @@
                                     <span>Detalle: {{ $f->observacion ?? '—' }}</span>
                                 </div>
 
+                                {{-- Respaldo Factura --}}
+                                @if ($f->foto_comprobante)
+                                    @php
+                                        $extFact = strtolower(pathinfo($f->foto_comprobante, PATHINFO_EXTENSION));
+                                        $isImageFact = in_array($extFact, ['jpg', 'jpeg', 'png']);
+                                    @endphp
+                                    <div class="mt-1 flex items-center gap-1 text-xs">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                                        </svg>
+                                        @if ($isImageFact)
+                                            <button type="button" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+                                                @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $f->foto_comprobante) }}' })">
+                                                Ver Respaldo Factura
+                                            </button>
+                                        @else
+                                            <a href="{{ asset('storage/' . $f->foto_comprobante) }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline">
+                                                Abrir PDF Factura
+                                            </a>
+                                        @endif
+                                    </div>
+                                @endif
+
                             </div>
                         </td>
 
@@ -356,7 +379,8 @@
                                                 <th class="p-2 w-[4%] text-center whitespace-nowrap">#</th>
                                                 <th class="p-2 w-[25%] whitespace-nowrap">Destino de Banco</th>
                                                 <th class="p-2 w-[25%] whitespace-nowrap">Pago</th>
-                                                <th class="p-2 w-[20%] whitespace-nowrap">Observación</th>
+                                                <th class="p-2 w-[15%] whitespace-nowrap">Observación</th>
+                                                <th class="p-2 w-[5%] whitespace-nowrap text-center">Resp.</th>
                                                 <th class="p-2 w-[10%] whitespace-nowrap text-center">Tipo</th>
 
                                                 @can('facturas.pay')
@@ -485,6 +509,36 @@
                                                             class="text-sm leading-snug text-gray-700 dark:text-neutral-200 break-words">
                                                             {{ $pg->observacion ?: '—' }}
                                                         </p>
+                                                    </td>
+
+                                                    {{-- Respaldo Pago --}}
+                                                    <td class="p-2 align-middle text-center">
+                                                        @if ($pg->foto_comprobante)
+                                                            @php
+                                                                $extPago = strtolower(pathinfo($pg->foto_comprobante, PATHINFO_EXTENSION));
+                                                                $isImagePago = in_array($extPago, ['jpg', 'jpeg', 'png']);
+                                                            @endphp
+                                                            @if ($isImagePago)
+                                                                <button type="button"
+                                                                    class="inline-flex items-center justify-center w-7 h-7 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition"
+                                                                    title="Ver imagen"
+                                                                    @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $pg->foto_comprobante) }}' })">
+                                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                                    </svg>
+                                                                </button>
+                                                            @else
+                                                                <a href="{{ asset('storage/' . $pg->foto_comprobante) }}" target="_blank" rel="noopener noreferrer"
+                                                                    class="inline-flex items-center justify-center w-7 h-7 rounded bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 transition"
+                                                                    title="Ver PDF">
+                                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                                    </svg>
+                                                                </a>
+                                                            @endif
+                                                        @else
+                                                            <span class="text-gray-400 dark:text-neutral-500">—</span>
+                                                        @endif
                                                     </td>
 
                                                     {{-- Tipo --}}

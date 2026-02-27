@@ -152,6 +152,7 @@ class FacturaPagoService
                 'metodo_pago' => $data['metodo_pago'] ?? null,
                 'nro_operacion' => $data['nro_operacion'] ?? null,
                 'observacion' => $data['observacion'] ?? null,
+                'foto_comprobante' => $data['foto_comprobante'] ?? null,
 
                 // Snapshots de destino
                 'destino_banco_nombre_snapshot' => $banco?->nombre,

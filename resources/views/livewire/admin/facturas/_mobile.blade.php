@@ -131,6 +131,29 @@
                      title="{{ $f->observacion ?? '—' }}">
                      Detalle: {{ $f->observacion ?? '—' }}
                  </div>
+
+                 {{-- Respaldo Factura --}}
+                 @if ($f->foto_comprobante)
+                     @php
+                         $extFactMob = strtolower(pathinfo($f->foto_comprobante, PATHINFO_EXTENSION));
+                         $isImageFactMob = in_array($extFactMob, ['jpg', 'jpeg', 'png']);
+                     @endphp
+                     <div class="mt-1 flex items-center gap-1 text-xs">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                         </svg>
+                         @if ($isImageFactMob)
+                             <button type="button" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+                                 @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $f->foto_comprobante) }}' })">
+                                 Ver Respaldo
+                             </button>
+                         @else
+                             <a href="{{ asset('storage/' . $f->foto_comprobante) }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline">
+                                 Abrir PDF
+                             </a>
+                         @endif
+                     </div>
+                 @endif
              </div>
 
              {{-- Estado + Saldo --}}
@@ -337,6 +360,35 @@
                                      <div class="text-xs text-gray-800 dark:text-neutral-200 line-clamp-2"
                                          title="{{ $pg->observacion }}">
                                          {{ $pg->observacion }}
+                                     </div>
+                                 </div>
+                             @endif
+
+                             {{-- Respaldo Pago --}}
+                             @if ($pg->foto_comprobante)
+                                 @php
+                                     $extPagoMob = strtolower(pathinfo($pg->foto_comprobante, PATHINFO_EXTENSION));
+                                     $isImagePagoMob = in_array($extPagoMob, ['jpg', 'jpeg', 'png']);
+                                 @endphp
+                                 <div class="grid grid-cols-[110px,1fr] gap-2 mt-1">
+                                     <div class="text-xs text-gray-500 dark:text-neutral-400">Respaldo</div>
+                                     <div class="text-xs">
+                                         @if ($isImagePagoMob)
+                                             <button type="button" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1"
+                                                 @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $pg->foto_comprobante) }}' })">
+                                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                 </svg>
+                                                 Ver Imagen
+                                             </button>
+                                         @else
+                                             <a href="{{ asset('storage/' . $pg->foto_comprobante) }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                </svg>
+                                                 Abrir PDF
+                                             </a>
+                                         @endif
                                      </div>
                                  </div>
                              @endif

@@ -14,10 +14,11 @@ use DomainException;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 
 class Facturas extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
     // Formateo monto facturado
     public string $monto_facturado_formatted = '';
     public string $monto_formatted = '';
@@ -56,9 +57,8 @@ class Facturas extends Component
 
     public $retencion_porcentaje = 0;
     public $retencion_monto = 0;
-    public $monto_neto = 0;
-
     public ?string $observacion_factura = null;
+    public $foto_comprobante = null;
 
     // Modal PAGO
     public bool $openPagoModal = false;
@@ -72,6 +72,11 @@ class Facturas extends Component
     public ?string $nro_operacion = null;
     public ?string $observacion = null;
     public ?string $fecha_pago = null;
+    public $pago_foto_comprobante = null;
+
+    // Visor Foto
+    public bool $openFotoModal = false;
+    public ?string $fotoUrl = null;
 
     public function mount(): void
     {
@@ -238,6 +243,7 @@ class Facturas extends Component
         $this->monto_neto = 0;
 
         $this->observacion_factura = null;
+        $this->foto_comprobante = null;
     }
 
     public function closeFactura(): void
@@ -253,6 +259,7 @@ class Facturas extends Component
             'monto_facturado',
             'retencion_porcentaje',
             'observacion_factura',
+            'foto_comprobante',
         ]);
 
         $this->retencion_monto = 0;
@@ -273,9 +280,15 @@ class Facturas extends Component
             'fecha_emision' => 'nullable|date',
             'monto_facturado' => 'required|numeric|min:0.01|max:999999999.99',
             'observacion_factura' => 'nullable|string|max:2000',
+            'foto_comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         try {
+            $path = null;
+            if ($this->foto_comprobante) {
+                $path = $this->foto_comprobante->store('empresas/' . $this->empresaId() . '/facturas', 'public');
+            }
+
             $service->crearFactura(
                 [
                     'entidad_id' => $this->entidad_id,
@@ -284,6 +297,7 @@ class Facturas extends Component
                     'fecha_emision' => $this->fecha_emision,
                     'monto_facturado' => $this->monto_facturado,
                     'observacion_factura' => $this->observacion_factura,
+                    'foto_comprobante' => $path,
                 ],
                 auth()->user(),
             );
@@ -409,6 +423,7 @@ class Facturas extends Component
             'nro_operacion',
             'observacion',
             'fecha_pago',
+            'pago_foto_comprobante',
         ]);
 
         $this->tipo = 'normal';
@@ -432,6 +447,7 @@ class Facturas extends Component
             'nro_operacion' => 'nullable|string|max:80',
             'observacion' => 'nullable|string|max:2000',
             'fecha_pago' => 'required|date',
+            'pago_foto_comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ];
 
         if ($this->metodo_pago !== 'efectivo') {
@@ -442,6 +458,11 @@ class Facturas extends Component
         $this->validate($rules);
 
         try {
+            $path = null;
+            if ($this->pago_foto_comprobante) {
+                $path = $this->pago_foto_comprobante->store('empresas/' . $this->empresaId() . '/facturas-pagos', 'public');
+            }
+
             $service->registrarPago(
                 $factura,
                 [
@@ -452,6 +473,7 @@ class Facturas extends Component
                     'nro_operacion' => $this->nro_operacion,
                     'observacion' => $this->observacion,
                     'fecha_pago' => $this->fecha_pago,
+                    'foto_comprobante' => $path,
                 ],
                 auth()->user(),
             );
@@ -497,6 +519,20 @@ class Facturas extends Component
         } catch (DomainException $e) {
             $this->addError('tipo', $e->getMessage());
         }
+    }
+
+    // FOTO
+    #[On('open-image-modal')]
+    public function openFotoComprobante(string $url): void
+    {
+        $this->fotoUrl = $url;
+        $this->openFotoModal = true;
+    }
+
+    public function closeFoto(): void
+    {
+        $this->openFotoModal = false;
+        $this->fotoUrl = null;
     }
 
     // RENDER (delegado al Query Object)

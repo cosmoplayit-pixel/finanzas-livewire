@@ -16,8 +16,8 @@ return new class extends Migration {
             $table->dateTime('fecha_emision')->nullable();
             $table->decimal('monto_facturado', 14, 2)->default(0);
             $table->decimal('retencion', 14, 2)->default(0); // ✅ Retención
-
             $table->text('observacion')->nullable();
+            $table->string('foto_comprobante')->nullable();
 
             $table->boolean('active')->default(true);
 

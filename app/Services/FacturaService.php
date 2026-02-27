@@ -104,6 +104,7 @@ class FacturaService
             'monto_facturado' => $facturado,
             'retencion' => $retencionMonto,
             'observacion' => $data['observacion_factura'] ?? null,
+            'foto_comprobante' => $data['foto_comprobante'] ?? null,
             'active' => true,
         ]);
     }

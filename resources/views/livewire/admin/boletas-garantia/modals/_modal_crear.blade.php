@@ -154,7 +154,7 @@
                     {{-- Observación --}}
                     <div>
                         <label class="block text-sm mb-1">Observación</label>
-                        <textarea rows="3" wire:model.live="observacion" placeholder="Opcional"
+                        <textarea rows="2" wire:model.live="observacion" placeholder="Opcional"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"></textarea>
                         @error('observacion')
                             <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
@@ -256,7 +256,7 @@
         <div class="w-full grid grid-cols-2 gap-2 sm:flex sm:justify-end sm:gap-3">
 
             <button type="button" wire:click="close"
-                class="w-full px-4 py-2 rounded-lg border cursor-pointer
+                class="w-full sm:w-auto px-5 py-2 rounded-lg border cursor-pointer
                    border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200
                    hover:bg-gray-100 dark:hover:bg-neutral-800">
                 Cancelar
@@ -264,7 +264,7 @@
 
             <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
                 @disabled(!$this->puedeGuardar)
-                class="w-full px-4 py-2 rounded-lg cursor-pointer bg-black text-white hover:opacity-90
+                class="w-full sm:w-auto px-5 py-2 rounded-lg cursor-pointer bg-black text-white hover:opacity-90
                    disabled:opacity-50 disabled:cursor-not-allowed">
                 <span wire:loading.remove wire:target="save">Guardar</span>
                 <span wire:loading wire:target="save">Guardando…</span>

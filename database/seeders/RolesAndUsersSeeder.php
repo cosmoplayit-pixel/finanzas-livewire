@@ -85,9 +85,8 @@ class RolesAndUsersSeeder extends Seeder
             // FACTURAS
             'facturas.view',
             'facturas.create',
-            'facturas.update',
-            'facturas.toggle',
-            'facturas.pay', // registrar pagos
+            'facturas.pay', 
+            'facturas.delete',
 
             // Agentes de Servicio
             'agentes_servicio.view',
@@ -212,8 +211,7 @@ class RolesAndUsersSeeder extends Seeder
 
             'facturas.view',
             'facturas.create',
-            'facturas.update',
-            'facturas.pay',
+                       'facturas.pay',
 
             'agentes_servicio.view',
             'agentes_servicio.create',

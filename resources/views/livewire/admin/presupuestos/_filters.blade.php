@@ -57,19 +57,19 @@
             </div>
 
             {{-- Estado --}}
-            <div class="md:col-span-3 lg:col-span-2">
+            <div class="md:col-span-2 lg:col-span-2">
                 <label class="block text-sm font-medium mb-1 text-gray-700 dark:text-neutral-200">
                     Estado
                 </label>
                 <div
-                    class="w-full rounded-lg border px-3 py-2.5
+                    class="w-full rounded-lg border px-2 py-2.5
                             bg-gray-50/60 border-gray-200
                             dark:bg-neutral-900/40 dark:border-neutral-700">
-                    <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-600 dark:text-neutral-400">Cerrados</span>
 
                         <button type="button" wire:click="$toggle('soloPendientes')"
-                            class="cursor-pointer relative inline-flex h-6 w-11 items-center rounded-full transition-colors
+                            class="cursor-pointer relative inline-flex mx-2 shrink-0 h-6 w-11 items-center rounded-full transition-colors
                                    {{ $soloPendientes ? 'bg-emerald-600' : 'bg-gray-300 dark:bg-neutral-700' }}
                                    focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
                             <span

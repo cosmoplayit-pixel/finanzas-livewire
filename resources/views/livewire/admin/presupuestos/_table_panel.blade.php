@@ -107,6 +107,7 @@
 
                                             {{-- CREAR RENDICIÓN --}}
                                             @if (empty($p->rendicion_id))
+                                                @can('agente_rendicion.create')
                                                 <button type="button" wire:click="crearRendicion({{ $p->id }})"
                                                     wire:loading.attr="disabled"
                                                     wire:target="crearRendicion({{ $p->id }})"
@@ -137,10 +138,12 @@
                                                         </svg>
                                                     </span>
                                                 </button>
+                                                @endcan
 
 
                                                 {{-- VER RENDICIÓN --}}
                                             @else
+                                                @can('agente_rendicion.view')
                                                 <button type="button"
                                                     wire:click="openRendicionEditor({{ $p->rendicion_id }})"
                                                     wire:loading.attr="disabled"
@@ -173,6 +176,7 @@
                                                         </svg>
                                                     </span>
                                                 </button>
+                                                @endcan
                                             @endif
                                         </div>
                                     </td>

@@ -441,6 +441,13 @@
                         'entidades' => 5,
                         'proyecto' => 6,
                         'proyectos' => 6,
+                        'bancos' => 7,
+                        'facturas' => 8,
+                        'agentes_servicio' => 9,
+                        'agente_presupuestos' => 10,
+                        'agente_rendicion' => 11,
+                        'boletas_garantia' => 12,
+                        'inversiones' => 13,
                     ];
 
                     // 3) Títulos de grupos
@@ -454,6 +461,13 @@
                         'entidades' => 'Entidad',
                         'proyecto' => 'Proyecto',
                         'proyectos' => 'Proyecto',
+                        'bancos' => 'Bancos',
+                        'facturas' => 'Facturas',
+                        'agentes_servicio' => 'Agentes de Servicio',
+                        'agente_presupuestos' => 'Agentes de Presupuestos',
+                        'agente_rendicion' => 'Rendición de Gastos',
+                        'boletas_garantia' => 'Boletas de Garantía',
+                        'inversiones' => 'Inversiones',
                     ];
 
                     // 4) Orden de acciones dentro de cada grupo
@@ -462,6 +476,13 @@
                         'create' => 2,
                         'update' => 3,
                         'toggle' => 4,
+                        'assign_role' => 5,
+                        'assign_permissions' => 6,
+                        'pay' => 7,
+                        'delete' => 8,
+                        'close' => 9,
+                        'movimiento' => 10,
+                        'pagar' => 11,
                     ];
 
                     // 5) Diccionario humano (puedes ampliarlo)
@@ -481,6 +502,10 @@
                             'label' => 'Activar o desactivar usuarios',
                             'desc' => 'Permite habilitar o deshabilitar usuarios.',
                         ],
+                        'users.assign_role' => [
+                            'label' => 'Asignar roles',
+                            'desc' => 'Permite definir los roles de un usuario.',
+                        ],
 
                         'roles.view' => ['label' => 'Ver roles', 'desc' => 'Permite visualizar roles.'],
                         'roles.create' => ['label' => 'Crear roles', 'desc' => 'Permite crear nuevos roles.'],
@@ -492,6 +517,30 @@
                         'roles.assign_permissions' => [
                             'label' => 'Asignar permisos a roles',
                             'desc' => 'Permite definir permisos de un rol.',
+                        ],
+
+                        'facturas.pay' => [
+                            'label' => 'Pagar facturas',
+                            'desc' => 'Permite registrar pagos a facturas.',
+                        ],
+                        
+                        'agente_presupuestos.close' => [
+                            'label' => 'Cerrar presupuestos',
+                            'desc' => 'Permite cerrar controles de presupuestos.',
+                        ],
+                        
+                        'agente_rendicion.close' => [
+                            'label' => 'Cerrar rendición',
+                            'desc' => 'Permite cerrar rendiciones de gastos.',
+                        ],
+                        
+                        'inversiones.movimiento' => [
+                            'label' => 'Registrar movimiento',
+                            'desc' => 'Permite registrar entradas y salidas a inversiones.',
+                        ],
+                        'inversiones.pagar' => [
+                            'label' => 'Finalizar inversión',
+                            'desc' => 'Permite consolidar la inversión y pagar capital o utilidades.',
                         ],
                     ];
 
@@ -509,6 +558,7 @@
                             'view' => 'Ver',
                             'create' => 'Crear',
                             'update' => 'Editar',
+                            'delete' => 'Eliminar',
                             'toggle' => 'Activar / Desactivar',
                             default => ucfirst(str_replace('_', ' ', $accionKey ?: $perm)),
                         };

@@ -99,7 +99,7 @@
             @endcanany
 
             {{-- ================= GESTIÓN FINANCIERA ================= --}}
-            @canany(['entidades.view', 'proyectos.view', 'bancos.view'])
+            @canany(['entidades.view', 'proyectos.view', 'bancos.view', 'facturas.view', 'agente_presupuestos.view', 'agente_rendicion.view', 'boletas_garantia.view', 'inversiones.view'])
                 <flux:navlist.group :heading="__('Gestión de Catalogos')" class="grid">
 
                     {{-- Entidades --}}

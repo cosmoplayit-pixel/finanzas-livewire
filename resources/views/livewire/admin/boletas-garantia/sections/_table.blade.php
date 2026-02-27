@@ -28,7 +28,9 @@
                     <th class="w-[20%] p-2 select-none whitespace-nowrap">Boleta</th>
                     <th class="w-[7%]  p-2 select-none whitespace-nowrap text-center">Estado</th>
                     <th class="w-[8%]  p-2 select-none whitespace-nowrap text-center">Devuelto</th>
-                    <th class="w-[7%]  p-2 whitespace-nowrap text-center">Acciones</th>
+                    @can('boletas_garantia.update')
+                        <th class="w-[7%]  p-2 whitespace-nowrap text-center">Acciones</th>
+                    @endcan
                 </tr>
             </thead>
 
@@ -37,7 +39,12 @@
                     $totalDev = (float) ($bg->devoluciones?->sum('monto') ?? 0);
                     $rest = max(0, (float) $bg->retencion - $totalDev);
                     $devuelta = $totalDev >= (float) $bg->retencion;
-                    $colspan = 7;
+                    
+                    // Calcular colspan dinámico para la tabla principal
+                    $colspan = 6 + (auth()->user()->can('boletas_garantia.update') ? 1 : 0);
+                    
+                    // Calcular colspan dinámico para la tabla anidada de devoluciones
+                    $colspanInner = 6 + (auth()->user()->can('boletas_garantia.toggle') ? 1 : 0);
                 @endphp
 
                 {{-- open: detalle devoluciones; showFullProject: ver más/menos del proyecto --}}
@@ -318,27 +325,29 @@
                             </div>
                         </td>
 
-                        {{-- ACCIONES (no abrir detalle) --}}
-                        <td class="p-2 whitespace-nowrap align-middle" @click.stop>
-                            <div class="flex items-center justify-center gap-2">
+                        {{-- ACCIONES --}}
+                        @can('boletas_garantia.update')
+                            <td class="p-2 whitespace-nowrap align-middle" @click.stop>
+                                <div class="flex items-center justify-center gap-2">
 
-                                <button type="button" wire:click="openDevolucion({{ $bg->id }})"
-                                    @disabled($rest <= 0)
-                                    class="inline-flex cursor-pointer items-center gap-1 px-3 py-1.5 rounded-lg border transition text-sm
-                                        {{ $rest <= 0
-                                            ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700'
-                                            : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700' }}">
-                                    {{-- icon corner-down-left (devolver) --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M9 14 4 9l5-5" />
-                                        <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
-                                    </svg>
-                                </button>
+                                    <button type="button" wire:click="openDevolucion({{ $bg->id }})"
+                                        @disabled($rest <= 0)
+                                        class="inline-flex cursor-pointer items-center gap-1 px-3 py-1.5 rounded-lg border transition text-sm
+                                            {{ $rest <= 0
+                                                ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700'
+                                                : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700' }}">
+                                        {{-- icon corner-down-left (devolver) --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M9 14 4 9l5-5" />
+                                            <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+                                        </svg>
+                                    </button>
 
-                            </div>
-                        </td>
+                                </div>
+                            </td>
+                        @endcan
                     </tr>
 
                     {{-- DETALLE (SOLO DEVOLUCIONES) --}}
@@ -360,7 +369,9 @@
                                                     <th class="p-2 w-[15%] text-right">Monto</th>
                                                     <th class="p-2 w-[15%]">Nro Op.</th>
                                                     <th class="p-2 w-[8%] text-center">Resp.</th>
-                                                    <th class="p-2 w-[5%]  text-center">Acc.</th>
+                                                    @can('boletas_garantia.toggle')
+                                                        <th class="p-2 w-[5%]  text-center">Acc.</th>
+                                                    @endcan
                                                 </tr>
                                             </thead>
 
@@ -479,31 +490,33 @@
                                                             @endif
                                                         </td>
 
-                                                        <td class="p-2 text-center">
-                                                            {{-- Delete: dispara modal Livewire separado (no abrir detalle) --}}
-                                                            <button type="button"
-                                                                class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-red-300 text-red-700
-                                                                       hover:bg-red-200 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500 transition cursor-pointer"
-                                                                title="Eliminar devolución"
-                                                                wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }})">
-                                                                {{-- icon trash --}}
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    class="w-4 h-4" viewBox="0 0 24 24"
-                                                                    fill="none" stroke="currentColor"
-                                                                    stroke-width="2" stroke-linecap="round"
-                                                                    stroke-linejoin="round">
-                                                                    <path d="M3 6h18" />
-                                                                    <path d="M8 6V4h8v2" />
-                                                                    <path d="M6 6l1 16h10l1-16" />
-                                                                    <path d="M10 11v6" />
-                                                                    <path d="M14 11v6" />
-                                                                </svg>
-                                                            </button>
-                                                        </td>
+                                                        @can('boletas_garantia.toggle')
+                                                            <td class="p-2 text-center">
+                                                                {{-- Delete: dispara modal Livewire separado (no abrir detalle) --}}
+                                                                <button type="button"
+                                                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-red-300 text-red-700
+                                                                           hover:bg-red-200 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500 transition cursor-pointer"
+                                                                    title="Eliminar devolución"
+                                                                    wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }})">
+                                                                    {{-- icon trash --}}
+                                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                                        class="w-4 h-4" viewBox="0 0 24 24"
+                                                                        fill="none" stroke="currentColor"
+                                                                        stroke-width="2" stroke-linecap="round"
+                                                                        stroke-linejoin="round">
+                                                                        <path d="M3 6h18" />
+                                                                        <path d="M8 6V4h8v2" />
+                                                                        <path d="M6 6l1 16h10l1-16" />
+                                                                        <path d="M10 11v6" />
+                                                                        <path d="M14 11v6" />
+                                                                    </svg>
+                                                                </button>
+                                                            </td>
+                                                        @endcan
                                                     </tr>
                                                 @empty
                                                     <tr>
-                                                        <td colspan="6"
+                                                        <td colspan="{{ $colspanInner }}"
                                                             class="p-3 text-center text-gray-500 dark:text-neutral-400">
                                                             No hay devoluciones registradas.
                                                         </td>
@@ -523,9 +536,12 @@
             @endforeach
 
             @if ($boletas->count() === 0)
+                @php
+                    $emptyColspan = 6 + (auth()->user()->can('boletas_garantia.update') ? 1 : 0);
+                @endphp
                 <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                     <tr>
-                        <td class="p-4 text-center text-gray-500 dark:text-neutral-400" colspan="7">
+                        <td class="p-4 text-center text-gray-500 dark:text-neutral-400" colspan="{{ $emptyColspan }}">
                             Sin resultados.
                         </td>
                     </tr>

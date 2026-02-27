@@ -12,6 +12,7 @@
             </p>
         </div>
 
+        @can('agente_presupuestos.create')
         <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
             class="shrink-0 inline-flex items-center gap-2 rounded-lg px-3 py-2
                    text-sm font-semibold
@@ -24,6 +25,7 @@
             <span wire:loading.remove wire:target="openCreate">Nuevo</span>
             <span wire:loading wire:target="openCreate">…</span>
         </button>
+        @endcan
     </div>
 </div>
 
@@ -38,6 +40,7 @@
         </p>
     </div>
 
+    @can('agente_presupuestos.create')
     <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
         class="inline-flex items-center justify-center gap-2
                px-4 py-2.5 rounded-lg
@@ -49,4 +52,5 @@
         <span wire:loading.remove wire:target="openCreate">Nuevo Presupuesto</span>
         <span wire:loading wire:target="openCreate">Abriendo…</span>
     </button>
+    @endcan
 </div>

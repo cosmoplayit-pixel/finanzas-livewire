@@ -11,10 +11,10 @@ class MultiEmpresaSeeder extends Seeder
         $this->call([
             EmpresaSeeder::class,
             RolesAndUsersSeeder::class,
-            EntidadesSeeder::class,
-            ProyectosSeeder::class,
-            BancosSeeder::class,
-            AgenteServicioSeeder::class,
+            //EntidadesSeeder::class,
+            //ProyectosSeeder::class,
+            //BancosSeeder::class,
+            //AgenteServicioSeeder::class,
         ]);
     }
 }

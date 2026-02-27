@@ -36,6 +36,10 @@ class DevolucionModal extends Component
      */
     public ?string $monedaBoleta = null;
 
+    // Preview
+    public float $saldo_banco_actual_preview = 0;
+    public float $saldo_banco_despues_preview = 0;
+
     private function userEmpresaId(): int
     {
         return (int) Auth::user()?->empresa_id;
@@ -148,6 +152,8 @@ class DevolucionModal extends Component
         $this->foto_comprobante = null;
 
         $this->monedaBoleta = null;
+        $this->saldo_banco_actual_preview = 0;
+        $this->saldo_banco_despues_preview = 0;
 
         $this->resetErrorBag();
         $this->resetValidation();
@@ -168,7 +174,35 @@ class DevolucionModal extends Component
         if (is_numeric($clean)) {
             $this->devol_monto = (float) $clean;
             $this->devol_monto_formatted = number_format((float) $this->devol_monto, 2, ',', '.');
+            $this->recalcularPreviewBanco();
         }
+    }
+
+    public function updatedBancoId($value): void
+    {
+        $this->banco_id = (int) $value;
+        $this->recalcularPreviewBanco();
+    }
+
+    private function recalcularPreviewBanco(): void
+    {
+        $this->saldo_banco_actual_preview = 0;
+        $this->saldo_banco_despues_preview = 0;
+
+        if (!$this->banco_id) {
+            return;
+        }
+
+        $banco = Banco::query()->where('empresa_id', $this->userEmpresaId())->find((int) $this->banco_id);
+        if (!$banco) {
+            return;
+        }
+
+        $saldoActual = (float) $banco->monto;
+        $this->saldo_banco_actual_preview = $saldoActual;
+
+        // Es un ingreso al banco
+        $this->saldo_banco_despues_preview = $saldoActual + (float) $this->devol_monto;
     }
 
     public function getRestanteProperty(): float

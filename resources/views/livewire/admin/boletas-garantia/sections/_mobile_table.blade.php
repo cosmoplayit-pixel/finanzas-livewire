@@ -191,33 +191,36 @@
                                 <div class="font-bold tabular-nums text-gray-900 dark:text-white">
                                     {{ $bg->moneda === 'USD' ? '$' : 'Bs' }} {{ number_format((float) $dv->monto, 2, ',', '.') }}
                                 </div>
-                                <button type="button" @click.stop wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }})"
-                                    class="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 transition ml-1" title="Eliminar">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                </button>
+                                @can('boletas_garantia.toggle')
+                                    <button type="button" @click.stop wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }})"
+                                        class="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 transition ml-1" title="Eliminar">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                @endcan
                             </div>
                         </div>
                         @endforeach
                     </div>
                 </div>
                 @endif
-                
-                {{-- BOTON ACCIONES --}}
-                <div class="pt-1">
-                    <button type="button" @click.stop wire:click="openDevolucion({{ $bg->id }})"
-                        @disabled($rest <= 0)
-                        class="w-full px-4 py-2.5 rounded-lg border text-sm font-semibold transition flex justify-center items-center gap-2
-                            {{ $rest <= 0
-                                ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700'
-                                : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 shadow-sm' }}">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                        </svg>
-                        Registrar Devolución
-                    </button>
-                </div>
+                @can('boletas_garantia.update')
+                    {{-- BOTON ACCIONES --}}
+                    <div class="pt-1">
+                        <button type="button" @click.stop wire:click="openDevolucion({{ $bg->id }})"
+                            @disabled($rest <= 0)
+                            class="w-full px-4 py-2.5 rounded-lg border text-sm font-semibold transition flex justify-center items-center gap-2
+                                {{ $rest <= 0
+                                    ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700'
+                                    : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 shadow-sm' }}">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                            </svg>
+                            Registrar Devolución
+                        </button>
+                    </div>
+                @endcan
 
             </div>
         </div>

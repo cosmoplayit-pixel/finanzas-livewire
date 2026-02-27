@@ -38,6 +38,7 @@
 
                         <div class="ml-auto shrink-0">
                             @if (empty($p->rendicion_id))
+                                @can('agente_rendicion.create')
                                 <button type="button" wire:click="crearRendicion({{ $p->id }})"
                                     wire:loading.attr="disabled" wire:target="crearRendicion({{ $p->id }})"
                                     wire:loading.class="opacity-60 cursor-not-allowed"
@@ -55,7 +56,9 @@
                                     </svg>
 
                                 </button>
+                                @endcan
                             @else
+                                @can('agente_rendicion.view')
                                 <button type="button" wire:click="openRendicionEditor({{ $p->rendicion_id }})"
                                     wire:loading.attr="disabled"
                                     wire:target="openRendicionEditor({{ $p->rendicion_id }})"
@@ -79,6 +82,7 @@
 
 
                                 </button>
+                                @endcan
                             @endif
 
                         </div>

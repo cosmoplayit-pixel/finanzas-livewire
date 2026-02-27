@@ -383,7 +383,7 @@
                                                 <th class="p-2 w-[5%] whitespace-nowrap text-center">Resp.</th>
                                                 <th class="p-2 w-[10%] whitespace-nowrap text-center">Tipo</th>
 
-                                                @can('facturas.pay')
+                                                @can('facturas.delete')
                                                     <th class="p-2 w-[4%] whitespace-nowrap text-center">Acc.</th>
                                                 @endcan
                                             </tr>
@@ -559,7 +559,7 @@
                                                     </td>
 
                                                     {{-- Acciones --}}
-                                                    @can('facturas.pay')
+                                                    @can('facturas.delete')
                                                         <td class="p-2 align-middle whitespace-nowrap">
                                                             <div class="flex items-center justify-center">
                                                                 <button type="button"
@@ -587,7 +587,7 @@
                                                 </tr>
                                             @empty
                                                 @php
-                                                    $colspanPagos = 5 + (auth()->user()->can('facturas.pay') ? 1 : 0);
+                                                    $colspanPagos = 5 + (auth()->user()->can('facturas.delete') ? 1 : 0);
                                                 @endphp
 
                                                 <tr>

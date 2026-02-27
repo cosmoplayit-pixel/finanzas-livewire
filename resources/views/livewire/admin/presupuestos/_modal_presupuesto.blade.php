@@ -201,6 +201,14 @@
         {{-- Footer mobile-first: Agregar arriba, Cancelar abajo --}}
         <div class="flex flex-col gap-2 w-full sm:flex-row sm:justify-end sm:gap-3">
 
+             <button type="button" wire:click="closeModal"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg border cursor-pointer
+                       border-gray-300 dark:border-neutral-700
+                       text-gray-700 dark:text-neutral-200
+                       hover:bg-gray-100 dark:hover:bg-neutral-800">
+                Cancelar
+            </button>
+            
             <button type="button" wire:click="savePresupuesto" wire:loading.attr="disabled" wire:target="savePresupuesto"
                 @disabled(!$this->puedeGuardar)
                 class="w-full sm:w-auto px-4 py-2 rounded-lg cursor-pointer
@@ -208,16 +216,8 @@
                        disabled:opacity-50 disabled:cursor-not-allowed">
                 <span wire:loading.remove wire:target="savePresupuesto">Agregar</span>
                 <span wire:loading wire:target="savePresupuesto">Guardando…</span>
-            </button>
-
-            <button type="button" wire:click="closeModal"
-                class="w-full sm:w-auto px-4 py-2 rounded-lg border cursor-pointer
-                       border-gray-300 dark:border-neutral-700
-                       text-gray-700 dark:text-neutral-200
-                       hover:bg-gray-100 dark:hover:bg-neutral-800">
-                Cancelar
-            </button>
-
+            </button>    
+            
         </div>
     @endslot
 </x-ui.modal>

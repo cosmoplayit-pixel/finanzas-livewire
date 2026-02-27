@@ -62,6 +62,7 @@
 
                     {{-- BOTÓN (siempre visible arriba a la derecha en mobile) --}}
                     <div class="shrink-0">
+                        @can('agente_rendicion.create')
                         <button type="button" wire:click="openMovimientoModal1" wire:loading.attr="disabled"
                             wire:target="openMovimientoModal1" @disabled(($editorSaldo ?? 0) <= 0)
                             title="{{ ($editorSaldo ?? 0) <= 0 ? 'Saldo agotado. No se pueden registrar más movimientos.' : '' }}"
@@ -87,6 +88,7 @@
                                 …
                             </span>
                         </button>
+                        @endcan
                     </div>
                 </div>
             </div>
@@ -210,7 +212,9 @@
                                         <th class="p-3 text-center">Monto</th>
                                         <th class="p-3 text-center">Base</th>
                                         <th class="p-3 text-center w-[90px]">Foto</th>
+                                        @can('agente_rendicion.create')
                                         <th class="p-3 text-center w-[140px]">Acc.</th>
+                                        @endcan
                                     </tr>
                                 </thead>
 
@@ -246,18 +250,26 @@
                                                 {{ $editorMonedaBase ?? 'BOB' }}
                                             </td>
 
-                                            <td class="p-3 text-center">
+                                            <td class="p-3 text-center w-[50px]">
                                                 @if (!empty($m->foto_path))
                                                     <button type="button" wire:click="verFoto({{ $m->id }})"
-                                                        class="text-xs underline text-blue-700 dark:text-blue-300">
-                                                        Ver
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/40 dark:hover:text-blue-400 transition"
+                                                        title="Ver foto">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                                            <path d="M21 15l-5-5L5 21" />
+                                                        </svg>
                                                     </button>
                                                 @else
                                                     <span class="text-xs text-gray-400">—</span>
                                                 @endif
                                             </td>
 
-                                            <td class="p-3 text-center">
+                                            @can('agente_rendicion.create')
+                                            <td class="p-3 text-center w-[50px]">
                                                 <button type="button" x-data
                                                     x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
                                                     class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded border border-red-200 text-red-700 hover:bg-red-50
@@ -275,6 +287,7 @@
                                                     </svg>
                                                 </button>
                                             </td>
+                                            @endcan
                                         </tr>
 
                                         {{-- FILA OBSERVACIÓN (ABAJO) --}}
@@ -329,15 +342,15 @@
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                         stroke-width="1.8" stroke-linecap="round"
                                                         stroke-linejoin="round">
-                                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7
-                                a2 2 0 0 1 2-2h3l2-2h6l2 2h3
-                                a2 2 0 0 1 2 2z" />
-                                                        <circle cx="12" cy="13" r="3" />
+                                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                                        <path d="M21 15l-5-5L5 21" />
                                                     </svg>
                                                 </button>
                                             @endif
 
                                             {{-- ELIMINAR --}}
+                                            @can('agente_rendicion.create')
                                             <button type="button" x-data
                                                 x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
                                                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg
@@ -354,6 +367,7 @@
                                                     <path d="M14 11v6" />
                                                 </svg>
                                             </button>
+                                            @endcan
                                         </div>
                                     </div>
 
@@ -429,7 +443,9 @@
                                         <th class="p-3 text-center">Monto</th>
                                         <th class="p-3 text-center">Base</th>
                                         <th class="p-3 text-center w-[50px]">Foto</th>
+                                        @can('agente_rendicion.create')
                                         <th class="p-3 text-center w-[50px]">Acc.</th>
+                                        @endcan
                                     </tr>
                                 </thead>
 
@@ -473,18 +489,26 @@
                                                 {{ $editorMonedaBase ?? 'BOB' }}
                                             </td>
 
-                                            <td class="p-3 text-center">
+                                            <td class="p-3 text-center w-[50px]">
                                                 @if (!empty($m->foto_path))
                                                     <button type="button" wire:click="verFoto({{ $m->id }})"
-                                                        class="text-xs underline text-blue-700 dark:text-blue-300">
-                                                        Ver
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/40 dark:hover:text-blue-400 transition"
+                                                        title="Ver foto">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                                            <path d="M21 15l-5-5L5 21" />
+                                                        </svg>
                                                     </button>
                                                 @else
                                                     <span class="text-xs text-gray-400">—</span>
                                                 @endif
                                             </td>
 
-                                            <td class="p-3 text-center">
+                                            @can('agente_rendicion.create')
+                                            <td class="p-3 text-center w-[50px]">
                                                 <button type="button" x-data
                                                     x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
                                                     class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded
@@ -503,6 +527,7 @@
                                                     </svg>
                                                 </button>
                                             </td>
+                                            @endcan
                                         </tr>
 
                                         {{-- FILA OBSERVACIÓN --}}
@@ -564,14 +589,14 @@
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                         stroke-width="1.8" stroke-linecap="round"
                                                         stroke-linejoin="round">
-                                                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7
-                                         a2 2 0 0 1 2-2h3l2-2h6l2 2h3
-                                         a2 2 0 0 1 2 2z" />
-                                                        <circle cx="12" cy="13" r="3" />
+                                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                                        <path d="M21 15l-5-5L5 21" />
                                                     </svg>
                                                 </button>
                                             @endif
 
+                                            @can('agente_rendicion.create')
                                             <button type="button" x-data
                                                 x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
                                                 class="inline-flex items-center justify-center w-9 h-9 rounded-lg
@@ -588,6 +613,7 @@
                                                     <path d="M14 11v6" />
                                                 </svg>
                                             </button>
+                                            @endcan
                                         </div>
                                     </div>
 
@@ -649,6 +675,7 @@
                 class="cursor-pointer px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition">
                 Cerrar
             </button>
+            @can('agente_rendicion.close')
             <button type="button" wire:click="cerrarRendicion" wire:loading.attr="disabled"
                 wire:target="cerrarRendicion" @disabled($editorEstado === 'cerrado' || ((float) ($editorSaldo ?? 0)) > 0)
                 class="cursor-pointer px-4 py-2 rounded-lg bg-emerald-600 text-white
@@ -661,6 +688,7 @@
                     Cerrando…
                 </span>
             </button>
+            @endcan
         </div>
     @endslot
 </x-ui.modal>

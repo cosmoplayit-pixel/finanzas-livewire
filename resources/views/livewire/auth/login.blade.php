@@ -9,10 +9,10 @@
         }
     </style>
 
-    <div class="relative h-screen w-screen overflow-hidden bg-white">
+    <div class="relative h-screen w-screen overflow-hidden bg-white dark:bg-zinc-950">
 
         {{-- ===================== FONDO NODOS FULL (DESKTOP + MOBILE) ===================== --}}
-        <div class="fixed inset-0 z-0 bg-white">
+        <div class="fixed inset-0 z-0 bg-white dark:bg-zinc-950">
             {{-- Canvas SIEMPRE visible (mobile incluido) --}}
             <canvas id="nodes-bg" class="absolute inset-0 w-full h-full"></canvas>
 
@@ -36,10 +36,10 @@
                         </svg>
                     </div>
 
-                    <h1 class="text-2xl font-semibold tracking-tight text-gray-900">
+                    <h1 class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-white">
                         {{ __('Accede a tu cuenta') }}
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600">
+                    <p class="mt-1 text-sm text-gray-600 dark:text-zinc-400">
                         {{ __('Control financiero seguro y trazable. Inicia sesión para continuar.') }}
                     </p>
                 </div>
@@ -48,7 +48,7 @@
                 <x-auth-session-status class="mt-5 text-center" :status="session('status')" />
 
                 {{-- Card --}}
-                <div class="mt-5 rounded-2xl border border-gray-200 bg-white shadow-lg shadow-black/10">
+                <div class="mt-5 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg shadow-black/10 dark:shadow-black/40">
                     <div class="p-6">
                         <form method="POST" action="{{ route('login.store') }}" class="space-y-5">
                             @csrf
@@ -75,8 +75,8 @@
                     </div>
 
                     {{-- Footer note --}}
-                    <div class="border-t border-gray-200 px-6 py-4 text-center">
-                        <p class="text-xs text-gray-500 leading-relaxed">
+                    <div class="border-t border-gray-200 dark:border-zinc-800 px-6 py-4 text-center">
+                        <p class="text-xs text-gray-500 dark:text-zinc-400 leading-relaxed">
                             {{ __('Este sistema prioriza seguridad, control de accesos y trazabilidad. Si no tienes acceso, contacta a un administrador.') }}
                         </p>
                     </div>
@@ -203,9 +203,11 @@
 
                     ctx.clearRect(0, 0, w, h);
 
-                    const line = 'rgba(0,0,0,';
-                    const glow = 'rgba(0,0,0,';
-                    const core = 'rgba(0,0,0,';
+                    const isDark = document.documentElement.classList.contains('dark');
+                    const color = isDark ? '255,255,255' : '0,0,0';
+                    const line = `rgba(${color},`;
+                    const glow = `rgba(${color},`;
+                    const core = `rgba(${color},`;
 
                     // update
                     for (const p of nodes) {

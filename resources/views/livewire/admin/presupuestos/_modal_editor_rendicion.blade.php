@@ -62,7 +62,7 @@
 
                     {{-- BOTÓN (siempre visible arriba a la derecha en mobile) --}}
                     <div class="shrink-0">
-                        @can('agente_rendicion.create')
+                        @can('agente_presupuestos.register_movement')
                         <button type="button" wire:click="openMovimientoModal1" wire:loading.attr="disabled"
                             wire:target="openMovimientoModal1" @disabled(($editorSaldo ?? 0) <= 0)
                             title="{{ ($editorSaldo ?? 0) <= 0 ? 'Saldo agotado. No se pueden registrar más movimientos.' : '' }}"
@@ -212,7 +212,7 @@
                                         <th class="p-3 text-center">Monto</th>
                                         <th class="p-3 text-center">Base</th>
                                         <th class="p-3 text-center w-[90px]">Foto</th>
-                                        @can('agente_rendicion.create')
+                                        @can('agente_presupuestos.delete_movement')
                                         <th class="p-3 text-center w-[140px]">Acc.</th>
                                         @endcan
                                     </tr>
@@ -268,7 +268,7 @@
                                                 @endif
                                             </td>
 
-                                            @can('agente_rendicion.create')
+                                            @can('agente_presupuestos.delete_movement')
                                             <td class="p-3 text-center w-[50px]">
                                                 <button type="button" x-data
                                                     x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
@@ -350,12 +350,12 @@
                                             @endif
 
                                             {{-- ELIMINAR --}}
-                                            @can('agente_rendicion.create')
+                                            @can('agente_presupuestos.delete_movement')
                                             <button type="button" x-data
                                                 x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
                                                 class="inline-flex items-center justify-center w-8 h-8 rounded-lg
-                               border border-red-200 text-red-700 hover:bg-red-50
-                               dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
+                                                border border-red-200 text-red-700 hover:bg-red-50
+                                                dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
                                                 title="Eliminar">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -443,7 +443,7 @@
                                         <th class="p-3 text-center">Monto</th>
                                         <th class="p-3 text-center">Base</th>
                                         <th class="p-3 text-center w-[50px]">Foto</th>
-                                        @can('agente_rendicion.create')
+                                        @can('agente_presupuestos.delete_movement')
                                         <th class="p-3 text-center w-[50px]">Acc.</th>
                                         @endcan
                                     </tr>
@@ -507,7 +507,7 @@
                                                 @endif
                                             </td>
 
-                                            @can('agente_rendicion.create')
+                                            @can('agente_presupuestos.delete_movement')
                                             <td class="p-3 text-center w-[50px]">
                                                 <button type="button" x-data
                                                     x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
@@ -596,7 +596,7 @@
                                                 </button>
                                             @endif
 
-                                            @can('agente_rendicion.create')
+                                            @can('agente_presupuestos.delete_movement')
                                             <button type="button" x-data
                                                 x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
                                                 class="inline-flex items-center justify-center w-9 h-9 rounded-lg
@@ -675,7 +675,7 @@
                 class="cursor-pointer px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition">
                 Cerrar
             </button>
-            @can('agente_rendicion.close')
+            @can('agente_presupuestos.close_movement')
             <button type="button" wire:click="cerrarRendicion" wire:loading.attr="disabled"
                 wire:target="cerrarRendicion" @disabled($editorEstado === 'cerrado' || ((float) ($editorSaldo ?? 0)) > 0)
                 class="cursor-pointer px-4 py-2 rounded-lg bg-emerald-600 text-white

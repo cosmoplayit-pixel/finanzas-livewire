@@ -191,7 +191,7 @@
                                 <div class="font-bold tabular-nums text-gray-900 dark:text-white">
                                     {{ $bg->moneda === 'USD' ? '$' : 'Bs' }} {{ number_format((float) $dv->monto, 2, ',', '.') }}
                                 </div>
-                                @can('boletas_garantia.toggle')
+                                @can('boletas_garantia.delete')
                                     <button type="button" @click.stop wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }})"
                                         class="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 transition ml-1" title="Eliminar">
                                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -205,7 +205,7 @@
                     </div>
                 </div>
                 @endif
-                @can('boletas_garantia.update')
+                @can('boletas_garantia.register_return')
                     {{-- BOTON ACCIONES --}}
                     <div class="pt-1">
                         <button type="button" @click.stop wire:click="openDevolucion({{ $bg->id }})"

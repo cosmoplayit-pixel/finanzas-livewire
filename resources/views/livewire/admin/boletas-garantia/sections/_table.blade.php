@@ -28,7 +28,7 @@
                     <th class="w-[20%] p-2 select-none whitespace-nowrap">Boleta</th>
                     <th class="w-[7%]  p-2 select-none whitespace-nowrap text-center">Estado</th>
                     <th class="w-[8%]  p-2 select-none whitespace-nowrap text-center">Devuelto</th>
-                    @can('boletas_garantia.update')
+                    @can('boletas_garantia.register_return')
                         <th class="w-[7%]  p-2 whitespace-nowrap text-center">Acciones</th>
                     @endcan
                 </tr>
@@ -41,10 +41,10 @@
                     $devuelta = $totalDev >= (float) $bg->retencion;
                     
                     // Calcular colspan dinámico para la tabla principal
-                    $colspan = 6 + (auth()->user()->can('boletas_garantia.update') ? 1 : 0);
+                    $colspan = 6 + (auth()->user()->can('boletas_garantia.register_return') ? 1 : 0);
                     
                     // Calcular colspan dinámico para la tabla anidada de devoluciones
-                    $colspanInner = 6 + (auth()->user()->can('boletas_garantia.toggle') ? 1 : 0);
+                    $colspanInner = 6 + (auth()->user()->can('boletas_garantia.delete') ? 1 : 0);
                 @endphp
 
                 {{-- open: detalle devoluciones; showFullProject: ver más/menos del proyecto --}}
@@ -326,7 +326,7 @@
                         </td>
 
                         {{-- ACCIONES --}}
-                        @can('boletas_garantia.update')
+                        @can('boletas_garantia.register_return')
                             <td class="p-2 whitespace-nowrap align-middle" @click.stop>
                                 <div class="flex items-center justify-center gap-2">
 
@@ -369,7 +369,7 @@
                                                     <th class="p-2 w-[15%] text-right">Monto</th>
                                                     <th class="p-2 w-[15%]">Nro Op.</th>
                                                     <th class="p-2 w-[8%] text-center">Resp.</th>
-                                                    @can('boletas_garantia.toggle')
+                                                    @can('boletas_garantia.delete')
                                                         <th class="p-2 w-[5%]  text-center">Acc.</th>
                                                     @endcan
                                                 </tr>
@@ -490,7 +490,7 @@
                                                             @endif
                                                         </td>
 
-                                                        @can('boletas_garantia.toggle')
+                                                        @can('boletas_garantia.delete')
                                                             <td class="p-2 text-center">
                                                                 {{-- Delete: dispara modal Livewire separado (no abrir detalle) --}}
                                                                 <button type="button"
@@ -537,7 +537,7 @@
 
             @if ($boletas->count() === 0)
                 @php
-                    $emptyColspan = 6 + (auth()->user()->can('boletas_garantia.update') ? 1 : 0);
+                    $emptyColspan = 6 + (auth()->user()->can('boletas_garantia.register_return') ? 1 : 0);
                 @endphp
                 <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                     <tr>

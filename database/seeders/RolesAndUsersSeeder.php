@@ -81,6 +81,12 @@ class RolesAndUsersSeeder extends Seeder
             'bancos.create',
             'bancos.update',
             'bancos.toggle',
+ 
+            // Agentes de Servicio
+            'agentes_servicio.view',
+            'agentes_servicio.create',
+            'agentes_servicio.update',
+            'agentes_servicio.toggle',
 
             // FACTURAS
             'facturas.view',
@@ -88,39 +94,27 @@ class RolesAndUsersSeeder extends Seeder
             'facturas.pay', 
             'facturas.delete',
 
-            // Agentes de Servicio
-            'agentes_servicio.view',
-            'agentes_servicio.create',
-            'agentes_servicio.update',
-            'agentes_servicio.toggle',
-
             // Agentes de Presupuestos
             'agente_presupuestos.view',
             'agente_presupuestos.create',
-            'agente_presupuestos.update',
-            'agente_presupuestos.toggle',
-            'agente_presupuestos.close',
+            'agente_presupuestos.view_detail',
+            'agente_presupuestos.register_movement',
+            'agente_presupuestos.delete_movement',
+            'agente_presupuestos.close_movement',         
 
-            // Agentes de Rendicion
-            'agente_rendicion.view',
-            'agente_rendicion.create',
-            'agente_rendicion.update',
-            'agente_rendicion.toggle',
-            'agente_rendicion.close',
 
             // Boletas de Garantia
             'boletas_garantia.view',
             'boletas_garantia.create',
-            'boletas_garantia.update',
-            'boletas_garantia.toggle',
+            'boletas_garantia.register_return',
+            'boletas_garantia.delete',
 
             // Inversiones
             'inversiones.view',
             'inversiones.create',
-            'inversiones.movimiento',
-            'inversiones.pagar',
-            'inversiones.update',
-            'inversiones.toggle',
+            'inversiones.confirm_pay',
+            'inversiones.register_pay',
+            'inversiones.delete',
         ];
 
         foreach ($permissions as $p) {
@@ -207,40 +201,34 @@ class RolesAndUsersSeeder extends Seeder
             'bancos.view',
             'bancos.create',
             'bancos.update',
-            'bancos.toggle',
-
-            'facturas.view',
-            'facturas.create',
-                       'facturas.pay',
+            'bancos.toggle',          
 
             'agentes_servicio.view',
             'agentes_servicio.create',
             'agentes_servicio.update',
             'agentes_servicio.toggle',
+            
+            'facturas.view',
+            'facturas.create',
+            'facturas.pay',
 
             'agente_presupuestos.view',
             'agente_presupuestos.create',
-            'agente_presupuestos.update',
-            'agente_presupuestos.toggle',
-            'agente_presupuestos.close',
-
-            'agente_rendicion.view',
-            'agente_rendicion.create',
-            'agente_rendicion.update',
-            'agente_rendicion.toggle',
-            'agente_rendicion.close',
+            'agente_presupuestos.register_movement',
+            'agente_presupuestos.view_detail',
+            'agente_presupuestos.delete_movement',
+            'agente_presupuestos.close_movement',   
 
             'boletas_garantia.view',
             'boletas_garantia.create',
-            'boletas_garantia.update',
-            'boletas_garantia.toggle',
+            'boletas_garantia.register_return',
+            'boletas_garantia.delete',
 
             'inversiones.view',
             'inversiones.create',
-            'inversiones.movimiento',
-            'inversiones.pagar',
-            'inversiones.update',
-            'inversiones.toggle',
+            'inversiones.confirm_pay',
+            'inversiones.register_pay',
+            'inversiones.delete',
         ]);
 
         // Empresa_Visualizador
@@ -252,8 +240,7 @@ class RolesAndUsersSeeder extends Seeder
             'bancos.view',
             'facturas.view',
             'agentes_servicio.view',
-            'agente_presupuestos.view',
-            'agente_rendicion.view',
+            'agente_presupuestos.view',           
             'boletas_garantia.view',
             'inversiones.view',
         ]);

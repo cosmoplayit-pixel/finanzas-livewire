@@ -303,7 +303,7 @@
                         {{-- ACCIONES --}}
                         <td class="p-3 text-center">
                             <div class="inline-flex items-center gap-1">
-                                @can('inversiones.movimiento')
+                                @can('inversiones.view')
                                     <button type="button"
                                         wire:click="$dispatch('openMovimientosInversion', [{{ $inv->id }}])"
                                         class="w-8 h-8 cursor-pointer inline-flex items-center justify-center

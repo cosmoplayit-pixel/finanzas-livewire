@@ -23,6 +23,7 @@
                 </div>
 
                 {{-- Botón Pagar --}}
+                @can('inversiones.register_pay')
                 <div class="shrink-0">
                     <button type="button" wire:click="$dispatch('openPagarBanco', { inversionId: {{ $inversionId }} })"
                         @disabled($bloqueado || !$inversionId)
@@ -45,6 +46,7 @@
                         <span>Pagar</span>
                     </button>
                 </div>
+                @endcan
 
             </div>
         </div>
@@ -320,33 +322,36 @@
                     </div>
 
                     {{-- ACCIONES (siempre visibles, bloqueadas si no aplica) --}}
+                    @canany(['inversiones.confirm_pay', 'inversiones.delete'])
                     <div class="mt-3 grid grid-cols-3 gap-2">
 
+                        @can('inversiones.confirm_pay')
                         {{-- Confirmar --}}
-                        @if ($canConfirm)
-                            <button type="button"
-                                class="h-6 w-full rounded-lg px-3 text-[13px] font-semibold inline-flex items-center justify-center gap-2
-                                       bg-emerald-600 text-white hover:bg-emerald-700"
-                                title="Abrir para confirmar / editar"
-                                wire:click="openConfirmarBanco({{ (int) $m['id'] }})">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <path d="M20 6 9 17l-5-5" />
-                                </svg>
-                            </button>
-                        @else
-                            <button type="button" disabled
-                                class="h-6 w-full rounded-lg px-3 text-[13px] font-semibold inline-flex items-center justify-center gap-2
-                                       bg-emerald-600 text-white opacity-40 cursor-not-allowed">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <path d="M20 6 9 17l-5-5" />
-                                </svg>
-                            </button>
-                        @endif
-
+                            @if ($canConfirm)
+                                <button type="button"
+                                    class="h-6 w-full rounded-lg px-3 text-[13px] font-semibold inline-flex items-center justify-center gap-2
+                                        bg-emerald-600 text-white hover:bg-emerald-700"
+                                    title="Abrir para confirmar / editar"
+                                    wire:click="openConfirmarBanco({{ (int) $m['id'] }})">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M20 6 9 17l-5-5" />
+                                    </svg>
+                                </button>
+                            @else
+                                <button type="button" disabled
+                                    class="h-6 w-full rounded-lg px-3 text-[13px] font-semibold inline-flex items-center justify-center gap-2
+                                        bg-emerald-600 text-white opacity-40 cursor-not-allowed">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M20 6 9 17l-5-5" />
+                                    </svg>
+                                </button>
+                            @endif
+                        @endcan
+                     
                         {{-- Imagen --}}
                         @if ($hasImg)
                             <button type="button" wire:click="verFotoMovimiento({{ (int) $m['id'] }})"
@@ -377,32 +382,15 @@
                                 </svg>
                             </button>
                         @endif
-
-                        {{-- Eliminar --}}
-                        @if ($isCapitalInicial)
-                            <button type="button"
-                                class="h-6 w-full rounded-lg inline-flex items-center justify-center gap-2 border
-                                       border-red-300 text-red-700 bg-white hover:bg-red-50
-                                       dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
-                                title="Eliminar inversión completa" wire:click="abrirEliminarTodoModal">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <path d="M3 6h18" />
-                                    <path d="M8 6V4h8v2" />
-                                    <path d="M6 6l1 16h10l1-16" />
-                                    <path d="M10 11v6" />
-                                    <path d="M14 11v6" />
-                                </svg>
-                            </button>
-                        @elseif ($canDelete)
-                            @if ($isPag)
+                        
+                        @can('inversiones.delete')
+                            {{-- Eliminar --}}
+                            @if ($isCapitalInicial)
                                 <button type="button"
                                     class="h-6 w-full rounded-lg inline-flex items-center justify-center gap-2 border
-                                           border-red-300 text-red-700 bg-white hover:bg-red-50
-                                           dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
-                                    title="Eliminar (requiere contraseña)"
-                                    wire:click="abrirEliminarFilaModal({{ (int) $m['id'] }})">
+                                        border-red-300 text-red-700 bg-white hover:bg-red-50
+                                        dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
+                                    title="Eliminar inversión completa" wire:click="abrirEliminarTodoModal">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round">
@@ -413,29 +401,17 @@
                                         <path d="M14 11v6" />
                                     </svg>
                                 </button>
-                            @else
-                                <div x-data class="w-full">
+                            @elseif ($canDelete)
+                                @if ($isPag)
                                     <button type="button"
                                         class="h-6 w-full rounded-lg inline-flex items-center justify-center gap-2 border
-                                               border-red-300 text-red-700 bg-white hover:bg-red-50
-                                               dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
-                                        title="Eliminar"
-                                        @click.prevent="
-                                            Swal.fire({
-                                                title: '¿Eliminar este registro?',
-                                                text: 'Si está PAGADO se revertirá el banco y el saldo. Si está PENDIENTE solo se borrará.',
-                                                icon: 'warning',
-                                                showCancelButton: true,
-                                                confirmButtonText: 'Sí, eliminar',
-                                                cancelButtonText: 'Cancelar',
-                                                reverseButtons: true,
-                                                confirmButtonColor: '#dc2626',
-                                                cancelButtonColor: '#6b7280',
-                                            }).then((r) => { if (r.isConfirmed) { $wire.eliminarMovimientoFila({{ (int) $m['id'] }}); } });
-                                        ">
+                                            border-red-300 text-red-700 bg-white hover:bg-red-50
+                                            dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
+                                        title="Eliminar (requiere contraseña)"
+                                        wire:click="abrirEliminarFilaModal({{ (int) $m['id'] }})">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
                                             <path d="M3 6h18" />
                                             <path d="M8 6V4h8v2" />
                                             <path d="M6 6l1 16h10l1-16" />
@@ -443,26 +419,58 @@
                                             <path d="M14 11v6" />
                                         </svg>
                                     </button>
-                                </div>
+                                @else
+                                    <div x-data class="w-full">
+                                        <button type="button"
+                                            class="h-6 w-full rounded-lg inline-flex items-center justify-center gap-2 border
+                                                border-red-300 text-red-700 bg-white hover:bg-red-50
+                                                dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
+                                            title="Eliminar"
+                                            @click.prevent="
+                                                Swal.fire({
+                                                    title: '¿Eliminar este registro?',
+                                                    text: 'Si está PAGADO se revertirá el banco y el saldo. Si está PENDIENTE solo se borrará.',
+                                                    icon: 'warning',
+                                                    showCancelButton: true,
+                                                    confirmButtonText: 'Sí, eliminar',
+                                                    cancelButtonText: 'Cancelar',
+                                                    reverseButtons: true,
+                                                    confirmButtonColor: '#dc2626',
+                                                    cancelButtonColor: '#6b7280',
+                                                }).then((r) => { if (r.isConfirmed) { $wire.eliminarMovimientoFila({{ (int) $m['id'] }}); } });
+                                            ">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                                fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M3 6h18" />
+                                                <path d="M8 6V4h8v2" />
+                                                <path d="M6 6l1 16h10l1-16" />
+                                                <path d="M10 11v6" />
+                                                <path d="M14 11v6" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                @endif
+                            @else
+                                <button type="button" disabled
+                                    class="h-6 w-full rounded-lg inline-flex items-center justify-center gap-2 border
+                                        border-red-200 text-red-700 bg-white opacity-40 cursor-not-allowed
+                                        dark:border-red-900/40 dark:bg-neutral-900/40 dark:text-red-300"
+                                    title="No disponible">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M3 6h18" />
+                                        <path d="M8 6V4h8v2" />
+                                        <path d="M6 6l1 16h10l1-16" />
+                                        <path d="M10 11v6" />
+                                        <path d="M14 11v6" />
+                                    </svg>
+                                </button>
                             @endif
-                        @else
-                            <button type="button" disabled
-                                class="h-6 w-full rounded-lg inline-flex items-center justify-center gap-2 border
-                                       border-red-200 text-red-700 bg-white opacity-40 cursor-not-allowed
-                                       dark:border-red-900/40 dark:bg-neutral-900/40 dark:text-red-300"
-                                title="No disponible">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <path d="M3 6h18" />
-                                    <path d="M8 6V4h8v2" />
-                                    <path d="M6 6l1 16h10l1-16" />
-                                    <path d="M10 11v6" />
-                                    <path d="M14 11v6" />
-                                </svg>
-                            </button>
-                        @endif
+                        @endcan
                     </div>
+                    @endcanany
 
                 </div>
             @empty

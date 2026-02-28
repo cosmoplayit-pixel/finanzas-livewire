@@ -68,7 +68,7 @@
                     {{-- Roles --}}
                     @can('roles.view')
                         <flux:navlist.item icon="shield-check" :href="route('roles')"
-                            :current="request()->routeIs('admin.roles')" wire:navigate>
+                            :current="request()->routeIs('roles')" wire:navigate>
                             <span class="flex w-full items-center justify-between gap-2">
                                 <span>{{ __('Roles') }}</span>
                                 @isset($navCounts['roles'])
@@ -99,7 +99,7 @@
             @endcanany
 
             {{-- ================= GESTIÓN FINANCIERA ================= --}}
-            @canany(['entidades.view', 'proyectos.view', 'bancos.view', 'facturas.view', 'agente_presupuestos.view', 'agente_rendicion.view', 'boletas_garantia.view', 'inversiones.view'])
+            @canany(['entidades.view', 'proyectos.view', 'bancos.view', 'agentes_servicio.view'])
                 <flux:navlist.group :heading="__('Gestión de Catalogos')" class="grid">
 
                     {{-- Entidades --}}
@@ -161,70 +161,73 @@
                             </span>
                         </flux:navlist.item>
                     @endcan
+                </flux:navlist.group>
+            @endcanany
 
-                    <flux:navlist.group :heading="__('Gestión Financiera')" class="grid">
 
-                        {{-- Facturas --}}
-                        @can('facturas.view')
-                            <flux:navlist.item icon="document-text" :href="route('facturas')"
-                                :current="request()->routeIs('facturas')" wire:navigate>
-                                <span class="flex w-full items-center justify-between gap-2">
-                                    <span>{{ __('Proyetos Facturas') }}</span>
-                                    @isset($navCounts['facturas'])
-                                        <flux:badge size="sm" variant="subtle">
-                                            {{ $navCounts['facturas'] }}
-                                        </flux:badge>
-                                    @endisset
-                                </span>
-                            </flux:navlist.item>
-                        @endcan
+            @canany(['facturas.view', 'agente_presupuestos.view', 'boletas_garantia.view', 'inversiones.view'])
+                <flux:navlist.group :heading="__('Gestión Financiera')" class="grid">
 
-                        {{-- Agentes de Presupuestos --}}
-                        @can('agente_presupuestos.view')
-                            <flux:navlist.item icon="user-group" :href="route('agente_presupuestos')"
-                                :current="request()->routeIs('agente_presupuestos')" wire:navigate>
-                                <span class="flex w-full items-center justify-between gap-2">
-                                    <span>{{ __('Ag. Presupuestos') }}</span>
-                                    @isset($navCounts['agente_presupuestos'])
-                                        <flux:badge size="sm" variant="subtle">
-                                            {{ $navCounts['agente_presupuestos'] }}
-                                        </flux:badge>
-                                    @endisset
-                                </span>
-                            </flux:navlist.item>
-                        @endcan
+                    {{-- Facturas --}}
+                    @can('facturas.view')
+                        <flux:navlist.item icon="document-text" :href="route('facturas')"
+                            :current="request()->routeIs('facturas')" wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Proyetos Facturas') }}</span>
+                                @isset($navCounts['facturas'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['facturas'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
 
-                        {{-- Boletas de Garantia --}}
-                        @can('boletas_garantia.view')
-                            <flux:navlist.item icon="shield-check" :href="route('boletas_garantia')"
-                                :current="request()->routeIs('boletas_garantia')" wire:navigate>
-                                <span class="flex w-full items-center justify-between gap-2">
-                                    <span>{{ __('Boletas de Garantía') }}</span>
-                                    @isset($navCounts['boletas_garantia'])
-                                        <flux:badge size="sm" variant="subtle">
-                                            {{ $navCounts['boletas_garantia'] }}
-                                        </flux:badge>
-                                    @endisset
-                                </span>
-                            </flux:navlist.item>
-                        @endcan
+                    {{-- Agentes de Presupuestos --}}
+                    @can('agente_presupuestos.view')
+                        <flux:navlist.item icon="user-group" :href="route('agente_presupuestos')"
+                            :current="request()->routeIs('agente_presupuestos')" wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Ag. Presupuestos') }}</span>
+                                @isset($navCounts['agente_presupuestos'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['agente_presupuestos'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
 
-                        {{-- Inversiones --}}
-                        @can('inversiones.view')
-                            <flux:navlist.item icon="currency-dollar" :href="route('inversiones')"
-                                :current="request()->routeIs('inversiones')" wire:navigate>
-                                <span class="flex w-full items-center justify-between gap-2">
-                                    <span>{{ __('Inversiones') }}</span>
-                                    @isset($navCounts['inversiones'])
-                                        <flux:badge size="sm" variant="subtle">
-                                            {{ $navCounts['inversiones'] }}
-                                        </flux:badge>
-                                    @endisset
-                                </span>
-                            </flux:navlist.item>
-                        @endcan
+                    {{-- Boletas de Garantia --}}
+                    @can('boletas_garantia.view')
+                        <flux:navlist.item icon="shield-check" :href="route('boletas_garantia')"
+                            :current="request()->routeIs('boletas_garantia')" wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Boletas de Garantía') }}</span>
+                                @isset($navCounts['boletas_garantia'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['boletas_garantia'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
 
-                    </flux:navlist.group>
+                    {{-- Inversiones --}}
+                    @can('inversiones.view')
+                        <flux:navlist.item icon="currency-dollar" :href="route('inversiones')"
+                            :current="request()->routeIs('inversiones')" wire:navigate>
+                            <span class="flex w-full items-center justify-between gap-2">
+                                <span>{{ __('Inversiones') }}</span>
+                                @isset($navCounts['inversiones'])
+                                    <flux:badge size="sm" variant="subtle">
+                                        {{ $navCounts['inversiones'] }}
+                                    </flux:badge>
+                                @endisset
+                            </span>
+                        </flux:navlist.item>
+                    @endcan
+
                 </flux:navlist.group>
             @endcanany
 

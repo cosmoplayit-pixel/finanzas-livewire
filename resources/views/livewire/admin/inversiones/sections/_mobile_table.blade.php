@@ -286,7 +286,7 @@
 
                         {{-- Acciones (derecha) --}}
                         <div class="shrink-0 inline-flex items-center gap-1">
-                            @can('inversiones.movimiento')
+                            @can('inversiones.view')
                                 <button type="button"
                                     wire:click="$dispatch('openMovimientosInversion', [{{ $inv->id }}])"
                                     class="w-8 h-8 inline-flex items-center justify-center rounded-lg border

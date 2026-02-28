@@ -3,24 +3,56 @@
 <div class="p-0 md:p-6 space-y-4">
 
     {{-- HEADER (RESPONSIVE) --}}
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 class="text-2xl font-semibold">Entidades</h1>
+    {{-- MOBILE (<= md): título + botón arriba a la derecha, descripción compacta --}}
+    <div class="md:hidden">
+        <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+                <h1 class="text-lg font-semibold leading-tight text-gray-900 dark:text-neutral-100">
+                    Entidades
+                </h1>
+                <p class="mt-1 text-xs text-gray-500 dark:text-neutral-400 line-clamp-2">
+                    Gestión de entidades externas para la plataforma.
+                </p>
+            </div>
 
+            @can('entidades.create')
+                <button type="button" wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
+                    class="shrink-0 inline-flex items-center gap-2 rounded-lg px-3 py-2
+                           text-sm font-semibold
+                           bg-black text-white hover:bg-gray-800 transition
+                           disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path d="M10 4a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V5a1 1 0 011-1z" />
+                    </svg>
+                    <span>Nuevo</span>
+                </button>
+            @endcan
+        </div>
+    </div>
+
+    {{-- DESKTOP (>= md): layout clásico con botón a la derecha --}}
+    <div class="hidden md:flex md:items-start md:justify-between md:gap-6">
+        <div class="min-w-0">
+            <h1 class="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
+                Entidades
+            </h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-neutral-400">
+                Administración de entidades que operan con los proyectos.
+            </p>
+        </div>
         @can('entidades.create')
             <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
-                class="w-full sm:w-auto px-4 py-2 rounded
-                       bg-black text-white
-                       hover:bg-gray-800 hover:text-white
-                       transition-colors duration-150
-                       cursor-pointer
-                       disabled:opacity-50 disabled:cursor-not-allowed">
-
-                {{-- Texto normal --}}
+                class="inline-flex items-center justify-center gap-2
+                   px-4 py-2.5 rounded-lg
+                   bg-black text-white hover:bg-gray-800 transition
+                   cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path d="M10 4a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V5a1 1 0 011-1z" />
+                </svg>
                 <span wire:loading.remove wire:target="openCreate">
                     Nueva Entidad
                 </span>
 
-                {{-- Texto loading --}}
                 <span wire:loading wire:target="openCreate">
                     Abriendo…
                 </span>
@@ -41,38 +73,144 @@
     @endif
 
     {{-- FILTROS --}}
-    <div class="flex flex-col gap-3 md:flex-row md:items-center">
-        {{-- Buscar --}}
-        <input type="search" wire:model.live="search" placeholder="Buscar Nombre o Correo"
-            class="w-full md:w-72 lg:w-md border rounded px-3 py-2" autocomplete="off" />
+    <div class="rounded-xl border bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden">
+        {{-- MOBILE (<= md): FILTROS COLAPSABLES (MISMO TAMAÑO DE LETRA) --}}
+        <div class="md:hidden" x-data="{ openFilters: false }">
 
-        {{-- Selects derecha --}}
-        <div class="flex flex-col sm:flex-row gap-3 md:ml-auto w-full md:w-auto">
-            {{-- Estado --}}
-            <select wire:model.live="status"
-                class="w-full sm:w-auto
-                    border rounded px-3 py-2
-                    bg-white text-gray-900 border-gray-300
-                    dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
-                    focus:outline-none focus:ring-2 focus:ring-offset-0
-                    focus:ring-gray-300 dark:focus:ring-neutral-600">
-                <option value="all">Todos</option>
-                <option value="active">Activos</option>
-                <option value="inactive">Inactivos</option>
-            </select>
+            {{-- Header / botón MOBILE --}}
+            <div class="px-4 h-11 flex items-center justify-between">
+                {{-- Izquierda --}}
+                <div class="text-[13px] font-semibold text-gray-700 dark:text-neutral-200">
+                    Filtros
+                </div>
 
-            {{-- PerPage --}}
-            <select wire:model.live="perPage"
-                class="w-full sm:w-auto
-                    border rounded px-3 py-2
-                    bg-white text-gray-900 border-gray-300
-                    dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
-                    focus:outline-none focus:ring-2 focus:ring-offset-0
-                    focus:ring-gray-300 dark:focus:ring-neutral-600">
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-            </select>
+                {{-- Derecha --}}
+                <button type="button" @click="openFilters = !openFilters"
+                    class="inline-flex items-center gap-1.5
+                       px-3 h-8
+                       rounded-lg
+                       text-[13px] font-semibold
+                       border border-gray-200
+                       bg-white text-gray-700
+                       hover:bg-gray-50
+                       dark:border-neutral-700
+                       dark:bg-neutral-900
+                       dark:text-neutral-100
+                       dark:hover:bg-neutral-800/60
+                       transition">
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 4h-7" />
+                        <path d="M10 4H3" />
+                        <path d="M21 12h-9" />
+                        <path d="M8 12H3" />
+                        <path d="M21 20h-5" />
+                        <path d="M12 20H3" />
+                        <path d="M14 2v4" />
+                        <path d="M12 10v4" />
+                        <path d="M16 18v4" />
+                    </svg>
+
+                    <span x-text="openFilters ? 'Ocultar' : 'Mostrar'"></span>
+                </button>
+            </div>
+
+            {{-- Contenido (oculto al inicio) --}}
+            <div class="mt-2 space-y-3 px-4 pb-3 text-[13px]" x-show="openFilters" x-collapse x-cloak>
+
+                <div>
+                    <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">
+                        Búsqueda
+                    </label>
+
+                    <input type="text" wire:model.live="search" placeholder="Buscar Nombre o Correo" autocomplete="off"
+                        class="w-full rounded-lg border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           text-[13px]
+                           focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">
+                            Estado
+                        </label>
+
+                        <select wire:model.live="status"
+                            class="w-full rounded-lg border px-3 py-2
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               text-[13px]
+                               focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                            <option value="all">Todos</option>
+                            <option value="active">Activos</option>
+                            <option value="inactive">Inactivos</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">
+                            Mostrar
+                        </label>
+
+                        <select wire:model.live="perPage"
+                            class="w-full rounded-lg border px-3 py-2
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               text-[13px]
+                               focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- DESKTOP (>= md): Layout extendido --}}
+        <div class="hidden md:block p-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+                <div class="sm:col-span-3 lg:col-span-3">
+                    <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
+                    <input type="text" wire:model.live="search" placeholder="Buscar Nombre o Correo"
+                        autocomplete="off"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                            focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                </div>
+
+                <div></div>
+                
+                <div>
+                    <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Estado</label>
+                    <select wire:model.live="status"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                        <option value="all">Todos</option>
+                        <option value="active">Activos</option>
+                        <option value="inactive">Inactivos</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Mostrar</label>
+                    <select wire:model.live="perPage"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
 

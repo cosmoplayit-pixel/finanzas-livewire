@@ -69,6 +69,7 @@
                 </div>
 
                 {{-- DERECHA: ACCIONES PRIVADO --}}
+                @can('inversiones.register_pay')
                 <div class="shrink-0 w-full sm:w-auto">
                     <div class="w-full sm:w-auto flex flex-wrap justify-end gap-2">
                         <button type="button"
@@ -90,6 +91,7 @@
                         </button>
                     </div>
                 </div>
+                @endcan
 
             </div>
         </div>
@@ -113,7 +115,9 @@
                         <th class="p-3 w-[150px]">Utilidad</th>
                         <th class="p-3 w-[110px]">% Utilidad</th>
                         <th class="p-3 w-[120px]">Estado</th>
-                        <th class="p-3 w-[170px]">Acciones</th>
+                        @canany(['inversiones.confirm_pay', 'inversiones.delete'])
+                            <th class="p-3 w-[170px]">Acciones</th>
+                        @endcanany
                     </tr>
                 </thead>
 
@@ -227,37 +231,40 @@
                             </td>
 
                             {{-- ACCIONES (PRIVADO) --}}
+                            @canany(['inversiones.confirm_pay', 'inversiones.delete'])
                             <td class="p-2 align-middle">
                                 <div class="flex items-center justify-end gap-2 w-full">
 
-                                    {{-- Confirmar (SOLO primer pendiente) --}}
-                                    @if (!empty($m['puede_confirmar_privado']))
-                                        <div x-data class="flex items-center">
-                                            <button type="button"
-                                                class="h-7 px-2 cursor-pointer rounded-lg text-xs font-semibold inline-flex items-center gap-2
-                                                       bg-green-600 text-white hover:bg-green-700"
-                                                title="Confirmar pago"
-                                                @click.prevent="
-                                                    Swal.fire({
-                                                        title: '¿Confirmar pago?',
-                                                        text: 'Esto debitará el banco y marcará la utilidad como PAGADA.',
-                                                        icon: 'warning',
-                                                        showCancelButton: true,
-                                                        confirmButtonText: 'Sí, confirmar',
-                                                        cancelButtonText: 'Cancelar',
-                                                        reverseButtons: true,
-                                                        confirmButtonColor: '#16a34a',
-                                                        cancelButtonColor: '#6b7280',
-                                                    }).then((r) => { if (r.isConfirmed) { $wire.confirmarPagoUtilidad({{ (int) $m['id'] }}); } });
-                                                ">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M20 6 9 17l-5-5" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    @endif
+                                    @can('inversiones.confirm_pay')
+                                        {{-- Confirmar (SOLO primer pendiente) --}}
+                                        @if (!empty($m['puede_confirmar_privado']))
+                                            <div x-data class="flex items-center">
+                                                <button type="button"
+                                                    class="h-7 px-2 cursor-pointer rounded-lg text-xs font-semibold inline-flex items-center gap-2
+                                                        bg-green-600 text-white hover:bg-green-700"
+                                                    title="Confirmar pago"
+                                                    @click.prevent="
+                                                        Swal.fire({
+                                                            title: '¿Confirmar pago?',
+                                                            text: 'Esto debitará el banco y marcará la utilidad como PAGADA.',
+                                                            icon: 'warning',
+                                                            showCancelButton: true,
+                                                            confirmButtonText: 'Sí, confirmar',
+                                                            cancelButtonText: 'Cancelar',
+                                                            reverseButtons: true,
+                                                            confirmButtonColor: '#16a34a',
+                                                            cancelButtonColor: '#6b7280',
+                                                        }).then((r) => { if (r.isConfirmed) { $wire.confirmarPagoUtilidad({{ (int) $m['id'] }}); } });
+                                                    ">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M20 6 9 17l-5-5" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        @endif
+                                    @endcan
 
                                     {{-- Ver imagen --}}
                                     @if (!empty($m['tiene_imagen']))
@@ -277,47 +284,17 @@
                                         </button>
                                     @endif
 
-                                    {{-- Eliminar por fila (excepto CAPITAL_INICIAL) --}}
-                                    @if (($m['tipo'] ?? '') !== 'CAPITAL_INICIAL')
-                                        @if (!empty($m['puede_eliminar_fila']))
-                                            @if (($m['estado'] ?? '') === 'PAGADO')
-                                                <button type="button"
-                                                    class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                           border-red-300 text-red-700 hover:bg-red-100
-                                                           dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
-                                                    title="Eliminar (requiere contraseña)"
-                                                    wire:click="abrirEliminarFilaModal({{ (int) $m['id'] }})">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="2" stroke-linecap="round"
-                                                        stroke-linejoin="round">
-                                                        <path d="M3 6h18" />
-                                                        <path d="M8 6V4h8v2" />
-                                                        <path d="M6 6l1 16h10l1-16" />
-                                                        <path d="M10 11v6" />
-                                                        <path d="M14 11v6" />
-                                                    </svg>
-                                                </button>
-                                            @else
-                                                <div x-data class="flex items-center">
+                                    @can('inversiones.delete')
+                                        {{-- Eliminar por fila (excepto CAPITAL_INICIAL) --}}
+                                        @if (($m['tipo'] ?? '') !== 'CAPITAL_INICIAL')
+                                            @if (!empty($m['puede_eliminar_fila']))
+                                                @if (($m['estado'] ?? '') === 'PAGADO')
                                                     <button type="button"
                                                         class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                               border-red-300 text-red-700 hover:bg-red-100
-                                                               dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
-                                                        title="Eliminar registro"
-                                                        @click.prevent="
-                                                            Swal.fire({
-                                                                title: '¿Eliminar este registro?',
-                                                                text: 'Esta acción revertirá banco/capital según corresponda.',
-                                                                icon: 'warning',
-                                                                showCancelButton: true,
-                                                                confirmButtonText: 'Sí, eliminar',
-                                                                cancelButtonText: 'Cancelar',
-                                                                reverseButtons: true,
-                                                                confirmButtonColor: '#dc2626',
-                                                                cancelButtonColor: '#6b7280',
-                                                            }).then((r) => { if (r.isConfirmed) { $wire.eliminarMovimientoFila({{ (int) $m['id'] }}); } });
-                                                        ">
+                                                            border-red-300 text-red-700 hover:bg-red-100
+                                                            dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
+                                                        title="Eliminar (requiere contraseña)"
+                                                        wire:click="abrirEliminarFilaModal({{ (int) $m['id'] }})">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                             stroke-width="2" stroke-linecap="round"
@@ -329,21 +306,75 @@
                                                             <path d="M14 11v6" />
                                                         </svg>
                                                     </button>
-                                                </div>
+                                                @else
+                                                    <div x-data class="flex items-center">
+                                                        <button type="button"
+                                                            class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
+                                                                border-red-300 text-red-700 hover:bg-red-100
+                                                                dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500/15"
+                                                            title="Eliminar registro"
+                                                            @click.prevent="
+                                                                Swal.fire({
+                                                                    title: '¿Eliminar este registro?',
+                                                                    text: 'Esta acción revertirá banco/capital según corresponda.',
+                                                                    icon: 'warning',
+                                                                    showCancelButton: true,
+                                                                    confirmButtonText: 'Sí, eliminar',
+                                                                    cancelButtonText: 'Cancelar',
+                                                                    reverseButtons: true,
+                                                                    confirmButtonColor: '#dc2626',
+                                                                    cancelButtonColor: '#6b7280',
+                                                                }).then((r) => { if (r.isConfirmed) { $wire.eliminarMovimientoFila({{ (int) $m['id'] }}); } });
+                                                            ">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                                stroke-width="2" stroke-linecap="round"
+                                                                stroke-linejoin="round">
+                                                                <path d="M3 6h18" />
+                                                                <path d="M8 6V4h8v2" />
+                                                                <path d="M6 6l1 16h10l1-16" />
+                                                                <path d="M10 11v6" />
+                                                                <path d="M14 11v6" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                @endif
+                                            @else
+                                                {{-- ✅ Bloqueado SOLO para INGRESO/DEVOLUCIÓN que no son el último --}}
+                                                @if (in_array($m['tipo'] ?? '', ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL'], true))
+                                                    <button type="button"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border
+                                                            border-gray-200 text-gray-400 cursor-not-allowed
+                                                            dark:border-neutral-700 dark:text-neutral-500"
+                                                        title="No se puede eliminar porque existen movimientos posteriores. Solo se permite eliminar si es el último registro."
+                                                        disabled>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path d="M3 6h18" />
+                                                            <path d="M8 6V4h8v2" />
+                                                            <path d="M6 6l1 16h10l1-16" />
+                                                            <path d="M10 11v6" />
+                                                            <path d="M14 11v6" />
+                                                        </svg>
+                                                    </button>
+                                                @endif
                                             @endif
-                                        @else
-                                            {{-- ✅ Bloqueado SOLO para INGRESO/DEVOLUCIÓN que no son el último --}}
-                                            @if (in_array($m['tipo'] ?? '', ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL'], true))
+                                        @endif
+
+                                        {{-- Eliminar TODO (Capital inicial) => Modal contraseña --}}
+                                        @if (!empty($m['es_capital_inicial']))
+                                            <div class="flex items-center">
                                                 <button type="button"
-                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border
-                                                           border-gray-200 text-gray-400 cursor-not-allowed
-                                                           dark:border-neutral-700 dark:text-neutral-500"
-                                                    title="No se puede eliminar porque existen movimientos posteriores. Solo se permite eliminar si es el último registro."
-                                                    disabled>
+                                                    class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
+                                                        border-red-400 text-red-800 hover:bg-red-100
+                                                        dark:border-red-700 dark:text-red-300 dark:hover:bg-red-500/20"
+                                                    title="Eliminar inversión completa"
+                                                    wire:click="abrirEliminarTodoModal">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="2" stroke-linecap="round"
-                                                        stroke-linejoin="round">
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M3 6h18" />
                                                         <path d="M8 6V4h8v2" />
                                                         <path d="M6 6l1 16h10l1-16" />
@@ -351,34 +382,13 @@
                                                         <path d="M14 11v6" />
                                                     </svg>
                                                 </button>
-                                            @endif
+                                            </div>
                                         @endif
-                                    @endif
-
-                                    {{-- Eliminar TODO (Capital inicial) => Modal contraseña --}}
-                                    @if (!empty($m['es_capital_inicial']))
-                                        <div class="flex items-center">
-                                            <button type="button"
-                                                class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                       border-red-400 text-red-800 hover:bg-red-100
-                                                       dark:border-red-700 dark:text-red-300 dark:hover:bg-red-500/20"
-                                                title="Eliminar inversión completa"
-                                                wire:click="abrirEliminarTodoModal">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M3 6h18" />
-                                                    <path d="M8 6V4h8v2" />
-                                                    <path d="M6 6l1 16h10l1-16" />
-                                                    <path d="M10 11v6" />
-                                                    <path d="M14 11v6" />
-                                                </svg>
-                                            </button>
-                                        </div>
-                                    @endif
+                                    @endcan
 
                                 </div>
                             </td>
+                            @endcanany
                         </tr>
                     @empty
                         <tr>
@@ -443,7 +453,9 @@
                         </td>
 
                         <td class="p-3"></td>
-                        <td class="p-3"></td>
+                        @canany(['inversiones.confirm_pay', 'inversiones.delete'])
+                            <td class="p-3"></td>
+                        @endcanany
                     </tr>
 
                     {{-- PENDIENTES --}}
@@ -495,7 +507,9 @@
                         </td>
 
                         <td class="p-3"></td>
-                        <td class="p-3"></td>
+                        @canany(['inversiones.confirm_pay', 'inversiones.delete'])
+                            <td class="p-3"></td>
+                        @endcanany
                     </tr>
 
                 </tfoot>

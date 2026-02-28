@@ -36,9 +36,9 @@
                             #{{ $loop->iteration }} {{ $bancoNombre }}
                         </div>
 
+                        @can('agente_presupuestos.view_detail')
                         <div class="ml-auto shrink-0">
                             @if (empty($p->rendicion_id))
-                                @can('agente_rendicion.create')
                                 <button type="button" wire:click="crearRendicion({{ $p->id }})"
                                     wire:loading.attr="disabled" wire:target="crearRendicion({{ $p->id }})"
                                     wire:loading.class="opacity-60 cursor-not-allowed"
@@ -54,11 +54,10 @@
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M12 4.5v15m7.5-7.5h-15" />
                                     </svg>
+                                    Crear
 
                                 </button>
-                                @endcan
                             @else
-                                @can('agente_rendicion.view')
                                 <button type="button" wire:click="openRendicionEditor({{ $p->rendicion_id }})"
                                     wire:loading.attr="disabled"
                                     wire:target="openRendicionEditor({{ $p->rendicion_id }})"
@@ -79,13 +78,12 @@
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-
-
+                                    Ver
                                 </button>
-                                @endcan
                             @endif
 
                         </div>
+                        @endcan
                     </div>
 
                     {{-- meta --}}

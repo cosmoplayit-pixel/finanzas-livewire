@@ -29,7 +29,9 @@
                                 <th class="p-3 text-right w-[140px]">Presupuesto</th>
                                 <th class="p-3 text-right w-[130px]">Rendido</th>
                                 <th class="p-3 text-right w-[140px]">Saldo por rendir</th>
+                                @can('agente_presupuestos.view_detail')
                                 <th class="p-3 text-center w-[75px]">Acciones.</th>
+                                @endcan
                             </tr>
                         </thead>
 
@@ -102,12 +104,12 @@
                                         {{ number_format($saldo, 2, ',', '.') }}
                                     </td>
 
+                                    @can('agente_presupuestos.view_detail')
                                     <td class="p-2 whitespace-nowrap align-middle">
                                         <div class="flex items-center justify-center gap-2">
 
                                             {{-- CREAR RENDICIÓN --}}
                                             @if (empty($p->rendicion_id))
-                                                @can('agente_rendicion.create')
                                                 <button type="button" wire:click="crearRendicion({{ $p->id }})"
                                                     wire:loading.attr="disabled"
                                                     wire:target="crearRendicion({{ $p->id }})"
@@ -138,12 +140,10 @@
                                                         </svg>
                                                     </span>
                                                 </button>
-                                                @endcan
 
 
                                                 {{-- VER RENDICIÓN --}}
                                             @else
-                                                @can('agente_rendicion.view')
                                                 <button type="button"
                                                     wire:click="openRendicionEditor({{ $p->rendicion_id }})"
                                                     wire:loading.attr="disabled"
@@ -176,10 +176,10 @@
                                                         </svg>
                                                     </span>
                                                 </button>
-                                                @endcan
                                             @endif
                                         </div>
                                     </td>
+                                    @endcan
                                 </tr>
                             @empty
                                 <tr>

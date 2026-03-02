@@ -197,8 +197,9 @@
 
         {{-- DESKTOP (>= md): Layout extendido --}}
         <div class="hidden md:block p-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-                <div class="sm:col-span-3 lg:col-span-3">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div
+                    class="md:col-span-6 {{ auth()->user()?->hasRole('Administrador') ? 'lg:col-span-6' : 'lg:col-span-8' }}">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
                     <input type="text" wire:model.live="search" placeholder="Buscar Nombre, CI o Celular"
                         autocomplete="off"
@@ -208,7 +209,7 @@
                 </div>
 
                 @if (auth()->user()?->hasRole('Administrador'))
-                    <div>
+                    <div class="md:col-span-6 lg:col-span-2">
                         <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Empresa</label>
                         <select wire:model.live="empresaFilter"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -220,11 +221,9 @@
                             @endforeach
                         </select>
                     </div>
-                @else
-                    <div></div>
                 @endif
 
-                <div>
+                <div class="md:col-span-3 lg:col-span-2">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Estado</label>
                     <select wire:model.live="status"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -236,7 +235,7 @@
                     </select>
                 </div>
 
-                <div>
+                <div class="md:col-span-3 lg:col-span-2">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Mostrar</label>
                     <select wire:model.live="perPage"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -437,9 +436,10 @@
                     <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
 
                         {{-- ID + botón expandible (solo cuando NO es xl) --}}
-                        <td class="p-1 whitespace-nowrap text-center" x-data="{ showToggle: !window.matchMedia('(min-width: 1280px)').matches }" x-init="const mq = window.matchMedia('(min-width: 1280px)');
-                        const handler = e => showToggle = !e.matches;
-                        mq.addEventListener('change', handler);">
+                        <td class="p-1 whitespace-nowrap text-center" x-data="{ showToggle: !window.matchMedia('(min-width: 1280px)').matches }"
+                            x-init="const mq = window.matchMedia('(min-width: 1280px)');
+                            const handler = e => showToggle = !e.matches;
+                            mq.addEventListener('change', handler);">
                             <button type="button" x-show="showToggle" x-cloak
                                 class="w-5 h-5 inline-flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800
                                    dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white transition cursor-pointer"

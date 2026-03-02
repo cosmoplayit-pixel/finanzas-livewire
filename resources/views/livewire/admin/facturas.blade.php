@@ -1,7 +1,7 @@
 {{-- resources/views/livewire/admin/facturas.blade.php --}}
 @section('title', 'Facturas')
 
-<div class="p-0 md:p-6 space-y-4">
+<div class="p-0 md:px-0 md:py-6 space-y-4">
 
     {{-- Header + acciones --}}
     @include('livewire.admin.facturas._header')

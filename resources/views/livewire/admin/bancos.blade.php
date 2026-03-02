@@ -194,8 +194,8 @@
 
         {{-- DESKTOP (>= md): Layout extendido --}}
         <div class="hidden md:block p-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-                <div class="sm:col-span-3 lg:col-span-3">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div class="md:col-span-6 lg:col-span-6">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
                     <input type="text" wire:model.live="search" placeholder="Buscar Banco o Nro. de Cuenta"
                         autocomplete="off"
@@ -204,7 +204,7 @@
                             focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                 </div>
 
-                <div>
+                <div class="md:col-span-6 lg:col-span-2">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Moneda</label>
                     <select wire:model.live="monedaFilter"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -216,7 +216,7 @@
                     </select>
                 </div>
 
-                <div>
+                <div class="md:col-span-3 lg:col-span-2">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Estado</label>
                     <select wire:model.live="status"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -228,7 +228,7 @@
                     </select>
                 </div>
 
-                <div>
+                <div class="md:col-span-3 lg:col-span-2">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Mostrar</label>
                     <select wire:model.live="perPage"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -404,7 +404,8 @@
                         @endif
                     </th>
 
-                    <th class="w-[90px] p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('moneda')">
+                    <th class="w-[90px] p-2 cursor-pointer select-none whitespace-nowrap"
+                        wire:click="sortBy('moneda')">
                         Moneda
                         @if ($sortField === 'moneda')
                             {{ $sortDirection === 'asc' ? '▲' : '▼' }}
@@ -695,8 +696,7 @@
                             <span class="text-red-500">*</span>
                         @endif
                     </label>
-                    <select wire:model="moneda"
-                        @disabled($bancoId)
+                    <select wire:model="moneda" @disabled($bancoId)
                         class="w-full rounded border px-3 py-2
                            bg-white dark:bg-neutral-900
                            border-gray-300 dark:border-neutral-700

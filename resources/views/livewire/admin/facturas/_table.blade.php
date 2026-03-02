@@ -1,12 +1,11 @@
 {{-- TABLET + DESKTOP: TABLA (COMPACTA) --}}
 <div class="hidden md:block border rounded bg-white dark:bg-neutral-800 overflow-hidden">
     <div class="overflow-x-auto">
-        <table wire:key="facturas-table" class="w-full table-fixed text-sm min-w-[980px]">
+        <table wire:key="facturas-table" class="w-full table-fixed text-sm min-w-[1100px] lg:min-w-0">
             <thead
-                class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-200">
+                class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-700">
                 <tr class="text-left">
-
-                    <th class="w-[75px] text-center p-2 select-none whitespace-nowrap">
+                    <th class="w-[5%] text-center p-2 select-none whitespace-nowrap">
                         <div x-data="{ allOpen: false }" class="flex items-center justify-center gap-2">
                             <button type="button"
                                 class="w-7 h-7 inline-flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800
@@ -16,59 +15,46 @@
                                 <span x-show="!allOpen">⇵</span>
                                 <span x-show="allOpen" x-cloak>×</span>
                             </button>
-                            <span>ID</span>
                         </div>
                     </th>
 
-                    {{-- Proyecto --}}
-                    <th class="w-[420px] p-2 select-none whitespace-nowrap">
-                        Proyecto
-                    </th>
-
-                    {{-- Factura --}}
-                    <th class="w-[420px] p-2 select-none whitespace-nowrap">
-                        Factura
-                    </th>
-
-                    {{-- Estado --}}
-                    <th class="w-[120px] p-2 select-none whitespace-nowrap text-center">
-                        Estado
-                    </th>
-
-                    {{-- Saldo --}}
-                    <th class="w-[120px] p-2 select-none whitespace-nowrap text-center">
-                        Saldo
-                    </th>
+                    <th class="w-[30%] p-2 select-none whitespace-nowrap">Proyecto</th>
+                    <th class="w-[30%] p-2 select-none whitespace-nowrap">Factura</th>
+                    <th class="w-[10%] p-2 select-none whitespace-nowrap text-center">Estado</th>
+                    <th class="w-[10%] p-2 select-none whitespace-nowrap text-center">Saldo / Ret.</th>
 
                     @can('facturas.pay')
-                        <th class="w-[135px] p-2 whitespace-nowrap text-center">
-                            Acciones
-                        </th>
+                        <th class="w-[8%] p-2 select-none whitespace-nowrap text-center">Acc.</th>
                     @endcan
                 </tr>
             </thead>
 
-            @foreach ($facturas as $f)
-                <tbody x-data="{ open: false }" x-on:facturas:toggle-all.window="open = $event.detail.open"
-                    class="divide-y divide-gray-200 dark:divide-neutral-200" wire:key="factura-row-{{ $f->id }}">
+            @foreach ($rows as $r)
+                <tbody x-data="{ open: false, showFullProject: false, showFullDetalle: false }"
+                    x-on:facturas:toggle-all.window="if (@js((bool) ($r['pagos'] ?? false))) { open = $event.detail.open }"
+                    class="divide-y divide-gray-200 dark:divide-neutral-200" wire:key="factura-row-{{ $r['id'] }}">
 
-                    <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900 text-gray-700 dark:text-neutral-200">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-neutral-900/60 text-gray-700 dark:text-neutral-200
+                         {{ $r['pagos'] ?? false ? 'cursor-pointer' : 'cursor-default opacity-90' }}"
+                        @click="if (@js((bool) ($r['pagos'] ?? false))) open = !open">
 
-                        {{-- ID + toggle --}}
+                        {{-- Toggle --}}
                         <td class="p-2 whitespace-nowrap align-middle">
                             <div class="flex items-center justify-center gap-2">
-                                <button type="button"
-                                    class="w-5 h-5 inline-flex items-center justify-center rounded border border-gray-300 text-gray-600
-                                    hover:bg-gray-100 hover:text-gray-800
-                                    dark:border-neutral-700 dark:text-neutral-300
-                                    dark:hover:bg-neutral-700 dark:hover:text-white
-                                    transition cursor-pointer"
-                                    @click.stop="open = !open" :aria-expanded="open">
-                                    <span x-show="!open">+</span>
-                                    <span x-show="open" x-cloak>−</span>
+                                <button type="button" @disabled(!($r['pagos'] ?? false))
+                                    class="w-6 h-6 inline-flex items-center justify-center rounded border transition
+                               {{ $r['pagos'] ?? false
+                                   ? 'border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white cursor-pointer'
+                                   : 'border-gray-200 text-gray-300 dark:border-neutral-800 dark:text-neutral-600 cursor-not-allowed' }}"
+                                    @click.stop="if (@js((bool) ($r['pagos'] ?? false))) open = !open" :aria-expanded="open">
+
+                                    @if (!($r['pagos'] ?? false))
+                                        <span>—</span>
+                                    @else
+                                        <span x-show="!open">+</span>
+                                        <span x-show="open" x-cloak>−</span>
+                                    @endif
                                 </button>
-                                <span
-                                    class="text-sm font-medium text-gray-800 dark:text-neutral-200">{{ $f->id }}</span>
                             </div>
                         </td>
 
@@ -76,22 +62,41 @@
                         <td class="p-2 align-top">
                             <div class="min-w-0 space-y-0.5 leading-snug">
 
-                                {{-- Proyecto (principal) --}}
-                                <div class="flex items-center gap-1 truncate text-sm font-medium text-gray-800 dark:text-neutral-200"
-                                    title="{{ $f->proyecto?->nombre ?? '-' }}">
+                                <div class="flex gap-1 text-sm font-medium text-gray-800 dark:text-neutral-200">
                                     <svg xmlns="http://www.w3.org/2000/svg"
-                                        class="w-4 h-4 text-gray-400 dark:text-neutral-400" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
+                                        class="w-4 h-4 text-gray-400 dark:text-neutral-400 shrink-0 mt-0.5"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round">
                                         <path
                                             d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" />
                                     </svg>
-                                    <span>{{ $f->proyecto?->nombre ?? '—' }}</span>
+
+                                    <div class="min-w-0 flex-1">
+                                        <div x-show="!showFullProject" class="min-w-0 flex items-center gap-2">
+                                            <span class="min-w-0 flex-1 truncate whitespace-nowrap"
+                                                title="{{ $r['proyecto_nombre'] }}">
+                                                {{ $r['proyecto_nombre'] }}
+                                            </span>
+                                            <button type="button"
+                                                class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                @click.stop="showFullProject = true">
+                                                Ver más
+                                            </button>
+                                        </div>
+
+                                        <div x-show="showFullProject" x-cloak class="min-w-0 leading-snug">
+                                            <span class="break-words font-semibold">{{ $r['proyecto_nombre'] }}</span>
+                                            <button type="button"
+                                                class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                @click.stop="showFullProject = false">
+                                                Ver menos
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {{-- Entidad --}}
                                 <div class="flex items-center gap-1 truncate text-xs text-gray-500 dark:text-neutral-400"
-                                    title="{{ $f->proyecto?->entidad?->nombre ?? '-' }}">
+                                    title="{{ $r['entidad_nombre'] }}">
                                     <svg xmlns="http://www.w3.org/2000/svg"
                                         class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -100,10 +105,9 @@
                                         <path
                                             d="M7 7h.01M7 11h.01M7 15h.01M11 7h.01M11 11h.01M11 15h.01M15 7h.01M15 11h.01M15 15h.01" />
                                     </svg>
-                                    <span>Entidad: {{ $f->proyecto?->entidad?->nombre ?? '—' }}</span>
+                                    <span>Entidad: {{ $r['entidad_nombre'] }}</span>
                                 </div>
 
-                                {{-- Retención --}}
                                 <div class="flex items-center gap-1 text-xs text-gray-500 dark:text-neutral-400">
                                     <svg xmlns="http://www.w3.org/2000/svg"
                                         class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400" viewBox="0 0 24 24"
@@ -112,12 +116,10 @@
                                         <path d="M12 2l7 4v6c0 5-3 9-7 10C8 21 5 17 5 12V6l7-4z" />
                                     </svg>
                                     <span>Retención:</span>
-                                    <span class="font-semibold text-amber-700 dark:text-amber-300">
-                                        {{ number_format((float) ($f->proyecto?->retencion ?? 0), 2, ',', '.') }}%
-                                    </span>
+                                    <span
+                                        class="font-semibold text-amber-700 dark:text-amber-300">{{ $r['retencion_pct'] }}</span>
                                 </div>
 
-                                {{-- Contrato --}}
                                 <div class="flex items-center gap-1 text-xs text-gray-500 dark:text-neutral-400">
                                     <svg xmlns="http://www.w3.org/2000/svg"
                                         class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400" viewBox="0 0 24 24"
@@ -128,9 +130,8 @@
                                         <path d="M8 11h8" />
                                     </svg>
                                     <span>Contrato:</span>
-                                    <span class="font-semibold text-gray-800 dark:text-neutral-200">
-                                        Bs {{ number_format((float) ($f->proyecto?->monto ?? 0), 2, ',', '.') }}
-                                    </span>
+                                    <span
+                                        class="font-semibold text-gray-800 dark:text-neutral-200">{{ $r['contrato'] }}</span>
                                 </div>
 
                             </div>
@@ -140,9 +141,8 @@
                         <td class="p-2 align-top">
                             <div class="min-w-0 space-y-0.5 leading-snug">
 
-                                {{-- Nro --}}
                                 <div class="flex items-center gap-1 truncate text-sm font-medium text-gray-800 dark:text-neutral-200"
-                                    title="{{ $f->numero ?? '-' }}">
+                                    title="{{ $r['numero_raw'] }}">
                                     <svg xmlns="http://www.w3.org/2000/svg"
                                         class="w-4 h-4 text-gray-400 dark:text-neutral-400" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -153,10 +153,9 @@
                                         <path d="M16 17H8" />
                                         <path d="M10 9H8" />
                                     </svg>
-                                    <span>Nro: {{ $f->numero ?? '—' }}</span>
+                                    <span>{{ $r['numero'] }}</span>
                                 </div>
 
-                                {{-- Fecha --}}
                                 <div class="flex items-center gap-1 text-xs text-gray-500 dark:text-neutral-400">
                                     <svg xmlns="http://www.w3.org/2000/svg"
                                         class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400" viewBox="0 0 24 24"
@@ -167,15 +166,11 @@
                                         <line x1="8" y1="2" x2="8" y2="6" />
                                         <line x1="3" y1="10" x2="21" y2="10" />
                                     </svg>
-                                    <span>Fecha:
-                                        {{ $f->fecha_emision ? $f->fecha_emision->format('Y-m-d H:i') : '—' }}</span>
+                                    <span>{{ $r['fecha'] }}</span>
                                 </div>
 
-                                {{-- Monto + Retención --}}
                                 <div
                                     class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 dark:text-neutral-400">
-
-                                    {{-- Monto --}}
                                     <div class="flex items-center gap-1">
                                         <svg xmlns="http://www.w3.org/2000/svg"
                                             class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400"
@@ -185,61 +180,88 @@
                                             <path d="M12 7v10" />
                                             <path d="M8 11h8" />
                                         </svg>
-
                                         <span>Monto:</span>
-                                        <span class="font-semibold text-gray-800 dark:text-neutral-200">
-                                            Bs {{ number_format((float) $f->monto_facturado, 2, ',', '.') }}
-                                        </span>
-                                    </div>
+                                        <span
+                                            class="font-semibold text-gray-800 dark:text-neutral-200">{{ $r['monto_facturado'] }}</span>
 
-                                    {{-- Retención --}}
-                                    <div class="flex items-center gap-1">
                                         <svg xmlns="http://www.w3.org/2000/svg"
                                             class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M12 2l7 4v6c0 5-3 9-7 10C8 21 5 17 5 12V6l7-4z" />
                                         </svg>
-
-                                        <span>Ret. Factura:</span>
-                                        <span class="font-semibold text-amber-700 dark:text-amber-300">
-                                            Bs {{ number_format((float) ($f->retencion ?? 0), 2, ',', '.') }}
-                                        </span>
+                                        <span>Ret.:</span>
+                                        <span
+                                            class="font-semibold text-amber-700 dark:text-amber-300">{{ $r['retencion_monto'] }}</span>
                                     </div>
                                 </div>
 
                                 {{-- Detalle --}}
-                                <div class="flex items-center gap-1 truncate text-xs text-gray-500 dark:text-neutral-400"
-                                    title="{{ $f->observacion ?? '—' }}">
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                        class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M4 4h16v16H4z" />
-                                        <path d="M8 8h8" />
-                                        <path d="M8 12h8" />
-                                        <path d="M8 16h6" />
-                                    </svg>
-                                    <span>Detalle: {{ $f->observacion ?? '—' }}</span>
-                                </div>
-
-                                {{-- Respaldo Factura --}}
-                                @if ($f->foto_comprobante)
-                                    @php
-                                        $extFact = strtolower(pathinfo($f->foto_comprobante, PATHINFO_EXTENSION));
-                                        $isImageFact = in_array($extFact, ['jpg', 'jpeg', 'png']);
-                                    @endphp
-                                    <div class="mt-1 flex items-center gap-1 text-xs">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                                @if (($r['detalle'] ?? '—') !== '—')
+                                    <div class="flex items-center gap-1 text-xs text-gray-500 dark:text-neutral-400"
+                                        x-data="{ showFullDetalle: false }">
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                            class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M4 4h16v16H4z" />
+                                            <path d="M8 8h8" />
+                                            <path d="M8 12h8" />
+                                            <path d="M8 16h6" />
                                         </svg>
-                                        @if ($isImageFact)
-                                            <button type="button" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
-                                                @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $f->foto_comprobante) }}' })">
+
+                                        <span class="shrink-0">Detalle:</span>
+
+                                        <div class="min-w-0 flex-1">
+                                            <div x-show="!showFullDetalle" class="min-w-0 flex items-center gap-2">
+                                                <span class="min-w-0 flex-1 truncate whitespace-nowrap"
+                                                    title="{{ $r['detalle'] }}">
+                                                    {{ $r['detalle'] }}
+                                                </span>
+
+                                                <button type="button"
+                                                    class="shrink-0 text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                    @click.stop="showFullDetalle = true">
+                                                    Ver más
+                                                </button>
+                                            </div>
+
+                                            <div x-show="showFullDetalle" x-cloak class="min-w-0 leading-snug">
+                                                <span
+                                                    class="break-words font-medium text-gray-700 dark:text-neutral-200">
+                                                    {{ $r['detalle'] }}
+                                                </span>
+
+                                                <button type="button"
+                                                    class="inline-flex align-baseline ml-2 text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                    @click.stop="showFullDetalle = false">
+                                                    Ver menos
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- Respaldo factura --}}
+                                @if ($r['factura_file'])
+                                    <div class="mt-1 flex items-center gap-1 text-xs">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-500"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path
+                                                d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                                        </svg>
+
+                                        @if ($r['factura_file']['is_image'])
+                                            <button type="button"
+                                                class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+                                                @click.stop="$dispatch('open-image-modal', { url: '{{ $r['factura_file']['url'] }}' })">
                                                 Ver Respaldo Factura
                                             </button>
                                         @else
-                                            <a href="{{ asset('storage/' . $f->foto_comprobante) }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline">
+                                            <a href="{{ $r['factura_file']['url'] }}" target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline">
                                                 Abrir PDF Factura
                                             </a>
                                         @endif
@@ -249,108 +271,71 @@
                             </div>
                         </td>
 
-                        {{-- ESTADO --}}
-                        <td class="p-2 whitespace-nowrap align-middle">
-                            @php
-                                $cerrada = \App\Services\FacturaFinance::estaCerrada($f);
-                                $estadoPago = \App\Services\FacturaFinance::estadoPagoLabel($f);
-                                $estadoRet = \App\Services\FacturaFinance::estadoRetencionLabel($f);
-                                $pct = \App\Services\FacturaFinance::porcentajePago($f);
-                            @endphp
-
-                            <div class="flex items-center justify-center gap-2 flex-wrap">
-                                @if ($cerrada)
+                        {{-- Estado --}}
+                        <td class="p-2 align-top">
+                            <div class="flex text-center items-center justify-center gap-2 flex-wrap">
+                                @foreach ($r['estado_badges'] as $b)
                                     <span
-                                        class="px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200">
-                                        Completado
-                                    </span>
-                                @else
-                                    @if ($estadoPago === 'Pendiente')
-                                        <span
-                                            class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200">
-                                            Pagos 0%
-                                        </span>
-                                    @elseif ($estadoPago === 'Parcial')
-                                        <span
-                                            class="px-2 py-1 rounded text-xs font-semibold
-                                            {{ $pct == 100
-                                                ? 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200'
-                                                : ($pct > 0
-                                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
-                                                    : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200') }}">
-                                            Pagos {{ $pct }}%
-                                        </span>
-                                    @else
-                                        <span
-                                            class="px-2 py-1 rounded text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200">
-                                            Pagada (Neto)
-                                        </span>
-                                    @endif
-                                @endif
-
-                                @if ($estadoRet)
-                                    @if ($estadoRet === 'Retención pendiente')
-                                        <span
-                                            class="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200">
-                                            {{ $estadoRet }}
-                                        </span>
-                                    @else
-                                        <span
-                                            class="px-2 py-1 rounded text-xs bg-lime-100 text-lime-800 dark:bg-lime-500/20 dark:text-lime-200">
-                                            {{ $estadoRet }}
-                                        </span>
-                                    @endif
-                                @endif
+                                        class="px-2 py-1 rounded text-xs {{ $b['class'] }}">{{ $b['text'] }}</span>
+                                @endforeach
                             </div>
                         </td>
 
-                        {{-- SALDO --}}
+                        {{-- Saldo --}}
                         <td class="p-2 whitespace-nowrap align-middle">
-                            @php
-                                $saldo = \App\Services\FacturaFinance::saldo($f);
-                                $retPend = \App\Services\FacturaFinance::retencionPendiente($f);
-                            @endphp
-
                             <div class="flex flex-col items-center justify-center gap-0.5">
-                                <div class="text-sm font-semibold text-gray-800 dark:text-neutral-200">
-                                    Bs {{ number_format((float) $saldo, 2, ',', '.') }}
-                                </div>
-
-                                @if ($retPend > 0)
-                                    <div class="text-xs text-amber-700 dark:text-amber-300">
-                                        Ret.: Bs {{ number_format((float) $retPend, 2, ',', '.') }}
-                                    </div>
+                                <div class="text-xs font-semibold text-gray-800 dark:text-neutral-200">
+                                    {{ $r['saldo'] }}</div>
+                                @if ($r['ret_pendiente'])
+                                    <div class="text-xs text-amber-700 dark:text-amber-300">Ret.:
+                                        {{ $r['ret_pendiente'] }}</div>
                                 @endif
                             </div>
                         </td>
 
                         {{-- Acciones --}}
                         @can('facturas.pay')
-                            @php
-                                $saldo = \App\Services\FacturaFinance::saldo($f);
-                                $retPend = \App\Services\FacturaFinance::retencionPendiente($f);
-                                $cerrado = $saldo <= 0 && $retPend <= 0;
-                            @endphp
-
-                            <td class="p-2 whitespace-nowrap align-middle">
+                            <td class="p-2 whitespace-nowrap align-middle" @click.stop>
                                 <div class="flex items-center justify-center gap-2">
                                     <button type="button"
-                                        @if (!$cerrado) wire:click="openPago({{ $f->id }})" @endif
-                                        wire:loading.attr="disabled" wire:target="openPago({{ $f->id }})"
+                                        @if (!$r['cerrado_acc']) wire:click="openPago({{ $r['id'] }})" @endif
+                                        wire:loading.attr="disabled" wire:target="openPago({{ $r['id'] }})"
                                         wire:loading.class="cursor-not-allowed opacity-50"
                                         wire:loading.class.remove="cursor-pointer hover:bg-blue-700 hover:border-blue-700"
-                                        @disabled($cerrado)
-                                        class="px-3 py-1 rounded border transition cursor-pointer text-sm
-                                            {{ $cerrado
-                                                ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700'
-                                                : 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 dark:bg-blue-500 dark:border-blue-500 dark:hover:bg-blue-400 dark:hover:border-blue-400' }}">
-                                        <span wire:loading.remove wire:target="openPago({{ $f->id }})">
-                                            {{ $cerrado ? 'Completo' : 'Registrar pago' }}
+                                        @disabled($r['cerrado_acc'])
+                                        class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition
+                                        {{ $r['cerrado_acc']
+                                            ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700'
+                                            : 'bg-blue-600 cursor-pointer text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 dark:bg-blue-500 dark:border-blue-500 dark:hover:bg-blue-400 dark:hover:border-blue-400' }}"
+                                        title="{{ $r['cerrado_acc'] ? 'Factura completa' : 'Registrar pago' }}">
+
+                                        <span wire:loading.remove wire:target="openPago({{ $r['id'] }})"
+                                            class="inline-flex">
+                                            @if ($r['cerrado_acc'])
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M20 6 9 17l-5-5" />
+                                                </svg>
+                                            @else
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path
+                                                        d="M19 7V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" />
+                                                    <path d="M21 12H17a2 2 0 0 0 0 4h4v-4Z" />
+                                                </svg>
+                                            @endif
                                         </span>
 
-                                        @if (!$cerrado)
-                                            <span wire:loading wire:target="openPago({{ $f->id }})">
-                                                Abriendo…
+                                        @if (!$r['cerrado_acc'])
+                                            <span wire:loading wire:target="openPago({{ $r['id'] }})"
+                                                class="inline-flex">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 animate-spin"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M21 12a9 9 0 1 1-3-6.7" />
+                                                </svg>
                                             </span>
                                         @endif
                                     </button>
@@ -359,65 +344,49 @@
                         @endcan
                     </tr>
 
-                    @php
-                        $colspan = 5 + (auth()->user()->can('facturas.pay') ? 1 : 0);
-                    @endphp
-
-                    {{-- FILA: Detalle de pagos --}}
-                    <tr x-show="open" x-cloak
+                    {{-- Detalle pagos --}}
+                    <tr x-show="open && @js((bool) ($r['pagos'] ?? false))" x-cloak
                         class="bg-gray-100/60 dark:bg-neutral-900/40 border-b border-gray-200 dark:border-neutral-200">
-                        <td class="px-5 py-2" colspan="{{ $colspan }}">
-                            <div class="space-y-3 text-sm">
 
+                        <td class="px-5 py-2" colspan="{{ 5 + (auth()->user()->can('facturas.pay') ? 1 : 0) }}">
+                            <div class="space-y-3 text-sm">
                                 <div
                                     class="border rounded bg-white dark:bg-neutral-900 dark:border-neutral-800 overflow-hidden">
-                                    <table class="w-full table-fixed text-sm">
+                                    <table class="w-full text-sm text-left align-middle">
                                         <thead
                                             class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-800">
-                                            <tr class="text-left">
-
-                                                <th class="p-2 w-[4%] text-center whitespace-nowrap">#</th>
-                                                <th class="p-2 w-[25%] whitespace-nowrap">Destino de Banco</th>
-                                                <th class="p-2 w-[25%] whitespace-nowrap">Pago</th>
-                                                <th class="p-2 w-[15%] whitespace-nowrap">Observación</th>
-                                                <th class="p-2 w-[5%] whitespace-nowrap text-center">Resp.</th>
-                                                <th class="p-2 w-[10%] whitespace-nowrap text-center">Tipo</th>
+                                            <tr>
+                                                <th class="p-2 text-center font-medium whitespace-nowrap">#</th>
+                                                <th class="p-2 font-medium whitespace-nowrap">Destino de Banco</th>
+                                                <th class="p-2 font-medium whitespace-nowrap">Pago</th>
+                                                <th class="p-2 font-medium whitespace-nowrap">Observación</th>
+                                                <th class="p-2 text-center font-medium whitespace-nowrap">Resp.</th>
+                                                <th class="p-2 text-center font-medium whitespace-nowrap">Tipo</th>
 
                                                 @can('facturas.delete')
-                                                    <th class="p-2 w-[4%] whitespace-nowrap text-center">Acc.</th>
+                                                    <th class="p-2 text-center font-medium whitespace-nowrap">Acc.</th>
                                                 @endcan
                                             </tr>
                                         </thead>
 
                                         <tbody class="divide-y divide-gray-200 dark:divide-neutral-800">
-                                            @forelse(($f->pagos ?? collect()) as $pg)
-                                                <tr wire:key="factura-{{ $f->id }}-pago-{{ $pg->id }}"
+                                            @foreach ($r['pagos'] as $i => $pg)
+                                                <tr wire:key="factura-{{ $r['id'] }}-pago-{{ $pg['id'] }}"
                                                     class="text-gray-700 dark:text-neutral-200 align-top">
 
-                                                    {{-- # --}}
                                                     <td class="p-2 align-middle">
                                                         <div
                                                             class="flex items-center justify-center text-xs font-medium text-gray-700 dark:text-neutral-200">
-                                                            {{ $loop->iteration }}
+                                                            {{ $i + 1 }}
                                                         </div>
                                                     </td>
 
-                                                    {{-- Destino --}}
                                                     <td class="p-2 align-middle">
                                                         <div class="min-w-0 space-y-0.5 leading-snug">
                                                             <div class="truncate text-sm font-medium text-gray-800 dark:text-neutral-200"
-                                                                title="{{ $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? '—') }}">
-                                                                {{ $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? 'Caja Chica') }}
+                                                                title="{{ $pg['destino_tooltip'] }}">
+                                                                {{ $pg['destino_nombre'] }}
                                                             </div>
-
-                                                            @php
-                                                                $cuenta =
-                                                                    $pg->destino_numero_cuenta_snapshot ??
-                                                                    ($pg->banco?->numero_cuenta ?? null);
-                                                                $moneda =
-                                                                    $pg->destino_moneda_snapshot ??
-                                                                    ($pg->banco?->moneda ?? null);
-                                                            @endphp
 
                                                             <div
                                                                 class="flex items-center gap-1 truncate text-xs text-gray-500 dark:text-neutral-400">
@@ -431,13 +400,16 @@
                                                                     <line x1="2" y1="10"
                                                                         x2="22" y2="10" />
                                                                 </svg>
-                                                                <span>Nro. Cuenta:
-                                                                    {{ $cuenta ?: '—' }}{{ $moneda ? ' | ' . $moneda : '' }}</span>
+                                                                <span>Nro. Cuenta: {{ $pg['destino_cuenta'] }}
+                                                                    @if ($pg['destino_moneda'])
+                                                                        | {{ $pg['destino_moneda'] }}
+                                                                    @endif
+                                                                </span>
                                                             </div>
 
-                                                            @if ($pg->destino_titular_snapshot)
+                                                            @if ($pg['destino_titular'])
                                                                 <div class="flex items-center gap-1 truncate text-xs text-gray-500 dark:text-neutral-400"
-                                                                    title="{{ $pg->destino_titular_snapshot }}">
+                                                                    title="{{ $pg['destino_titular'] }}">
                                                                     <svg xmlns="http://www.w3.org/2000/svg"
                                                                         class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400"
                                                                         viewBox="0 0 24 24" fill="none"
@@ -448,17 +420,14 @@
                                                                             d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                                                                         <circle cx="12" cy="7" r="4" />
                                                                     </svg>
-                                                                    <span>Titular:
-                                                                        {{ $pg->destino_titular_snapshot }}</span>
+                                                                    <span>Titular: {{ $pg['destino_titular'] }}</span>
                                                                 </div>
                                                             @endif
                                                         </div>
                                                     </td>
 
-                                                    {{-- Pago --}}
                                                     <td class="p-2 align-middle">
                                                         <div class="min-w-0 space-y-0.5 leading-snug">
-                                                            {{-- Fecha --}}
                                                             <div
                                                                 class="flex items-center gap-1 truncate text-sm font-medium text-gray-800 dark:text-neutral-200">
                                                                 <svg xmlns="http://www.w3.org/2000/svg"
@@ -475,10 +444,9 @@
                                                                     <line x1="3" y1="10"
                                                                         x2="21" y2="10" />
                                                                 </svg>
-                                                                <span>{{ $pg->fecha_pago?->format('Y-m-d H:i') ?? '—' }}</span>
+                                                                <span>{{ $pg['fecha'] }}</span>
                                                             </div>
 
-                                                            {{-- Monto (neutro fuerte, consistente con saldos) --}}
                                                             <div
                                                                 class="flex items-center gap-1 truncate text-sm font-semibold text-gray-800 dark:text-neutral-200">
                                                                 <svg xmlns="http://www.w3.org/2000/svg"
@@ -490,49 +458,48 @@
                                                                     <path d="M12 7v10" />
                                                                     <path d="M8 11h8" />
                                                                 </svg>
-                                                                <span>Bs
-                                                                    {{ number_format((float) $pg->monto, 2, ',', '.') }}</span>
+                                                                <span>{{ $pg['monto'] }}</span>
                                                             </div>
 
-                                                            {{-- Método --}}
                                                             <div
                                                                 class="truncate text-xs text-gray-500 dark:text-neutral-400">
-                                                                Método: {{ $pg->metodo_pago ?? '—' }} | Nro.Op:
-                                                                {{ $pg->nro_operacion ?: '—' }}
+                                                                Método: {{ $pg['metodo'] }} | Nro.Op:
+                                                                {{ $pg['nro_operacion'] }}
                                                             </div>
                                                         </div>
                                                     </td>
 
-                                                    {{-- Observación --}}
                                                     <td class="p-2 align-middle">
                                                         <p
                                                             class="text-sm leading-snug text-gray-700 dark:text-neutral-200 break-words">
-                                                            {{ $pg->observacion ?: '—' }}
+                                                            {{ $pg['observacion'] }}
                                                         </p>
                                                     </td>
 
-                                                    {{-- Respaldo Pago --}}
                                                     <td class="p-2 align-middle text-center">
-                                                        @if ($pg->foto_comprobante)
-                                                            @php
-                                                                $extPago = strtolower(pathinfo($pg->foto_comprobante, PATHINFO_EXTENSION));
-                                                                $isImagePago = in_array($extPago, ['jpg', 'jpeg', 'png']);
-                                                            @endphp
-                                                            @if ($isImagePago)
+                                                        @if ($pg['file'])
+                                                            @if ($pg['file']['is_image'])
                                                                 <button type="button"
                                                                     class="inline-flex items-center justify-center w-7 h-7 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition"
                                                                     title="Ver imagen"
-                                                                    @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $pg->foto_comprobante) }}' })">
-                                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                                    @click.stop="$dispatch('open-image-modal', { url: '{{ $pg['file']['url'] }}' })">
+                                                                    <svg class="w-4 h-4" fill="none"
+                                                                        viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round"
+                                                                            stroke-linejoin="round" stroke-width="2"
+                                                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                                     </svg>
                                                                 </button>
                                                             @else
-                                                                <a href="{{ asset('storage/' . $pg->foto_comprobante) }}" target="_blank" rel="noopener noreferrer"
+                                                                <a href="{{ $pg['file']['url'] }}" target="_blank"
+                                                                    rel="noopener noreferrer"
                                                                     class="inline-flex items-center justify-center w-7 h-7 rounded bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 transition"
                                                                     title="Ver PDF">
-                                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                                                    <svg class="w-4 h-4" fill="none"
+                                                                        viewBox="0 0 24 24" stroke="currentColor">
+                                                                        <path stroke-linecap="round"
+                                                                            stroke-linejoin="round" stroke-width="2"
+                                                                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                                     </svg>
                                                                 </a>
                                                             @endif
@@ -541,24 +508,15 @@
                                                         @endif
                                                     </td>
 
-                                                    {{-- Tipo --}}
                                                     <td class="p-2 align-middle whitespace-nowrap">
                                                         <div class="flex items-center justify-center">
-                                                            @if ($pg->tipo === 'normal')
-                                                                <span
-                                                                    class="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
-                                                                    Pago Normal
-                                                                </span>
-                                                            @else
-                                                                <span
-                                                                    class="inline-flex items-center px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200">
-                                                                    Pago de Retención
-                                                                </span>
-                                                            @endif
+                                                            <span
+                                                                class="inline-flex items-center px-2 py-1 rounded text-xs {{ $pg['tipo_class'] }}">
+                                                                {{ $pg['tipo_text'] }}
+                                                            </span>
                                                         </div>
                                                     </td>
 
-                                                    {{-- Acciones --}}
                                                     @can('facturas.delete')
                                                         <td class="p-2 align-middle whitespace-nowrap">
                                                             <div class="flex items-center justify-center">
@@ -566,9 +524,9 @@
                                                                     class="inline-flex items-center justify-center w-9 h-9 rounded border border-red-300 text-red-700
                                                                         hover:bg-red-200 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500 transition cursor-pointer"
                                                                     title="Eliminar pago"
-                                                                    wire:click="confirmDeletePago({{ $pg->id }})"
+                                                                    wire:click="confirmDeletePago({{ $pg['id'] }})"
                                                                     wire:loading.attr="disabled"
-                                                                    wire:target="confirmDeletePago({{ $pg->id }})">
+                                                                    wire:target="confirmDeletePago({{ $pg['id'] }})">
                                                                     <svg xmlns="http://www.w3.org/2000/svg"
                                                                         class="w-4 h-4" viewBox="0 0 24 24"
                                                                         fill="none" stroke="currentColor"
@@ -585,30 +543,18 @@
                                                         </td>
                                                     @endcan
                                                 </tr>
-                                            @empty
-                                                @php
-                                                    $colspanPagos = 5 + (auth()->user()->can('facturas.delete') ? 1 : 0);
-                                                @endphp
-
-                                                <tr>
-                                                    <td class="p-3 text-center text-gray-500 dark:text-neutral-400"
-                                                        colspan="{{ $colspanPagos }}">
-                                                        No hay pagos registrados para esta factura.
-                                                    </td>
-                                                </tr>
-                                            @endforelse
-
+                                            @endforeach
                                         </tbody>
                                     </table>
                                 </div>
-
                             </div>
                         </td>
                     </tr>
+
                 </tbody>
             @endforeach
 
-            @if ($facturas->count() === 0)
+            @if (count($rows) === 0)
                 <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
                     <tr>
                         <td class="p-4 text-center text-gray-500 dark:text-neutral-400"

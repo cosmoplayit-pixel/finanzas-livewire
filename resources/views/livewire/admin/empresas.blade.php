@@ -20,7 +20,7 @@
                 </span>
 
                 {{-- Texto loading --}}
-                <span wire:loading wire:target="openCreate">
+                          <span wire:loading wire:target="openCreate">
                     Abriendo…
                 </span>
             </button>

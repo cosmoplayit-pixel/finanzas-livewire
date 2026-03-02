@@ -124,7 +124,8 @@
                         Búsqueda
                     </label>
 
-                    <input type="text" wire:model.live="search" placeholder="Buscar Nombre o Correo" autocomplete="off"
+                    <input type="text" wire:model.live="search" placeholder="Buscar Nombre o Correo"
+                        autocomplete="off"
                         class="w-full rounded-lg border px-3 py-2
                            bg-white dark:bg-neutral-900
                            border-gray-300 dark:border-neutral-700
@@ -175,8 +176,8 @@
 
         {{-- DESKTOP (>= md): Layout extendido --}}
         <div class="hidden md:block p-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-                <div class="sm:col-span-3 lg:col-span-3">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div class="md:col-span-6 lg:col-span-8">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
                     <input type="text" wire:model.live="search" placeholder="Buscar Nombre o Correo"
                         autocomplete="off"
@@ -185,9 +186,7 @@
                             focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                 </div>
 
-                <div></div>
-                
-                <div>
+                <div class="md:col-span-3 lg:col-span-2">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Estado</label>
                     <select wire:model.live="status"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -198,8 +197,8 @@
                         <option value="inactive">Inactivos</option>
                     </select>
                 </div>
-                
-                <div>
+
+                <div class="md:col-span-3 lg:col-span-2">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Mostrar</label>
                     <select wire:model.live="perPage"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -420,12 +419,14 @@
                 <tbody x-data="{ open: false }" class="divide-y divide-gray-200 dark:divide-neutral-200">
 
                     {{-- FILA PRINCIPAL --}}
-                    <tr wire:key="entidad-row-{{ $e->id }}" class="hover:bg-gray-100 dark:hover:bg-neutral-900">
+                    <tr wire:key="entidad-row-{{ $e->id }}"
+                        class="hover:bg-gray-100 dark:hover:bg-neutral-900">
 
                         {{-- ID + Toggle detalle (<2xl) --}}
-                        <td class="p-1 whitespace-nowrap text-center" x-data="{ showToggle: !window.matchMedia('(min-width: 1536px)').matches }" x-init="const mq = window.matchMedia('(min-width: 1536px)');
-                        const handler = e => showToggle = !e.matches;
-                        mq.addEventListener('change', handler);">
+                        <td class="p-1 whitespace-nowrap text-center" x-data="{ showToggle: !window.matchMedia('(min-width: 1536px)').matches }"
+                            x-init="const mq = window.matchMedia('(min-width: 1536px)');
+                            const handler = e => showToggle = !e.matches;
+                            mq.addEventListener('change', handler);">
                             <button type="button" x-show="showToggle" x-cloak
                                 class="w-5 h-5 inline-flex items-center justify-center rounded
                                     border border-gray-300 text-gray-600
@@ -536,9 +537,9 @@
                                                disabled:opacity-50 disabled:cursor-not-allowed
                                                {{ $e->active
                                                    ? 'bg-red-600 text-white hover:bg-red-700
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                                                    : 'bg-green-600 text-white hover:bg-green-700
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
                                             <span x-show="!loading">
                                                 @if ($e->active)
                                                     {{-- eye-slash --}}

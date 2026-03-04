@@ -37,7 +37,7 @@ class RendicionMovimiento extends Model
     ];
 
     protected $casts = [
-        'fecha' => 'date',
+        'fecha' => 'datetime',
         'tipo_cambio' => 'decimal:6',
         'monto' => 'decimal:2',
         'monto_base' => 'decimal:2',

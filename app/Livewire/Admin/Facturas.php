@@ -102,17 +102,50 @@ class Facturas extends Component
 
     // UI: info factura pago preview
     public float $preview_banco_actual = 0;
+
     public float $preview_banco_nuevo = 0;
+
     public ?string $preview_banco_nombre = null;
+
     public ?string $preview_banco_moneda = null;
 
     public float $preview_saldo_actual = 0;
+
     public float $preview_saldo_nuevo = 0;
 
     // Visor.
     public bool $openFotoModal = false;
 
     public ?string $fotoUrl = null;
+
+    // UI: tabla pagos desplegables
+    public array $panelsOpen = [];
+
+    public function togglePanel(int $facturaId): void
+    {
+        $isOpen = (bool) ($this->panelsOpen[$facturaId] ?? false);
+        $this->panelsOpen[$facturaId] = ! $isOpen;
+    }
+
+    public function toggleAllPanels(bool $expand): void
+    {
+        $params = [
+            'search' => $this->search,
+            'perPage' => $this->perPage,
+            'empresaId' => $this->empresaId(),
+            'f_fecha_desde' => $this->f_fecha_desde,
+            'f_fecha_hasta' => $this->f_fecha_hasta,
+            'f_pago' => $this->f_pago ?? [],
+            'f_retencion' => $this->f_retencion ?? [],
+            'f_cerrada' => $this->f_cerrada ?? [],
+        ];
+
+        $idsPaginator = FacturaIndexQuery::paginateIds($params);
+
+        foreach ($idsPaginator->items() as $row) {
+            $this->panelsOpen[$row->id] = $expand;
+        }
+    }
 
     public function mount(): void
     {
@@ -222,18 +255,18 @@ class Facturas extends Component
                 if ($this->tipo === 'retencion') {
                     $retTotal = (float) ($f->retencion ?? 0);
                     $pagosRetencionSuma = $f->pagos->where('tipo', 'retencion')->sum('monto');
-                    
+
                     $saldoActual = max(0, $retTotal - $pagosRetencionSuma);
-                    
+
                     $this->preview_saldo_actual = $saldoActual;
                     $this->preview_saldo_nuevo = max(0, $saldoActual - $ingresado);
                 } else {
                     $montoTotal = (float) $f->monto_facturado;
                     $retTotal = (float) ($f->retencion ?? 0);
                     $pagosSuma = $f->pagos->where('tipo', 'normal')->sum('monto');
-                    
+
                     $saldoActual = max(0, $montoTotal - $retTotal - $pagosSuma);
-                    
+
                     $this->preview_saldo_actual = $saldoActual;
                     $this->preview_saldo_nuevo = max(0, $saldoActual - $ingresado);
                 }

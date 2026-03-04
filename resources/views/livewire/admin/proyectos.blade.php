@@ -1,218 +1,171 @@
 @section('title', 'Proyectos')
 
-<div class="p-0 md:p-6 space-y-4" :title="__('Dashboard')">
+<div>
 
     {{-- HEADER (RESPONSIVE) --}}
-    {{-- MOBILE (<= md): título + botón arriba a la derecha, descripción compacta --}}
-    <div class="md:hidden">
-        <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-                <h1 class="text-lg font-semibold leading-tight text-gray-900 dark:text-neutral-100">
-                    Proyectos
-                </h1>
-                <p class="mt-1 text-xs text-gray-500 dark:text-neutral-400 line-clamp-2">
-                    Gestión de proyectos y sus configuraciones.
-                </p>
-            </div>
+    <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-neutral-100 flex items-center gap-2">
+                <svg class="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                    </path>
+                </svg>
+                Proyectos
+            </h1>
+            <p class="text-sm text-gray-500 mt-1 dark:text-neutral-400">
+                Administración de proyectos vinculados a empresas y entidades.
+            </p>
+        </div>
 
+        <div class="flex gap-2">
             @can('proyectos.create')
-                <button type="button" wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
-                    class="shrink-0 inline-flex items-center gap-2 rounded-lg px-3 py-2
-                           text-sm font-semibold
-                           bg-black text-white hover:bg-gray-800 transition
-                           disabled:opacity-50 disabled:cursor-not-allowed">
-                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path d="M10 4a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V5a1 1 0 011-1z" />
+                <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
-                    <span>Nuevo</span>
+                    <span wire:loading.remove wire:target="openCreate">Nuevo Proyecto</span>
+                    <span wire:loading wire:target="openCreate">Abriendo…</span>
                 </button>
             @endcan
         </div>
     </div>
 
-    {{-- DESKTOP (>= md): layout clásico con botón a la derecha --}}
-    <div class="hidden md:flex md:items-start md:justify-between md:gap-6">
-        <div class="min-w-0">
-            <h1 class="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
-                Proyectos
-            </h1>
-            <p class="mt-1 text-sm text-gray-500 dark:text-neutral-400">
-                Administración de proyectos vinculados a empresas y entidades.
-            </p>
-        </div>
-        @can('proyectos.create')
-            <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
-                class="inline-flex items-center justify-center gap-2
-                   px-4 py-2.5 rounded-lg
-                   bg-black text-white hover:bg-gray-800 transition
-                   cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path d="M10 4a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V5a1 1 0 011-1z" />
-                </svg>
-                <span wire:loading.remove wire:target="openCreate">
-                    Nuevo Proyecto
-                </span>
-
-                <span wire:loading wire:target="openCreate">
-                    Abriendo…
-                </span>
-            </button>
-        @endcan
-    </div>
-
     {{-- ALERTAS (LIGHT/DARK) --}}
     @if (session('success'))
-        <div class="p-3 rounded bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-200">
+        <div
+            class="mb-6 p-4 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 flex items-center gap-3">
+            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
             {{ session('success') }}
         </div>
     @endif
     @if (session('error'))
-        <div class="p-3 rounded bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-200">
+        <div
+            class="mb-6 p-4 rounded-lg bg-red-50 text-red-800 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 flex items-center gap-3">
+            <svg class="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
             {{ session('error') }}
         </div>
     @endif
 
     {{-- FILTROS --}}
-    <div class="rounded-xl border bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden">
-        {{-- MOBILE (<= md): FILTROS COLAPSABLES (MISMO TAMAÑO DE LETRA) --}}
-        <div class="md:hidden" x-data="{ openFilters: false }">
-
-            {{-- Header / botón MOBILE --}}
-            <div class="px-4 h-11 flex items-center justify-between">
-                {{-- Izquierda --}}
-                <div class="text-[13px] font-semibold text-gray-700 dark:text-neutral-200">
-                    Filtros
+    <div x-data="{ openFilters: false }" class="relative mb-6">
+        <div
+            class="rounded-xl border border-gray-200 bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden shadow-sm">
+            {{-- MOBILE (<= md): FILTROS COLAPSABLES --}}
+            <div class="md:hidden" x-data="{ openMobile: false }">
+                <div class="px-4 h-11 flex items-center justify-between">
+                    <div class="text-[13px] font-semibold text-gray-700 dark:text-neutral-200">
+                        Filtros
+                    </div>
+                    <button type="button" @click="openMobile = !openMobile"
+                        class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-[13px] font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/60 transition cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 4h-7" />
+                            <path d="M10 4H3" />
+                            <path d="M21 12h-9" />
+                            <path d="M8 12H3" />
+                            <path d="M21 20h-5" />
+                            <path d="M12 20H3" />
+                            <path d="M14 2v4" />
+                            <path d="M12 10v4" />
+                            <path d="M16 18v4" />
+                        </svg>
+                        <span x-text="openMobile ? 'Ocultar' : 'Mostrar'"></span>
+                    </button>
                 </div>
 
-                {{-- Derecha --}}
-                <button type="button" @click="openFilters = !openFilters"
-                    class="inline-flex items-center gap-1.5
-                       px-3 h-8
-                       rounded-lg
-                       text-[13px] font-semibold
-                       border border-gray-200
-                       bg-white text-gray-700
-                       hover:bg-gray-50
-                       dark:border-neutral-700
-                       dark:bg-neutral-900
-                       dark:text-neutral-100
-                       dark:hover:bg-neutral-800/60
-                       transition">
-
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 4h-7" />
-                        <path d="M10 4H3" />
-                        <path d="M21 12h-9" />
-                        <path d="M8 12H3" />
-                        <path d="M21 20h-5" />
-                        <path d="M12 20H3" />
-                        <path d="M14 2v4" />
-                        <path d="M12 10v4" />
-                        <path d="M16 18v4" />
-                    </svg>
-
-                    <span x-text="openFilters ? 'Ocultar' : 'Mostrar'"></span>
-                </button>
+                <div class="mt-2 space-y-3 px-4 pb-3 text-[13px]" x-show="openMobile" x-collapse x-cloak>
+                    <div>
+                        <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">Búsqueda</label>
+                        <input type="text" wire:model.live.debounce.300ms="search"
+                            placeholder="Buscar Nombre o Código..." autocomplete="off"
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">Mostrar</label>
+                            <select wire:model.live="perPage"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-transparent select-none text-[13px]">&nbsp;</label>
+                            <button type="button" @click.stop="openFilters = !openFilters"
+                                class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                </svg>
+                                Opciones
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            {{-- Contenido (oculto al inicio) --}}
-            <div class="mt-2 space-y-3 px-4 pb-3 text-[13px]" x-show="openFilters" x-collapse x-cloak>
-
-                <div>
-                    <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">
-                        Búsqueda
-                    </label>
-
-                    <input type="text" wire:model.live="search" placeholder="Buscar Nombre o Código"
-                        autocomplete="off"
-                        class="w-full rounded-lg border px-3 py-2
-                           bg-white dark:bg-neutral-900
-                           border-gray-300 dark:border-neutral-700
-                           text-gray-900 dark:text-neutral-100
-                           text-[13px]
-                           focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                </div>
-
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="col-span-2">
-                        <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">
-                            Entidad
-                        </label>
-
-                        <select wire:model.live="entidadFilter"
-                            class="w-full rounded-lg border px-3 py-2
-                               bg-white dark:bg-neutral-900
-                               border-gray-300 dark:border-neutral-700
-                               text-gray-900 dark:text-neutral-100
-                               text-[13px]
-                               focus:outline-none focus:ring-2 focus:ring-gray-500/40">
-                            <option value="all">Todas las Entidades</option>
-                            @foreach ($entidades as $en)
-                                <option value="{{ $en->id }}" title="{{ $en->nombre }}">
-                                    {{ \Illuminate\Support\Str::limit($en->nombre, 30) }}
-                                </option>
-                            @endforeach
-                        </select>
+            {{-- DESKTOP (>= md): Layout extendido --}}
+            <div class="hidden md:block p-4">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    <div class="md:col-span-6 lg:col-span-8">
+                        <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
+                        <input type="text" wire:model.live.debounce.300ms="search"
+                            placeholder="Buscar Nombre o Código..." autocomplete="off"
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                     </div>
 
-                    <div>
-                        <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">
-                            Estado
-                        </label>
-
-                        <select wire:model.live="status"
-                            class="w-full rounded-lg border px-3 py-2
-                               bg-white dark:bg-neutral-900
-                               border-gray-300 dark:border-neutral-700
-                               text-gray-900 dark:text-neutral-100
-                               text-[13px]
-                               focus:outline-none focus:ring-2 focus:ring-gray-500/40">
-                            <option value="all">Todos</option>
-                            <option value="active">Activos</option>
-                            <option value="inactive">Inactivos</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">
-                            Mostrar
-                        </label>
-
+                    <div class="md:col-span-3 lg:col-span-2">
+                        <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Mostrar</label>
                         <select wire:model.live="perPage"
-                            class="w-full rounded-lg border px-3 py-2
-                               bg-white dark:bg-neutral-900
-                               border-gray-300 dark:border-neutral-700
-                               text-gray-900 dark:text-neutral-100
-                               text-[13px]
-                               focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
                         </select>
                     </div>
+
+                    <div class="md:col-span-3 lg:col-span-2">
+                        <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Filtros</label>
+                        <button type="button" @click.stop="openFilters = !openFilters"
+                            class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition cursor-pointer">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
+                            Opciones
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- DESKTOP (>= md): Layout extendido --}}
-        <div class="hidden md:block p-4">
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
-                <div class="md:col-span-6 lg:col-span-6">
-                    <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
-                    <input type="text" wire:model.live="search" placeholder="Buscar Nombre o Código"
-                        autocomplete="off"
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                            focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                </div>
+        {{-- PANEL FLOTANTE --}}
+        <div x-show="openFilters" x-cloak @click.outside="openFilters = false"
+            @keydown.escape.window="openFilters = false"
+            class="absolute right-0 top-full mt-2 w-full sm:w-[360px] z-50 rounded-xl border border-gray-200 bg-white shadow-xl dark:border-neutral-700 dark:bg-neutral-900 overflow-hidden"
+            wire:ignore.self wire:key="proyectos-panel-filtros">
 
-                <div class="md:col-span-6 lg:col-span-2">
-                    <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Entidad</label>
+            {{-- Header --}}
+            <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
+                <div class="font-semibold text-gray-800 dark:text-neutral-100">Filtros Avanzados</div>
+            </div>
+
+            <div class="px-4 py-4 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Entidad</label>
                     <select wire:model.live="entidadFilter"
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px]">
                         <option value="all">Todas</option>
                         @foreach ($entidades as $en)
                             <option value="{{ $en->id }}">{{ \Illuminate\Support\Str::limit($en->nombre, 30) }}
@@ -221,27 +174,13 @@
                     </select>
                 </div>
 
-                <div class="md:col-span-3 lg:col-span-2">
-                    <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Estado</label>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Estado</label>
                     <select wire:model.live="status"
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px]">
                         <option value="all">Todos</option>
                         <option value="active">Activos</option>
                         <option value="inactive">Inactivos</option>
-                    </select>
-                </div>
-
-                <div class="md:col-span-3 lg:col-span-2">
-                    <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Mostrar</label>
-                    <select wire:model.live="perPage"
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40">
-                        <option value="10">10</option>
-                        <option value="25">25</option>
-                        <option value="50">50</option>
                     </select>
                 </div>
             </div>
@@ -369,30 +308,68 @@
     </div>
 
     {{-- TABLET + DESKTOP: TABLA --}}
-    <div class="hidden md:block border rounded bg-white dark:bg-neutral-800 overflow-hidden">
-        <table class="w-full table-fixed text-sm">
+    <div
+        class="hidden md:block border border-gray-200 rounded-xl bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden shadow-sm mt-4">
+        <table class="w-full table-fixed text-[13px] text-left">
             <thead
-                class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-200">
-                <tr class="text-left">
+                class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200
+                   border-b border-gray-200 dark:border-neutral-200">
+                <tr class="text-left text-xs uppercase tracking-wider">
                     <th class="w-[70px] text-center p-2 cursor-pointer select-none whitespace-nowrap"
                         wire:click="sortBy('id')">
                         ID
                         @if ($sortField === 'id')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @if ($sortDirection === 'asc')
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            @else
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            @endif
                         @endif
                     </th>
 
                     <th class="p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('entidad_id')">
                         Entidad
                         @if ($sortField === 'entidad_id')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @if ($sortDirection === 'asc')
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            @else
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            @endif
                         @endif
                     </th>
 
                     <th class="p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('nombre')">
                         Nombre
                         @if ($sortField === 'nombre')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @if ($sortDirection === 'asc')
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            @else
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            @endif
                         @endif
                     </th>
 
@@ -400,7 +377,19 @@
                         wire:click="sortBy('codigo')">
                         Código
                         @if ($sortField === 'codigo')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @if ($sortDirection === 'asc')
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            @else
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            @endif
                         @endif
                     </th>
 
@@ -408,7 +397,19 @@
                         wire:click="sortBy('monto')">
                         Monto
                         @if ($sortField === 'monto')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @if ($sortDirection === 'asc')
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            @else
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            @endif
                         @endif
                     </th>
 
@@ -416,7 +417,19 @@
                         wire:click="sortBy('retencion')">
                         Retención
                         @if ($sortField === 'retencion')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @if ($sortDirection === 'asc')
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            @else
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            @endif
                         @endif
                     </th>
 
@@ -424,7 +437,19 @@
                         wire:click="sortBy('fecha_inicio')">
                         Inicio
                         @if ($sortField === 'fecha_inicio')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @if ($sortDirection === 'asc')
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            @else
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            @endif
                         @endif
                     </th>
 
@@ -432,7 +457,19 @@
                         wire:click="sortBy('fecha_fin')">
                         Fin
                         @if ($sortField === 'fecha_fin')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @if ($sortDirection === 'asc')
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            @else
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            @endif
                         @endif
                     </th>
 
@@ -440,7 +477,19 @@
                         wire:click="sortBy('active')">
                         Estado
                         @if ($sortField === 'active')
-                            {{ $sortDirection === 'asc' ? '▲' : '▼' }}
+                            @if ($sortDirection === 'asc')
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            @else
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            @endif
                         @endif
                     </th>
 
@@ -455,18 +504,25 @@
             @foreach ($proyectos as $p)
                 <tbody wire:key="{{ $p->id }}" x-data="{ open: false }"
                     class="divide-y divide-gray-200 dark:divide-neutral-200">
-                    <tr class="hover:bg-gray-100 dark:hover:bg-neutral-900">
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-neutral-900/40 transition-colors">
 
                         <td class="p-1 whitespace-nowrap text-center" x-data="{ showToggle: !window.matchMedia('(min-width: 1536px)').matches }"
                             x-init="const mq = window.matchMedia('(min-width: 1536px)');
                             const handler = e => showToggle = !e.matches;
                             mq.addEventListener('change', handler);">
                             <button type="button" x-show="showToggle" x-cloak
-                                class="w-5 h-5 inline-flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800
-                                   dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white transition cursor-pointer"
+                                class="w-6 h-6 inline-flex items-center justify-center rounded-md border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 hover:text-gray-900 dark:border-neutral-700 dark:text-neutral-400 dark:bg-neutral-900 dark:hover:text-white transition-colors cursor-pointer shadow-sm"
                                 @click.stop="open = !open" :aria-expanded="open">
-                                <span x-show="!open">+</span>
-                                <span x-show="open">−</span>
+                                <svg x-show="!open" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <svg x-show="open" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M20 12H4"></path>
+                                </svg>
                             </button>
                             <span class="ml-1">{{ $p->id }}</span>
                         </td>

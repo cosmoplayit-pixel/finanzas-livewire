@@ -99,17 +99,23 @@ class AgentePresupuestosResumenQuery
     {
         $q = $this->buildBaseQuery($filters);
 
-        $row = $q->selectRaw('
-            COALESCE(SUM(ap.monto), 0) as presupuesto_total,
-            COALESCE(SUM(ap.rendido_total), 0) as rendido_total,
-            COALESCE(SUM(ap.saldo_por_rendir), 0) as saldo_total,
+        $row = $q->selectRaw("
+            COALESCE(SUM(CASE WHEN ap.moneda = 'BOB' THEN ap.monto ELSE 0 END), 0) as presupuesto_total_bob,
+            COALESCE(SUM(CASE WHEN ap.moneda = 'USD' THEN ap.monto ELSE 0 END), 0) as presupuesto_total_usd,
+            COALESCE(SUM(CASE WHEN ap.moneda = 'BOB' THEN ap.rendido_total ELSE 0 END), 0) as rendido_total_bob,
+            COALESCE(SUM(CASE WHEN ap.moneda = 'USD' THEN ap.rendido_total ELSE 0 END), 0) as rendido_total_usd,
+            COALESCE(SUM(CASE WHEN ap.moneda = 'BOB' THEN ap.saldo_por_rendir ELSE 0 END), 0) as saldo_total_bob,
+            COALESCE(SUM(CASE WHEN ap.moneda = 'USD' THEN ap.saldo_por_rendir ELSE 0 END), 0) as saldo_total_usd,
             COUNT(ap.id) as cantidad_total
-        ')->first();
+        ")->first();
 
         return [
-            'presupuesto_total' => round((float) ($row->presupuesto_total ?? 0), 2),
-            'rendido_total' => round((float) ($row->rendido_total ?? 0), 2),
-            'saldo_total' => round((float) ($row->saldo_total ?? 0), 2),
+            'presupuesto_total_bob' => round((float) ($row->presupuesto_total_bob ?? 0), 2),
+            'presupuesto_total_usd' => round((float) ($row->presupuesto_total_usd ?? 0), 2),
+            'rendido_total_bob' => round((float) ($row->rendido_total_bob ?? 0), 2),
+            'rendido_total_usd' => round((float) ($row->rendido_total_usd ?? 0), 2),
+            'saldo_total_bob' => round((float) ($row->saldo_total_bob ?? 0), 2),
+            'saldo_total_usd' => round((float) ($row->saldo_total_usd ?? 0), 2),
             'cantidad_total' => (int) ($row->cantidad_total ?? 0),
         ];
     }

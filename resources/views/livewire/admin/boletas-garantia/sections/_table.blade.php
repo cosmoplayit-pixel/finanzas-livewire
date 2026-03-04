@@ -1,23 +1,32 @@
 {{-- TABLET + DESKTOP --}}
-<div class="hidden md:block border rounded bg-white dark:bg-neutral-800 overflow-hidden">
+<div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm">
     <div class="overflow-x-auto">
         <table wire:key="boletas-table" class="w-full table-fixed text-sm min-w-[1100px] lg:min-w-0">
 
             <thead
-                class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200
-                border-b border-gray-200 dark:border-neutral-700">
-                <tr class="text-left">
+                class="bg-slate-50/50 text-slate-600 dark:bg-neutral-900/50 dark:text-neutral-400 border-b border-gray-100 dark:border-neutral-800">
+                <tr class="text-left text-[11px] uppercase tracking-wider font-semibold">
 
                     {{-- ID --}}
                     <th class="w-[5%] text-center p-2 select-none whitespace-nowrap">
                         <div x-data="{ allOpen: false }" class="flex items-center justify-center gap-2">
                             <button type="button"
-                                class="w-7 h-7 inline-flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800
-                                       dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white transition cursor-pointer"
+                                class="w-6 h-6 inline-flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-white hover:border-gray-300 hover:text-gray-700 hover:shadow-sm
+                                 dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200 transition-all cursor-pointer"
                                 title="Desplegar / Ocultar todos"
-                                @click="allOpen = !allOpen; window.dispatchEvent(new CustomEvent('boletas:toggle-all', { detail: { open: allOpen } }));">
-                                <span x-show="!allOpen">⇵</span>
-                                <span x-show="allOpen" x-cloak>×</span>
+                                @click="allOpen = !allOpen; $wire.toggleAllPanels(allOpen, {{ $boletas->pluck('id') }})">
+                                <svg x-show="!allOpen" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
+                                    fill="currentColor" class="size-3">
+                                    <path fill-rule="evenodd"
+                                        d="M3.22 7.595a.75.75 0 0 0 0 1.06l4.25 4.25a.75.75 0 0 0 1.06 0l4.25-4.25a.75.75 0 0 0-1.06-1.06l-2.97 2.97V2.75a.75.75 0 0 0-1.5 0v7.81l-2.97-2.97a.75.75 0 0 0-1.06 0Z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                <svg x-show="allOpen" x-cloak xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
+                                    fill="currentColor" class="size-3">
+                                    <path fill-rule="evenodd"
+                                        d="M12.78 8.405a.75.75 0 0 0 0-1.06l-4.25-4.25a.75.75 0 0 0-1.06 0l-4.25 4.25a.75.75 0 0 0 1.06 1.06l2.97-2.97v7.81a.75.75 0 0 0 1.5 0v-7.81l2.97 2.97a.75.75 0 0 0 1.06 0Z"
+                                        clip-rule="evenodd" />
+                                </svg>
                             </button>
                             <span>ID</span>
                         </div>
@@ -36,37 +45,52 @@
 
             @foreach ($boletas as $bg)
                 @php
+                    $isOpen = (bool) ($panelsOpen[$bg->id] ?? false);
                     $totalDev = (float) ($bg->devoluciones?->sum('monto') ?? 0);
+                    $hasDevoluciones = ($bg->devoluciones?->count() ?? 0) > 0;
                     $rest = max(0, (float) $bg->retencion - $totalDev);
                     $devuelta = $totalDev >= (float) $bg->retencion;
-                    
+
                     // Calcular colspan dinámico para la tabla principal
                     $colspan = 6 + (auth()->user()->can('boletas_garantia.register_return') ? 1 : 0);
-                    
+
                     // Calcular colspan dinámico para la tabla anidada de devoluciones
                     $colspanInner = 6 + (auth()->user()->can('boletas_garantia.delete') ? 1 : 0);
                 @endphp
 
-                {{-- open: detalle devoluciones; showFullProject: ver más/menos del proyecto --}}
-                <tbody x-data="{ open: false, showFullProject: false }" x-on:boletas:toggle-all.window="open = $event.detail.open"
-                    class="divide-y divide-gray-200 dark:divide-neutral-700" wire:key="boleta-row-{{ $bg->id }}">
+                {{-- showFullProject: ver más/menos del proyecto --}}
+                <tbody x-data="{ showFullProject: false }" class="divide-y divide-gray-100 dark:divide-neutral-800"
+                    wire:key="boleta-row-{{ $bg->id }}">
 
                     {{-- CLICK EN LA FILA: despliega/oculta detalle --}}
-                    <tr class="hover:bg-gray-50 dark:hover:bg-neutral-900/60 text-gray-700 dark:text-neutral-200 cursor-pointer"
-                        @click="open = !open">
+                    <tr class="border-t border-gray-300 dark:border-neutral-800 hover:bg-slate-50/50 dark:hover:bg-neutral-900/60 transition-colors text-gray-700 dark:text-neutral-200
+                        {{ $hasDevoluciones ? 'cursor-pointer' : 'cursor-default' }}"
+                        @click="if (@js($hasDevoluciones)) $wire.togglePanel({{ $bg->id }})">
 
                         {{-- ID + toggle (no disparar click de fila) --}}
                         <td class="p-2 whitespace-nowrap align-middle">
                             <div class="flex items-center justify-center gap-2">
-                                <button type="button"
-                                    class="w-6 h-6 inline-flex items-center justify-center rounded border border-gray-300 text-gray-600
-                                           hover:bg-gray-100 hover:text-gray-800
-                                           dark:border-neutral-700 dark:text-neutral-300
-                                           dark:hover:bg-neutral-700 dark:hover:text-white
-                                           transition cursor-pointer"
-                                    @click.stop="open = !open" :aria-expanded="open">
-                                    <span x-show="!open">+</span>
-                                    <span x-show="open" x-cloak>−</span>
+                                <button type="button" @disabled(!$hasDevoluciones)
+                                    class="w-6 h-6 inline-flex items-center justify-center rounded border transition-all
+                                        {{ $hasDevoluciones
+                                            ? 'border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:shadow-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-neutral-200 cursor-pointer'
+                                            : 'border-transparent text-transparent bg-transparent cursor-default' }}"
+                                    @click.stop="if (@js($hasDevoluciones)) $wire.togglePanel({{ $bg->id }})"
+                                    :aria-expanded="{{ $isOpen ? 'true' : 'false' }}">
+                                    @if ($hasDevoluciones)
+                                        @if (!$isOpen)
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
+                                                fill="currentColor" class="size-3">
+                                                <path
+                                                    d="M8.75 3.75a.75.75 0 0 0-1.5 0v3.5h-3.5a.75.75 0 0 0 0 1.5h3.5v3.5a.75.75 0 0 0 1.5 0v-3.5h3.5a.75.75 0 0 0 0-1.5h-3.5v-3.5Z" />
+                                            </svg>
+                                        @else
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"
+                                                fill="currentColor" class="size-3">
+                                                <path d="M3.75 7.25a.75.75 0 0 0 0 1.5h8.5a.75.75 0 0 0 0-1.5h-8.5Z" />
+                                            </svg>
+                                        @endif
+                                    @endif
                                 </button>
 
                                 <span class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
@@ -236,8 +260,11 @@
                                 @if ($bg->foto_comprobante)
                                     <div class="flex items-center gap-1 mt-1">
                                         {{-- icon paperclip --}}
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                          <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-blue-500"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path
+                                                d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                                         </svg>
                                         @php
                                             $ext = strtolower(pathinfo($bg->foto_comprobante, PATHINFO_EXTENSION));
@@ -245,15 +272,16 @@
                                         @endphp
 
                                         @if ($isImage)
-                                            <button type="button" 
+                                            <button type="button"
                                                 class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
                                                 @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $bg->foto_comprobante) }}' })">
                                                 Ver comprobante
                                             </button>
                                         @else
-                                            <a href="{{ asset('storage/' . $bg->foto_comprobante) }}" target="_blank" rel="noopener noreferrer" 
-                                               class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
-                                               @click.stop>
+                                            <a href="{{ asset('storage/' . $bg->foto_comprobante) }}" target="_blank"
+                                                rel="noopener noreferrer"
+                                                class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                @click.stop>
                                                 Ver comprobante (PDF)
                                             </a>
                                         @endif
@@ -351,186 +379,226 @@
                     </tr>
 
                     {{-- DETALLE (SOLO DEVOLUCIONES) --}}
-                    <tr x-show="open" x-cloak
-                        class="bg-gray-50/60 dark:bg-neutral-900/40 border-t border-gray-200 dark:border-neutral-700">
-                        <td class="p-3 md:p-4" colspan="{{ $colspan }}">
+                    @if ($hasDevoluciones && $isOpen)
+                        <tr
+                            class="bg-gray-50/60 dark:bg-neutral-900/40 border-t border-gray-200 dark:border-neutral-700">
+                            <td class="p-3 md:p-4" colspan="{{ $colspan }}">
 
-                            <div
-                                class="rounded-lg border bg-white dark:bg-neutral-900 dark:border-neutral-800 overflow-hidden">
-                                <div class="p-3">
-                                    <div class="border rounded-lg overflow-hidden dark:border-neutral-800">
-                                        <table class="w-full text-sm">
-                                            <thead
-                                                class="bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800">
-                                                <tr class="text-left text-xs text-gray-600 dark:text-neutral-300">
-                                                    <th class="p-2 w-[5%]  text-center">#</th>
-                                                    <th class="p-2 w-[30%]">Banco</th>
-                                                    <th class="p-2 w-[22%]">Fecha</th>
-                                                    <th class="p-2 w-[15%] text-right">Monto</th>
-                                                    <th class="p-2 w-[15%]">Nro Op.</th>
-                                                    <th class="p-2 w-[8%] text-center">Resp.</th>
-                                                    @can('boletas_garantia.delete')
-                                                        <th class="p-2 w-[5%]  text-center">Acc.</th>
-                                                    @endcan
-                                                </tr>
-                                            </thead>
-
-                                            <tbody class="divide-y divide-gray-200 dark:divide-neutral-800">
-                                                @forelse(($bg->devoluciones ?? collect()) as $dv)
-                                                    <tr class="text-gray-700 dark:text-neutral-200">
-
-                                                        <td class="p-2 text-center">{{ $loop->iteration }}</td>
-
-                                                        <td class="p-2">
-                                                            <div class="flex items-center gap-1 font-medium truncate">
-                                                                {{-- icon building --}}
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    class="w-4 h-4 text-gray-400 dark:text-neutral-400"
-                                                                    viewBox="0 0 24 24" fill="none"
-                                                                    stroke="currentColor" stroke-width="2"
-                                                                    stroke-linecap="round" stroke-linejoin="round">
-                                                                    <path d="M3 21h18" />
-                                                                    <path d="M4 21V8" />
-                                                                    <path d="M20 21V8" />
-                                                                    <path d="M12 3l8 5H4l8-5z" />
-                                                                    <path d="M8 12v5" />
-                                                                    <path d="M12 12v5" />
-                                                                    <path d="M16 12v5" />
-                                                                </svg>
-                                                                <span>{{ $dv->banco?->nombre ?? '—' }}</span>
-                                                            </div>
-
-                                                            <div
-                                                                class="flex items-center gap-1 text-xs text-gray-500 dark:text-neutral-400 truncate">
-                                                                {{-- icon credit-card --}}
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400"
-                                                                    viewBox="0 0 24 24" fill="none"
-                                                                    stroke="currentColor" stroke-width="2"
-                                                                    stroke-linecap="round" stroke-linejoin="round">
-                                                                    <rect x="2" y="5" width="20" height="14"
-                                                                        rx="2" />
-                                                                    <path d="M2 10h20" />
-                                                                </svg>
-                                                                <span>{{ $dv->banco?->numero_cuenta ?? '—' }}
-                                                                    ({{ $dv->banco?->moneda ?? '—' }})
-                                                                </span>
-                                                            </div>
-                                                        </td>
-
-                                                        <td class="p-2 text-xs">
-                                                            <div class="flex items-center gap-1">
-                                                                {{-- icon calendar --}}
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400"
-                                                                    viewBox="0 0 24 24" fill="none"
-                                                                    stroke="currentColor" stroke-width="2"
-                                                                    stroke-linecap="round" stroke-linejoin="round">
-                                                                    <rect x="3" y="4" width="18" height="18"
-                                                                        rx="2" />
-                                                                    <line x1="16" y1="2"
-                                                                        x2="16" y2="6" />
-                                                                    <line x1="8" y1="2"
-                                                                        x2="8" y2="6" />
-                                                                    <line x1="3" y1="10"
-                                                                        x2="21" y2="10" />
-                                                                </svg>
-                                                                <span>{{ $dv->fecha_devolucion?->format('Y-m-d H:i') ?? '—' }}</span>
-                                                            </div>
-                                                        </td>
-
-                                                        <td class="p-2 text-right tabular-nums font-semibold">
-                                                            {{ $bg->moneda === 'USD' ? '$' : 'Bs' }}
-                                                            {{ number_format((float) $dv->monto, 2, ',', '.') }}
-                                                        </td>
-
-                                                        <td class="p-2 text-xs truncate">
-                                                            <div class="flex items-center gap-1">
-                                                                {{-- icon hash --}}
-                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400"
-                                                                    viewBox="0 0 24 24" fill="none"
-                                                                    stroke="currentColor" stroke-width="2"
-                                                                    stroke-linecap="round" stroke-linejoin="round">
-                                                                    <path d="M4 9h16" />
-                                                                    <path d="M4 15h16" />
-                                                                    <path d="M10 3 8 21" />
-                                                                    <path d="M16 3 14 21" />
-                                                                </svg>
-                                                                <span>{{ $dv->nro_transaccion ?? '—' }}</span>
-                                                            </div>
-                                                        </td>
-
-                                                        <td class="p-2 text-center">
-                                                            @if ($dv->foto_comprobante)
-                                                                @php
-                                                                    $ext = strtolower(pathinfo($dv->foto_comprobante, PATHINFO_EXTENSION));
-                                                                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png']);
-                                                                @endphp
-                                                                @if ($isImage)
-                                                                    <button type="button"
-                                                                        class="inline-flex items-center justify-center w-7 h-7 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition"
-                                                                        title="Ver imagen"
-                                                                        @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $dv->foto_comprobante) }}' })">
-                                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                                                        </svg>
-                                                                    </button>
-                                                                @else
-                                                                    <a href="{{ asset('storage/' . $dv->foto_comprobante) }}" target="_blank" rel="noopener noreferrer"
-                                                                        class="inline-flex items-center justify-center w-7 h-7 rounded bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 transition"
-                                                                        title="Ver PDF">
-                                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                                        </svg>
-                                                                    </a>
-                                                                @endif
-                                                            @else
-                                                                <span class="text-gray-400 dark:text-neutral-500">—</span>
-                                                            @endif
-                                                        </td>
-
+                                <div
+                                    class="rounded-lg border bg-white dark:bg-neutral-900 dark:border-neutral-800 overflow-hidden">
+                                    <div class="p-3">
+                                        <div class="border rounded-lg overflow-hidden dark:border-neutral-800">
+                                            <table class="w-full text-sm">
+                                                <thead
+                                                    class="bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800">
+                                                    <tr class="text-left text-xs text-gray-600 dark:text-neutral-300">
+                                                        <th class="p-2 w-[5%]  text-center">#</th>
+                                                        <th class="p-2 w-[30%]">Banco</th>
+                                                        <th class="p-2 w-[22%]">Fecha</th>
+                                                        <th class="p-2 w-[15%] text-right">Monto</th>
+                                                        <th class="p-2 w-[15%]">Nro Op.</th>
+                                                        <th class="p-2 w-[8%] text-center">Resp.</th>
                                                         @can('boletas_garantia.delete')
-                                                            <td class="p-2 text-center">
-                                                                {{-- Delete: dispara modal Livewire separado (no abrir detalle) --}}
-                                                                <button type="button"
-                                                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-red-300 text-red-700
-                                                                           hover:bg-red-200 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500 transition cursor-pointer"
-                                                                    title="Eliminar devolución"
-                                                                    wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }})">
-                                                                    {{-- icon trash --}}
-                                                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                                                        class="w-4 h-4" viewBox="0 0 24 24"
-                                                                        fill="none" stroke="currentColor"
-                                                                        stroke-width="2" stroke-linecap="round"
-                                                                        stroke-linejoin="round">
-                                                                        <path d="M3 6h18" />
-                                                                        <path d="M8 6V4h8v2" />
-                                                                        <path d="M6 6l1 16h10l1-16" />
-                                                                        <path d="M10 11v6" />
-                                                                        <path d="M14 11v6" />
-                                                                    </svg>
-                                                                </button>
-                                                            </td>
+                                                            <th class="p-2 w-[5%]  text-center">Acc.</th>
                                                         @endcan
                                                     </tr>
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="{{ $colspanInner }}"
-                                                            class="p-3 text-center text-gray-500 dark:text-neutral-400">
-                                                            No hay devoluciones registradas.
-                                                        </td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
+                                                </thead>
 
-                                        </table>
+                                                <tbody class="divide-y divide-gray-200 dark:divide-neutral-800">
+                                                    @forelse(($bg->devoluciones ?? collect()) as $dv)
+                                                        <tr class="text-gray-700 dark:text-neutral-200">
+
+                                                            <td class="p-2 text-center">{{ $loop->iteration }}</td>
+
+                                                            <td class="p-2">
+                                                                <div
+                                                                    class="flex items-center gap-1 font-medium truncate">
+                                                                    {{-- icon building --}}
+                                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                                        class="w-4 h-4 text-gray-400 dark:text-neutral-400"
+                                                                        viewBox="0 0 24 24" fill="none"
+                                                                        stroke="currentColor" stroke-width="2"
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round">
+                                                                        <path d="M3 21h18" />
+                                                                        <path d="M4 21V8" />
+                                                                        <path d="M20 21V8" />
+                                                                        <path d="M12 3l8 5H4l8-5z" />
+                                                                        <path d="M8 12v5" />
+                                                                        <path d="M12 12v5" />
+                                                                        <path d="M16 12v5" />
+                                                                    </svg>
+                                                                    <span>{{ $dv->banco?->nombre ?? '—' }}</span>
+                                                                </div>
+
+                                                                <div
+                                                                    class="flex items-center gap-1 text-xs text-gray-500 dark:text-neutral-400 truncate">
+                                                                    {{-- icon credit-card --}}
+                                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                                        class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400"
+                                                                        viewBox="0 0 24 24" fill="none"
+                                                                        stroke="currentColor" stroke-width="2"
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round">
+                                                                        <rect x="2" y="5" width="20"
+                                                                            height="14" rx="2" />
+                                                                        <path d="M2 10h20" />
+                                                                    </svg>
+                                                                    <span>{{ $dv->banco?->numero_cuenta ?? '—' }}
+                                                                        ({{ $dv->banco?->moneda ?? '—' }})
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+
+                                                            <td class="p-2 text-xs">
+                                                                <div class="flex items-center gap-1">
+                                                                    {{-- icon calendar --}}
+                                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                                        class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400"
+                                                                        viewBox="0 0 24 24" fill="none"
+                                                                        stroke="currentColor" stroke-width="2"
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round">
+                                                                        <rect x="3" y="4" width="18"
+                                                                            height="18" rx="2" />
+                                                                        <line x1="16" y1="2"
+                                                                            x2="16" y2="6" />
+                                                                        <line x1="8" y1="2"
+                                                                            x2="8" y2="6" />
+                                                                        <line x1="3" y1="10"
+                                                                            x2="21" y2="10" />
+                                                                    </svg>
+                                                                    <span>{{ $dv->fecha_devolucion?->format('Y-m-d H:i') ?? '—' }}</span>
+                                                                </div>
+                                                            </td>
+
+                                                            <td class="p-2 text-right tabular-nums font-semibold">
+                                                                {{ $bg->moneda === 'USD' ? '$' : 'Bs' }}
+                                                                {{ number_format((float) $dv->monto, 2, ',', '.') }}
+                                                            </td>
+
+                                                            <td class="p-2 text-xs truncate">
+                                                                <div class="flex items-center gap-1">
+                                                                    {{-- icon hash --}}
+                                                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                                                        class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400"
+                                                                        viewBox="0 0 24 24" fill="none"
+                                                                        stroke="currentColor" stroke-width="2"
+                                                                        stroke-linecap="round"
+                                                                        stroke-linejoin="round">
+                                                                        <path d="M4 9h16" />
+                                                                        <path d="M4 15h16" />
+                                                                        <path d="M10 3 8 21" />
+                                                                        <path d="M16 3 14 21" />
+                                                                    </svg>
+                                                                    <span>{{ $dv->nro_transaccion ?? '—' }}</span>
+                                                                </div>
+                                                            </td>
+
+                                                            <td class="p-2 text-center">
+                                                                @if ($dv->foto_comprobante)
+                                                                    @php
+                                                                        $ext = strtolower(
+                                                                            pathinfo(
+                                                                                $dv->foto_comprobante,
+                                                                                PATHINFO_EXTENSION,
+                                                                            ),
+                                                                        );
+                                                                        $isImage = in_array($ext, [
+                                                                            'jpg',
+                                                                            'jpeg',
+                                                                            'png',
+                                                                        ]);
+                                                                    @endphp
+                                                                    @if ($isImage)
+                                                                        <button type="button"
+                                                                            class="inline-flex items-center justify-center w-7 h-7 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition"
+                                                                            title="Ver imagen"
+                                                                            @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $dv->foto_comprobante) }}' })">
+                                                                            <svg class="w-4 h-4" fill="none"
+                                                                                viewBox="0 0 24 24"
+                                                                                stroke="currentColor">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    stroke-width="2"
+                                                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                            </svg>
+                                                                        </button>
+                                                                    @else
+                                                                        <a href="{{ asset('storage/' . $dv->foto_comprobante) }}"
+                                                                            target="_blank" rel="noopener noreferrer"
+                                                                            class="inline-flex items-center justify-center w-7 h-7 rounded bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/40 transition"
+                                                                            title="Ver PDF">
+                                                                            <svg class="w-4 h-4" fill="none"
+                                                                                viewBox="0 0 24 24"
+                                                                                stroke="currentColor">
+                                                                                <path stroke-linecap="round"
+                                                                                    stroke-linejoin="round"
+                                                                                    stroke-width="2"
+                                                                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                                            </svg>
+                                                                        </a>
+                                                                    @endif
+                                                                @else
+                                                                    <span
+                                                                        class="text-gray-400 dark:text-neutral-500">—</span>
+                                                                @endif
+                                                            </td>
+
+                                                            @can('boletas_garantia.delete')
+                                                                <td class="p-2 text-center">
+                                                                    {{-- Delete: dispara modal Livewire separado (no abrir detalle) --}}
+                                                                    <button type="button"
+                                                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-red-300 text-red-700
+                                                                           hover:bg-red-200 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500 transition cursor-pointer"
+                                                                        title="Eliminar devolución"
+                                                                        wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }})">
+                                                                        {{-- icon trash --}}
+                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                            class="w-4 h-4" viewBox="0 0 24 24"
+                                                                            fill="none" stroke="currentColor"
+                                                                            stroke-width="2" stroke-linecap="round"
+                                                                            stroke-linejoin="round">
+                                                                            <path d="M3 6h18" />
+                                                                            <path d="M8 6V4h8v2" />
+                                                                            <path d="M6 6l1 16h10l1-16" />
+                                                                            <path d="M10 11v6" />
+                                                                            <path d="M14 11v6" />
+                                                                        </svg>
+                                                                    </button>
+                                                                </td>
+                                                            @endcan
+                                                        </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="{{ $colspanInner }}"
+                                                                class="p-8 text-center bg-white dark:bg-neutral-900/10">
+                                                                <div
+                                                                    class="flex flex-col items-center justify-center text-gray-400 dark:text-neutral-500">
+                                                                    <svg class="w-10 h-10 mb-3 opacity-20"
+                                                                        fill="none" stroke="currentColor"
+                                                                        viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round"
+                                                                            stroke-linejoin="round" stroke-width="2"
+                                                                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                                                                        </path>
+                                                                    </svg>
+                                                                    <span class="text-sm font-medium">No hay
+                                                                        devoluciones registradas.</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    @endforelse
+                                                </tbody>
+
+                                            </table>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                        </td>
-                    </tr>
+                            </td>
+                        </tr>
+                    @endif
 
                 </tbody>
             @endforeach
@@ -539,10 +607,18 @@
                 @php
                     $emptyColspan = 6 + (auth()->user()->can('boletas_garantia.register_return') ? 1 : 0);
                 @endphp
-                <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
                     <tr>
-                        <td class="p-4 text-center text-gray-500 dark:text-neutral-400" colspan="{{ $emptyColspan }}">
-                            Sin resultados.
+                        <td class="p-8 text-center" colspan="{{ $emptyColspan }}">
+                            <div class="flex flex-col items-center justify-center text-gray-400 dark:text-neutral-500">
+                                <svg class="w-12 h-12 mb-3 opacity-20" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                                    </path>
+                                </svg>
+                                <span class="text-sm font-medium">Sin resultados.</span>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

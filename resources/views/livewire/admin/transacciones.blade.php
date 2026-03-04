@@ -28,36 +28,78 @@
     </div>
 
     {{-- Resumen Cards --}}
-    @php $currencySymbol = $moneda === 'USD' ? '$us' : ($moneda === 'BOB' ? 'Bs.' : ''); @endphp
+    @php
+        $isBoth = empty($moneda);
+        $valClassBase = $isBoth ? 'text-lg' : 'text-2xl';
+    @endphp
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {{-- Ingresos --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group">
+        <div
+            class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group flex flex-col">
             <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <svg class="w-12 h-12 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                 </svg>
             </div>
-            <p class="text-sm font-medium text-gray-500 mb-1">Total Ingresos</p>
-            <p class="text-2xl font-bold text-gray-900">
-                {{ $currencySymbol }} {{ number_format($totales->total_ingresos ?? 0, 2) }}
-            </p>
+            <p class="text-sm font-medium text-gray-500 mb-3">Total Ingresos</p>
+            <div class="mt-auto flex flex-col gap-2 relative z-10">
+                @if ($isBoth || $moneda === 'BOB')
+                    <div class="flex items-center justify-between {{ $isBoth ? 'pb-2 border-b border-gray-100' : '' }}">
+                        <span
+                            class="text-[11px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">BOB</span>
+                        <span class="{{ $valClassBase }} font-bold text-gray-900 tabular-nums">
+                            {{ number_format((float) ($totales->ingresos_bob ?? 0), 2, ',', '.') }}
+                        </span>
+                    </div>
+                @endif
+                @if ($isBoth || $moneda === 'USD')
+                    <div class="flex items-center justify-between">
+                        <span
+                            class="text-[11px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">USD</span>
+                        <span class="{{ $valClassBase }} font-bold text-gray-900 tabular-nums">
+                            {{ number_format((float) ($totales->ingresos_usd ?? 0), 2, ',', '.') }}
+                        </span>
+                    </div>
+                @endif
+            </div>
         </div>
+
         {{-- Egresos --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group">
+        <div
+            class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group flex flex-col">
             <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <svg class="w-12 h-12 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
                 </svg>
             </div>
-            <p class="text-sm font-medium text-gray-500 mb-1">Total Egresos</p>
-            <p class="text-2xl font-bold text-gray-900">
-                {{ $currencySymbol }} {{ number_format($totales->total_egresos ?? 0, 2) }}
-            </p>
+            <p class="text-sm font-medium text-gray-500 mb-3">Total Egresos</p>
+            <div class="mt-auto flex flex-col gap-2 relative z-10">
+                @if ($isBoth || $moneda === 'BOB')
+                    <div class="flex items-center justify-between {{ $isBoth ? 'pb-2 border-b border-gray-100' : '' }}">
+                        <span
+                            class="text-[11px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">BOB</span>
+                        <span class="{{ $valClassBase }} font-bold text-gray-900 tabular-nums">
+                            {{ number_format((float) ($totales->egresos_bob ?? 0), 2, ',', '.') }}
+                        </span>
+                    </div>
+                @endif
+                @if ($isBoth || $moneda === 'USD')
+                    <div class="flex items-center justify-between">
+                        <span
+                            class="text-[11px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">USD</span>
+                        <span class="{{ $valClassBase }} font-bold text-gray-900 tabular-nums">
+                            {{ number_format((float) ($totales->egresos_usd ?? 0), 2, ',', '.') }}
+                        </span>
+                    </div>
+                @endif
+            </div>
         </div>
+
         {{-- Neto --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group">
+        <div
+            class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group flex flex-col">
             <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <svg class="w-12 h-12 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -65,14 +107,39 @@
                     </path>
                 </svg>
             </div>
-            <p class="text-sm font-medium text-gray-500 mb-1">Flujo Neto</p>
-            @php $neto = ($totales->total_ingresos ?? 0) - ($totales->total_egresos ?? 0); @endphp
-            <p class="text-2xl font-bold {{ $neto >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">
-                {{ $currencySymbol }} {{ number_format($neto, 2) }}
-            </p>
+            <p class="text-sm font-medium text-gray-500 mb-3">Flujo Neto</p>
+            @php
+                $neto_bob = ($totales->ingresos_bob ?? 0) - ($totales->egresos_bob ?? 0);
+                $neto_usd = ($totales->ingresos_usd ?? 0) - ($totales->egresos_usd ?? 0);
+            @endphp
+            <div class="mt-auto flex flex-col gap-2 relative z-10">
+                @if ($isBoth || $moneda === 'BOB')
+                    <div
+                        class="flex items-center justify-between {{ $isBoth ? 'pb-2 border-b border-gray-100' : '' }}">
+                        <span
+                            class="text-[11px] font-semibold {{ $neto_bob >= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50' }} px-1.5 py-0.5 rounded">BOB</span>
+                        <span
+                            class="{{ $valClassBase }} font-bold {{ $neto_bob >= 0 ? 'text-emerald-600' : 'text-rose-600' }} tabular-nums">
+                            {{ number_format($neto_bob, 2, ',', '.') }}
+                        </span>
+                    </div>
+                @endif
+                @if ($isBoth || $moneda === 'USD')
+                    <div class="flex items-center justify-between">
+                        <span
+                            class="text-[11px] font-semibold {{ $neto_usd >= 0 ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50' }} px-1.5 py-0.5 rounded">USD</span>
+                        <span
+                            class="{{ $valClassBase }} font-bold {{ $neto_usd >= 0 ? 'text-emerald-600' : 'text-rose-600' }} tabular-nums">
+                            {{ number_format($neto_usd, 2, ',', '.') }}
+                        </span>
+                    </div>
+                @endif
+            </div>
         </div>
+
         {{-- Cantidad --}}
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group">
+        <div
+            class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group flex flex-col">
             <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <svg class="w-12 h-12 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -80,9 +147,9 @@
                     </path>
                 </svg>
             </div>
-            <p class="text-sm font-medium text-gray-500 mb-1">Transacciones</p>
-            <p class="text-2xl font-bold text-gray-900">
-                {{ $totales->total_transacciones ?? 0 }}
+            <p class="text-sm font-medium text-gray-500 mb-2">Transacciones</p>
+            <p class="mt-auto text-2xl font-bold text-gray-900 relative z-10">
+                {{ number_format((int) ($totales->total_transacciones ?? 0), 0, ',', '.') }}
             </p>
         </div>
     </div>
@@ -108,7 +175,8 @@
             <div class="col-span-1 sm:col-span-2 lg:col-span-1">
                 <label class="block text-xs font-medium text-gray-700 mb-1">Buscar</label>
                 <div class="relative">
-                    <input wire:model.live.debounce.500ms="search" type="text" placeholder="Concepto, ref, notas..."
+                    <input wire:model.live.debounce.500ms="search" type="text"
+                        placeholder="Concepto, ref, notas..."
                         class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor"
                         viewBox="0 0 24 24">
@@ -116,17 +184,6 @@
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </div>
-            </div>
-
-            {{-- Moneda --}}
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Moneda</label>
-                <select wire:model.live="moneda"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    <option value="">-- Todas (Mixta) --</option>
-                    <option value="BOB">BOB (Bolivianos)</option>
-                    <option value="USD">USD (Dólares)</option>
-                </select>
             </div>
 
             {{-- Banco --}}
@@ -231,10 +288,10 @@
                     @forelse ($transacciones as $t)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span
-                                    class="text-sm font-medium text-gray-900">{{ \Carbon\Carbon::parse($t->fecha)->format('d/m/Y') }}</span>
-                                <div class="text-xs text-gray-500">Reg:
-                                    {{ \Carbon\Carbon::parse($t->created_at)->format('d/m/Y H:i') }}</div>
+                                <span class="text-sm font-medium text-gray-900">Creación:
+                                    {{ \Carbon\Carbon::parse($t->created_at)->format('d/m/Y H:i') }}</span>
+                                <div class="text-xs text-gray-500">Pago:
+                                    {{ \Carbon\Carbon::parse($t->fecha)->format('d/m/Y H:i') }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span

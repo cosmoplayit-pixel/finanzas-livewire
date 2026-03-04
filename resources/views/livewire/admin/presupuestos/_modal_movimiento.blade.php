@@ -46,9 +46,9 @@
 
                     <div>
                         <label class="block text-sm mb-1">
-                            Fecha <span class="text-red-500">*</span>
+                            Fecha Pago: <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" wire:model.live="mov_fecha"
+                        <input type="datetime-local" wire:model.live="mov_fecha"
                             class="cursor-pointer w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -61,7 +61,7 @@
 
                     <div>
                         <label class="block text-sm mb-1">
-                            Moneda <span class="text-red-500">*</span>
+                            Moneda: <span class="text-red-500">*</span>
                         </label>
                         <select wire:model.live="mov_moneda"
                             class="cursor-pointer w-full rounded-lg border px-3 py-2
@@ -79,7 +79,7 @@
 
                     <div>
                         <label class="block text-sm mb-1">
-                            Monto ({{ $mov_moneda }}) <span class="text-red-500">*</span>
+                            Monto: ({{ $mov_moneda }}) <span class="text-red-500">*</span>
                         </label>
                         <input type="text" wire:model.live.blur="mov_monto_formatted" placeholder="Ej: 1.234,56"
                             class="w-full rounded-lg border px-3 py-2
@@ -99,7 +99,7 @@
 
                         <div>
                             <label class="block text-sm mb-1">
-                                Tipo de cambio <span class="text-red-500">*</span>
+                                Tipo de cambio: <span class="text-red-500">*</span>
                             </label>
                             <input type="text" wire:model.live.blur="mov_tipo_cambio_formatted"
                                 placeholder="Ej: 6,96"
@@ -115,7 +115,7 @@
 
                         <div>
                             <label class="block text-sm mb-1">
-                                Equivalente en moneda base ({{ $baseMoneda }})
+                                Equivalente en moneda base: ({{ $baseMoneda }})
                             </label>
                             <input type="text" readonly value="{{ $mov_monto_base_preview ?? '—' }}" placeholder="—"
                                 class="w-full rounded-lg border px-3 py-2
@@ -135,7 +135,7 @@
 
                     <div>
                         <label class="block text-sm mb-1">
-                            Entidad <span class="text-red-500">*</span>
+                            Entidad: <span class="text-red-500">*</span>
                         </label>
                         <select wire:model.live="mov_entidad_id"
                             class="w-full cursor-pointer rounded-lg border px-3 py-2
@@ -155,7 +155,7 @@
 
                     <div>
                         <label class="block text-sm mb-1">
-                            Proyecto <span class="text-red-500">*</span>
+                            Proyecto: <span class="text-red-500">*</span>
                         </label>
                         <select wire:model.live="mov_proyecto_id" @disabled(empty($mov_entidad_id))
                             class="w-full rounded-lg border px-3 py-2
@@ -184,7 +184,7 @@
 
                     <div>
                         <label class="block text-sm mb-1">
-                            Tipo comprobante <span class="text-red-500">*</span>
+                            Tipo comprobante: <span class="text-red-500">*</span>
                         </label>
                         <select wire:model.live="mov_tipo_comprobante"
                             class="w-full cursor-pointer rounded-lg border px-3 py-2
@@ -203,7 +203,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm mb-1">Nro comprobante</label>
+                        <label class="block text-sm mb-1">Nro comprobante:</label>
                         <input type="text" wire:model.live="mov_nro_comprobante"
                             placeholder="Ej: 12345 / N° / código"
                             class="w-full rounded-lg border px-3 py-2
@@ -217,7 +217,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm mb-1">Observación</label>
+                        <label class="block text-sm mb-1">Observación:</label>
                         <input type="text" wire:model.live="mov_observacion" placeholder="Ej: Compra de materiales…"
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
@@ -233,7 +233,7 @@
 
                 {{-- FOTO --}}
                 <div>
-                    <label class="block text-sm mb-1">Foto (opcional)</label>
+                    <label class="block text-sm mb-1">Foto (opcional):</label>
 
                     <label
                         class="group flex items-center justify-between w-full rounded-lg border border-dashed
@@ -269,7 +269,7 @@
                             </div>
                         </div>
 
-                        <input type="file" wire:model="mov_foto" class="hidden" />
+                        <input type="file" wire:model="mov_foto" class="hidden" accept=".jpg,.jpeg,.png,.pdf" />
                     </label>
 
                     @error('mov_foto')
@@ -315,11 +315,26 @@
             ========================= --}}
             @if ($mov_modal_tipo === 'DEVOLUCION')
                 {{-- FILA 1: BANCO / MONEDA / MONTO --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     <div>
                         <label class="block text-sm mb-1">
-                            Banco <span class="text-red-500">*</span>
+                            Fecha Pago: <span class="text-red-500">*</span>
+                        </label>
+                        <input type="datetime-local" wire:model.live="mov_fecha"
+                            class="cursor-pointer w-full rounded-lg border px-3 py-2
+                                   bg-white dark:bg-neutral-900
+                                   border-gray-300/60 dark:border-neutral-700/60
+                                   text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                        @error('mov_fecha')
+                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm mb-1">
+                            Banco: <span class="text-red-500">*</span>
                         </label>
                         <select wire:model.live="mov_banco_id"
                             class="w-full cursor-pointer rounded-lg border px-3 py-2
@@ -341,7 +356,7 @@
 
                     <div>
                         <label class="block text-sm mb-1">
-                            Monto ({{ $mov_moneda }}) <span class="text-red-500">*</span>
+                            Monto: ({{ $mov_moneda }}) <span class="text-red-500">*</span>
                         </label>
                         <input type="text" wire:model.live.blur="mov_monto_formatted" placeholder="Ej: 1.234,56"
                             class="w-full rounded-lg border px-3 py-2
@@ -362,7 +377,7 @@
 
                         <div>
                             <label class="block text-sm mb-1">
-                                Tipo de cambio <span class="text-red-500">*</span>
+                                Tipo de cambio: <span class="text-red-500">*</span>
                             </label>
                             <input type="text" wire:model.live.blur="mov_tipo_cambio_formatted"
                                 placeholder="Ej: 6,96"
@@ -378,7 +393,7 @@
 
                         <div>
                             <label class="block text-sm mb-1">
-                                Equivalente en moneda base ({{ $baseMoneda }})
+                                Equivalente en moneda base: ({{ $baseMoneda }})
                             </label>
                             <input type="text" readonly value="{{ $mov_monto_base_preview ?? '—' }}"
                                 placeholder="—"
@@ -399,7 +414,7 @@
 
                     <div>
                         <label class="block text-sm mb-1">
-                            Nro transacción <span class="text-red-500">*</span>
+                            Nro transacción: <span class="text-red-500">*</span>
                         </label>
                         <input type="text" wire:model.live="mov_nro_transaccion"
                             placeholder="Ej: TRX-000123 / N° operación"
@@ -414,7 +429,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm mb-1">Observación</label>
+                        <label class="block text-sm mb-1">Observación: </label>
                         <input type="text" wire:model.live="mov_observacion"
                             placeholder="Ej: Devolución de saldo no utilizado…"
                             class="w-full rounded-lg border px-3 py-2
@@ -431,7 +446,7 @@
 
                 {{-- FOTO --}}
                 <div>
-                    <label class="block text-sm mb-1">Foto (opcional)</label>
+                    <label class="block text-sm mb-1">Foto (opcional): </label>
 
                     <label
                         class="group flex items-center justify-between w-full rounded-lg border border-dashed
@@ -467,7 +482,7 @@
                             </div>
                         </div>
 
-                        <input type="file" wire:model="mov_foto" class="hidden" />
+                        <input type="file" wire:model="mov_foto" class="hidden" accept=".jpg,.jpeg,.png,.pdf" />
                     </label>
 
                     @error('mov_foto')

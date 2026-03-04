@@ -26,6 +26,7 @@ class AgentePresupuesto extends Model
         'fecha_presupuesto',
         'nro_transaccion',
         'observacion',
+        'foto_comprobante',
 
         'estado',
         'active',

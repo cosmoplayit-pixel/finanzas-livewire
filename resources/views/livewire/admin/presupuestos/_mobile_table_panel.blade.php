@@ -37,52 +37,52 @@
                         </div>
 
                         @can('agente_presupuestos.view_detail')
-                        <div class="ml-auto shrink-0">
-                            @if (empty($p->rendicion_id))
-                                <button type="button" wire:click="crearRendicion({{ $p->id }})"
-                                    wire:loading.attr="disabled" wire:target="crearRendicion({{ $p->id }})"
-                                    wire:loading.class="opacity-60 cursor-not-allowed"
-                                    class="inline-flex items-center gap-1 px-3 py-1 rounded-md
+                            <div class="ml-auto shrink-0">
+                                @if (empty($p->rendicion_id))
+                                    <button type="button" wire:click="crearRendicion({{ $p->id }})"
+                                        wire:loading.attr="disabled" wire:target="crearRendicion({{ $p->id }})"
+                                        wire:loading.class="opacity-60 cursor-not-allowed"
+                                        class="inline-flex items-center gap-1 px-3 py-1 rounded-md
                                     text-xs font-semibold transition
                                     bg-emerald-600 text-white hover:bg-emerald-700
                                     dark:bg-emerald-500 dark:hover:bg-emerald-400"
-                                    title="Crear rendición">
+                                        title="Crear rendición">
 
-                                    {{-- ICONO CREAR --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M12 4.5v15m7.5-7.5h-15" />
-                                    </svg>
-                                    Crear
+                                        {{-- ICONO CREAR --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                            viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M12 4.5v15m7.5-7.5h-15" />
+                                        </svg>
+                                        Crear
 
-                                </button>
-                            @else
-                                <button type="button" wire:click="openRendicionEditor({{ $p->rendicion_id }})"
-                                    wire:loading.attr="disabled"
-                                    wire:target="openRendicionEditor({{ $p->rendicion_id }})"
-                                    wire:loading.class="opacity-60 cursor-not-allowed"
-                                    class="inline-flex items-center gap-1 px-3 py-1 rounded-md
+                                    </button>
+                                @else
+                                    <button type="button" wire:click="openRendicionEditor({{ $p->rendicion_id }})"
+                                        wire:loading.attr="disabled"
+                                        wire:target="openRendicionEditor({{ $p->rendicion_id }})"
+                                        wire:loading.class="opacity-60 cursor-not-allowed"
+                                        class="inline-flex items-center gap-1 px-3 py-1 rounded-md
                                     text-xs font-semibold transition
                                     bg-gray-100 text-gray-700 hover:bg-gray-200
                                     dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-                                    title="Ver rendición">
+                                        title="Ver rendición">
 
-                                    {{-- ICONO VER --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                        viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.062 12.348a1 1 0 010-.696C3.423 7.51 7.36 4.5 12 4.5
-                                        c4.638 0 8.576 3.01 9.938 7.152a1 1 0 010 .696
-                                        C20.576 16.49 16.638 19.5 12 19.5
-                                        c-4.64 0-8.577-3.01-9.938-7.152z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    Ver
-                                </button>
-                            @endif
+                                        {{-- ICONO VER --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                            viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.062 12.348a1 1 0 010-.696C3.423 7.51 7.36 4.5 12 4.5
+                                            c4.638 0 8.576 3.01 9.938 7.152a1 1 0 010 .696
+                                            C20.576 16.49 16.638 19.5 12 19.5
+                                            c-4.64 0-8.577-3.01-9.938-7.152z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        Ver
+                                    </button>
+                                @endif
 
-                        </div>
+                            </div>
                         @endcan
                     </div>
 
@@ -93,8 +93,19 @@
                                 <span class="mx-1">|</span>{{ $monedaBanco }}
                             @endif
                         </div>
-                        <div>
-                            Tx: {{ $nroTx }} <span class="mx-1">·</span> {{ $fechaTxt }}
+                        <div class="flex items-center">
+                            <span>Tx: {{ $nroTx }} <span class="mx-1">·</span> {{ $fechaTxt }}</span>
+                            @if ($p->foto_comprobante)
+                                <a href="{{ asset('storage/' . $p->foto_comprobante) }}" target="_blank"
+                                    class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 ml-2 transition-colors"
+                                    title="Ver Respaldo">
+                                    <svg class="size-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                        viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                                    </svg>
+                                </a>
+                            @endif
                         </div>
                     </div>
 

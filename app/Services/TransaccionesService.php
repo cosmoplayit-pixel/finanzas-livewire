@@ -54,7 +54,7 @@ class TransaccionesService
                 CONCAT('Asignación de presupuesto #', ap.nro_transaccion) as concepto,
                 CONCAT(ap.nro_transaccion, ' - ', ag.nombre) as referencia,
                 ap.estado as estado,
-                NULL as comprobante,
+                ap.foto_comprobante as comprobante,
                 ap.observacion as notas,
                 CONCAT('/presupuestos/', ap.id) as url_origen,
                 ap.created_at,
@@ -107,7 +107,7 @@ class TransaccionesService
                 bg.moneda as moneda,
                 bg.banco_egreso_id as banco_id,
                 CONCAT('Emisión de Boleta de Garantía #', bg.nro_boleta) as concepto,
-                bg.nro_boleta as referencia,
+                CONCAT_WS(' - ', NULLIF(bg.nro_boleta, ''), p.nombre) as referencia,
                 bg.estado as estado,
                 bg.foto_comprobante as comprobante,
                 bg.observacion as notas,
@@ -115,6 +115,7 @@ class TransaccionesService
                 bg.created_at,
                 bg.empresa_id
             ")
+            ->leftJoin('proyectos as p', 'bg.proyecto_id', '=', 'p.id')
             // bg.retencion holds the amount for boletas_garantia
             ->whereNotNull('bg.banco_egreso_id');
 
@@ -133,7 +134,7 @@ class TransaccionesService
                 b.moneda as moneda,
                 bgd.banco_id,
                 CONCAT('Devolución de Boleta de Garantía #', bg.nro_boleta) as concepto,
-                bgd.nro_transaccion as referencia,
+                CONCAT_WS(' - ', NULLIF(bgd.nro_transaccion, ''), p.nombre) as referencia,
                 'COMPLETADO' as estado,
                 bgd.foto_comprobante as comprobante,
                 bgd.observacion as notas,
@@ -142,6 +143,7 @@ class TransaccionesService
                 bg.empresa_id
             ")
             ->join('boletas_garantia as bg', 'bgd.boleta_garantia_id', '=', 'bg.id')
+            ->leftJoin('proyectos as p', 'bg.proyecto_id', '=', 'p.id')
             ->join('bancos as b', 'bgd.banco_id', '=', 'b.id')
             ->whereNotNull('bgd.banco_id');
 

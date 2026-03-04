@@ -22,65 +22,88 @@ trait RendicionEditor
     // EDITOR RENDICIÓN
     // =========================================================
     public bool $openEditor = false;
+
     public ?int $editorRendicionId = null;
 
     public ?string $editorRendicionNro = null;
+
     public ?string $editorAgenteNombre = null;
+
     public ?string $editorFecha = null;
+
     public ?string $editorMonedaBase = null;
 
     public float $editorPresupuestoTotal = 0;
+
     public float $editorRendidoTotal = 0;
+
     public float $editorSaldo = 0;
 
     public array $editorEntidades = [];
+
     public array $editorProyectos = [];
+
     public array $editorBancos = [];
 
     public array $editorCompras = [];
+
     public array $editorDevoluciones = [];
 
     public float $editorTotalComprasBase = 0;
+
     public float $editorTotalDevolucionesBase = 0;
 
     // =========================================================
     // MODAL MOVIMIENTO
     // =========================================================
     public bool $openMovimientoModal = false;
+
     public string $mov_modal_tipo = 'COMPRA'; // COMPRA | DEVOLUCION
 
     // =========================================================
     // FORM MOVIMIENTO
     // =========================================================
     public ?string $mov_fecha = null; // Y-m-d
+
     public string $mov_moneda = 'BOB'; // BOB|USD
+
     public ?string $mov_tipo_cambio = null;
+
     public ?string $mov_monto = null;
 
     // compra
     public ?int $mov_entidad_id = null;
+
     public ?int $mov_proyecto_id = null;
+
     public ?string $mov_tipo_comprobante = null;
+
     public ?string $mov_nro_comprobante = null;
 
     // devolucion
     public ?int $mov_banco_id = null;
+
     public ?string $mov_nro_transaccion = null;
 
     public ?string $mov_observacion = null;
+
     public $mov_foto = null;
 
     public ?string $mov_monto_formatted = null;
+
     public ?string $mov_tipo_cambio_formatted = null;
 
     // =========================================================
     // PREVIEWS
     // =========================================================
     public float $mov_saldo_actual_preview = 0;
+
     public float $mov_saldo_despues_preview = 0;
 
     public float $mov_banco_actual_preview = 0;
+
     public float $mov_banco_despues_preview = 0;
+
     public string $mov_banco_moneda_preview = '';
 
     public bool $mov_monto_excede_saldo = false;
@@ -89,12 +112,14 @@ trait RendicionEditor
     // NUEVO: TC condicional + conversión realtime
     // =========================================================
     public bool $mov_needs_tc = false;
+
     public ?string $mov_monto_base_preview = null;
 
     // =========================================================
     // FOTO
     // =========================================================
     public bool $openFotoModal = false;
+
     public ?string $fotoUrl = null;
 
     // =========================================================
@@ -112,12 +137,12 @@ trait RendicionEditor
     protected function movimientoRules(): array
     {
         $base = [
-            'mov_fecha' => ['required', 'date_format:Y-m-d'],
+            'mov_fecha' => ['required', 'date'],
             'mov_moneda' => ['required', Rule::in(['BOB', 'USD'])],
             'mov_monto' => ['required', 'numeric', 'min:0.01'],
             'mov_tipo_cambio' => ['nullable', 'numeric', 'min:0.000001'],
             'mov_observacion' => ['nullable', 'string', 'max:100'],
-            'mov_foto' => ['nullable', 'file', 'max:5120'],
+            'mov_foto' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ];
 
         $tipo = strtoupper(trim((string) ($this->mov_modal_tipo ?? 'COMPRA')));
@@ -150,16 +175,16 @@ trait RendicionEditor
     public function getPuedeGuardarMovimientoProperty(): bool
     {
         if ($this->mov_modal_tipo === 'COMPRA') {
-            if (!$this->mov_fecha || !$this->mov_moneda || !$this->mov_monto || !$this->mov_entidad_id || !$this->mov_proyecto_id || !$this->mov_tipo_comprobante) {
+            if (! $this->mov_fecha || ! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_entidad_id || ! $this->mov_proyecto_id || ! $this->mov_tipo_comprobante) {
                 return false;
             }
         } elseif ($this->mov_modal_tipo === 'DEVOLUCION') {
-            if (!$this->mov_moneda || !$this->mov_monto || !$this->mov_banco_id || !$this->mov_nro_transaccion) {
+            if (! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_banco_id || ! $this->mov_nro_transaccion) {
                 return false;
             }
         }
 
-        if ($this->mov_needs_tc && !$this->mov_tipo_cambio) {
+        if ($this->mov_needs_tc && ! $this->mov_tipo_cambio) {
             return false;
         }
 
@@ -179,7 +204,7 @@ trait RendicionEditor
 
         /** @var Rendicion $r */
         $r = Rendicion::query()
-            ->when(!$this->isAdmin(), fn($q) => $q->where('empresa_id', $this->userEmpresaId()))
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('empresa_id', $this->userEmpresaId()))
             ->with(['agente'])
             ->findOrFail($rendicionId);
 
@@ -209,7 +234,7 @@ trait RendicionEditor
         $this->resetMovimientoForm();
 
         // defaults
-        $this->mov_fecha = now()->toDateString();
+        $this->mov_fecha = now()->format('d-m-Y H:i');
         $this->mov_moneda = $this->editorMonedaBase ?: 'BOB';
         $this->recalcMovimientoConversion();
 
@@ -236,7 +261,7 @@ trait RendicionEditor
         $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
 
         $this->editorEntidades = Entidad::query()
-            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('active', true)
             ->whereHas('proyectos', function ($q) use ($empresaId) {
                 $q->where('active', true);
@@ -246,16 +271,16 @@ trait RendicionEditor
             })
             ->orderBy('nombre')
             ->get(['id', 'nombre'])
-            ->map(fn($e) => ['id' => $e->id, 'nombre' => $e->nombre])
+            ->map(fn ($e) => ['id' => $e->id, 'nombre' => $e->nombre])
             ->all();
 
         $this->editorBancos = Banco::query()
-            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('active', true)
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'numero_cuenta', 'moneda'])
             ->map(
-                fn($b) => [
+                fn ($b) => [
                     'id' => $b->id,
                     'nombre' => $b->nombre,
                     'numero_cuenta' => $b->numero_cuenta,
@@ -266,9 +291,9 @@ trait RendicionEditor
 
         if ($this->mov_entidad_id) {
             $exists = collect($this->editorEntidades)->contains(
-                fn($e) => (int) $e['id'] === (int) $this->mov_entidad_id,
+                fn ($e) => (int) $e['id'] === (int) $this->mov_entidad_id,
             );
-            if (!$exists) {
+            if (! $exists) {
                 $this->mov_entidad_id = null;
                 $this->mov_proyecto_id = null;
                 $this->editorProyectos = [];
@@ -285,19 +310,19 @@ trait RendicionEditor
     protected function loadProyectosByEntidad(?int $entidadId): void
     {
         $this->editorProyectos = [];
-        if (!$entidadId) {
+        if (! $entidadId) {
             return;
         }
 
         $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
 
         $this->editorProyectos = Proyecto::query()
-            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('entidad_id', $entidadId)
             ->where('active', true)
             ->orderBy('nombre')
             ->get(['id', 'nombre'])
-            ->map(fn($p) => ['id' => $p->id, 'nombre' => $p->nombre])
+            ->map(fn ($p) => ['id' => $p->id, 'nombre' => $p->nombre])
             ->all();
     }
 
@@ -306,14 +331,14 @@ trait RendicionEditor
     // =========================================================
     protected function loadEditorMovimientos(): void
     {
-        if (!$this->editorRendicionId) {
+        if (! $this->editorRendicionId) {
             return;
         }
 
         $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
 
         $movs = RendicionMovimiento::query()
-            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('rendicion_id', $this->editorRendicionId)
             ->where('active', true)
             ->with(['entidad', 'proyecto', 'banco'])
@@ -344,7 +369,7 @@ trait RendicionEditor
             return;
         }
 
-        if (!$this->editorRendicionId) {
+        if (! $this->editorRendicionId) {
             return;
         }
 
@@ -353,7 +378,7 @@ trait RendicionEditor
         $this->loadEditorCatalogos();
         $this->resetMovimientoForm();
 
-        $this->mov_fecha = now()->toDateString();
+        $this->mov_fecha = now()->format('Y-m-d H:i');
         $this->mov_moneda = $this->editorMonedaBase ?: 'BOB';
 
         $this->recalcMovimientoConversion();
@@ -399,19 +424,20 @@ trait RendicionEditor
     public function updatedMovBancoId($value): void
     {
         $id = (int) $value;
-        if (!$id) {
+        if (! $id) {
             $this->mov_moneda = $this->editorMonedaBase ?: 'BOB';
             $this->mov_tipo_cambio = null;
             $this->mov_banco_actual_preview = 0;
             $this->mov_banco_moneda_preview = '';
             $this->recalcMovimientoConversion();
+
             return;
         }
 
-        $b = collect($this->editorBancos)->first(fn($x) => (int) $x['id'] === $id);
+        $b = collect($this->editorBancos)->first(fn ($x) => (int) $x['id'] === $id);
 
         if ($b) {
-            if (!empty($b['moneda'])) {
+            if (! empty($b['moneda'])) {
                 $this->mov_moneda = (string) $b['moneda'];
                 $this->mov_banco_moneda_preview = (string) $b['moneda'];
             }
@@ -438,10 +464,12 @@ trait RendicionEditor
     {
         $this->recalcMovimientoConversion();
     }
+
     public function updatedMovMonto(): void
     {
         $this->recalcMovimientoConversion();
     }
+
     public function updatedMovTipoCambio(): void
     {
         $this->recalcMovimientoConversion();
@@ -457,16 +485,18 @@ trait RendicionEditor
         $monto = $this->toFloatDecimal($this->mov_monto);
         $tc = $this->toFloatDecimal($this->mov_tipo_cambio);
 
-        if (!$this->mov_needs_tc) {
+        if (! $this->mov_needs_tc) {
             $this->mov_tipo_cambio = null;
             $this->mov_monto_base_preview = $monto > 0 ? number_format($monto, 2, ',', '.') : null;
             $this->calcularImpactoFinancieroMovimiento();
+
             return;
         }
 
         if ($monto <= 0 || $tc <= 0) {
             $this->mov_monto_base_preview = null;
             $this->calcularImpactoFinancieroMovimiento();
+
             return;
         }
 
@@ -487,8 +517,8 @@ trait RendicionEditor
     protected function calcularImpactoFinancieroMovimiento(): void
     {
         $montoBaseFloat = 0;
-        
-        // Use mov_monto_formatted if mov_monto is empty, since updated string might not be parsed on all lifecycles 
+
+        // Use mov_monto_formatted if mov_monto is empty, since updated string might not be parsed on all lifecycles
         $montoSource = $this->mov_monto ?: $this->mov_monto_formatted;
 
         if ($this->mov_needs_tc) {
@@ -523,7 +553,7 @@ trait RendicionEditor
                 $this->mov_banco_moneda_preview = (string) $b->moneda;
                 $this->mov_banco_actual_preview = round((float) ($b->monto ?? 0), 2);
 
-                // Importante: Si la moneda del banco es igual a la del movimiento, 
+                // Importante: Si la moneda del banco es igual a la del movimiento,
                 // entonces la suma en el banco es el '$monto' (no convertido).
                 // Pero como la vista del banco se calcula en la moneda misma del banco, y aquí el sistema lo valida:
                 $montoMov = $this->toFloatDecimal($montoSource);
@@ -537,8 +567,9 @@ trait RendicionEditor
     // =========================================================
     public function addMovimiento(RendicionService $service): void
     {
-        if (!$this->editorRendicionId) {
+        if (! $this->editorRendicionId) {
             $this->addError('mov_monto', 'No hay rendición seleccionada.');
+
             return;
         }
 
@@ -552,7 +583,7 @@ trait RendicionEditor
         $data = $this->validate($this->movimientoRules());
 
         $r = Rendicion::query()
-            ->when(!$this->isAdmin(), fn($q) => $q->where('empresa_id', $this->userEmpresaId()))
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('empresa_id', $this->userEmpresaId()))
             ->findOrFail($this->editorRendicionId);
 
         try {
@@ -575,12 +606,12 @@ trait RendicionEditor
 
     public function deleteMovimiento(int $movId, RendicionService $service): void
     {
-        if (!$this->editorRendicionId) {
+        if (! $this->editorRendicionId) {
             return;
         }
 
         $r = Rendicion::query()
-            ->when(!$this->isAdmin(), fn($q) => $q->where('empresa_id', $this->userEmpresaId()))
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('empresa_id', $this->userEmpresaId()))
             ->findOrFail($this->editorRendicionId);
 
         $service->eliminarMovimiento($r, $movId, auth()->user());
@@ -597,12 +628,13 @@ trait RendicionEditor
         $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
 
         $m = RendicionMovimiento::query()
-            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->findOrFail($movId);
 
         if (empty($m->foto_path)) {
             $this->fotoUrl = null;
             $this->openFotoModal = true;
+
             return;
         }
 
@@ -640,6 +672,7 @@ trait RendicionEditor
     protected function toFloatDecimal(?string $value): float
     {
         $v = $this->normalizeDecimal($value);
+
         return $v !== null && is_numeric($v) ? (float) $v : 0.0;
     }
 
@@ -698,7 +731,7 @@ trait RendicionEditor
     // =========================================================
     public function cerrarRendicion(RendicionService $service): void
     {
-        if (!$this->editorRendicionId) {
+        if (! $this->editorRendicionId) {
             return;
         }
 
@@ -714,7 +747,7 @@ trait RendicionEditor
 
         /** @var Rendicion $r */
         $r = Rendicion::query()
-            ->when(!$this->isAdmin(), fn($q) => $q->where('empresa_id', $this->userEmpresaId()))
+            ->when(! $this->isAdmin(), fn ($q) => $q->where('empresa_id', $this->userEmpresaId()))
             ->findOrFail($this->editorRendicionId);
 
         try {

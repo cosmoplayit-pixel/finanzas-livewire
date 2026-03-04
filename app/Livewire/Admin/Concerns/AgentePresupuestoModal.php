@@ -22,6 +22,8 @@ trait AgentePresupuestoModal
     public string $monto_formatted = '';
     public float $monto = 0;
 
+    public $foto_comprobante;
+
     // Previews
     public float $saldo_banco_actual_preview = 0;
     public float $saldo_banco_despues_preview = 0;
@@ -40,6 +42,7 @@ trait AgentePresupuestoModal
             'fecha_presupuesto' => ['required', 'date'],
             'nro_transaccion' => ['required', 'string', 'max:50'],
             'monto' => ['required', 'numeric', 'min:0.01'],
+            'foto_comprobante' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'], // Max 5MB
             'observacion' => ['nullable', 'string', 'max:2000'],
         ];
     }
@@ -163,6 +166,11 @@ trait AgentePresupuestoModal
         $mon = (string) $banco->moneda;
         $fecha = date('Y-m-d H:i:00', strtotime($data['fecha_presupuesto']));
 
+        $path = null;
+        if ($this->foto_comprobante) {
+            $path = $this->foto_comprobante->store('comprobantes/agente_presupuestos', 'public');
+        }
+
         try {
             $svc->crear(
                 agente: $agente,
@@ -172,6 +180,7 @@ trait AgentePresupuestoModal
                 fecha: $fecha,
                 nro_transaccion: $data['nro_transaccion'],
                 observacion: $data['observacion'] ?? null,
+                foto_comprobante: $path,
                 user: auth()->user(),
             );
 
@@ -264,6 +273,7 @@ trait AgentePresupuestoModal
             'fecha_presupuesto',
             'nro_transaccion',
             'observacion',
+            'foto_comprobante',
             'monto_formatted',
             'monto',
             'saldo_banco_actual_preview',

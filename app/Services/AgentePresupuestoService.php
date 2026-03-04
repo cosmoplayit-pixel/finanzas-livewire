@@ -19,6 +19,7 @@ class AgentePresupuestoService
         string $fecha, // Y-m-d
         string $nro_transaccion,
         ?string $observacion,
+        ?string $foto_comprobante,
         User $user,
     ): AgentePresupuesto {
         return DB::transaction(function () use (
@@ -29,6 +30,7 @@ class AgentePresupuestoService
             $fecha,
             $nro_transaccion,
             $observacion,
+            $foto_comprobante,
             $user,
         ) {
             $empresaId = (int) ($user->empresa_id ?? 0);
@@ -52,7 +54,7 @@ class AgentePresupuestoService
             }
 
             $moneda = strtoupper(trim((string) $moneda));
-            if (!in_array($moneda, ['BOB', 'USD'], true)) {
+            if (! in_array($moneda, ['BOB', 'USD'], true)) {
                 throw new DomainException('Moneda inválida. Debe ser BOB o USD.');
             }
 
@@ -103,6 +105,7 @@ class AgentePresupuestoService
                 'fecha_presupuesto' => $fecha,
                 'nro_transaccion' => $nro_transaccion,
                 'observacion' => $observacion,
+                'foto_comprobante' => $foto_comprobante,
 
                 'estado' => 'abierto',
                 'active' => true,

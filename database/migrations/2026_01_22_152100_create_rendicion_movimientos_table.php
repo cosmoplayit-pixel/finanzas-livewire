@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('rendicion_movimientos', function (Blueprint $table) {
@@ -17,7 +18,7 @@ return new class extends Migration {
             $table->enum('tipo', ['COMPRA', 'DEVOLUCION']);
 
             // Fecha del movimiento
-            $table->date('fecha');
+            $table->datetime('fecha');
 
             // Compra (opcionales)
             $table->foreignId('entidad_id')->nullable()->constrained('entidades')->nullOnDelete();

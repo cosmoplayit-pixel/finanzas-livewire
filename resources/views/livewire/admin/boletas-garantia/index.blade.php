@@ -3,6 +3,7 @@
 
     @include('livewire.admin.boletas-garantia.sections._header')
     @include('livewire.admin.boletas-garantia.sections._alerts')
+    @include('livewire.admin.boletas-garantia.sections._summary')
     @include('livewire.admin.boletas-garantia.sections._filters')
     @include('livewire.admin.boletas-garantia.sections._table')
     @include('livewire.admin.boletas-garantia.sections._mobile_table')

@@ -21,10 +21,35 @@ class Index extends Component
     // Filtros
     public ?string $f_fecha_desde = null;
     public ?string $f_fecha_hasta = null;
-
+    public string $moneda = 'all'; // all | BOB | USD
     public array $f_tipo = []; // SERIEDAD | CUMPLIMIENTO
     public array $f_estado = []; // abierta | devuelta
     public array $f_devoluciones = []; // con | sin
+
+    // Paneles de la tabla
+    public array $panelsOpen = [];
+
+    public function togglePanel(int $boletaId): void
+    {
+        $key = (string)$boletaId;
+        if (isset($this->panelsOpen[$key])) {
+            unset($this->panelsOpen[$key]);
+        } else {
+            $this->panelsOpen[$key] = true;
+        }
+    }
+
+    public function toggleAllPanels(bool $expand, array $ids = []): void
+    {
+        if (!$expand) {
+            $this->panelsOpen = [];
+            return;
+        }
+
+        foreach ($ids as $id) {
+            $this->panelsOpen[(string)$id] = true;
+        }
+    }
 
     // UI panel
     public bool $openFilters = false;
@@ -208,8 +233,26 @@ class Index extends Component
             $boletasQuery->whereDate('fecha_emision', '<=', $this->f_fecha_hasta);
         }
 
+        // Clón para calcular totales sin paginación
+        $baseQuery = clone $boletasQuery;
+
         $boletas = $boletasQuery->latest('id')->paginate($this->perPage);
 
-        return view('livewire.admin.boletas-garantia.index', compact('boletas'));
+        // Calcular totales
+        $bobIds = (clone $baseQuery)->where('moneda', 'BOB')->pluck('id');
+        $usdIds = (clone $baseQuery)->where('moneda', 'USD')->pluck('id');
+
+        $totales = [
+            'cantidad_total' => (clone $baseQuery)->count(),
+            'total_retencion_bob' => (clone $baseQuery)->where('moneda', 'BOB')->sum('retencion') ?? 0,
+            'total_retencion_usd' => (clone $baseQuery)->where('moneda', 'USD')->sum('retencion') ?? 0,
+            'total_devuelto_bob' => \App\Models\BoletaGarantiaDevolucion::whereIn('boleta_garantia_id', $bobIds)->sum('monto') ?? 0,
+            'total_devuelto_usd' => \App\Models\BoletaGarantiaDevolucion::whereIn('boleta_garantia_id', $usdIds)->sum('monto') ?? 0,
+        ];
+        
+        $totales['saldo_total_bob'] = max(0, $totales['total_retencion_bob'] - $totales['total_devuelto_bob']);
+        $totales['saldo_total_usd'] = max(0, $totales['total_retencion_usd'] - $totales['total_devuelto_usd']);
+
+        return view('livewire.admin.boletas-garantia.index', compact('boletas', 'totales'));
     }
 }

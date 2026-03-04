@@ -2,16 +2,15 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-
-use App\Models\User;
+use App\Models\Banco;
 use App\Models\Empresa;
 use App\Models\Entidad;
-use App\Models\Proyecto;
-use App\Models\Banco;
 use App\Models\Factura;
-use Spatie\Permission\Models\Role;
+use App\Models\Proyecto;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\Models\Role;
 
 class ViewServiceProvider extends ServiceProvider
 {
@@ -21,8 +20,9 @@ class ViewServiceProvider extends ServiceProvider
             $user = auth()->user();
 
             // Evitar consultas si no hay sesión
-            if (!$user) {
+            if (! $user) {
                 $view->with('navCounts', []);
+
                 return;
             }
 
@@ -49,7 +49,7 @@ class ViewServiceProvider extends ServiceProvider
             // ENTIDADES
             if ($user->can('entidades.view')) {
                 $navCounts['entidades'] = Entidad::where('active', true)
-                    ->when(!$user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                    ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
                         $q->where('empresa_id', $empresaId);
                     })
                     ->count();
@@ -58,7 +58,7 @@ class ViewServiceProvider extends ServiceProvider
             // PROYECTOS
             if ($user->can('proyectos.view')) {
                 $navCounts['proyectos'] = Proyecto::where('active', true)
-                    ->when(!$user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                    ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
                         $q->where('empresa_id', $empresaId);
                     })
                     ->count();
@@ -67,7 +67,7 @@ class ViewServiceProvider extends ServiceProvider
             // BANCOS
             if ($user->can('bancos.view')) {
                 $navCounts['bancos'] = Banco::where('active', true)
-                    ->when(!$user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                    ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
                         $q->where('empresa_id', $empresaId);
                     })
                     ->count();
@@ -107,7 +107,7 @@ class ViewServiceProvider extends ServiceProvider
                     })
 
                     // ✅ Multiempresa vía proyecto (porque facturas no tiene empresa_id)
-                    ->when(!$user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                    ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
                         $q->whereHas('proyecto', function ($p) use ($empresaId) {
                             $p->where('empresa_id', $empresaId);
                         });
@@ -119,7 +119,7 @@ class ViewServiceProvider extends ServiceProvider
             if ($user->can('agentes_servicio.view')) {
                 $navCounts['agentes_servicio'] = DB::table('agentes_servicio')
                     ->where('active', true)
-                    ->when(!$user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                    ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
                         $q->where('empresa_id', $empresaId);
                     })
                     ->count();
@@ -129,7 +129,17 @@ class ViewServiceProvider extends ServiceProvider
             if ($user->can('agente_presupuestos.view')) {
                 $navCounts['agente_presupuestos'] = DB::table('agente_presupuestos')
                     ->where('active', true)
-                    ->when(!$user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                    ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                        $q->where('empresa_id', $empresaId);
+                    })
+                    ->count();
+            }
+
+            // BOLETA GARANTIA
+            if ($user->can('boletas_garantia.view')) {
+                $navCounts['boletas_garantia'] = DB::table('boletas_garantia')
+                    ->where('estado', 'abierta')
+                    ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
                         $q->where('empresa_id', $empresaId);
                     })
                     ->count();

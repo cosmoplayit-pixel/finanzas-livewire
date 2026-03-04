@@ -4,7 +4,7 @@
         {{-- Tipo / Método / Fecha --}}
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
-                <label class="block text-sm mb-1">Tipo <span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Tipo: <span class="text-red-500">*</span></label>
                 <select wire:model.live="tipo" disabled
                     class="w-full rounded border px-3 py-2 bg-gray-100 dark:bg-neutral-800 border-gray-300 dark:border-neutral-700 opacity-80 cursor-not-allowed">
                     <option value="normal">Normal</option>
@@ -16,7 +16,7 @@
             </div>
 
             <div>
-                <label class="block text-sm mb-1">Método de pago <span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Método de pago: <span class="text-red-500">*</span></label>
                 <select wire:model="metodo_pago"
                     class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700">
                     <option value="transferencia">Transferencia</option>
@@ -33,7 +33,7 @@
             </div>
 
             <div>
-                <label class="block text-sm mb-1">Fecha de pago <span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Fecha de pago: <span class="text-red-500">*</span></label>
                 <input type="datetime-local" wire:model="fecha_pago"
                     class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700">
                 @error('fecha_pago')
@@ -48,7 +48,7 @@
 
             {{-- Banco --}}
             <div>
-                <label class="block text-sm mb-1">Banco destino <span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Banco destino: <span class="text-red-500">*</span></label>
                 <select wire:model.live="banco_id"
                     class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700">
                     <option value="">Seleccione...</option>
@@ -65,7 +65,7 @@
 
             {{-- Monto --}}
             <div>
-                <label class="block text-sm mb-1">Monto <span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Monto: <span class="text-red-500">*</span></label>
                 <input type="text" inputmode="decimal" wire:model.lazy="monto_formatted" placeholder="0,00"
                     class="w-full rounded border px-3 py-2
                 bg-white dark:bg-neutral-900
@@ -82,7 +82,7 @@
 
             {{-- Nro. Operación --}}
             <div>
-                <label class="block text-sm mb-1">Nro. Operación <span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Nro. Operación: <span class="text-red-500">*</span></label>
                 <input wire:model="nro_operacion"
                     class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700">
                 @error('nro_operacion')
@@ -92,7 +92,7 @@
         </div>
 
         <div>
-            <label class="block text-sm mb-1">Observación</label>
+            <label class="block text-sm mb-1">Observación:</label>
             <textarea wire:model="observacion" rows="2"
                 class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700"></textarea>
             @error('observacion')
@@ -102,7 +102,7 @@
 
         {{-- Comprobante (Imagen o PDF) --}}
         <div>
-            <label class="block text-sm mb-1">Respaldo (Imagen/PDF)</label>
+            <label class="block text-sm mb-1">Respaldo (Imagen/PDF):</label>
             <label
                 class="group h-11 flex items-center justify-between w-full rounded border border-dashed
             border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900

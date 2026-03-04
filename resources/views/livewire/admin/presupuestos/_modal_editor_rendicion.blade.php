@@ -1,5 +1,64 @@
-<x-ui.modal wire:key="rendicion-editor-{{ $editorRendicionId ?? 'none' }}" model="openEditor" title="Planilla de Rendición"
+<x-ui.modal wire:key="rendicion-editor-{{ $editorRendicionId ?? 'none' }}" model="openEditor"
     maxWidth="sm:max-w-4xl lg:max-w-7xl" onClose="closeEditor">
+    <x-slot:title>
+        <div class="flex items-center gap-4">
+            <span>Planilla de Rendición</span>
+
+            @if ($editorRendicionId)
+                <div class="hidden sm:flex items-center gap-2 font-normal">
+
+                    <div
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16.5 6v.75m0 3v.75m0 3v.75m0 3V18m-9-5.25h5.25M7.5 15h3M3.375 5.25c-.621 0-1.125.504-1.125 1.125v3.026a2.999 2.999 0 0 1 0 5.198v3.026c0 .621.504 1.125 1.125 1.125h17.25c.621 0 1.125-.504 1.125-1.125v-3.026a2.999 2.999 0 0 1 0-5.198V6.375c0-.621-.504-1.125-1.125-1.125H3.375Z" />
+                        </svg>
+
+                        <span class="text-[11px] font-medium text-gray-500 dark:text-neutral-400">Nro:</span>
+                        <span
+                            class="text-[11px] font-bold text-[#1a202c] dark:text-neutral-100 uppercase tracking-wide">
+                            {{ $editorRendicionNro ?? '—' }}
+                        </span>
+                    </div>
+
+                    <div
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 shadow-sm">
+                        {{-- icon user --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span class="text-[11px] font-medium text-gray-500 dark:text-neutral-400">Agente:</span>
+                        <span
+                            class="text-[11px] font-bold text-[#1a202c] dark:text-neutral-100 uppercase tracking-wide">
+                            {{ $editorAgenteNombre ?? '—' }}
+                        </span>
+                    </div>
+
+                    <div
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white dark:bg-neutral-800/50 border border-gray-200 dark:border-neutral-700 shadow-sm">
+                        {{-- icon calendar --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                        <span class="text-[11px] font-medium text-gray-500 dark:text-neutral-400">Fecha:</span>
+                        <span class="text-[11px] font-bold text-[#1a202c] dark:text-neutral-100">
+                            {{ $editorFecha ? \Carbon\Carbon::parse($editorFecha)->format('d/m/Y H:i') : '—' }}
+                        </span>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </x-slot:title>
+
     @php
         $hasCompras = !empty($editorCompras) && count($editorCompras) > 0;
         $hasDevoluciones = !empty($editorDevoluciones) && count($editorDevoluciones) > 0;
@@ -8,176 +67,81 @@
 
     <div class="space-y-4">
         {{-- CABECERA --}}
-        <div class="rounded-xl border bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden">
+        <div
+            class="rounded-xl border border-gray-200 bg-white dark:bg-neutral-900 dark:border-neutral-700 shadow-sm flex flex-col lg:flex-row items-center justify-between p-3 gap-6">
 
-            {{-- TOP --}}
-            <div class="px-4 py-3">
-                {{-- FILA 1 (mobile: título + botón a la derecha) --}}
-                <div class="flex items-start gap-3">
-                    <div class="min-w-0 flex-1">
-                        <div class="text-base font-semibold text-gray-900 dark:text-neutral-100">
-                            #
-                            <span class="font-extrabold tabular-nums">
-                                {{ $editorRendicionNro ?? '#' . ($editorRendicionId ?? '—') }}
-                            </span>
-                        </div>
-
-                        {{-- META (mobile: chips) --}}
-                        <div class="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-600 dark:text-neutral-300">
-                            <span
-                                class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-50 border border-gray-200
-                                 dark:bg-neutral-900/30 dark:border-neutral-700">
-                                {{-- icon user --}}
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                    class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M4.5 20.25a7.5 7.5 0 0115 0" />
-                                </svg>
-                                <span class="text-gray-500 dark:text-neutral-400">Agente:</span>
-                                <span class="font-semibold text-gray-900 dark:text-neutral-100 truncate max-w-[180px]">
-                                    {{ $editorAgenteNombre ?? '—' }}
-                                </span>
-                            </span>
-
-                            <span
-                                class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-50 border border-gray-200
-                                 dark:bg-neutral-900/30 dark:border-neutral-700">
-                                {{-- icon calendar --}}
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                    class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-500" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                <span class="text-gray-500 dark:text-neutral-400">Fecha:</span>
-                                <span class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
-                                    {{ $editorFecha ? \Carbon\Carbon::parse($editorFecha)->format('d/m/Y') : '—' }}
-                                </span>
-                            </span>
-                        </div>
+            {{-- DERECHA: KPIs (Toman el espacio restante en pantallas grandes) --}}
+            <div class="flex items-center gap-3 flex-1 w-full flex-col sm:flex-row">
+                {{-- Presupuesto --}}
+                <div
+                    class="flex-1 w-full rounded border border-gray-200 bg-white dark:bg-neutral-800 dark:border-neutral-700 py-1.5 px-3 shadow-sm">
+                    <div class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-neutral-500 font-bold">
+                        Presupuesto ({{ $editorMonedaBase ?? 'BOB' }})
                     </div>
+                    <div
+                        class="text-[16px] font-bold tabular-nums text-[#1a202c] dark:text-neutral-100 leading-none mt-1">
+                        {{ number_format((float) ($editorPresupuestoTotal ?? 0), 2, ',', '.') }}
+                    </div>
+                </div>
 
-                    {{-- BOTÓN (siempre visible arriba a la derecha en mobile) --}}
-                    <div class="shrink-0">
-                        @can('agente_presupuestos.register_movement')
-                        <button type="button" wire:click="openMovimientoModal1" wire:loading.attr="disabled"
-                            wire:target="openMovimientoModal1" @disabled(($editorSaldo ?? 0) <= 0)
-                            title="{{ ($editorSaldo ?? 0) <= 0 ? 'Saldo agotado. No se pueden registrar más movimientos.' : '' }}"
-                            class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition
-                           bg-gray-900 text-white hover:opacity-90
-                           disabled:opacity-50 disabled:cursor-not-allowed
-                           dark:bg-white dark:text-gray-900">
+                {{-- Rendido --}}
+                <div
+                    class="flex-1 w-full rounded border border-gray-200 bg-white dark:bg-neutral-800 dark:border-neutral-700 py-1.5 px-3 shadow-sm">
+                    <div class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-neutral-500 font-bold">
+                        Rendido ({{ $editorMonedaBase ?? 'BOB' }})
+                    </div>
+                    <div
+                        class="text-[16px] font-bold tabular-nums text-[#009b5a] dark:text-emerald-400 leading-none mt-1">
+                        {{ number_format((float) ($editorRendidoTotal ?? 0), 2, ',', '.') }}
+                    </div>
+                </div>
 
-                            {{-- icon plus --}}
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
-
-                            <span class="hidden sm:inline" wire:loading.remove wire:target="openMovimientoModal1">
-                                Movimiento
-                            </span>
-                            <span class="sm:hidden" wire:loading.remove wire:target="openMovimientoModal1">
-                                Mov.
-                            </span>
-
-                            <span wire:loading wire:target="openMovimientoModal1">
-                                …
-                            </span>
-                        </button>
-                        @endcan
+                {{-- Saldo --}}
+                <div
+                    class="flex-1 w-full rounded border border-gray-200 bg-white dark:bg-neutral-800 dark:border-neutral-700 py-1.5 px-3 shadow-sm">
+                    <div class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-neutral-500 font-bold">
+                        Saldo ({{ $editorMonedaBase ?? 'BOB' }})
+                    </div>
+                    <div
+                        class="text-[16px] font-bold tabular-nums leading-none mt-1
+                        {{ (float) ($editorSaldo ?? 0) <= 0
+                            ? 'text-emerald-700 dark:text-emerald-300'
+                            : 'text-[#e11d48] dark:text-rose-400' }}">
+                        {{ number_format((float) ($editorSaldo ?? 0), 2, ',', '.') }}
                     </div>
                 </div>
             </div>
 
-            {{-- KPIs --}}
-            <div class="border-t dark:border-neutral-700 px-4 py-3">
+            {{-- IZQUIERDA: Titulo + Boton --}}
+            <div class="flex items-center justify-between w-full lg:w-auto gap-4 shrink-0">
 
-                {{-- MOBILE: LISTA (como tu imagen) --}}
-                <div class="sm:hidden space-y-2">
-                    {{-- PRESUP --}}
-                    <div class="flex items-baseline justify-between">
-                        <span
-                            class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-neutral-400 font-semibold">
-                            Presup.
-                        </span>
-                        <span class="text-base font-extrabold tabular-nums text-gray-900 dark:text-neutral-100">
-                            {{ number_format((float) ($editorPresupuestoTotal ?? 0), 2, ',', '.') }}
-                        </span>
-                    </div>
+                {{-- BOTÓN --}}
+                @can('agente_presupuestos.register_movement')
+                    <button type="button" wire:click="openMovimientoModal1" wire:loading.attr="disabled"
+                        wire:target="openMovimientoModal1" @disabled(($editorSaldo ?? 0) <= 0)
+                        title="{{ ($editorSaldo ?? 0) <= 0 ? 'Saldo agotado. No se pueden registrar más movimientos.' : '' }}"
+                        class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold transition
+                        bg-[#111827] text-white hover:bg-gray-800
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                        dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 whitespace-nowrap">
 
-                    {{-- RENDIDO --}}
-                    <div class="flex items-baseline justify-between">
-                        <span
-                            class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-neutral-400 font-semibold">
-                            Rendido
-                        </span>
-                        <span class="text-base font-extrabold tabular-nums text-emerald-600 dark:text-emerald-300">
-                            {{ number_format((float) ($editorRendidoTotal ?? 0), 2, ',', '.') }}
-                        </span>
-                    </div>
+                        {{-- icon plus --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
 
-                    {{-- SALDO --}}
-                    <div class="flex items-baseline justify-between">
-                        <span
-                            class="text-[11px] uppercase tracking-wide text-gray-500 dark:text-neutral-400 font-semibold">
-                            Saldo
+                        <span wire:loading.remove wire:target="openMovimientoModal1">
+                            Movimiento
                         </span>
-                        <span
-                            class="text-base font-extrabold tabular-nums
-                {{ (float) ($editorSaldo ?? 0) <= 0
-                    ? 'text-emerald-700 dark:text-emerald-300'
-                    : 'text-rose-600 dark:text-rose-300' }}">
-                            {{ number_format((float) ($editorSaldo ?? 0), 2, ',', '.') }}
+
+                        <span wire:loading wire:target="openMovimientoModal1">
+                            …
                         </span>
-                    </div>
-                </div>
-
-                {{-- SM+ : GRID (tu versión actual) --}}
-                <div class="hidden sm:grid grid-cols-3 gap-3">
-                    {{-- Presupuesto --}}
-                    <div
-                        class="rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50/70 dark:bg-neutral-900 p-2.5">
-                        <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400 font-bold">
-                            Presupuesto ({{ $editorMonedaBase ?? 'BOB' }})
-                        </div>
-                        <div class="mt-1 text-lg font-extrabold tabular-nums text-gray-900 dark:text-neutral-100">
-                            {{ number_format((float) ($editorPresupuestoTotal ?? 0), 2, ',', '.') }}
-                        </div>
-                    </div>
-
-                    {{-- Rendido --}}
-                    <div
-                        class="rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50/70 dark:bg-neutral-900 p-2.5">
-                        <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400 font-bold">
-                            Rendido ({{ $editorMonedaBase ?? 'BOB' }})
-                        </div>
-                        <div class="mt-1 text-lg font-extrabold tabular-nums text-emerald-600 dark:text-emerald-300">
-                            {{ number_format((float) ($editorRendidoTotal ?? 0), 2, ',', '.') }}
-                        </div>
-                    </div>
-
-                    {{-- Saldo --}}
-                    <div
-                        class="rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50/70 dark:bg-neutral-900 p-2.5">
-                        <div class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400 font-bold">
-                            Saldo ({{ $editorMonedaBase ?? 'BOB' }})
-                        </div>
-                        <div
-                            class="mt-1 text-lg font-extrabold tabular-nums
-                            {{ (float) ($editorSaldo ?? 0) <= 0
-                                ? 'text-emerald-700 dark:text-emerald-300'
-                                : 'text-rose-600 dark:text-rose-300' }}">
-                            {{ number_format((float) ($editorSaldo ?? 0), 2, ',', '.') }}
-                        </div>
-                    </div>
-                </div>
+                    </button>
+                @endcan
             </div>
         </div>
-
 
         {{-- TABLAS --}}
         @if ($hasMovs)
@@ -186,13 +150,25 @@
                 {{-- DEVOLUCIONES --}}
                 @if ($hasDevoluciones)
                     <div
-                        class="rounded-xl border bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden">
-
-                        <div class="px-4 py-2 border-b dark:border-neutral-700 flex items-center justify-between">
-                            <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Devoluciones</div>
-                            <div class="text-xs text-gray-500 dark:text-neutral-400">
+                        class="rounded-xl border border-emerald-200/60 dark:border-emerald-800/30 bg-white dark:bg-neutral-900/40 overflow-hidden shadow-sm mb-4">
+                        <div
+                            class="px-4 py-3 border-b border-emerald-100 dark:border-emerald-800/30 bg-emerald-50/50 dark:bg-emerald-900/10 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-800/50 text-emerald-600 dark:text-emerald-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <polyline points="9 14 4 9 9 4"></polyline>
+                                        <path d="M20 20v-7a4 4 0 0 0-4-4H4"></path>
+                                    </svg>
+                                </div>
+                                <div class="text-sm font-bold text-emerald-800 dark:text-emerald-400">Devoluciones
+                                </div>
+                            </div>
+                            <div class="text-xs text-emerald-600 dark:text-emerald-400/80">
                                 Total devolución (base):
-                                <span class="font-extrabold tabular-nums text-gray-800 dark:text-neutral-100">
+                                <span class="font-bold tabular-nums ml-1 text-emerald-700 dark:text-emerald-300">
                                     {{ number_format((float) ($editorTotalDevolucionesBase ?? 0), 2, ',', '.') }}
                                 </span>
                             </div>
@@ -202,109 +178,98 @@
                         <div class="hidden md:block overflow-visible">
                             <table class="w-full text-sm">
                                 <thead
-                                    class="sticky top-0 z-10 bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700">
+                                    class="bg-gray-50/50 dark:bg-neutral-800/50 border-b border-gray-100 dark:border-neutral-700/50">
                                     <tr
-                                        class="text-left text-[11px] uppercase tracking-wide text-gray-600 dark:text-neutral-300">
-                                        <th class="p-3 text-center w-[60px]">Nro</th>
-                                        <th class="p-3 w-[120px]">Fecha</th>
+                                        class="text-left text-[11px] uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold">
+                                        <th class="p-3 text-center w-[50px]">Nro</th>
+                                        <th class="p-3 text-center w-[90px]">Fecha</th>
                                         <th class="p-3">Banco</th>
                                         <th class="p-3">Transacción</th>
-                                        <th class="p-3 text-center">Monto</th>
-                                        <th class="p-3 text-center">Base</th>
-                                        <th class="p-3 text-center w-[90px]">Foto</th>
+                                        <th class="p-3">Observación</th>
+                                        <th class="p-3 text-right">Monto</th>
+                                        <th class="p-3 text-right">Base</th>
+                                        <th class="p-3 text-center w-[60px]">Foto</th>
                                         @can('agente_presupuestos.delete_movement')
-                                        <th class="p-3 text-center w-[140px]">Acc.</th>
+                                            <th class="p-3 text-center w-[60px]">Acc.</th>
                                         @endcan
                                     </tr>
                                 </thead>
-
-                                <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                                <tbody class="divide-y divide-gray-100 dark:divide-neutral-800/80">
                                     @foreach ($editorDevoluciones ?? [] as $i => $m)
-                                        {{-- FILA PRINCIPAL --}}
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-neutral-800/60 transition">
-                                            <td class="p-3 text-center text-gray-700 dark:text-neutral-200">
+                                        <tr
+                                            class="hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10 transition group">
+                                            <td
+                                                class="p-3 text-center text-gray-400 dark:text-neutral-500 font-medium">
                                                 {{ $i + 1 }}
                                             </td>
-
-                                            <td class="p-3 text-gray-700 dark:text-neutral-200 whitespace-nowrap">
-                                                {{ $m->fecha?->format('d/m/y') ?? '-' }}
+                                            <td
+                                                class="p-3 text-gray-600 dark:text-neutral-300 whitespace-nowrap text-center">
+                                                <div class="text-xs">{{ $m->fecha?->format('d/m/Y') ?? '—' }}</div>
+                                                <div class="text-[10px] text-gray-400">
+                                                    {{ $m->fecha?->format('H:i') ?? '' }}</div>
                                             </td>
-
-                                            <td class="p-3 text-gray-700 dark:text-neutral-200">
+                                            <td
+                                                class="p-3 text-gray-700 dark:text-neutral-200 font-medium whitespace-nowrap">
                                                 {{ $m->banco?->nombre ?? '—' }}
                                             </td>
-
-                                            <td class="p-3 text-gray-700 dark:text-neutral-200">
+                                            <td class="p-3 text-gray-600 dark:text-neutral-300 whitespace-nowrap">
                                                 {{ $m->nro_transaccion ?? '—' }}
                                             </td>
-
+                                            <td class="p-3 text-gray-500 dark:text-neutral-400 text-xs"
+                                                title="{{ $m->observacion }}">
+                                                <div class="line-clamp-2 min-w-[120px]">{{ $m->observacion ?: '—' }}
+                                                </div>
+                                            </td>
                                             <td
-                                                class="p-3 text-center tabular-nums text-gray-900 dark:text-neutral-100">
+                                                class="p-3 text-right tabular-nums text-gray-900 dark:text-neutral-100 font-medium whitespace-nowrap">
                                                 {{ number_format((float) $m->monto, 2, ',', '.') }}
-                                                {{ $m->moneda }}
+                                                <span class="text-[10px] text-gray-400">{{ $m->moneda }}</span>
                                             </td>
-
                                             <td
-                                                class="p-3 text-center tabular-nums text-gray-900 dark:text-neutral-100">
+                                                class="p-3 text-right tabular-nums text-emerald-700 dark:text-emerald-400 font-semibold whitespace-nowrap">
                                                 {{ number_format((float) $m->monto_base, 2, ',', '.') }}
-                                                {{ $editorMonedaBase ?? 'BOB' }}
+                                                <span
+                                                    class="text-[10px] opacity-70">{{ $editorMonedaBase ?? 'BOB' }}</span>
                                             </td>
-
-                                            <td class="p-3 text-center w-[50px]">
+                                            <td class="p-3 text-center">
                                                 @if (!empty($m->foto_path))
                                                     <button type="button" wire:click="verFoto({{ $m->id }})"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/40 dark:hover:text-blue-400 transition"
-                                                        title="Ver foto">
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400 transition"
+                                                        title="Ver comprobante">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <rect x="3" y="3" width="18" height="18"
+                                                                rx="2" ry="2" />
                                                             <circle cx="8.5" cy="8.5" r="1.5" />
                                                             <path d="M21 15l-5-5L5 21" />
                                                         </svg>
                                                     </button>
                                                 @else
-                                                    <span class="text-xs text-gray-400">—</span>
+                                                    <span class="text-xs text-gray-300 dark:text-neutral-600">—</span>
                                                 @endif
                                             </td>
-
                                             @can('agente_presupuestos.delete_movement')
-                                            <td class="p-3 text-center w-[50px]">
-                                                <button type="button" x-data
-                                                    x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
-                                                    class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded border border-red-200 text-red-700 hover:bg-red-50
-                                                    dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
-                                                    title="Eliminar">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="2" stroke-linecap="round"
-                                                        stroke-linejoin="round">
-                                                        <path d="M3 6h18" />
-                                                        <path d="M8 6V4h8v2" />
-                                                        <path d="M6 6l1 16h10l1-16" />
-                                                        <path d="M10 11v6" />
-                                                        <path d="M14 11v6" />
-                                                    </svg>
-                                                </button>
-                                            </td>
+                                                <td class="p-3 text-center">
+                                                    <button type="button" x-data
+                                                        x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
+                                                        class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded-full text-red-400 hover:bg-red-50 hover:text-red-600 dark:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                        title="Eliminar">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path d="M3 6h18"></path>
+                                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                                        </svg>
+                                                    </button>
+                                                </td>
                                             @endcan
-                                        </tr>
-
-                                        {{-- FILA OBSERVACIÓN (ABAJO) --}}
-                                        <tr class="bg-gray-50/60 dark:bg-neutral-900/40">
-                                            <td colspan="8"
-                                                class="px-4 py-2 text-xs text-gray-600 dark:text-neutral-300">
-                                                <span
-                                                    class="font-medium text-gray-700 dark:text-neutral-200">Obs:</span>
-                                                <span
-                                                    class="{{ empty($m->observacion) ? 'text-gray-400 dark:text-neutral-500' : '' }}">
-                                                    {{ $m->observacion ?: '—' }}
-                                                </span>
-                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
-
                             </table>
                         </div>
 
@@ -323,7 +288,7 @@
                                             </div>
 
                                             <div class="mt-0.5 text-xs text-gray-500 dark:text-neutral-400">
-                                                {{ $m->fecha?->format('d/m/Y') ?? '-' }}
+                                                {{ $m->fecha?->format('d/m/Y H:i') ?? '-' }}
                                                 <span class="mx-1">•</span>
                                                 Tx: {{ $m->nro_transaccion ?? '—' }}
                                             </div>
@@ -335,14 +300,15 @@
                                             @if (!empty($m->foto_path))
                                                 <button type="button" wire:click="verFoto({{ $m->id }})"
                                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg
-                                   border border-gray-200 text-gray-700 hover:bg-gray-100
-                                   dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
+                                                    border border-gray-200 text-gray-700 hover:bg-gray-100
+                                                    dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
                                                     title="Ver foto">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                         stroke-width="1.8" stroke-linecap="round"
                                                         stroke-linejoin="round">
-                                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                        <rect x="3" y="3" width="18" height="18"
+                                                            rx="2" ry="2" />
                                                         <circle cx="8.5" cy="8.5" r="1.5" />
                                                         <path d="M21 15l-5-5L5 21" />
                                                     </svg>
@@ -351,22 +317,22 @@
 
                                             {{-- ELIMINAR --}}
                                             @can('agente_presupuestos.delete_movement')
-                                            <button type="button" x-data
-                                                x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
-                                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg
+                                                <button type="button" x-data
+                                                    x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
+                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg
                                                 border border-red-200 text-red-700 hover:bg-red-50
                                                 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
-                                                title="Eliminar">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M3 6h18" />
-                                                    <path d="M8 6V4h8v2" />
-                                                    <path d="M6 6l1 16h10l1-16" />
-                                                    <path d="M10 11v6" />
-                                                    <path d="M14 11v6" />
-                                                </svg>
-                                            </button>
+                                                    title="Eliminar">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M3 6h18" />
+                                                        <path d="M8 6V4h8v2" />
+                                                        <path d="M6 6l1 16h10l1-16" />
+                                                        <path d="M10 11v6" />
+                                                        <path d="M14 11v6" />
+                                                    </svg>
+                                                </button>
                                             @endcan
                                         </div>
                                     </div>
@@ -417,12 +383,26 @@
                 {{-- COMPRAS --}}
                 @if ($hasCompras)
                     <div
-                        class="rounded-xl border bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden">
-                        <div class="px-4 py-2 border-b dark:border-neutral-700 flex items-center justify-between">
-                            <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Compras</div>
-                            <div class="text-xs text-gray-500 dark:text-neutral-400">
+                        class="rounded-xl border border-blue-200/60 dark:border-blue-800/30 bg-white dark:bg-neutral-900/40 overflow-hidden shadow-sm mb-4">
+                        <div
+                            class="px-4 py-3 border-b border-blue-100 dark:border-blue-800/30 bg-blue-50/50 dark:bg-blue-900/10 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div
+                                    class="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <circle cx="9" cy="21" r="1"></circle>
+                                        <circle cx="20" cy="21" r="1"></circle>
+                                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <div class="text-sm font-bold text-blue-800 dark:text-blue-400">Compras</div>
+                            </div>
+                            <div class="text-xs text-blue-600 dark:text-blue-400/80">
                                 Total compras (base):
-                                <span class="font-extrabold tabular-nums text-gray-800 dark:text-neutral-100">
+                                <span class="font-bold tabular-nums ml-1 text-blue-700 dark:text-blue-300">
                                     {{ number_format((float) ($editorTotalComprasBase ?? 0), 2, ',', '.') }}
                                 </span>
                             </div>
@@ -432,115 +412,102 @@
                         <div class="hidden md:block overflow-visible">
                             <table class="w-full text-sm">
                                 <thead
-                                    class="sticky top-0 z-10 bg-gray-50 dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-700">
+                                    class="bg-gray-50/50 dark:bg-neutral-800/50 border-b border-gray-100 dark:border-neutral-700/50">
                                     <tr
-                                        class="text-left text-[11px] uppercase tracking-wide text-gray-600 dark:text-neutral-300">
+                                        class="text-left text-[11px] uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold">
                                         <th class="p-3 text-center w-[50px]">Nro</th>
-                                        <th class="p-3 text-center w-[70px]">Fecha</th>
-                                        <th class="p-3">Entidad</th>
-                                        <th class="p-3">Proyecto</th>
-                                        <th class="p-3 text-center">Comprobante</th>
-                                        <th class="p-3 text-center">Monto</th>
-                                        <th class="p-3 text-center">Base</th>
-                                        <th class="p-3 text-center w-[50px]">Foto</th>
+                                        <th class="p-3 text-center w-[90px]">Fecha</th>
+                                        <th class="p-3 min-w-[150px]">Entidad / Proyecto</th>
+                                        <th class="p-3">Comprobante</th>
+                                        <th class="p-3">Observación</th>
+                                        <th class="p-3 text-right">Monto</th>
+                                        <th class="p-3 text-right">Base</th>
+                                        <th class="p-3 text-center w-[60px]">Foto</th>
                                         @can('agente_presupuestos.delete_movement')
-                                        <th class="p-3 text-center w-[50px]">Acc.</th>
+                                            <th class="p-3 text-center w-[60px]">Acc.</th>
                                         @endcan
                                     </tr>
                                 </thead>
-
-                                <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+                                <tbody class="divide-y divide-gray-100 dark:divide-neutral-800/80">
                                     @foreach ($editorCompras ?? [] as $i => $m)
-                                        {{-- FILA PRINCIPAL --}}
-                                        <tr class="hover:bg-gray-50 dark:hover:bg-neutral-800/60 transition">
-                                            <td class="p-3 text-center text-gray-700 dark:text-neutral-200">
+                                        <tr class="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition group">
+                                            <td
+                                                class="p-3 text-center text-gray-400 dark:text-neutral-500 font-medium">
                                                 {{ $i + 1 }}
                                             </td>
-
                                             <td
-                                                class="p-3 text-center whitespace-nowrap text-gray-700 dark:text-neutral-200">
-                                                {{ $m->fecha?->format('d/m/y') ?? '-' }}
+                                                class="p-3 text-gray-600 dark:text-neutral-300 whitespace-nowrap text-center">
+                                                <div class="text-xs">{{ $m->fecha?->format('d/m/Y') ?? '—' }}</div>
+                                                <div class="text-[10px] text-gray-400">
+                                                    {{ $m->fecha?->format('H:i') ?? '' }}</div>
                                             </td>
-
-                                            <td class="p-3 text-gray-700 dark:text-neutral-200">
-                                                {{ $m->entidad?->nombre ?? '—' }}
+                                            <td class="p-3 pr-4">
+                                                <div class="text-sm font-medium text-gray-800 dark:text-neutral-200 line-clamp-1 truncate max-w-[200px]"
+                                                    title="{{ $m->entidad?->nombre }}">
+                                                    {{ $m->entidad?->nombre ?? '—' }}</div>
+                                                <div class="text-[11px] text-gray-500 dark:text-neutral-400 line-clamp-1 truncate max-w-[200px]"
+                                                    title="{{ $m->proyecto?->nombre }}">
+                                                    {{ $m->proyecto?->nombre ?? '—' }}</div>
                                             </td>
-
-                                            <td class="p-3 text-gray-700 dark:text-neutral-200">
-                                                {{ $m->proyecto?->nombre ?? '—' }}
-                                            </td>
-
-                                            <td class="p-3 text-center text-gray-700 dark:text-neutral-200">
-                                                {{ $m->tipo_comprobante ?? '—' }}
+                                            <td class="p-3 text-gray-600 dark:text-neutral-300 text-xs">
+                                                <div class="font-medium text-gray-700 dark:text-neutral-200">
+                                                    {{ $m->tipo_comprobante ?? '—' }}</div>
                                                 @if (!empty($m->nro_comprobante))
-                                                    <span class="text-gray-400">•</span> {{ $m->nro_comprobante }}
+                                                    <div class="text-gray-500">{{ $m->nro_comprobante }}</div>
                                                 @endif
                                             </td>
-
+                                            <td class="p-3 text-gray-500 dark:text-neutral-400 text-xs"
+                                                title="{{ $m->observacion }}">
+                                                <div class="line-clamp-2 min-w-[120px]">{{ $m->observacion ?: '—' }}
+                                                </div>
+                                            </td>
                                             <td
-                                                class="p-3 text-center tabular-nums text-gray-900 dark:text-neutral-100">
+                                                class="p-3 text-right tabular-nums text-gray-900 dark:text-neutral-100 font-medium whitespace-nowrap">
                                                 {{ number_format((float) $m->monto, 2, ',', '.') }}
-                                                {{ $m->moneda }}
+                                                <span class="text-[10px] text-gray-400">{{ $m->moneda }}</span>
                                             </td>
-
                                             <td
-                                                class="p-3 text-center tabular-nums text-gray-900 dark:text-neutral-100">
+                                                class="p-3 text-right tabular-nums text-blue-700 dark:text-blue-400 font-semibold whitespace-nowrap">
                                                 {{ number_format((float) $m->monto_base, 2, ',', '.') }}
-                                                {{ $editorMonedaBase ?? 'BOB' }}
+                                                <span
+                                                    class="text-[10px] opacity-70">{{ $editorMonedaBase ?? 'BOB' }}</span>
                                             </td>
-
-                                            <td class="p-3 text-center w-[50px]">
+                                            <td class="p-3 text-center">
                                                 @if (!empty($m->foto_path))
                                                     <button type="button" wire:click="verFoto({{ $m->id }})"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/40 dark:hover:text-blue-400 transition"
-                                                        title="Ver foto">
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400 transition"
+                                                        title="Ver comprobante">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <rect x="3" y="3" width="18" height="18"
+                                                                rx="2" ry="2" />
                                                             <circle cx="8.5" cy="8.5" r="1.5" />
                                                             <path d="M21 15l-5-5L5 21" />
                                                         </svg>
                                                     </button>
                                                 @else
-                                                    <span class="text-xs text-gray-400">—</span>
+                                                    <span class="text-xs text-gray-300 dark:text-neutral-600">—</span>
                                                 @endif
                                             </td>
-
                                             @can('agente_presupuestos.delete_movement')
-                                            <td class="p-3 text-center w-[50px]">
-                                                <button type="button" x-data
-                                                    x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
-                                                    class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded
-                                                    border border-red-200 text-red-700 hover:bg-red-50
-                                                    dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
-                                                    title="Eliminar">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="2" stroke-linecap="round"
-                                                        stroke-linejoin="round">
-                                                        <path d="M3 6h18" />
-                                                        <path d="M8 6V4h8v2" />
-                                                        <path d="M6 6l1 16h10l1-16" />
-                                                        <path d="M10 11v6" />
-                                                        <path d="M14 11v6" />
-                                                    </svg>
-                                                </button>
-                                            </td>
+                                                <td class="p-3 text-center">
+                                                    <button type="button" x-data
+                                                        x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
+                                                        class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded-full text-red-400 hover:bg-red-50 hover:text-red-600 dark:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                        title="Eliminar">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path d="M3 6h18"></path>
+                                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                                        </svg>
+                                                    </button>
+                                                </td>
                                             @endcan
-                                        </tr>
-
-                                        {{-- FILA OBSERVACIÓN --}}
-                                        <tr class="bg-gray-50/60 dark:bg-neutral-900/40">
-                                            <td colspan="9"
-                                                class="px-4 py-2 text-xs text-gray-600 dark:text-neutral-300">
-                                                <span
-                                                    class="font-medium text-gray-700 dark:text-neutral-200">Obs:</span>
-                                                <span
-                                                    class="{{ empty($m->observacion) ? 'text-gray-400 dark:text-neutral-500' : '' }}">
-                                                    {{ $m->observacion ?: '—' }}
-                                                </span>
-                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -566,7 +533,7 @@
                                             <div class="mt-0.5 text-xs text-gray-500 dark:text-neutral-400">
                                                 {{ $m->entidad?->nombre ?? '—' }}
                                                 <span class="mx-1">•</span>
-                                                {{ $m->fecha?->format('d/m/Y') ?? '-' }}
+                                                {{ $m->fecha?->format('d/m/Y H:i') ?? '-' }}
                                             </div>
 
                                             <div class="mt-0.5 text-xs text-gray-500 dark:text-neutral-400">
@@ -589,7 +556,8 @@
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                         stroke-width="1.8" stroke-linecap="round"
                                                         stroke-linejoin="round">
-                                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                        <rect x="3" y="3" width="18" height="18"
+                                                            rx="2" ry="2" />
                                                         <circle cx="8.5" cy="8.5" r="1.5" />
                                                         <path d="M21 15l-5-5L5 21" />
                                                     </svg>
@@ -597,22 +565,22 @@
                                             @endif
 
                                             @can('agente_presupuestos.delete_movement')
-                                            <button type="button" x-data
-                                                x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
-                                                class="inline-flex items-center justify-center w-9 h-9 rounded-lg
+                                                <button type="button" x-data
+                                                    x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
+                                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg
                                border border-red-200 text-red-700 hover:bg-red-50
                                dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
-                                                title="Eliminar">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M3 6h18" />
-                                                    <path d="M8 6V4h8v2" />
-                                                    <path d="M6 6l1 16h10l1-16" />
-                                                    <path d="M10 11v6" />
-                                                    <path d="M14 11v6" />
-                                                </svg>
-                                            </button>
+                                                    title="Eliminar">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M3 6h18" />
+                                                        <path d="M8 6V4h8v2" />
+                                                        <path d="M6 6l1 16h10l1-16" />
+                                                        <path d="M10 11v6" />
+                                                        <path d="M14 11v6" />
+                                                    </svg>
+                                                </button>
                                             @endcan
                                         </div>
                                     </div>
@@ -676,18 +644,18 @@
                 Cerrar
             </button>
             @can('agente_presupuestos.close_movement')
-            <button type="button" wire:click="cerrarRendicion" wire:loading.attr="disabled"
-                wire:target="cerrarRendicion" @disabled($editorEstado === 'cerrado' || ((float) ($editorSaldo ?? 0)) > 0)
-                class="cursor-pointer px-4 py-2 rounded-lg bg-emerald-600 text-white
+                <button type="button" wire:click="cerrarRendicion" wire:loading.attr="disabled"
+                    wire:target="cerrarRendicion" @disabled($editorEstado === 'cerrado' || ((float) ($editorSaldo ?? 0)) > 0)
+                    class="cursor-pointer px-4 py-2 rounded-lg bg-emerald-600 text-white
            hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
-                <span wire:loading.remove wire:target="cerrarRendicion">
-                    Cerrar rendición
-                </span>
+                    <span wire:loading.remove wire:target="cerrarRendicion">
+                        Cerrar rendición
+                    </span>
 
-                <span wire:loading wire:target="cerrarRendicion">
-                    Cerrando…
-                </span>
-            </button>
+                    <span wire:loading wire:target="cerrarRendicion">
+                        Cerrando…
+                    </span>
+                </button>
             @endcan
         </div>
     @endslot

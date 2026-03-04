@@ -2,13 +2,13 @@
 
 namespace App\Livewire\Admin;
 
+use App\Exports\TransaccionesExport;
 use App\Models\Banco;
+use App\Models\User;
 use App\Services\TransaccionesService;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
-use App\Exports\TransaccionesExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class Transacciones extends Component
@@ -19,20 +19,31 @@ class Transacciones extends Component
     // protected $paginationTheme = 'tailwind';
 
     // Filtros
-    public $moneda = 'BOB';
+    public $moneda = ''; // Por defecto vacio = todas
+
     public $banco_id = '';
+
     public $date_from = '';
+
     public $date_to = '';
+
     public $modulo = '';
+
     public $tipo = '';
+
     public $estado = '';
+
     public $user_id = '';
+
     public $search = '';
+
     public $has_attachment = '';
 
     // Data lists para selects
     public $bancos = [];
+
     public $usuarios = [];
+
     public $modulos_disponibles = ['Facturas', 'Ag. Presupuestos', 'Boletas Garantía', 'Inversiones'];
 
     public function mount()
@@ -47,22 +58,35 @@ class Transacciones extends Component
         $empresaId = auth()->user()->hasRole('Super Admin') ? null : auth()->user()->empresa_id;
 
         $this->bancos = Banco::query()
-            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('active', true)
             ->orderBy('nombre')
             ->get();
 
         $this->usuarios = User::query()
-            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->orderBy('name')
             ->get();
     }
 
     public function updated($propertyName)
     {
+        // Automáticamente asignar moneda si se selecciona banco
+        if ($propertyName === 'banco_id') {
+            if ($this->banco_id) {
+                // Find the selected bank to determine its currency
+                $banco = $this->bancos->firstWhere('id', (int) $this->banco_id);
+                if ($banco) {
+                    $this->moneda = $banco->moneda;
+                }
+            } else {
+                $this->moneda = ''; // Show all if no bank is selected
+            }
+        }
+
         // Reset pagination when any filter changes
         if (in_array($propertyName, [
-            'banco_id', 'date_from', 'date_to', 'modulo', 'tipo', 'estado', 'user_id', 'search', 'has_attachment', 'moneda'
+            'banco_id', 'date_from', 'date_to', 'modulo', 'tipo', 'estado', 'user_id', 'search', 'has_attachment', 'moneda',
         ])) {
             $this->resetPage();
         }
@@ -71,8 +95,8 @@ class Transacciones extends Component
     public function getQuery()
     {
         $empresaId = auth()->user()->hasRole('Super Admin') ? null : auth()->user()->empresa_id;
-        
-        $service = new TransaccionesService();
+
+        $service = new TransaccionesService;
         $query = DB::query()->fromSub($service->obtenerTransaccionesQuery($empresaId), 't');
 
         // Apply filters
@@ -111,11 +135,11 @@ class Transacciones extends Component
         }
 
         if ($this->search) {
-            $searchTerm = '%' . $this->search . '%';
+            $searchTerm = '%'.$this->search.'%';
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('t.concepto', 'like', $searchTerm)
-                  ->orWhere('t.referencia', 'like', $searchTerm)
-                  ->orWhere('t.notas', 'like', $searchTerm);
+                    ->orWhere('t.referencia', 'like', $searchTerm)
+                    ->orWhere('t.notas', 'like', $searchTerm);
             });
         }
 
@@ -124,7 +148,7 @@ class Transacciones extends Component
 
     public function limpiarFiltros()
     {
-        $this->moneda = 'BOB';
+        $this->moneda = '';
         $this->banco_id = '';
         $this->date_from = '';
         $this->date_to = '';
@@ -139,11 +163,10 @@ class Transacciones extends Component
 
     public function exportBrowser()
     {
-        return Excel::download(new TransaccionesExport($this->getQuery()), 'transacciones_' . now()->format('YmdHi') . '.xlsx');
+        return Excel::download(new TransaccionesExport($this->getQuery()), 'transacciones_'.now()->format('YmdHi').'.xlsx');
     }
 
     public function render()
-
     {
         $query = $this->getQuery();
 
@@ -151,18 +174,20 @@ class Transacciones extends Component
         // Hacemos una copia para no afectar el render
         $totalesQuery = clone $query;
         $totales = $totalesQuery->select(
-            DB::raw("SUM(CASE WHEN t.tipo_movimiento = 'INGRESO' THEN t.monto ELSE 0 END) as total_ingresos"),
-            DB::raw("SUM(CASE WHEN t.tipo_movimiento = 'EGRESO' THEN t.monto ELSE 0 END) as total_egresos"),
-            DB::raw("COUNT(*) as total_transacciones")
+            DB::raw("SUM(CASE WHEN t.moneda = 'BOB' AND t.tipo_movimiento = 'INGRESO' THEN t.monto ELSE 0 END) as ingresos_bob"),
+            DB::raw("SUM(CASE WHEN t.moneda = 'USD' AND t.tipo_movimiento = 'INGRESO' THEN t.monto ELSE 0 END) as ingresos_usd"),
+            DB::raw("SUM(CASE WHEN t.moneda = 'BOB' AND t.tipo_movimiento = 'EGRESO' THEN t.monto ELSE 0 END) as egresos_bob"),
+            DB::raw("SUM(CASE WHEN t.moneda = 'USD' AND t.tipo_movimiento = 'EGRESO' THEN t.monto ELSE 0 END) as egresos_usd"),
+            DB::raw('COUNT(*) as total_transacciones')
         )->first();
 
-        $transacciones = $query->orderByDesc('t.fecha')
-                               ->orderByDesc('t.created_at')
-                               ->paginate(20);
+        $transacciones = $query
+            ->orderByDesc('t.created_at')
+            ->paginate(20);
 
         return view('livewire.admin.transacciones', [
             'transacciones' => $transacciones,
-            'totales' => $totales
+            'totales' => $totales,
         ]);
     }
 }

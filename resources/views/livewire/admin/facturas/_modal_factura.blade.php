@@ -28,7 +28,7 @@
 
             {{-- Proyecto --}}
             <div>
-                <label class="block text-sm mb-1">Proyecto<span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Proyecto: <span class="text-red-500">*</span></label>
                 <select wire:model.live="proyecto_id" @disabled(!$entidad_id)
                     class="cursor-pointer w-full rounded border px-3 py-2
                    bg-white dark:bg-neutral-900
@@ -55,7 +55,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             {{-- Número --}}
             <div>
-                <label class="block text-sm mb-1">Nro. Factura<span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Nro. Factura: <span class="text-red-500">*</span></label>
                 <input wire:model="numero" autocomplete="off"
                     class="w-full rounded border px-3 py-2
                        bg-white dark:bg-neutral-900
@@ -70,7 +70,7 @@
 
             {{-- Monto --}}
             <div>
-                <label class="block text-sm mb-1">Monto Facturado<span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Monto Facturado: <span class="text-red-500">*</span></label>
                 <input type="text" inputmode="decimal" wire:model.lazy="monto_facturado_formatted" placeholder="0,00"
                     class="w-full rounded border px-3 py-2
                bg-white dark:bg-neutral-900
@@ -86,7 +86,7 @@
 
             {{-- Fecha --}}
             <div>
-                <label class="block text-sm mb-1">Fecha Emisión <span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Fecha Emisión: <span class="text-red-500">*</span></label>
                 <input type="datetime-local" wire:model="fecha_emision"
                     class="w-full rounded border px-3 py-2
                        bg-white dark:bg-neutral-900
@@ -103,7 +103,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             {{-- Retención % --}}
             <div>
-                <label class="block text-sm mb-1">Retención (%)</label>
+                <label class="block text-sm mb-1">Retención (%):</label>
                 <input type="number" wire:model.live="retencion_porcentaje" disabled
                     class="w-full rounded border px-3 py-2
                        bg-gray-100 dark:bg-neutral-800
@@ -114,7 +114,7 @@
 
             {{-- Retención monto --}}
             <div>
-                <label class="block text-sm mb-1">Retención (Monto)</label>
+                <label class="block text-sm mb-1">Retención (Monto):</label>
                 <input type="number" step="0.01" disabled wire:model="retencion_monto"
                     class="w-full rounded border px-3 py-2
                bg-gray-100 dark:bg-neutral-800
@@ -126,7 +126,7 @@
 
             {{-- Neto --}}
             <div>
-                <label class="block text-sm mb-1">Monto Neto</label>
+                <label class="block text-sm mb-1">Monto Neto:</label>
                 <input type="number" step="0.01" disabled wire:model="monto_neto"
                     class="w-full rounded border px-3 py-2
                bg-gray-100 dark:bg-neutral-800
@@ -139,7 +139,7 @@
 
         {{-- Detalle --}}
         <div>
-            <label class="block text-sm mb-1">Detalle</label>
+            <label class="block text-sm mb-1">Detalle:</label>
             <textarea wire:model="observacion_factura" rows="1"
                 class="w-full rounded border px-3 py-2
                    bg-white dark:bg-neutral-900
@@ -154,7 +154,7 @@
 
         {{-- Comprobante (Imagen o PDF) --}}
         <div>
-            <label class="block text-sm mb-1">Respaldo (Imagen/PDF)</label>
+            <label class="block text-sm mb-1">Respaldo (Imagen/PDF):</label>
             <label
                 class="group h-11 flex items-center justify-between w-full rounded border border-dashed
                 border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900

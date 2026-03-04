@@ -5,8 +5,8 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
                 <label class="block text-sm mb-1">Tipo <span class="text-red-500">*</span></label>
-                <select wire:model="tipo"
-                    class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700">
+                <select wire:model.live="tipo" disabled
+                    class="w-full rounded border px-3 py-2 bg-gray-100 dark:bg-neutral-800 border-gray-300 dark:border-neutral-700 opacity-80 cursor-not-allowed">
                     <option value="normal">Normal</option>
                     <option value="retencion">Retención</option>
                 </select>
@@ -49,7 +49,7 @@
             {{-- Banco --}}
             <div>
                 <label class="block text-sm mb-1">Banco destino <span class="text-red-500">*</span></label>
-                <select wire:model="banco_id"
+                <select wire:model.live="banco_id"
                     class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700">
                     <option value="">Seleccione...</option>
                     @foreach ($bancos as $b)
@@ -154,6 +154,63 @@
                 </div>
             @endif
         </div>
+
+        {{-- Impacto Financiero --}}
+        @if ($facturaId || $banco_id)
+            <div
+                class="p-3 bg-gray-50 border border-gray-200 rounded-lg dark:bg-neutral-800/50 dark:border-neutral-700">
+                <h4
+                    class="text-sm font-semibold text-gray-800 dark:text-neutral-200 mb-3 border-b border-gray-200 dark:border-neutral-700 pb-2">
+                    Impacto financiero</h4>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{-- Columna: Factura --}}
+                    @if ($facturaId)
+                        <div>
+                            <div class="text-xs font-semibold uppercase text-gray-500 dark:text-neutral-400 mb-2">
+                                {{ $tipo === 'retencion' ? 'Retención' : 'Factura' }}
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span class="text-gray-600 dark:text-neutral-400">Saldo actual:</span>
+                                <span class="font-medium text-gray-900 dark:text-white">Bs
+                                    {{ number_format($preview_saldo_actual, 2, ',', '.') }}</span>
+                            </div>
+
+                            <div class="flex items-center justify-between text-sm mt-1">
+                                <span class="text-gray-600 dark:text-neutral-400">Nuevo estimado:</span>
+                                <span
+                                    class="font-semibold {{ $preview_saldo_nuevo <= 0 ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400' }}">
+                                    Bs {{ number_format($preview_saldo_nuevo, 2, ',', '.') }}
+                                </span>
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- Columna: Banco --}}
+                    @if ($banco_id && $preview_banco_nombre)
+                        <div>
+                            <div class="text-xs font-semibold uppercase text-gray-500 dark:text-neutral-400 mb-2">Banco
+                                <span class="text-gray-600 dark:text-neutral-400">{{ $preview_banco_nombre }}</span>
+                            </div>
+                            <div class="flex items-center justify-between text-sm mt-1">
+                                <span class="text-gray-600 dark:text-neutral-400">Saldo actual:</span>
+                                <span class="font-medium text-gray-900 dark:text-white">
+                                    {{ number_format($preview_banco_actual, 2, ',', '.') }}
+                                    {{ $preview_banco_moneda }}
+                                </span>
+                            </div>
+
+                            <div class="flex items-center justify-between text-sm mt-1">
+                                <span class="text-gray-600 dark:text-neutral-400">Nuevo estimado:</span>
+                                <span class="font-semibold text-emerald-600 dark:text-emerald-400">
+                                    {{ number_format($preview_banco_nuevo, 2, ',', '.') }} {{ $preview_banco_moneda }}
+                                </span>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
     </div>
 
     <x-slot:footer>
@@ -164,6 +221,8 @@
         </button>
 
         <button type="button" wire:click="savePago" wire:loading.attr="disabled" wire:target="savePago"
+            x-bind:disabled="!$wire.tipo || !$wire.metodo_pago || !$wire.monto_formatted || !$wire.fecha_pago || ($wire
+                .metodo_pago !== 'efectivo' && (!$wire.banco_id || !$wire.nro_operacion))"
             class="px-4 py-2 cursor-pointer rounded bg-black text-white hover:bg-gray-800
                    disabled:opacity-50 disabled:cursor-not-allowed">
             <span wire:loading.remove wire:target="savePago">Guardar</span>

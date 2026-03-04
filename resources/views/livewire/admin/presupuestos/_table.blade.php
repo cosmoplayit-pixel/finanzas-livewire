@@ -1,27 +1,42 @@
   {{-- TABLA PRINCIPAL --}}
   <div class="hidden md:block border rounded bg-white dark:bg-neutral-800 overflow-hidden">
       <div class="overflow-x-auto">
-          <table class="w-full table-fixed text-sm min-w-[1050px]">
+          <table wire:key="presupuestos-table" class="w-full table-fixed text-sm min-w-[1050px]">
               <thead
-                  class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-200">
+                  class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-700">
                   <tr class="text-left">
-                      <th class="w-[75px] text-center p-2 select-none whitespace-nowrap">Ag.</th>
+                      <th class="w-[75px] text-center p-2 select-none whitespace-nowrap">
+                          <div x-data="{ allOpen: false }" class="flex items-center justify-center gap-2">
+                              <button type="button"
+                                  class="w-7 h-7 inline-flex items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800
+                                dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white transition cursor-pointer"
+                                  title="Desplegar / Ocultar todos"
+                                  @click="
+                                    allOpen = !allOpen;
+                                    $wire.toggleAllPanels(allOpen);
+                                ">
+                                  <span x-show="!allOpen">⇵</span>
+                                  <span x-show="allOpen" x-cloak>×</span>
+                              </button>
+                          </div>
+                      </th>
 
-                      <th class="p-2 cursor-pointer select-none" wire:click="sortBy('agente')">
+                      <th class="p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('agente')">
                           Agente
                           @if ($sortField === 'agente')
                               {{ $sortDirection === 'asc' ? '▲' : '▼' }}
                           @endif
                       </th>
 
-                      <th class="p-2 w-[110px] text-center cursor-pointer select-none" wire:click="sortBy('moneda')">
+                      <th class="p-2 w-[110px] text-center cursor-pointer select-none whitespace-nowrap"
+                          wire:click="sortBy('moneda')">
                           Moneda
                           @if ($sortField === 'moneda')
                               {{ $sortDirection === 'asc' ? '▲' : '▼' }}
                           @endif
                       </th>
 
-                      <th class="p-2 w-[160px] text-right cursor-pointer select-none"
+                      <th class="p-2 w-[160px] text-right cursor-pointer select-none whitespace-nowrap"
                           wire:click="sortBy('total_presupuesto')">
                           Presupuesto
                           @if ($sortField === 'total_presupuesto')
@@ -29,7 +44,7 @@
                           @endif
                       </th>
 
-                      <th class="p-2 w-[160px] text-right cursor-pointer select-none"
+                      <th class="p-2 w-[160px] text-right cursor-pointer select-none whitespace-nowrap"
                           wire:click="sortBy('total_rendido')">
                           Rendido
                           @if ($sortField === 'total_rendido')
@@ -37,7 +52,7 @@
                           @endif
                       </th>
 
-                      <th class="p-2 w-[180px] text-right cursor-pointer select-none"
+                      <th class="p-2 w-[180px] text-right cursor-pointer select-none whitespace-nowrap"
                           wire:click="sortBy('total_saldo')">
                           Saldo por rendir
                           @if ($sortField === 'total_saldo')
@@ -45,7 +60,7 @@
                           @endif
                       </th>
 
-                      <th class="p-2 w-[140px] text-center cursor-pointer select-none"
+                      <th class="p-2 w-[140px] text-center cursor-pointer select-none whitespace-nowrap"
                           wire:click="sortBy('total_presupuestos')">
                           Presupuestos
                           @if ($sortField === 'total_presupuestos')
@@ -64,29 +79,22 @@
                       $open = (bool) ($panelsOpen[$rowKey] ?? false);
                   @endphp
 
-                  <tbody wire:key="agente-block-{{ $rowKey }}"
-                      class="cursor-pointer divide-y divide-gray-200 dark:divide-neutral-200">
+                  <tbody wire:key="agente-block-{{ $rowKey }}" x-data="{ open: @js($open) }"
+                      class="divide-y divide-gray-200 dark:divide-neutral-200">
 
                       {{-- FILA PRINCIPAL --}}
-                      <tr class="hover:bg-gray-50 dark:hover:bg-neutral-900">
-                          <td class="p-2 text-center align-middle">
-                              <button type="button"
-                                  wire:click="togglePanel({{ $agenteId }}, '{{ $rowMoneda }}')"
-                                  wire:loading.attr="disabled"
-                                  wire:target="togglePanel({{ $agenteId }}, '{{ $rowMoneda }}')"
-                                  x-data="{ open: @js($open) }" @click="open = !open"
-                                  class="cursor-pointer w-7 h-7 inline-flex items-center justify-center rounded border border-gray-300 text-gray-700 hover:bg-gray-100 transition-all duration-200 ease-out dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+                      <tr class="hover:bg-gray-50 dark:hover:bg-neutral-900/60 text-gray-700 dark:text-neutral-200 cursor-pointer"
+                          @click="open = !open; $wire.togglePanel({{ $agenteId }}, '{{ $rowMoneda }}')">
 
-                                  <span
-                                      :class="open
-                                          ?
-                                          'rotate-180 scale-110' :
-                                          'rotate-0 scale-100'"
-                                      class="inline-block transform transition-transform duration-200">
-                                      {{ $open ? '−' : '+' }}
-                                  </span>
-                              </button>
-
+                          <td class="p-2 whitespace-nowrap align-middle">
+                              <div class="flex items-center justify-center gap-2">
+                                  <button type="button"
+                                      class="w-6 h-6 inline-flex items-center justify-center rounded border transition border-gray-300 text-gray-600 hover:bg-gray-100 hover:text-gray-800 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-700 dark:hover:text-white cursor-pointer"
+                                      @click.stop="open = !open; $wire.togglePanel({{ $agenteId }}, '{{ $rowMoneda }}')"
+                                      :aria-expanded="open">
+                                      <span x-text="open ? '−' : '+'" x-cloak>+</span>
+                                  </button>
+                              </div>
                           </td>
 
                           <td class="p-2 align-top">
@@ -129,9 +137,9 @@
                           <td class="p-2 text-center">
                               <span
                                   class="text-xs font-semibold px-2 py-1 rounded-full
-                                {{ $rowMoneda === 'USD'
-                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200'
-                                    : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200' }}">
+                              {{ $rowMoneda === 'USD'
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-200'
+                                  : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200' }}">
                                   {{ $rowMoneda }}
                               </span>
                           </td>
@@ -140,7 +148,7 @@
                               {{ number_format((float) $row->total_presupuesto, 2, ',', '.') }}
                           </td>
 
-                          <td class="p-2 text-right tabular-nums font-semibold text-green-500 dark:text-green-300">
+                          <td class="p-2 text-right tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">
                               {{ number_format((float) $row->total_rendido, 2, ',', '.') }}
                           </td>
 
@@ -148,17 +156,17 @@
 
                           <td
                               class="p-2 text-right tabular-nums font-semibold
-                            {{ (float) $row->total_saldo <= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-600 dark:text-red-300' }}">
+                          {{ (float) $row->total_saldo <= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400' }}">
                               {{ number_format((float) $row->total_saldo, 2, ',', '.') }}
                           </td>
 
                           <td class="p-2 text-center">
                               <span
                                   class="inline-flex items-center justify-center min-w-[32px] px-2 py-0.5
-                                    rounded-full text-xs font-bold tabular-nums
-                                    {{ (int) $row->total_presupuestos > 0
-                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200'
-                                        : 'bg-gray-100 text-gray-500 dark:bg-neutral-700 dark:text-neutral-400' }}">
+                                  rounded-full text-xs font-bold tabular-nums
+                                  {{ (int) $row->total_presupuestos > 0
+                                      ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200'
+                                      : 'bg-gray-100 text-gray-500 dark:bg-neutral-700 dark:text-neutral-400' }}">
                                   {{ (int) $row->total_presupuestos }}
                               </span>
                           </td>

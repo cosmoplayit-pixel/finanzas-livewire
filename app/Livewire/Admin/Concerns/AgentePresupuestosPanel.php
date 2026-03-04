@@ -4,6 +4,7 @@ use App\Models\AgentePresupuesto;
 use App\Models\AgenteServicio;
 use App\Models\RendicionService;
 use App\Services\RendicionService as RendicionDomainService;
+use App\Queries\AgentePresupuestosResumenQuery;
 
 trait AgentePresupuestosPanel
 {
@@ -41,6 +42,33 @@ trait AgentePresupuestosPanel
 
         if ($this->panelsOpen[$key]) {
             $this->loadPanel($agenteId, $moneda);
+        }
+    }
+
+    public function toggleAllPanels(bool $expand): void
+    {
+        $filters = [
+            'empresaId' => $this->isAdmin() ? null : $this->userEmpresaId(),
+            'empresaFilter' => $this->empresaFilter,
+            'search' => $this->search,
+            'moneda' => $this->moneda,
+            'soloPendientes' => $this->soloPendientes,
+            'sortField' => $this->sortField,
+            'sortDirection' => $this->sortDirection,
+        ];
+
+        $query = new AgentePresupuestosResumenQuery();
+        $agentesResumen = $query->paginate($filters, $this->perPage);
+
+        foreach ($agentesResumen as $row) {
+            $key = $this->rowKey((int) $row->agente_servicio_id, $row->moneda);
+            $this->panelsOpen[$key] = $expand;
+            
+            if ($expand) {
+                $this->loadPanel((int) $row->agente_servicio_id, $row->moneda);
+            } else {
+                unset($this->panelData[$key], $this->panelTotalFalta[$key], $this->panelAgenteMeta[$key]);
+            }
         }
     }
 

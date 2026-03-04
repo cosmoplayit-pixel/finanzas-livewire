@@ -131,4 +131,11 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware(['permission:inversiones.view'])->group(function () {
         Route::get('/inversiones', InversionesIndex::class)->name('inversiones');
     });
+
+    // =======================
+    // TRANSACCIONES
+    // =======================
+    // Route::middleware(['permission:transacciones.view'])->group(function () {
+        Route::get('/transacciones', \App\Livewire\Admin\Transacciones::class)->name('transacciones');
+    // });
 });

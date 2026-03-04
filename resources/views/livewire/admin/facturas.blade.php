@@ -1,22 +1,24 @@
 {{-- resources/views/livewire/admin/facturas.blade.php --}}
 @section('title', 'Facturas')
 
-<div class="p-0 md:px-0 md:py-6 space-y-4">
+<div>
 
     {{-- Header + acciones --}}
     @include('livewire.admin.facturas._header')
+
+    {{-- Resumen Totales --}}
+    @include('livewire.admin.facturas._summary')
 
     {{-- Filtros --}}
     @include('livewire.admin.facturas._filters')
 
     {{-- Alertas --}}
-    @include('livewire.admin.facturas._alerts')
+    <div class="mb-4">
+        @include('livewire.admin.facturas._alerts')
+    </div>
 
     {{-- Vista Mobile --}}
     @include('livewire.admin.facturas._mobile')
-
-    {{-- Resumen Totales --}}
-    @include('livewire.admin.facturas._summary')
 
     {{-- Tabla Desktop --}}
     @include('livewire.admin.facturas._table')

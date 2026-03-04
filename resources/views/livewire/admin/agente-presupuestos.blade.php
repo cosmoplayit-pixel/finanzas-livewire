@@ -1,15 +1,20 @@
 @section('title', 'Presupuestos y Rendiciones')
 
-<div class="p-0 md:p-6 space-y-4">
+<div>
 
     {{-- HEADER --}}
     @include('livewire.admin.presupuestos._header')
 
-    {{-- ALERTAS --}}
-    @include('livewire.admin.presupuestos._alerts')
+    {{-- SUMMARY --}}
+    @include('livewire.admin.presupuestos._summary')
 
     {{-- FILTROS --}}
     @include('livewire.admin.presupuestos._filters')
+
+    {{-- ALERTAS --}}
+    <div class="mb-4">
+        @include('livewire.admin.presupuestos._alerts')
+    </div>
 
     {{-- TABLA PRINCIPAL + PANEL --}}
     @include('livewire.admin.presupuestos._table')

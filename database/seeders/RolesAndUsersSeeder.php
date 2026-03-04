@@ -211,6 +211,7 @@ class RolesAndUsersSeeder extends Seeder
             'facturas.view',
             'facturas.create',
             'facturas.pay',
+            'facturas.delete',
 
             'agente_presupuestos.view',
             'agente_presupuestos.create',

@@ -220,6 +220,8 @@
 
         <button type="button" wire:click="saveFactura" wire:loading.attr="disabled"
             wire:target="saveFactura,foto_comprobante"
+            x-bind:disabled="!$wire.entidad_id || !$wire.proyecto_id || !$wire.numero || !$wire.monto_facturado_formatted || !$wire
+                .fecha_emision"
             class="w-full sm:w-auto px-4 py-2 rounded inline-flex items-center justify-center gap-2
            bg-black text-white cursor-pointer
            hover:bg-gray-800 transition

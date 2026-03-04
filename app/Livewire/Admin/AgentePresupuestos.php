@@ -30,6 +30,8 @@ class AgentePresupuestos extends Component
     public string $sortField = 'agente'; // agente | moneda | total_presupuesto | total_rendido | total_saldo | total_presupuestos
     public string $sortDirection = 'asc';
 
+    public array $totales = [];
+
     protected function reloadOpenPanels(): void
     {
         foreach ($this->panelsOpen as $key => $isOpen) {
@@ -110,6 +112,7 @@ class AgentePresupuestos extends Component
 
         $query = new AgentePresupuestosResumenQuery();
         $agentesResumen = $query->paginate($filters, $this->perPage);
+        $this->totales = $query->totales($filters);
 
         // Modal data (solo cuando está abierto)
         [$bancos, $agentes] = $this->modalCatalogos();

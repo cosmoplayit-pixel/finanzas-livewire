@@ -74,6 +74,18 @@ trait RendicionEditor
     public ?string $mov_tipo_cambio_formatted = null;
 
     // =========================================================
+    // PREVIEWS
+    // =========================================================
+    public float $mov_saldo_actual_preview = 0;
+    public float $mov_saldo_despues_preview = 0;
+
+    public float $mov_banco_actual_preview = 0;
+    public float $mov_banco_despues_preview = 0;
+    public string $mov_banco_moneda_preview = '';
+
+    public bool $mov_monto_excede_saldo = false;
+
+    // =========================================================
     // NUEVO: TC condicional + conversión realtime
     // =========================================================
     public bool $mov_needs_tc = false;
@@ -133,6 +145,29 @@ trait RendicionEditor
         }
 
         return $base;
+    }
+
+    public function getPuedeGuardarMovimientoProperty(): bool
+    {
+        if ($this->mov_modal_tipo === 'COMPRA') {
+            if (!$this->mov_fecha || !$this->mov_moneda || !$this->mov_monto || !$this->mov_entidad_id || !$this->mov_proyecto_id || !$this->mov_tipo_comprobante) {
+                return false;
+            }
+        } elseif ($this->mov_modal_tipo === 'DEVOLUCION') {
+            if (!$this->mov_moneda || !$this->mov_monto || !$this->mov_banco_id || !$this->mov_nro_transaccion) {
+                return false;
+            }
+        }
+
+        if ($this->mov_needs_tc && !$this->mov_tipo_cambio) {
+            return false;
+        }
+
+        if ($this->mov_monto_excede_saldo) {
+            return false;
+        }
+
+        return true;
     }
 
     // =========================================================
@@ -367,14 +402,19 @@ trait RendicionEditor
         if (!$id) {
             $this->mov_moneda = $this->editorMonedaBase ?: 'BOB';
             $this->mov_tipo_cambio = null;
+            $this->mov_banco_actual_preview = 0;
+            $this->mov_banco_moneda_preview = '';
             $this->recalcMovimientoConversion();
             return;
         }
 
         $b = collect($this->editorBancos)->first(fn($x) => (int) $x['id'] === $id);
 
-        if ($b && !empty($b['moneda'])) {
-            $this->mov_moneda = (string) $b['moneda'];
+        if ($b) {
+            if (!empty($b['moneda'])) {
+                $this->mov_moneda = (string) $b['moneda'];
+                $this->mov_banco_moneda_preview = (string) $b['moneda'];
+            }
         }
 
         $this->mov_tipo_cambio = null;
@@ -387,6 +427,13 @@ trait RendicionEditor
     // =========================================================
     // RECALCULO REALTIME
     // =========================================================
+    public function updated($property, $value)
+    {
+        if (in_array($property, ['mov_moneda', 'mov_monto', 'mov_monto_formatted', 'mov_tipo_cambio', 'mov_tipo_cambio_formatted', 'mov_banco_id'])) {
+            $this->recalcMovimientoConversion();
+        }
+    }
+
     public function updatedMovMoneda(): void
     {
         $this->recalcMovimientoConversion();
@@ -413,11 +460,13 @@ trait RendicionEditor
         if (!$this->mov_needs_tc) {
             $this->mov_tipo_cambio = null;
             $this->mov_monto_base_preview = $monto > 0 ? number_format($monto, 2, ',', '.') : null;
+            $this->calcularImpactoFinancieroMovimiento();
             return;
         }
 
         if ($monto <= 0 || $tc <= 0) {
             $this->mov_monto_base_preview = null;
+            $this->calcularImpactoFinancieroMovimiento();
             return;
         }
 
@@ -431,6 +480,56 @@ trait RendicionEditor
 
         $this->mov_monto_base_preview =
             $baseAmount !== null ? number_format((float) $baseAmount, 2, ',', '.') : null;
+
+        $this->calcularImpactoFinancieroMovimiento();
+    }
+
+    protected function calcularImpactoFinancieroMovimiento(): void
+    {
+        $montoBaseFloat = 0;
+        
+        // Use mov_monto_formatted if mov_monto is empty, since updated string might not be parsed on all lifecycles 
+        $montoSource = $this->mov_monto ?: $this->mov_monto_formatted;
+
+        if ($this->mov_needs_tc) {
+            $base = strtoupper((string) ($this->editorMonedaBase ?: 'BOB'));
+            $mov = strtoupper((string) ($this->mov_moneda ?: $base));
+            $monto = $this->toFloatDecimal($montoSource);
+            $tc = $this->toFloatDecimal($this->mov_tipo_cambio ?: $this->mov_tipo_cambio_formatted);
+
+            if ($base === 'BOB' && $mov === 'USD') {
+                $montoBaseFloat = $monto * $tc;
+            } elseif ($base === 'USD' && $mov === 'BOB') {
+                $montoBaseFloat = $tc > 0 ? $monto / $tc : 0;
+            }
+        } else {
+            $montoBaseFloat = $this->toFloatDecimal($montoSource);
+        }
+
+        // SALDO "QUE SE DEBE" O PRESUPUESTO RESTANTE:
+        $this->mov_saldo_actual_preview = round((float) ($this->editorSaldo ?? 0), 2);
+        $this->mov_saldo_despues_preview = round($this->mov_saldo_actual_preview - $montoBaseFloat, 2);
+
+        $this->mov_monto_excede_saldo = $this->mov_saldo_despues_preview < 0;
+
+        // BANCO (SÓLO DEVOLUCIÓN)
+        $this->mov_banco_actual_preview = 0;
+        $this->mov_banco_despues_preview = 0;
+        $this->mov_banco_moneda_preview = '';
+
+        if ($this->mov_modal_tipo === 'DEVOLUCION' && $this->mov_banco_id) {
+            $b = Banco::query()->find($this->mov_banco_id);
+            if ($b) {
+                $this->mov_banco_moneda_preview = (string) $b->moneda;
+                $this->mov_banco_actual_preview = round((float) ($b->monto ?? 0), 2);
+
+                // Importante: Si la moneda del banco es igual a la del movimiento, 
+                // entonces la suma en el banco es el '$monto' (no convertido).
+                // Pero como la vista del banco se calcula en la moneda misma del banco, y aquí el sistema lo valida:
+                $montoMov = $this->toFloatDecimal($montoSource);
+                $this->mov_banco_despues_preview = round($this->mov_banco_actual_preview + $montoMov, 2);
+            }
+        }
     }
 
     // =========================================================
@@ -566,6 +665,13 @@ trait RendicionEditor
 
         $this->mov_needs_tc = false;
         $this->mov_monto_base_preview = null;
+
+        $this->mov_saldo_actual_preview = round((float) ($this->editorSaldo ?? 0), 2);
+        $this->mov_saldo_despues_preview = $this->mov_saldo_actual_preview;
+        $this->mov_banco_actual_preview = 0;
+        $this->mov_banco_despues_preview = 0;
+        $this->mov_banco_moneda_preview = '';
+        $this->mov_monto_excede_saldo = false;
 
         $this->mov_monto_formatted = null;
         $this->mov_tipo_cambio_formatted = null;

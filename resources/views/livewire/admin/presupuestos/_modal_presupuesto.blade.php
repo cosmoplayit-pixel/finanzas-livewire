@@ -2,17 +2,13 @@
 <x-ui.modal wire:key="presupuesto-modal-{{ $openModal ? 'open' : 'closed' }}" model="openModal"
     title="Registrar Presupuesto" maxWidth="sm:max-w-xl md:max-w-2xl" onClose="closeModal">
 
-    <div class="space-y-3 sm:space-y-4">
+    <div class="space-y-2">
 
-        {{-- ORIGEN Y DESTINO --}}
-        <div class="rounded-lg border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
-            <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b dark:border-neutral-700">
-                <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">
-                    Origen y destino de fondos
-                </div>
-            </div>
+        {{-- FORM (SIN “CAJAS” EXTRA) --}}
+        <div class="space-y-2">
 
-            <div class="p-3 sm:p-4 space-y-3 sm:space-y-4">
+            {{-- FILA 1 --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 {{-- BANCO --}}
                 <div>
@@ -23,9 +19,9 @@
                     <select wire:model.live="banco_id"
                         class="w-full rounded-lg border px-3 py-2
                                bg-white dark:bg-neutral-900
-                               border-gray-300 dark:border-neutral-700
+                               border-gray-300/60 dark:border-neutral-700/60
                                text-gray-900 dark:text-neutral-100
-                               focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                               focus:outline-none focus:ring-2 focus:ring-gray-500/40">
                         <option value="">Seleccione…</option>
                         @foreach ($bancos as $b)
                             <option value="{{ $b->id }}">
@@ -48,9 +44,9 @@
                     <select wire:model.live="agente_servicio_id"
                         class="w-full rounded-lg border px-3 py-2
                                bg-white dark:bg-neutral-900
-                               border-gray-300 dark:border-neutral-700
+                               border-gray-300/60 dark:border-neutral-700/60
                                text-gray-900 dark:text-neutral-100
-                               focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                               focus:outline-none focus:ring-2 focus:ring-gray-500/40">
                         <option value="">Seleccione…</option>
                         @foreach ($agentes as $a)
                             <option value="{{ $a->id }}">
@@ -63,81 +59,74 @@
                         <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                     @enderror
                 </div>
-
-            </div>
-        </div>
-
-        {{-- DATOS DE LA OPERACIÓN --}}
-        <div class="rounded-lg border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
-            <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b dark:border-neutral-700">
-                <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">
-                    Datos de la operación
-                </div>
             </div>
 
-            <div class="p-3 sm:p-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {{-- FILA 2 --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
-                    <div>
-                        <label class="block text-sm mb-1">
-                            Monto <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" inputmode="decimal" wire:model.blur="monto_formatted" placeholder="0,00"
-                            class="w-full rounded-lg border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
-                        @error('monto')
-                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm mb-1">
-                            Fecha <span class="text-red-500">*</span>
-                        </label>
-                        <input type="datetime-local" wire:model="fecha_presupuesto"
-                            class="w-full rounded-lg border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
-                        @error('fecha_presupuesto')
-                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm mb-1">
-                            Nro. Transacción <span class="text-red-500">*</span>
-                        </label>
-                        <input wire:model.live="nro_transaccion" placeholder="Ej: 156285"
-                            class="w-full rounded-lg border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
-                        @error('nro_transaccion')
-                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
+                {{-- MONTO --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Monto <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" inputmode="decimal" wire:model.blur="monto_formatted" placeholder="0,00"
+                        class="w-full rounded-lg border px-3 py-2
+                               bg-white dark:bg-neutral-900
+                               border-gray-300/60 dark:border-neutral-700/60
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                    @error('monto')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
                 </div>
 
-                @if ($monto_excede_saldo)
-                    <div class="mt-3 text-xs text-red-600 dark:text-red-400">
-                        El monto no puede ser mayor al saldo actual del banco.
-                    </div>
-                @endif
+                {{-- FECHA --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Fecha <span class="text-red-500">*</span>
+                    </label>
+                    <input type="datetime-local" wire:model="fecha_presupuesto"
+                        class="w-full rounded-lg border px-3 py-2
+                               bg-white dark:bg-neutral-900
+                               border-gray-300/60 dark:border-neutral-700/60
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                    @error('fecha_presupuesto')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
 
-                <p class="mt-3 text-xs text-gray-500 dark:text-neutral-400">
-                    <span class="text-red-500">*</span> Campos obligatorios.
-                </p>
+                {{-- NRO TRANSACCIÓN --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Nro. Transacción <span class="text-red-500">*</span>
+                    </label>
+                    <input wire:model.live="nro_transaccion" placeholder="Ej: 156285"
+                        class="w-full rounded-lg border px-3 py-2
+                               bg-white dark:bg-neutral-900
+                               border-gray-300/60 dark:border-neutral-700/60
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                    @error('nro_transaccion')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
             </div>
+
+            @if ($monto_excede_saldo)
+                <div class="text-xs text-red-600 dark:text-red-400">
+                    El monto no puede ser mayor al saldo actual del banco.
+                </div>
+            @endif
+
+            <p class="text-xs text-gray-500 dark:text-neutral-400">
+                <span class="text-red-500">*</span> Campos obligatorios.
+            </p>
+
         </div>
 
-        {{-- IMPACTO FINANCIERO --}}
+        {{-- IMPACTO FINANCIERO (NO TOCAR) --}}
         <div class="rounded-lg border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden">
             <div class="px-3 sm:px-4 py-2 border-b dark:border-neutral-700">
                 <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">
@@ -198,26 +187,25 @@
     </div>
 
     @slot('footer')
-        {{-- Footer mobile-first: Agregar arriba, Cancelar abajo --}}
         <div class="flex flex-col gap-2 w-full sm:flex-row sm:justify-end sm:gap-3">
 
-             <button type="button" wire:click="closeModal"
+            <button type="button" wire:click="closeModal"
                 class="w-full sm:w-auto px-4 py-2 rounded-lg border cursor-pointer
                        border-gray-300 dark:border-neutral-700
                        text-gray-700 dark:text-neutral-200
                        hover:bg-gray-100 dark:hover:bg-neutral-800">
                 Cancelar
             </button>
-            
+
             <button type="button" wire:click="savePresupuesto" wire:loading.attr="disabled" wire:target="savePresupuesto"
                 @disabled(!$this->puedeGuardar)
                 class="w-full sm:w-auto px-4 py-2 rounded-lg cursor-pointer
                        bg-black text-white hover:opacity-90
                        disabled:opacity-50 disabled:cursor-not-allowed">
-                <span wire:loading.remove wire:target="savePresupuesto">Agregar</span>
+                <span wire:loading.remove wire:target="savePresupuesto">Guardar</span>
                 <span wire:loading wire:target="savePresupuesto">Guardando…</span>
-            </button>    
-            
+            </button>
+
         </div>
     @endslot
 </x-ui.modal>

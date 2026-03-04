@@ -123,7 +123,7 @@
             @can('facturas.view')
                 <flux:sidebar.item icon="document-text" :href="route('facturas')"
                     :current="request()->routeIs('facturas')" :badge="$navCounts['facturas'] ?? null" wire:navigate>
-                    {{ __('Proy. Facturas') }}
+                    {{ __('Facturas') }}
                 </flux:sidebar.item>
             @endcan
 
@@ -131,7 +131,7 @@
                 <flux:sidebar.item icon="user-group" :href="route('agente_presupuestos')"
                     :current="request()->routeIs('agente_presupuestos')"
                     :badge="$navCounts['agente_presupuestos'] ?? null" wire:navigate>
-                    {{ __('Ag. Presupuestos') }}
+                    {{ __('Presupuestos') }}
                 </flux:sidebar.item>
             @endcan
 
@@ -146,9 +146,15 @@
             @can('inversiones.view')
                 <flux:sidebar.item icon="currency-dollar" :href="route('inversiones')"
                     :current="request()->routeIs('inversiones')" :badge="$navCounts['inversiones'] ?? null" wire:navigate>
-                    {{ __('Inversiones') }}
+                    {{ __('Interes') }}
                 </flux:sidebar.item>
             @endcan
+
+            {{-- TRANSACCIONES --}}
+            <flux:sidebar.item icon="arrows-right-left" :href="route('transacciones')"
+                :current="request()->routeIs('transacciones')" wire:navigate>
+                {{ __('Transacciones') }}
+            </flux:sidebar.item>
 
         </flux:sidebar.nav>
 

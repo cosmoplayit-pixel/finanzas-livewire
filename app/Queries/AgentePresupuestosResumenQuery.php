@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 class AgentePresupuestosResumenQuery
 {
-    public function paginate(array $filters, int $perPage = 10)
+    private function buildBaseQuery(array $filters)
     {
         $empresaId = $filters['empresaId'] ?? null;
         $empresaFilter = $filters['empresaFilter'] ?? 'all';
@@ -16,22 +16,8 @@ class AgentePresupuestosResumenQuery
 
         $soloPendientes = (bool) ($filters['soloPendientes'] ?? true);
 
-        $sortField = (string) ($filters['sortField'] ?? 'agente');
-        $sortDirection = (string) ($filters['sortDirection'] ?? 'asc');
-        $dir = $sortDirection === 'desc' ? 'desc' : 'asc';
-
         $q = DB::table('agente_presupuestos as ap')
             ->join('agentes_servicio as a', 'a.id', '=', 'ap.agente_servicio_id')
-            ->select([
-                'ap.agente_servicio_id',
-                'a.nombre as agente_nombre',
-                'a.ci as agente_ci',
-                'ap.moneda',
-                DB::raw('SUM(ap.monto) as total_presupuesto'),
-                DB::raw('SUM(ap.rendido_total) as total_rendido'),
-                DB::raw('SUM(ap.saldo_por_rendir) as total_saldo'),
-                DB::raw('COUNT(ap.id) as total_presupuestos'),
-            ])
             ->where('ap.active', 1);
 
         // EMPRESA
@@ -64,6 +50,28 @@ class AgentePresupuestosResumenQuery
             $q->where('ap.estado', 'cerrado'); // cerrados
         }
 
+        return $q;
+    }
+
+    public function paginate(array $filters, int $perPage = 10)
+    {
+        $sortField = (string) ($filters['sortField'] ?? 'agente');
+        $sortDirection = (string) ($filters['sortDirection'] ?? 'asc');
+        $dir = $sortDirection === 'desc' ? 'desc' : 'asc';
+
+        $q = $this->buildBaseQuery($filters);
+
+        $q->select([
+            'ap.agente_servicio_id',
+            'a.nombre as agente_nombre',
+            'a.ci as agente_ci',
+            'ap.moneda',
+            DB::raw('SUM(ap.monto) as total_presupuesto'),
+            DB::raw('SUM(ap.rendido_total) as total_rendido'),
+            DB::raw('SUM(ap.saldo_por_rendir) as total_saldo'),
+            DB::raw('COUNT(ap.id) as total_presupuestos'),
+        ]);
+
         // GROUP (una fila por agente + moneda)
         $q->groupBy('ap.agente_servicio_id', 'a.nombre', 'a.ci', 'ap.moneda');
 
@@ -85,5 +93,24 @@ class AgentePresupuestosResumenQuery
         }
 
         return $q->paginate($perPage);
+    }
+
+    public function totales(array $filters): array
+    {
+        $q = $this->buildBaseQuery($filters);
+
+        $row = $q->selectRaw('
+            COALESCE(SUM(ap.monto), 0) as presupuesto_total,
+            COALESCE(SUM(ap.rendido_total), 0) as rendido_total,
+            COALESCE(SUM(ap.saldo_por_rendir), 0) as saldo_total,
+            COUNT(ap.id) as cantidad_total
+        ')->first();
+
+        return [
+            'presupuesto_total' => round((float) ($row->presupuesto_total ?? 0), 2),
+            'rendido_total' => round((float) ($row->rendido_total ?? 0), 2),
+            'saldo_total' => round((float) ($row->saldo_total ?? 0), 2),
+            'cantidad_total' => (int) ($row->cantidad_total ?? 0),
+        ];
     }
 }

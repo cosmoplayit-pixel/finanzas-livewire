@@ -3,53 +3,7 @@
      (Respeta filtros porque usa $totales calculado en el backend)
      ============================ --}}
 
- {{-- RESUMEN TOTALES (MOBILE) --}}
- <div class="md:hidden">
-     <div class="border rounded-lg bg-white dark:bg-neutral-900 dark:border-neutral-800 overflow-hidden">
-         <div class="px-4 py-3 border-b border-gray-200 dark:border-neutral-800">
-             <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">
-                 Resumen (Totales)
-             </div>
-             <div class="text-xs text-gray-500 dark:text-neutral-400">
-                 Calculado según los filtros actuales
-             </div>
-         </div>
 
-         <div class="p-4 grid grid-cols-1 gap-3">
-             {{-- Total facturado --}}
-             <div class="flex items-center justify-between gap-3">
-                 <div class="text-xs text-gray-500 dark:text-neutral-400">Monto total facturado</div>
-                 <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                     Bs {{ number_format((float) ($totales['facturado'] ?? 0), 2, ',', '.') }}
-                 </div>
-             </div>
-
-             {{-- Total pagado --}}
-             <div class="flex items-center justify-between gap-3">
-                 <div class="text-xs text-gray-500 dark:text-neutral-400">Monto total pagado</div>
-                 <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                     Bs {{ number_format((float) ($totales['pagado_total'] ?? 0), 2, ',', '.') }}
-                 </div>
-             </div>
-
-             {{-- Saldo total --}}
-             <div class="flex items-center justify-between gap-3">
-                 <div class="text-xs text-gray-500 dark:text-neutral-400">Saldo total</div>
-                 <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                     Bs {{ number_format((float) ($totales['saldo'] ?? 0), 2, ',', '.') }}
-                 </div>
-             </div>
-
-             {{-- Retención pendiente total --}}
-             <div class="flex items-center justify-between gap-3">
-                 <div class="text-xs text-gray-500 dark:text-neutral-400">Retención pendiente total</div>
-                 <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                     Bs {{ number_format((float) ($totales['retencion_pendiente'] ?? 0), 2, ',', '.') }}
-                 </div>
-             </div>
-         </div>
-     </div>
- </div>
 
  {{-- MOBILE: CARDS (md:hidden) --}}
  <div class="space-y-3 md:hidden mt-3">
@@ -74,8 +28,7 @@
              $bloqueado = $saldo <= 0 && $retPend <= 0;
          @endphp
 
-         <div x-data="{ open: false }"
-             class="border rounded-lg p-4 bg-white dark:bg-neutral-900 dark:border-neutral-800">
+         <div x-data="{ open: false }" class="border rounded-lg p-4 bg-white dark:bg-neutral-900 dark:border-neutral-800">
              {{-- Header card: Proyecto + Monto --}}
              <div class="flex items-start justify-between gap-3">
                  <div class="min-w-0">
@@ -139,16 +92,22 @@
                          $isImageFactMob = in_array($extFactMob, ['jpg', 'jpeg', 'png']);
                      @endphp
                      <div class="mt-1 flex items-center gap-1 text-xs">
-                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                             <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-500"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                             stroke-linecap="round" stroke-linejoin="round">
+                             <path
+                                 d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
                          </svg>
                          @if ($isImageFactMob)
-                             <button type="button" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+                             <button type="button"
+                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
                                  @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $f->foto_comprobante) }}' })">
                                  Ver Respaldo
                              </button>
                          @else
-                             <a href="{{ asset('storage/' . $f->foto_comprobante) }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline">
+                             <a href="{{ asset('storage/' . $f->foto_comprobante) }}" target="_blank"
+                                 rel="noopener noreferrer"
+                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline">
                                  Abrir PDF
                              </a>
                          @endif
@@ -374,18 +333,27 @@
                                      <div class="text-xs text-gray-500 dark:text-neutral-400">Respaldo</div>
                                      <div class="text-xs">
                                          @if ($isImagePagoMob)
-                                             <button type="button" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1"
+                                             <button type="button"
+                                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1"
                                                  @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $pg->foto_comprobante) }}' })">
-                                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                                     stroke="currentColor">
+                                                     <path stroke-linecap="round" stroke-linejoin="round"
+                                                         stroke-width="2"
+                                                         d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                  </svg>
                                                  Ver Imagen
                                              </button>
                                          @else
-                                             <a href="{{ asset('storage/' . $pg->foto_comprobante) }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1">
-                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                                                </svg>
+                                             <a href="{{ asset('storage/' . $pg->foto_comprobante) }}"
+                                                 target="_blank" rel="noopener noreferrer"
+                                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1">
+                                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                                     stroke="currentColor">
+                                                     <path stroke-linecap="round" stroke-linejoin="round"
+                                                         stroke-width="2"
+                                                         d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                 </svg>
                                                  Abrir PDF
                                              </a>
                                          @endif

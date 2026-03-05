@@ -163,14 +163,35 @@ class TransaccionesService
                     ELSE 'EGRESO'
                 END as tipo_movimiento,
                 im.fecha_pago as fecha,
-                im.monto_total as monto,
+                COALESCE(im.monto_total, im.monto_utilidad, 0) as monto,
                 b.moneda as moneda,
                 im.banco_id,
-                CONCAT('Movimiento de Inversión (', im.tipo, ') - ', i.codigo) as concepto,
-                im.nro as referencia,
+                CONCAT('Inversión ', 
+                    CASE i.tipo 
+                        WHEN 'PRIVADO' THEN 'Privada' 
+                        WHEN 'BANCO' THEN 'Banca' 
+                        ELSE '' 
+                    END, ' - ', 
+                    CASE im.tipo 
+                        WHEN 'CAPITAL_INICIAL' THEN 'Capital Inicial'
+                        WHEN 'INGRESO_CAPITAL' THEN 'Ingreso Capital'
+                        WHEN 'PAGO_UTILIDAD' THEN 'Pago Utilidad'
+                        WHEN 'DEVOLUCION_CAPITAL' THEN 'Devolución Capital'
+                        ELSE im.tipo
+                    END,
+                    ' #', i.codigo) as concepto,
+                CONCAT_WS(' - ', 
+                    IF(im.nro IS NOT NULL AND im.nro != '', CONCAT('Nro: ', im.nro), NULL), 
+                    i.nombre_completo
+                ) as referencia,
                 im.estado as estado,
                 im.comprobante_imagen_path as comprobante,
-                im.descripcion as notas,
+                CONCAT_WS(' | ', 
+                    NULLIF(im.descripcion, ''), 
+                    CASE WHEN im.tipo IN ('CAPITAL_INICIAL', 'PAGO_UTILIDAD') THEN 
+                        CONCAT('Interés/Utilidad: ', ROUND(IFNULL(i.porcentaje_utilidad, 0) + IFNULL(i.tasa_anual, 0), 2), '%')
+                    ELSE NULL END
+                ) as notas,
                 CONCAT('/inversiones/', i.id, '/detalles') as url_origen,
                 im.created_at,
                 i.empresa_id

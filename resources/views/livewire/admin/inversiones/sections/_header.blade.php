@@ -1,61 +1,28 @@
 {{-- ===================== HEADER (Plantilla estilo Agente Presupuesto) ===================== --}}
-
-{{-- MOBILE (<= md): título + botón arriba a la derecha, descripción compacta --}}
-<div class="md:hidden">
-    <div class="flex items-start justify-between gap-3">
-        <div class="min-w-0">
-            <h1 class="text-lg font-semibold leading-tight text-gray-900 dark:text-neutral-100">
-                Inversiones
-            </h1>
-            <p class="mt-1 text-xs text-gray-500 dark:text-neutral-400 line-clamp-2">
-                Gestión de inversiones (creación, movimientos de capital y pago de utilidades) con historial por
-                registro.
-            </p>
-        </div>
-
-        @can('inversiones.create')
-            <button type="button" wire:click="$dispatch('openCreateInversion')"
-                class="shrink-0 inline-flex items-center gap-2 rounded-lg px-3 py-2
-                       text-sm font-semibold
-                       bg-black text-white hover:bg-gray-800 transition
-                       disabled:opacity-50 disabled:cursor-not-allowed">
-                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path d="M10 4a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V5a1 1 0 011-1z" />
-                </svg>
-                <span>Nuevo</span>
-            </button>
-        @endcan
-    </div>
-</div>
-
-{{-- DESKTOP (>= md): layout clásico con botón a la derecha --}}
-<div class="hidden md:flex md:items-start md:justify-between md:gap-6">
-    <div class="min-w-0">
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-neutral-100">
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-neutral-100 flex items-center gap-2">
+            <svg class="h-6 w-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6">
+                </path>
+            </svg>
             Inversiones
         </h1>
-        <p class="mt-1 text-sm text-gray-500 dark:text-neutral-400">
+        <p class="text-sm text-gray-500 mt-1 dark:text-neutral-400">
             Gestión de inversiones (creación, movimientos de capital y pago de utilidades) con historial por registro.
         </p>
     </div>
-    @can('inversiones.create')
-        <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
-            class="inline-flex items-center justify-center gap-2
-               px-4 py-2.5 rounded-lg
-               bg-black text-white hover:bg-gray-800 transition
-               cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path d="M10 4a1 1 0 011 1v4h4a1 1 0 110 2h-4v4a1 1 0 11-2 0v-4H5a1 1 0 110-2h4V5a1 1 0 011-1z" />
-            </svg>
-            <span wire:loading.remove wire:target="openCreate">
-                Nueva Inversión
-            </span>
 
-            <span wire:loading wire:target="openCreate">
-                Abriendo…
-            </span>
-        </button>
-    @endcan
-
-
+    <div class="flex gap-2">
+        @can('inversiones.create')
+            <button wire:click="$dispatch('openCreateInversion')" wire:loading.attr="disabled" wire:target="openCreate"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>Nueva Inversión</span>
+            </button>
+        @endcan
+    </div>
 </div>

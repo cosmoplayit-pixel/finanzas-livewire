@@ -2,6 +2,7 @@
 <div class="p-0 md:p-6 space-y-4">
     @include('livewire.admin.inversiones.sections._header')
     @include('livewire.admin.inversiones.sections._alerts')
+    @include('livewire.admin.inversiones.sections._summary')
     @include('livewire.admin.inversiones.sections._filters')
     @include('livewire.admin.inversiones.sections._table')
     @include('livewire.admin.inversiones.sections._mobile_table')

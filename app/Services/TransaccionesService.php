@@ -171,26 +171,26 @@ class TransaccionesService
                         WHEN 'PRIVADO' THEN 'Privada' 
                         WHEN 'BANCO' THEN 'Banca' 
                         ELSE '' 
-                    END, ' - ', 
+                    END, ' - Codigo:  ', i.codigo,
                     CASE im.tipo 
-                        WHEN 'CAPITAL_INICIAL' THEN 'Capital Inicial'
-                        WHEN 'INGRESO_CAPITAL' THEN 'Ingreso Capital'
-                        WHEN 'PAGO_UTILIDAD' THEN 'Pago Utilidad'
-                        WHEN 'DEVOLUCION_CAPITAL' THEN 'Devolución Capital'
-                        ELSE im.tipo
-                    END,
-                    ' #', i.codigo) as concepto,
-                CONCAT_WS(' - ', 
-                    IF(im.nro IS NOT NULL AND im.nro != '', CONCAT('Nro: ', im.nro), NULL), 
-                    i.nombre_completo
-                ) as referencia,
+                        WHEN 'CAPITAL_INICIAL' THEN ' - Capital Inicial'
+                        WHEN 'INGRESO_CAPITAL' THEN ' - Ingreso Capital'
+                        WHEN 'PAGO_UTILIDAD' THEN CONCAT(' - ', NULLIF(im.descripcion, ''))
+                        WHEN 'DEVOLUCION_CAPITAL' THEN ' - Devolución Capital'
+                        WHEN 'BANCO_PAGO' THEN CONCAT(' - Pago Cuota #', LPAD(im.nro - 1, 2, '0'))
+                        ELSE CONCAT(' - ', im.tipo)
+                    END) as concepto,
+                CONCAT_WS(' - ', COALESCE(NULLIF(im.comprobante, ''), '0'), i.nombre_completo) as referencia,
                 im.estado as estado,
                 im.comprobante_imagen_path as comprobante,
                 CONCAT_WS(' | ', 
-                    NULLIF(im.descripcion, ''), 
-                    CASE WHEN im.tipo IN ('CAPITAL_INICIAL', 'PAGO_UTILIDAD') THEN 
-                        CONCAT('Interés/Utilidad: ', ROUND(IFNULL(i.porcentaje_utilidad, 0) + IFNULL(i.tasa_anual, 0), 2), '%')
-                    ELSE NULL END
+                    CASE 
+                        WHEN im.tipo = 'CAPITAL_INICIAL' THEN 
+                            CONCAT('Interés: ', ROUND(IFNULL(i.porcentaje_utilidad, 0) + IFNULL(i.tasa_anual, 0), 2), '%')
+                        WHEN im.tipo IN ('PAGO_UTILIDAD', 'BANCO_PAGO') THEN 
+                            CONCAT('Interés: ', ROUND(IFNULL(im.porcentaje_utilidad, 0), 2), '%')
+                        ELSE NULL 
+                    END
                 ) as notas,
                 CONCAT('/inversiones/', i.id, '/detalles') as url_origen,
                 im.created_at,
@@ -198,7 +198,7 @@ class TransaccionesService
             ")
             ->join('inversions as i', 'im.inversion_id', '=', 'i.id')
             ->join('bancos as b', 'im.banco_id', '=', 'b.id')
-            ->whereIn('im.tipo', ['CAPITAL_INICIAL', 'INGRESO_CAPITAL', 'PAGO_UTILIDAD', 'DEVOLUCION_CAPITAL'])
+            ->whereIn('im.tipo', ['CAPITAL_INICIAL', 'INGRESO_CAPITAL', 'PAGO_UTILIDAD', 'DEVOLUCION_CAPITAL', 'BANCO_PAGO'])
             ->where('im.estado', 'PAGADO') // El usuario dice "cuando pasa a pagado"
             ->whereNotNull('im.banco_id');
 

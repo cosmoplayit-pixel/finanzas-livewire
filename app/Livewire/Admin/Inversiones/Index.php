@@ -15,11 +15,12 @@ class Index extends Component
     protected $paginationTheme = 'tailwind';
 
     // =========================
-    // Filtros
-    // =========================
     public string $search = '';
     public string $fTipo = '';
     public string $fEstado = 'ACTIVA'; // ACTIVA | CERRADA | PENDIENTE (privado: utilidad pendiente | banco: pago pendiente)
+    public string $moneda = 'all'; // all | BOB | USD
+
+    public array $totales = [];
 
     protected $listeners = [
         'inversionUpdated' => '$refresh',
@@ -30,6 +31,7 @@ class Index extends Component
         $this->search = '';
         $this->fTipo = '';
         $this->fEstado = 'ACTIVA';
+        $this->moneda = 'all';
     }
     // Resetea paginación al buscar
     public function updatingSearch(): void
@@ -49,6 +51,11 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatingMoneda(): void
+    {
+        $this->resetPage();
+    }
+
     // Abre modal crear inversión
     public function openCreate(): void
     {
@@ -58,7 +65,7 @@ class Index extends Component
     // Limpia filtros
     public function resetFilters(): void
     {
-        $this->reset(['search', 'fTipo', 'fEstado']);
+        $this->reset(['search', 'fTipo', 'fEstado', 'moneda']);
         $this->resetPage();
     }
 
@@ -67,125 +74,30 @@ class Index extends Component
     {
         $empresaId = auth()->user()->empresa_id;
 
-        $q = Inversion::query()
-            ->where('empresa_id', $empresaId)
-            ->with('banco')
-            ->select('inversions.*')
-
-            // =========================
-            // PRIVADO: agregados
-            // =========================
-
-            // Suma utilidad pendiente
-            ->selectSub(
-                InversionMovimiento::query()
-                    ->selectRaw('COALESCE(SUM(monto_utilidad),0)')
-                    ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
-                    ->where('tipo', 'PAGO_UTILIDAD')
-                    ->where('estado', 'PENDIENTE'),
-                'utilidad_pendiente_sum',
-            )
-
-            // Última utilidad pagada (monto)
-            ->selectSub(
-                InversionMovimiento::query()
-                    ->select('monto_utilidad')
-                    ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
-                    ->where('tipo', 'PAGO_UTILIDAD')
-                    ->where('estado', 'PAGADO')
-                    ->orderByDesc('pagado_en')
-                    ->orderByDesc('fecha_pago')
-                    ->orderByDesc('id')
-                    ->limit(1),
-                'ultima_utilidad_pagada',
-            )
-
-            // Último % utilidad pagado
-            ->selectSub(
-                InversionMovimiento::query()
-                    ->select('porcentaje_utilidad')
-                    ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
-                    ->where('tipo', 'PAGO_UTILIDAD')
-                    ->where('estado', 'PAGADO')
-                    ->orderByDesc('pagado_en')
-                    ->orderByDesc('fecha_pago')
-                    ->orderByDesc('id')
-                    ->limit(1),
-                'ultima_utilidad_pct',
-            )
-
-            // Existe utilidad PENDIENTE (flag)
-            ->selectSub(
-                InversionMovimiento::query()
-                    ->selectRaw('CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END')
-                    ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
-                    ->where('tipo', 'PAGO_UTILIDAD')
-                    ->where('estado', 'PENDIENTE'),
-                'tiene_utilidad_pendiente',
-            )
-
-            // =========================
-            // BANCO: agregados
-            // =========================
-
-            // Último pago TOTAL (solo PAGADO)
-            ->selectSub(
-                InversionMovimiento::query()
-                    ->selectRaw('COALESCE(monto_total,0)')
-                    ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
-                    ->where('tipo', 'BANCO_PAGO')
-                    ->where('estado', 'PAGADO')
-                    ->orderByDesc('fecha')
-                    ->orderByDesc('id')
-                    ->limit(1),
-                'banco_ultimo_pago_total',
-            )
-
-            // Último % interés (tasa guardada en porcentaje_utilidad) (solo PAGADO)
-            ->selectSub(
-                InversionMovimiento::query()
-                    ->selectRaw('COALESCE(porcentaje_utilidad,0)')
-                    ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
-                    ->where('tipo', 'BANCO_PAGO')
-                    ->where('estado', 'PAGADO')
-                    ->orderByDesc('fecha')
-                    ->orderByDesc('id')
-                    ->limit(1),
-                'banco_ultimo_pago_pct_interes',
-            )
-
-            // ✅ Existe BANCO_PAGO PENDIENTE (flag)
-            ->selectSub(
-                InversionMovimiento::query()
-                    ->selectRaw('CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END')
-                    ->whereColumn('inversion_movimientos.inversion_id', 'inversions.id')
-                    ->where('tipo', 'BANCO_PAGO')
-                    ->where('estado', 'PENDIENTE'),
-                'tiene_banco_pendiente',
-            );
+        $baseQ = Inversion::query()
+            ->where('empresa_id', $empresaId);
 
         // =========================
         // Filtros UI
         // =========================
         if ($this->search !== '') {
             $s = trim($this->search);
-            $q->where(function ($w) use ($s) {
+            $baseQ->where(function ($w) use ($s) {
                 $w->where('codigo', 'like', "%{$s}%")->orWhere('nombre_completo', 'like', "%{$s}%");
             });
         }
 
         if ($this->fTipo !== '') {
-            $q->where('tipo', $this->fTipo);
+            $baseQ->where('tipo', $this->fTipo);
         }
 
-        // Estado:
-        // - ACTIVA / CERRADA: estado real inversión
-        // - PENDIENTE:
-        //     PRIVADO -> tiene PAGO_UTILIDAD pendiente
-        //     BANCO   -> tiene BANCO_PAGO pendiente
+        if ($this->moneda !== 'all' && $this->moneda !== '') {
+            $baseQ->where('moneda', $this->moneda);
+        }
+
         if ($this->fEstado !== '') {
             if ($this->fEstado === 'PENDIENTE') {
-                $q->whereRaw("
+                $baseQ->whereRaw("
                     EXISTS (
                         SELECT 1
                         FROM inversion_movimientos im
@@ -197,9 +109,42 @@ class Index extends Component
                     )
                 ");
             } else {
-                $q->where('estado', $this->fEstado);
+                $baseQ->where('estado', $this->fEstado);
             }
         }
+
+        // Calculate totals
+        $this->totales = [
+            'privado_bob' => (clone $baseQ)->where('tipo', 'PRIVADO')->where('moneda', 'BOB')->sum('capital_actual'),
+            'privado_usd' => (clone $baseQ)->where('tipo', 'PRIVADO')->where('moneda', 'USD')->sum('capital_actual'),
+            'banco_bob' => (clone $baseQ)->where('tipo', 'BANCO')->where('moneda', 'BOB')->sum('capital_actual'),
+            'banco_usd' => (clone $baseQ)->where('tipo', 'BANCO')->where('moneda', 'USD')->sum('capital_actual'),
+            'pagado_bob' => \Illuminate\Support\Facades\DB::table('inversion_movimientos')
+                ->join('inversions', 'inversion_movimientos.inversion_id', '=', 'inversions.id')
+                ->whereIn('inversions.id', (clone $baseQ)->select('inversions.id'))
+                ->whereIn('inversion_movimientos.tipo', ['PAGO_UTILIDAD', 'BANCO_PAGO'])
+                ->where('inversion_movimientos.estado', 'PAGADO')
+                ->where('inversions.moneda', 'BOB')
+                ->sum(\Illuminate\Support\Facades\DB::raw("CASE WHEN inversion_movimientos.tipo = 'PAGO_UTILIDAD' THEN COALESCE(inversion_movimientos.monto_utilidad, 0) ELSE COALESCE(inversion_movimientos.monto_total, 0) END")),
+            'pagado_usd' => \Illuminate\Support\Facades\DB::table('inversion_movimientos')
+                ->join('inversions', 'inversion_movimientos.inversion_id', '=', 'inversions.id')
+                ->whereIn('inversions.id', (clone $baseQ)->select('inversions.id'))
+                ->whereIn('inversion_movimientos.tipo', ['PAGO_UTILIDAD', 'BANCO_PAGO'])
+                ->where('inversion_movimientos.estado', 'PAGADO')
+                ->where('inversions.moneda', 'USD')
+                ->sum(\Illuminate\Support\Facades\DB::raw("CASE WHEN inversion_movimientos.tipo = 'PAGO_UTILIDAD' THEN COALESCE(inversion_movimientos.monto_utilidad, 0) ELSE COALESCE(inversion_movimientos.monto_total, 0) END")),
+            'cantidad_activas' => (clone $baseQ)->where('estado', 'ACTIVA')->count(),
+            'cantidad_total' => (clone $baseQ)->count(),
+        ];
+
+        
+        $q = clone $baseQ;
+        $q->with('banco')
+            ->select('inversions.*');
+
+        // =========================
+        // PRIVADO: agregados
+        // =========================
 
         /** @var LengthAwarePaginator $paginator */
         $paginator = $q->orderByDesc('id')->paginate(10);

@@ -1,14 +1,14 @@
 {{-- DESKTOP: TABLA INVERSIONES --}}
-<div class="hidden md:block border rounded bg-white dark:bg-neutral-800 overflow-hidden">
+<div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm">
     <div class="overflow-x-auto">
         <table class="w-full text-sm font-sans min-w-[1350px] lg:min-w-0">
 
             <thead
                 class="sticky top-0 z-10
-                       bg-gray-50 text-gray-700
-                       dark:bg-neutral-900 dark:text-neutral-200
-                       border-b border-gray-200 dark:border-neutral-700">
-                <tr class="text-left  tracking-wide">
+                       bg-slate-50/50 text-slate-600
+                       dark:bg-neutral-900/50 dark:text-neutral-400
+                       border-b border-gray-100 dark:border-neutral-800">
+                <tr class="text-left text-[11px] uppercase tracking-wider font-semibold">
                     <th class="p-3 w-[90px] text-center">Código</th>
                     <th class="p-3 w-[200px]">Titular</th>
                     <th class="p-3 w-[200px]">Banco</th>
@@ -19,9 +19,10 @@
                 </tr>
             </thead>
 
-            <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
+            <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
                 @forelse ($inversiones as $inv)
-                    <tr class="text-left   hover:bg-gray-50 dark:hover:bg-neutral-900/50">
+                    <tr
+                        class="text-left text-gray-700 dark:text-neutral-200 border-t border-gray-100 dark:border-neutral-800 hover:bg-slate-50/50 dark:hover:bg-neutral-900/60 transition-colors">
 
                         {{-- CODIGO --}}
                         <td class="p-3 text-center text-gray-900 dark:text-neutral-100">

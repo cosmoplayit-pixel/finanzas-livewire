@@ -272,7 +272,7 @@
                             Módulo / Banco</th>
                         <th scope="col"
                             class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Concepto y Ref.</th>
+                            Concepto y Comprobante</th>
                         <th scope="col"
                             class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Monto</th>
@@ -311,7 +311,10 @@
                                 <div class="text-sm font-medium text-gray-900 mb-0.5">{{ $t->concepto }}</div>
                                 <div class="text-xs text-gray-500 flex gap-2">
                                     @if ($t->referencia)
-                                        <span class="text-indigo-600 font-medium">Ref: {{ $t->referencia }}</span>
+                                        <span class="text-indigo-600 font-medium">
+                                            {{ $t->modulo === 'Inversiones' ? 'Comp.:' : 'Ref:' }}
+                                            {{ $t->referencia }}
+                                        </span>
                                     @endif
                                     @if ($t->notas)
                                         <span class="truncate block max-w-xs text-gray-400"

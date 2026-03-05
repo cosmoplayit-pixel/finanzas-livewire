@@ -22,12 +22,12 @@ class InversionService
             $empresaId = auth()->user()->empresa_id;
 
             // Banco: ingreso inicial aumenta banco
-            if (!empty($data['banco_id'])) {
+            if (! empty($data['banco_id'])) {
                 /** @var Banco $banco */
                 $banco = Banco::query()->lockForUpdate()->findOrFail((int) $data['banco_id']);
 
                 if (
-                    !empty($banco->moneda) &&
+                    ! empty($banco->moneda) &&
                     strtoupper((string) $banco->moneda) !== strtoupper((string) $data['moneda'])
                 ) {
                     throw new DomainException('La moneda no coincide con la moneda del banco.');
@@ -44,7 +44,7 @@ class InversionService
             }
 
             // Código temporal para evitar choque unique
-            $codigoTemp = $codigoBase . '-TMP-' . uniqid();
+            $codigoTemp = $codigoBase.'-TMP-'.uniqid();
 
             // Normaliza tipo
             $tipo = strtoupper((string) ($data['tipo'] ?? 'PRIVADO'));
@@ -72,12 +72,12 @@ class InversionService
             ]);
 
             // Código final
-            $inv->codigo = $codigoBase . '-' . $inv->id;
+            $inv->codigo = $codigoBase.'-'.$inv->id;
             $inv->save();
 
             // Moneda banco (si aplica)
             $monedaBanco = null;
-            if (!empty($data['banco_id'])) {
+            if (! empty($data['banco_id'])) {
                 $monedaBanco = strtoupper(
                     (string) (Banco::find((int) $data['banco_id'])->moneda ?? null),
                 );
@@ -128,7 +128,7 @@ class InversionService
         DB::transaction(function () use ($inv, $password) {
             $user = auth()->user();
 
-            if (!$user || !Hash::check($password, (string) $user->password)) {
+            if (! $user || ! Hash::check($password, (string) $user->password)) {
                 throw new DomainException('Contraseña incorrecta.');
             }
 
@@ -265,9 +265,9 @@ class InversionService
                     $monTxt = $mon !== '' ? $mon : '—';
 
                     throw new DomainException(
-                        "No se puede eliminar: al revertir movimientos, el {$nombre}" .
-                            ($cuenta !== '' ? " ({$cuenta})" : '') .
-                            " quedaría en negativo. Faltan {$montoFaltante} {$monTxt}. " .
+                        "No se puede eliminar: al revertir movimientos, el {$nombre}".
+                            ($cuenta !== '' ? " ({$cuenta})" : '').
+                            " quedaría en negativo. Faltan {$montoFaltante} {$monTxt}. ".
                             'Esto pasa si ya usaste ese saldo en otras operaciones/inversiones.',
                     );
                 }
@@ -303,6 +303,7 @@ class InversionService
                         $banco->monto = (float) ($banco->monto ?? 0) - $monto;
                         $banco->save();
                     }
+
                     continue;
                 }
 
@@ -312,6 +313,7 @@ class InversionService
                         $banco->monto = (float) ($banco->monto ?? 0) - $monto;
                         $banco->save();
                     }
+
                     continue;
                 }
 
@@ -321,6 +323,7 @@ class InversionService
                         $banco->monto = (float) ($banco->monto ?? 0) + $monto;
                         $banco->save();
                     }
+
                     continue;
                 }
 
@@ -331,6 +334,7 @@ class InversionService
                         $banco->monto = (float) ($banco->monto ?? 0) + $reembolso;
                         $banco->save();
                     }
+
                     continue;
                 }
 
@@ -341,6 +345,7 @@ class InversionService
                         $banco->monto = (float) ($banco->monto ?? 0) + $reembolso;
                         $banco->save();
                     }
+
                     continue;
                 }
             }
@@ -486,7 +491,7 @@ class InversionService
             // PRIVADO
             // =========================
             $tiposOk = ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL', 'PAGO_UTILIDAD'];
-            if (!in_array($tipo, $tiposOk, true)) {
+            if (! in_array($tipo, $tiposOk, true)) {
                 throw new DomainException(
                     'Tipo de movimiento no permitido para eliminar por fila.',
                 );
@@ -496,6 +501,7 @@ class InversionService
             if ($tipo === 'PAGO_UTILIDAD' && ($estado === 'PENDIENTE' || $estado === '')) {
                 $mov->delete();
                 $updateHastaFecha();
+
                 return;
             }
 
@@ -539,6 +545,7 @@ class InversionService
 
                 $mov->delete();
                 $updateHastaFecha();
+
                 return;
             }
 
@@ -566,6 +573,7 @@ class InversionService
 
                 $mov->delete();
                 $updateHastaFecha();
+
                 return;
             }
 
@@ -607,6 +615,7 @@ class InversionService
 
                 $mov->delete();
                 $updateHastaFecha();
+
                 return;
             }
 
@@ -639,7 +648,7 @@ class InversionService
 
             $tipo = strtoupper((string) ($data['tipo'] ?? ''));
             $tiposValidos = ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL', 'PAGO_UTILIDAD'];
-            if (!in_array($tipo, $tiposValidos, true)) {
+            if (! in_array($tipo, $tiposValidos, true)) {
                 throw new DomainException('Tipo de movimiento inválido.');
             }
 
@@ -751,7 +760,7 @@ class InversionService
             $label = match ($tipo) {
                 'INGRESO_CAPITAL' => 'Ingreso de Capital',
                 'DEVOLUCION_CAPITAL' => 'Devolución de Capital',
-                'PAGO_UTILIDAD' => 'Pago de Utilidad',
+                'PAGO_UTILIDAD' => 'Pago Cuota',
                 default => 'Movimiento',
             };
 
@@ -771,8 +780,7 @@ class InversionService
 
                 'banco_id' => $banco->id,
                 'comprobante' => $data['nro_comprobante'] ?? ($data['comprobante'] ?? null),
-                'comprobante_imagen_path' =>
-                    $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
+                'comprobante_imagen_path' => $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
 
                 'monto_total' => (float) $montoBanco,
 
@@ -842,7 +850,7 @@ class InversionService
             $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
             $tc = $monInv !== $monBank ? (float) ($data['tipo_cambio'] ?? 0) : null;
 
-            if ($monInv !== $monBank && (!$tc || $tc <= 0)) {
+            if ($monInv !== $monBank && (! $tc || $tc <= 0)) {
                 throw new DomainException('Tipo de cambio obligatorio.');
             }
 
@@ -884,7 +892,7 @@ class InversionService
             $seqTipo = (int) $invLocked->movimientos()->where('tipo', 'PAGO_UTILIDAD')->count() + 1;
 
             // Descripción auto
-            $descripcionAuto = sprintf('Pago de Utilidad #%02d - %d D', $seqTipo, $diasPagados);
+            $descripcionAuto = sprintf('Pago Cuota #%02d - %d D', $seqTipo, $diasPagados);
 
             $invLocked->movimientos()->create([
                 'nro' => $nro,
@@ -893,8 +901,7 @@ class InversionService
                 'fecha' => $fechaFinal,
                 'fecha_pago' => $data['fecha_pago'] ?? $fechaFinal,
 
-                'descripcion' =>
-                    isset($data['descripcion']) && trim((string) $data['descripcion']) !== ''
+                'descripcion' => isset($data['descripcion']) && trim((string) $data['descripcion']) !== ''
                         ? (string) $data['descripcion']
                         : $descripcionAuto,
 
@@ -919,8 +926,7 @@ class InversionService
 
                 'banco_id' => $banco->id,
                 'comprobante' => $data['nro_comprobante'] ?? ($data['comprobante'] ?? null),
-                'comprobante_imagen_path' =>
-                    $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
+                'comprobante_imagen_path' => $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
 
                 'estado' => 'PENDIENTE',
                 'pagado_en' => null,
@@ -941,7 +947,7 @@ class InversionService
             $mov = InversionMovimiento::query()->lockForUpdate()->findOrFail($movimientoId);
 
             if (strtoupper((string) $mov->tipo) !== 'PAGO_UTILIDAD') {
-                throw new DomainException('El movimiento no es un pago de utilidad.');
+                throw new DomainException('El movimiento no es un pago Cuota.');
             }
 
             $estado = strtoupper((string) ($mov->estado ?? ''));
@@ -1014,7 +1020,7 @@ class InversionService
                     ->where('estado', 'PENDIENTE')
                     ->exists();
 
-                if (!$hayPendientes) {
+                if (! $hayPendientes) {
                     $inv->capital_actual = 0.0;
                     $inv->estado = 'CERRADA';
                 }
@@ -1047,14 +1053,14 @@ class InversionService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$last) {
+            if (! $last) {
                 throw new DomainException('No hay movimientos para eliminar.');
             }
 
             $tipo = strtoupper((string) ($last->tipo ?? ''));
 
             if (
-                !in_array($tipo, ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL', 'PAGO_UTILIDAD'], true)
+                ! in_array($tipo, ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL', 'PAGO_UTILIDAD'], true)
             ) {
                 throw new DomainException(
                     'Solo se puede eliminar el último registro si es INGRESO, DEVOLUCIÓN o UTILIDAD.',
@@ -1135,6 +1141,7 @@ class InversionService
                 $invLocked->save();
 
                 $last->delete();
+
                 return;
             }
 
@@ -1197,6 +1204,7 @@ class InversionService
                 $invLocked->save();
 
                 $last->delete();
+
                 return;
             }
 
@@ -1211,6 +1219,7 @@ class InversionService
                     $invLocked->save();
 
                     $last->delete();
+
                     return;
                 }
 
@@ -1259,11 +1268,12 @@ class InversionService
                     $invLocked->save();
 
                     $last->delete();
+
                     return;
                 }
 
                 throw new DomainException(
-                    'El estado del último pago de utilidad no es válido para eliminar.',
+                    'El estado del último pago Cuota no es válido para eliminar.',
                 );
             }
         });
@@ -1356,7 +1366,7 @@ class InversionService
             // correlativo por tipo para descripción
             $seq = (int) $invLocked->movimientos()->where('tipo', 'BANCO_PAGO')->count() + 1;
 
-            $descripcion = sprintf('Pago banco #%02d', $seq);
+            $descripcion = sprintf('Pago Cuota #%02d', $seq);
 
             $invLocked->movimientos()->create([
                 'nro' => $nro,
@@ -1384,8 +1394,7 @@ class InversionService
 
                 'banco_id' => $banco->id,
                 'comprobante' => $data['nro_comprobante'] ?? null,
-                'comprobante_imagen_path' =>
-                    $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
+                'comprobante_imagen_path' => $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
 
                 'estado' => 'PENDIENTE',
                 'pagado_en' => null,
@@ -1523,7 +1532,7 @@ class InversionService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$last) {
+            if (! $last) {
                 throw new DomainException('No hay movimientos para eliminar.');
             }
 

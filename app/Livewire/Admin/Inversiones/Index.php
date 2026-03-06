@@ -3,7 +3,6 @@
 namespace App\Livewire\Admin\Inversiones;
 
 use App\Models\Inversion;
-use App\Models\InversionMovimiento;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -16,8 +15,11 @@ class Index extends Component
 
     // =========================
     public string $search = '';
+
     public string $fTipo = '';
+
     public string $fEstado = 'ACTIVA'; // ACTIVA | CERRADA | PENDIENTE (privado: utilidad pendiente | banco: pago pendiente)
+
     public string $moneda = 'all'; // all | BOB | USD
 
     public array $totales = [];
@@ -33,6 +35,7 @@ class Index extends Component
         $this->fEstado = 'ACTIVA';
         $this->moneda = 'all';
     }
+
     // Resetea paginación al buscar
     public function updatingSearch(): void
     {
@@ -114,30 +117,34 @@ class Index extends Component
         }
 
         // Calculate totals
+        // Calculate totals
         $this->totales = [
             'privado_bob' => (clone $baseQ)->where('tipo', 'PRIVADO')->where('moneda', 'BOB')->sum('capital_actual'),
             'privado_usd' => (clone $baseQ)->where('tipo', 'PRIVADO')->where('moneda', 'USD')->sum('capital_actual'),
             'banco_bob' => (clone $baseQ)->where('tipo', 'BANCO')->where('moneda', 'BOB')->sum('capital_actual'),
             'banco_usd' => (clone $baseQ)->where('tipo', 'BANCO')->where('moneda', 'USD')->sum('capital_actual'),
-            'pagado_bob' => \Illuminate\Support\Facades\DB::table('inversion_movimientos')
+            'pendiente_bob' => \Illuminate\Support\Facades\DB::table('inversion_movimientos')
                 ->join('inversions', 'inversion_movimientos.inversion_id', '=', 'inversions.id')
                 ->whereIn('inversions.id', (clone $baseQ)->select('inversions.id'))
                 ->whereIn('inversion_movimientos.tipo', ['PAGO_UTILIDAD', 'BANCO_PAGO'])
-                ->where('inversion_movimientos.estado', 'PAGADO')
+                ->where('inversion_movimientos.estado', 'PENDIENTE')
+                ->whereDate('inversion_movimientos.fecha', '<=', now()->toDateString())
                 ->where('inversions.moneda', 'BOB')
                 ->sum(\Illuminate\Support\Facades\DB::raw("CASE WHEN inversion_movimientos.tipo = 'PAGO_UTILIDAD' THEN COALESCE(inversion_movimientos.monto_utilidad, 0) ELSE COALESCE(inversion_movimientos.monto_total, 0) END")),
-            'pagado_usd' => \Illuminate\Support\Facades\DB::table('inversion_movimientos')
+            'pendiente_usd' => \Illuminate\Support\Facades\DB::table('inversion_movimientos')
                 ->join('inversions', 'inversion_movimientos.inversion_id', '=', 'inversions.id')
                 ->whereIn('inversions.id', (clone $baseQ)->select('inversions.id'))
                 ->whereIn('inversion_movimientos.tipo', ['PAGO_UTILIDAD', 'BANCO_PAGO'])
-                ->where('inversion_movimientos.estado', 'PAGADO')
+                ->where('inversion_movimientos.estado', 'PENDIENTE')
+                ->whereDate('inversion_movimientos.fecha', '<=', now()->toDateString())
                 ->where('inversions.moneda', 'USD')
                 ->sum(\Illuminate\Support\Facades\DB::raw("CASE WHEN inversion_movimientos.tipo = 'PAGO_UTILIDAD' THEN COALESCE(inversion_movimientos.monto_utilidad, 0) ELSE COALESCE(inversion_movimientos.monto_total, 0) END")),
-            'cantidad_activas' => (clone $baseQ)->where('estado', 'ACTIVA')->count(),
-            'cantidad_total' => (clone $baseQ)->count(),
         ];
 
-        
+        // Global Totals (Capital Banco + Capital Privado + Pendientes)
+        $this->totales['total_general_bob'] = $this->totales['banco_bob'] + $this->totales['privado_bob'] + $this->totales['pendiente_bob'];
+        $this->totales['total_general_usd'] = $this->totales['banco_usd'] + $this->totales['privado_usd'] + $this->totales['pendiente_usd'];
+
         $q = clone $baseQ;
         $q->with('banco')
             ->select('inversions.*');
@@ -151,6 +158,7 @@ class Index extends Component
 
         $items = collect($paginator->items())->map(function (Inversion $inv) {
             $inv->resumen = $this->buildResumen($inv);
+
             return $inv;
         });
 
@@ -189,7 +197,7 @@ class Index extends Component
 
         // Estado pendiente (sirve para ambos)
         $estadoPendiente = null;
-        if (!$isBanco && $tienePendientePriv) {
+        if (! $isBanco && $tienePendientePriv) {
             $estadoPendiente = 'PENDIENTE';
         }
         if ($isBanco && $tienePendienteBanco) {
@@ -243,12 +251,13 @@ class Index extends Component
     {
         $mon = strtoupper((string) ($moneda ?? 'BOB'));
         $v = number_format($n, 2, ',', '.');
-        return $mon === 'USD' ? '$ ' . $v : $v . ' Bs';
+
+        return $mon === 'USD' ? '$ '.$v : $v.' Bs';
     }
 
     // Formatea porcentaje
     private function fmtPct(float $n): string
     {
-        return number_format($n, 2, ',', '.') . '%';
+        return number_format($n, 2, ',', '.').'%';
     }
 }

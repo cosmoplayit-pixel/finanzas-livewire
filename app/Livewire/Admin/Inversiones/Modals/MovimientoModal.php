@@ -15,6 +15,7 @@ class MovimientoModal extends Component
 {
     // State
     public bool $openMovimientosModal = false;
+
     public ?Inversion $inversion = null;
 
     /** @var array<int, array<string,mixed>> */
@@ -22,47 +23,65 @@ class MovimientoModal extends Component
 
     // Foto visor
     public bool $openFotoModal = false;
+
     public ?string $fotoUrl = null;
 
     // UI flags
     public bool $isBanco = false;
+
     public bool $bloqueado = true;
 
     // Identidad
     public int $inversionId = 0;
+
     public string $moneda = 'BOB';
 
     // Header
     public string $inversionNombre = '—';
+
     public string $inversionCodigo = '—';
+
     public string $inversionTipo = '—';
+
     public string $bancoNombre = 'Sin banco';
 
     // Header valores
     public string $capitalActualFmt = '0,00 Bs';
+
     public string $saldoDeudaFmt = '0,00 Bs';
+
     public string $fechaInicioFmt = '—';
+
     public string $fechaVencFmt = '—';
+
     public string $porcentajeUtilidadFmt = '0,00%';
+
     public string $ultimaUtilidadPctPagadaFmt = '—';
 
     // Banco
     public int $plazoMeses = 0;
+
     public int $diaPago = 0;
+
     public string $tasaAmortizacionFmt = '0,00%';
 
     // Acciones legacy (ya no se usan para “por fila”, pero dejo por compatibilidad)
     public bool $puedeEliminarUltimo = false;
+
     public bool $puedeEliminarUltimoPrivado = false;
+
     public bool $hayUtilidadPendiente = false;
 
     // Eliminar TODO (Capital inicial) con contraseña
     public bool $openEliminarTodoModal = false;
+
     public string $deleteAllPassword = '';
 
     // Eliminar FILA PAGADA con contraseña
     public bool $openEliminarFilaModal = false;
+
     public string $deleteRowPassword = '';
+
     public int $deleteRowMovId = 0;
 
     /**
@@ -74,6 +93,14 @@ class MovimientoModal extends Component
      */
     public array $totales = [
         'pagado' => [
+            'sumTotalFmt' => '0,00 Bs',
+            'sumCapitalFmt' => '0,00 Bs',
+            'sumUtilidadFmt' => '0,00 Bs',
+            'sumInteresFmt' => '0,00 Bs',
+            'lastPctFmt' => '—',
+            'lastInteresFmt' => '—',
+        ],
+        'vencido' => [
             'sumTotalFmt' => '0,00 Bs',
             'sumCapitalFmt' => '0,00 Bs',
             'sumUtilidadFmt' => '0,00 Bs',
@@ -104,7 +131,7 @@ class MovimientoModal extends Component
     #[On('inversionUpdated')]
     public function refreshIfOpen(): void
     {
-        if (!$this->openMovimientosModal || !$this->inversion) {
+        if (! $this->openMovimientosModal || ! $this->inversion) {
             return;
         }
         $this->loadData((int) $this->inversion->id);
@@ -157,6 +184,14 @@ class MovimientoModal extends Component
                 'lastPctFmt' => '—',
                 'lastInteresFmt' => '—',
             ],
+            'vencido' => [
+                'sumTotalFmt' => '0,00 Bs',
+                'sumCapitalFmt' => '0,00 Bs',
+                'sumUtilidadFmt' => '0,00 Bs',
+                'sumInteresFmt' => '0,00 Bs',
+                'lastPctFmt' => '—',
+                'lastInteresFmt' => '—',
+            ],
             'pendiente' => [
                 'sumTotalFmt' => '0,00 Bs',
                 'sumCapitalFmt' => '0,00 Bs',
@@ -171,7 +206,7 @@ class MovimientoModal extends Component
     // Banco: confirmar (se queda como está: abre modal editar/confirmar)
     public function openConfirmarBanco(int $movId): void
     {
-        if (!$this->inversion) {
+        if (! $this->inversion) {
             return;
         }
 
@@ -185,7 +220,7 @@ class MovimientoModal extends Component
     // Privado: confirmar utilidad (SOLO SweetAlert en la vista)
     public function confirmarPagoUtilidad(int $movId, InversionService $service): void
     {
-        if (!$this->inversion) {
+        if (! $this->inversion) {
             return;
         }
 
@@ -205,7 +240,7 @@ class MovimientoModal extends Component
     // Eliminar POR FILA (excepto CAPITAL_INICIAL)
     public function eliminarMovimientoFila(int $movId, InversionService $service): void
     {
-        if (!$this->inversion) {
+        if (! $this->inversion) {
             return;
         }
 
@@ -244,7 +279,7 @@ class MovimientoModal extends Component
 
     public function confirmarEliminarTodo(InversionService $service): void
     {
-        if (!$this->inversion) {
+        if (! $this->inversion) {
             return;
         }
 
@@ -253,13 +288,15 @@ class MovimientoModal extends Component
         // Validación básica
         if (trim($this->deleteAllPassword) === '') {
             $this->addError('deleteAllPassword', 'Ingrese su contraseña.');
+
             return;
         }
 
         // Verificar contraseña del usuario logueado
         $user = auth()->user();
-        if (!$user || !Hash::check($this->deleteAllPassword, (string) $user->password)) {
+        if (! $user || ! Hash::check($this->deleteAllPassword, (string) $user->password)) {
             $this->addError('deleteAllPassword', 'Contraseña incorrecta.');
+
             return;
         }
 
@@ -305,7 +342,7 @@ class MovimientoModal extends Component
 
     public function confirmarEliminarFilaConPassword(InversionService $service): void
     {
-        if (!$this->inversion) {
+        if (! $this->inversion) {
             return;
         }
 
@@ -317,17 +354,20 @@ class MovimientoModal extends Component
                 'title' => 'Error',
                 'text' => 'Movimiento inválido.',
             ]);
+
             return;
         }
 
         if (trim($this->deleteRowPassword) === '') {
             $this->addError('deleteRowPassword', 'Ingrese su contraseña.');
+
             return;
         }
 
         $user = auth()->user();
-        if (!$user || !Hash::check($this->deleteRowPassword, (string) $user->password)) {
+        if (! $user || ! Hash::check($this->deleteRowPassword, (string) $user->password)) {
             $this->addError('deleteRowPassword', 'Contraseña incorrecta.');
+
             return;
         }
 
@@ -357,7 +397,7 @@ class MovimientoModal extends Component
     // Foto
     public function verFotoMovimiento(int $movId): void
     {
-        if (!$this->inversion) {
+        if (! $this->inversion) {
             return;
         }
 
@@ -421,13 +461,13 @@ class MovimientoModal extends Component
             : '—';
 
         $this->porcentajeUtilidadFmt =
-            number_format((float) ($this->inversion->porcentaje_utilidad ?? 0), 2, ',', '.') . '%';
+            number_format((float) ($this->inversion->porcentaje_utilidad ?? 0), 2, ',', '.').'%';
 
         $this->plazoMeses = (int) ($this->inversion->plazo_meses ?? 0);
         $this->diaPago = (int) ($this->inversion->dia_pago ?? 0);
 
         $tasaAnual = (float) ($this->inversion->tasa_anual ?? 0);
-        $this->tasaAmortizacionFmt = number_format($tasaAnual / 12, 2, ',', '.') . '%';
+        $this->tasaAmortizacionFmt = number_format($tasaAnual / 12, 2, ',', '.').'%';
 
         // Orden por fecha para BANCO y PRIVADO
         $rows = $this->inversion
@@ -440,7 +480,7 @@ class MovimientoModal extends Component
 
         // Privado: detectar si hay utilidad pendiente
         $this->hayUtilidadPendiente = false;
-        if (!$this->isBanco) {
+        if (! $this->isBanco) {
             $this->hayUtilidadPendiente = $rows->contains(function ($m) {
                 return strtoupper((string) ($m->tipo ?? '')) === 'PAGO_UTILIDAD' &&
                     strtoupper((string) ($m->estado ?? '')) === 'PENDIENTE';
@@ -451,7 +491,7 @@ class MovimientoModal extends Component
         // - Si no está ACTIVA, bloquea todo.
         // - PRIVADO: si capital_actual quedó en 0 (por devolución), bloquear "Registrar Pago"
         //   pero la confirmación de pendientes se manejará en mapMovimientosForView().
-        $this->bloqueado = $estadoInv !== 'ACTIVA' || (!$this->isBanco && $capitalActual <= 0.01);
+        $this->bloqueado = $estadoInv !== 'ACTIVA' || (! $this->isBanco && $capitalActual <= 0.01);
 
         $this->movimientos = $this->mapMovimientosForView($rows, $estadoInv);
         $this->totales = $this->calcTotalesForView($rows);
@@ -464,19 +504,19 @@ class MovimientoModal extends Component
 
         // Privado: último % pagado
         $this->ultimaUtilidadPctPagadaFmt = '—';
-        if (!$this->isBanco) {
+        if (! $this->isBanco) {
             $lastPctPaid = $rows
                 ->filter(
-                    fn($x) => strtoupper((string) ($x->tipo ?? '')) === 'PAGO_UTILIDAD' &&
+                    fn ($x) => strtoupper((string) ($x->tipo ?? '')) === 'PAGO_UTILIDAD' &&
                         strtoupper((string) ($x->estado ?? '')) === 'PAGADO' &&
                         $x->porcentaje_utilidad !== null,
                 )
-                ->sortByDesc(fn($x) => $x->fecha?->timestamp ?? 0)
+                ->sortByDesc(fn ($x) => $x->fecha?->timestamp ?? 0)
                 ->first();
 
             if ($lastPctPaid) {
                 $this->ultimaUtilidadPctPagadaFmt =
-                    number_format((float) $lastPctPaid->porcentaje_utilidad, 2, ',', '.') . '%';
+                    number_format((float) $lastPctPaid->porcentaje_utilidad, 2, ',', '.').'%';
             }
         }
     }
@@ -497,9 +537,9 @@ class MovimientoModal extends Component
         // ✅ Para PRIVADO: running capital desde CAPITAL_INICIAL
         $runningCapital = null;
 
-        if (!$this->isBanco) {
+        if (! $this->isBanco) {
             $capIniMov = $rows->first(
-                fn($x) => strtoupper((string) ($x->tipo ?? '')) === 'CAPITAL_INICIAL',
+                fn ($x) => strtoupper((string) ($x->tipo ?? '')) === 'CAPITAL_INICIAL',
             );
             $capIni = (float) ($capIniMov?->monto_capital ?? 0);
 
@@ -515,8 +555,8 @@ class MovimientoModal extends Component
             $imgPath = $m->comprobante_imagen_path ?? ($m->imagen ?? null);
 
             $bancoLinea = null;
-            if (!empty($m->banco)) {
-                $bancoLinea = $m->banco->nombre . ' • ' . (string) ($m->banco->numero_cuenta ?? '');
+            if (! empty($m->banco)) {
+                $bancoLinea = $m->banco->nombre.' • '.(string) ($m->banco->numero_cuenta ?? '');
             }
 
             $tipoRaw = strtoupper((string) ($m->tipo ?? ''));
@@ -538,11 +578,11 @@ class MovimientoModal extends Component
 
             // ✅ Confirmar PRIVADO: solo primer PENDIENTE (NO depende de $this->bloqueado)
             $puedeConfirmarPrivado =
-                !$this->isBanco &&
+                ! $this->isBanco &&
                 $tipoRaw === 'PAGO_UTILIDAD' &&
                 $estado === 'PENDIENTE' &&
                 strtoupper($estadoInversion) === 'ACTIVA' &&
-                !$firstPendientePrivadoShown;
+                ! $firstPendientePrivadoShown;
 
             if ($puedeConfirmarPrivado) {
                 $firstPendientePrivadoShown = true;
@@ -554,7 +594,7 @@ class MovimientoModal extends Component
                 $tipoRaw === 'BANCO_PAGO' &&
                 $estado === 'PENDIENTE' &&
                 strtoupper($estadoInversion) === 'ACTIVA' &&
-                !$firstPendienteBancoShown;
+                ! $firstPendienteBancoShown;
 
             if ($puedeConfirmarBanco) {
                 $firstPendienteBancoShown = true;
@@ -563,7 +603,7 @@ class MovimientoModal extends Component
             $esCapitalInicial = $tipoRaw === 'CAPITAL_INICIAL';
 
             // Regla general: todo se puede eliminar por fila excepto CAPITAL_INICIAL
-            $puedeEliminarFila = !$esCapitalInicial;
+            $puedeEliminarFila = ! $esCapitalInicial;
 
             // Regla: INGRESO/DEVOLUCIÓN solo si es el ÚLTIMO registro
             if (in_array($tipoRaw, ['INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL'], true)) {
@@ -582,15 +622,15 @@ class MovimientoModal extends Component
             $interesFmt = $this->fmtMoney($intNum);
 
             $capitalDisplay =
-                $capNum == 0 ? '—' : ($capitalNegativo ? '- ' . $capitalFmt : $capitalFmt);
+                $capNum == 0 ? '—' : ($capitalNegativo ? '- '.$capitalFmt : $capitalFmt);
             $interesDisplay =
-                $intNum == 0 ? '—' : ($interesNegativo ? '- ' . $interesFmt : $interesFmt);
+                $intNum == 0 ? '—' : ($interesNegativo ? '- '.$interesFmt : $interesFmt);
 
             $pctInteresFmt = '—';
             if ($tipoRaw === 'BANCO_PAGO') {
                 $pct = $m->porcentaje_utilidad;
                 if ($pct !== null && (float) $pct != 0.0) {
-                    $pctInteresFmt = number_format((float) $pct, 2, ',', '.') . '%';
+                    $pctInteresFmt = number_format((float) $pct, 2, ',', '.').'%';
                 }
             }
 
@@ -601,7 +641,7 @@ class MovimientoModal extends Component
             // ==========================================================
             $capitalActualLinea = null;
 
-            if (!$this->isBanco && $runningCapital !== null) {
+            if (! $this->isBanco && $runningCapital !== null) {
                 // Calculamos "after" solo para filas que modifican capital y están PAGADAS
                 $after = $runningCapital;
 
@@ -623,10 +663,10 @@ class MovimientoModal extends Component
 
                 // Línea verde (siempre muestra el AFTER)
                 $capitalActualLinea =
-                    '   Act. :' .
+                    '   Act. :'.
                     ($this->moneda === 'USD'
-                        ? '$ ' . number_format($after, 2, ',', '.')
-                        : number_format($after, 2, ',', '.') . ' Bs');
+                        ? '$ '.number_format($after, 2, ',', '.')
+                        : number_format($after, 2, ',', '.').' Bs');
 
                 // Persistimos el runningCapital ya aplicado (solo si la fila cambió capital y está PAGADA)
                 if (
@@ -635,6 +675,12 @@ class MovimientoModal extends Component
                 ) {
                     $runningCapital = $after;
                 }
+            }
+
+            $esVencido = false;
+            if ($estado === 'PENDIENTE') {
+                $checkFecha = $m->fecha ? $m->fecha->startOfDay() : null;
+                $esVencido = $checkFecha && $checkFecha <= now()->startOfDay();
             }
 
             $out[] = [
@@ -656,13 +702,13 @@ class MovimientoModal extends Component
                 'banco_linea' => $bancoLinea,
 
                 'estado' => $estado,
+                'es_vencido' => $esVencido,
 
                 'puede_confirmar_privado' => $puedeConfirmarPrivado,
                 'puede_confirmar_banco' => $puedeConfirmarBanco,
 
-                'porcentaje_utilidad' =>
-                    $m->porcentaje_utilidad !== null
-                        ? number_format((float) $m->porcentaje_utilidad, 2, ',', '.') . '%'
+                'porcentaje_utilidad' => $m->porcentaje_utilidad !== null
+                        ? number_format((float) $m->porcentaje_utilidad, 2, ',', '.').'%'
                         : '—',
 
                 'capital' => $capitalDisplay,
@@ -679,7 +725,7 @@ class MovimientoModal extends Component
 
                 'pct_interes' => $pctInteresFmt,
 
-                'tiene_imagen' => !empty($imgPath),
+                'tiene_imagen' => ! empty($imgPath),
             ];
         }
 
@@ -699,7 +745,8 @@ class MovimientoModal extends Component
             if ($n === null) {
                 return '—';
             }
-            return abs((float) $n) < 0.000001 ? '—' : number_format((float) $n, 2, ',', '.') . '%';
+
+            return abs((float) $n) < 0.000001 ? '—' : number_format((float) $n, 2, ',', '.').'%';
         };
 
         $getEstado = function ($m): string {
@@ -725,8 +772,8 @@ class MovimientoModal extends Component
             return $estado !== '' ? $estado : '—';
         };
 
-        $pagado = $rows->filter(fn($m) => $getEstado($m) === 'PAGADO');
-        $pendiente = $rows->filter(fn($m) => $getEstado($m) === 'PENDIENTE');
+        $pagado = $rows->filter(fn ($m) => $getEstado($m) === 'PAGADO');
+        $pendiente = $rows->filter(fn ($m) => $getEstado($m) === 'PENDIENTE');
 
         $buildPrivado = function ($set) use ($moneyOrDash, $pctOrDash) {
             // En PRIVADO sí quieres incluir CAPITAL_INICIAL en el resumen de PAGADOS como “capital”
@@ -734,24 +781,24 @@ class MovimientoModal extends Component
 
             $sumCapital = (float) $set
                 ->filter(
-                    fn($m) => in_array(
+                    fn ($m) => in_array(
                         strtoupper((string) ($m->tipo ?? '')),
                         ['CAPITAL_INICIAL', 'INGRESO_CAPITAL', 'DEVOLUCION_CAPITAL'],
                         true,
                     ),
                 )
-                ->sum(fn($m) => (float) ($m->monto_capital ?? 0));
+                ->sum(fn ($m) => (float) ($m->monto_capital ?? 0));
 
             $sumUtilidad = (float) $set
-                ->filter(fn($m) => strtoupper((string) ($m->tipo ?? '')) === 'PAGO_UTILIDAD')
-                ->sum(fn($m) => (float) ($m->monto_utilidad ?? 0));
+                ->filter(fn ($m) => strtoupper((string) ($m->tipo ?? '')) === 'PAGO_UTILIDAD')
+                ->sum(fn ($m) => (float) ($m->monto_utilidad ?? 0));
 
             $lastPctMov = $set
                 ->filter(
-                    fn($m) => strtoupper((string) ($m->tipo ?? '')) === 'PAGO_UTILIDAD' &&
+                    fn ($m) => strtoupper((string) ($m->tipo ?? '')) === 'PAGO_UTILIDAD' &&
                         $m->porcentaje_utilidad !== null,
                 )
-                ->sortByDesc(fn($m) => $m->fecha?->timestamp ?? 0)
+                ->sortByDesc(fn ($m) => $m->fecha?->timestamp ?? 0)
                 ->first();
 
             return [
@@ -766,17 +813,17 @@ class MovimientoModal extends Component
 
         $buildBanco = function ($set, string $estado) use ($moneyOrDash, $pctOrDash) {
             // Solo cuotas BANCO_PAGO cuentan como “pagos” (CAPITAL_INICIAL NO entra)
-            $pagos = $set->filter(fn($m) => strtoupper((string) ($m->tipo ?? '')) === 'BANCO_PAGO');
+            $pagos = $set->filter(fn ($m) => strtoupper((string) ($m->tipo ?? '')) === 'BANCO_PAGO');
 
             // Totales de pagos (si en filas muestras negativos, aquí mostramos positivo)
-            $sumTotal = (float) $pagos->sum(fn($m) => abs((float) ($m->monto_total ?? 0)));
+            $sumTotal = (float) $pagos->sum(fn ($m) => abs((float) ($m->monto_total ?? 0)));
             $sumCapitalPagado = (float) $pagos->sum(
-                fn($m) => abs((float) ($m->monto_capital ?? 0)),
+                fn ($m) => abs((float) ($m->monto_capital ?? 0)),
             );
-            $sumInteres = (float) $pagos->sum(fn($m) => abs((float) ($m->monto_interes ?? 0)));
+            $sumInteres = (float) $pagos->sum(fn ($m) => abs((float) ($m->monto_interes ?? 0)));
 
             // Último % por estado (PAGADO/PENDIENTE) tomando la última cuota de ese estado
-            $lastPago = $pagos->sortByDesc(fn($m) => $m->fecha?->timestamp ?? 0)->first();
+            $lastPago = $pagos->sortByDesc(fn ($m) => $m->fecha?->timestamp ?? 0)->first();
             $lastPctFmt = $pctOrDash($lastPago?->porcentaje_utilidad);
 
             // En tu UI quieres:
@@ -796,15 +843,21 @@ class MovimientoModal extends Component
                 'sumUtilidadFmt' => '—',
                 'sumInteresFmt' => $moneyOrDash($sumInteres),
                 'lastPctFmt' => $lastPctFmt,
-                'lastInteresFmt' =>
-                    $lastPago && $lastPago->monto_interes !== null
+                'lastInteresFmt' => $lastPago && $lastPago->monto_interes !== null
                         ? $moneyOrDash(abs((float) $lastPago->monto_interes))
                         : '—',
             ];
         };
 
+        $vencido = $pendiente->filter(function ($m) {
+            $checkFecha = $m->fecha ? $m->fecha->startOfDay() : null;
+
+            return $checkFecha && $checkFecha <= now()->startOfDay();
+        });
+
         return [
             'pagado' => $isBanco ? $buildBanco($pagado, 'PAGADO') : $buildPrivado($pagado),
+            'vencido' => $isBanco ? $buildBanco($vencido, 'PENDIENTE') : $buildPrivado($vencido),
             'pendiente' => $isBanco
                 ? $buildBanco($pendiente, 'PENDIENTE')
                 : $buildPrivado($pendiente),
@@ -815,7 +868,8 @@ class MovimientoModal extends Component
     protected function fmtMoney(float $n): string
     {
         $v = number_format($n, 2, ',', '.');
-        return $this->moneda === 'USD' ? '$ ' . $v : $v . ' Bs';
+
+        return $this->moneda === 'USD' ? '$ '.$v : $v.' Bs';
     }
 
     public function render()

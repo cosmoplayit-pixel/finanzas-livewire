@@ -28,8 +28,8 @@
             <div class="mt-2 space-y-3 px-4 pb-3 text-[13px]" x-show="openMobile" x-collapse x-cloak>
                 <div>
                     <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">Búsqueda</label>
-                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Código o titular…"
-                        autocomplete="off"
+                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Buscar inversión..."
+                        autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -62,8 +62,9 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
                 <div class="md:col-span-6 lg:col-span-8">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
-                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Código o titular…"
-                        autocomplete="off"
+
+                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Buscar inversión..."
+                        autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                 </div>
 

@@ -236,10 +236,18 @@
                                         INICIAL
                                     </span>
                                 @elseif (($m['estado'] ?? '') === 'PENDIENTE')
-                                    <span
-                                        class="inline-flex items-center px-2 py-1 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
-                                        PENDIENTE
-                                    </span>
+                                    @if (!empty($m['es_vencido']))
+                                        <span
+                                            class="inline-flex items-center px-2 py-1 rounded bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300"
+                                            title="Este pago ya venció o debe realizarse hoy">
+                                            VENCIDO
+                                        </span>
+                                    @else
+                                        <span
+                                            class="inline-flex items-center px-2 py-1 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+                                            PENDIENTE
+                                        </span>
+                                    @endif
                                 @else
                                     <span
                                         class="inline-flex items-center px-2 py-1 rounded bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300">
@@ -270,7 +278,7 @@
                                                 </svg>
                                             </button>
                                         @endif
-                                        
+
                                         @can('inversiones.confirm_pay')
                                             {{-- Confirmar --}}
                                             @if (!empty($m['puede_confirmar_banco']))
@@ -453,8 +461,73 @@
                         @endcanany
                     </tr>
 
-                    {{-- PENDIENTES --}}
+                    {{-- VENCIDOS --}}
                     <tr class="align-middle border-t border-gray-200 dark:border-neutral-700">
+                        <td colspan="5" class="p-3">
+                            <div class="flex items-center justify-end gap-2">
+                                <span
+                                    class="inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wide uppercase
+                                    bg-rose-100 text-rose-800 border border-rose-200
+                                    dark:bg-rose-900/25 dark:text-rose-200 dark:border-rose-800/40">
+                                    <span class="inline-flex w-2 h-2 rounded-full bg-rose-500"></span>
+                                    Vencidos (a hoy)
+                                </span>
+                            </div>
+                        </td>
+
+                        {{-- Total --}}
+                        <td class="p-3 text-right">
+                            <div class="flex flex-col items-end leading-tight">
+                                <span
+                                    class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Total</span>
+                                <span class="font-semibold tabular-nums text-rose-900 dark:text-rose-200">
+                                    {{ $totales['vencido']['sumTotalFmt'] }}
+                                </span>
+                            </div>
+                        </td>
+
+                        {{-- Capital --}}
+                        <td class="p-3 text-right">
+                            <div class="flex flex-col items-end leading-tight">
+                                <span
+                                    class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Capital</span>
+                                <span class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                    {{ $totales['vencido']['sumCapitalFmt'] }}
+                                </span>
+                            </div>
+                        </td>
+
+                        {{-- Interés --}}
+                        <td class="p-3 text-right">
+                            <div class="flex flex-col items-end leading-tight">
+                                <span
+                                    class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Interés</span>
+                                <span class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                    {{ $totales['vencido']['sumInteresFmt'] }}
+                                </span>
+                            </div>
+                        </td>
+
+                        {{-- Último % --}}
+                        <td class="p-3 text-right">
+                            <div class="flex flex-col items-end leading-tight">
+                                <span
+                                    class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Último
+                                    %</span>
+                                <span class="font-semibold tabular-nums text-rose-900 dark:text-rose-200">
+                                    {{ $totales['vencido']['lastPctFmt'] }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td class="p-3"></td>
+                        @canany(['inversiones.confirm_pay', 'inversiones.delete'])
+                            <td class="p-3"></td>
+                        @endcanany
+                    </tr>
+
+                    {{-- Total pendiente OCULTO --}}
+                    <tr class="hidden align-middle border-t border-gray-200 dark:border-neutral-700">
                         <td colspan="5" class="p-3">
                             <div class="flex items-center justify-end gap-2">
                                 <span
@@ -462,7 +535,7 @@
                                     bg-amber-100 text-amber-800 border border-amber-200
                                     dark:bg-amber-900/25 dark:text-amber-200 dark:border-amber-800/40">
                                     <span class="inline-flex w-2 h-2 rounded-full bg-amber-500"></span>
-                                    Pagos pendientes
+                                    Total pendiente
                                 </span>
                             </div>
                         </td>

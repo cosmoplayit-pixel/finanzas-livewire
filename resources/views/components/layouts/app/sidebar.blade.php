@@ -146,7 +146,7 @@
             @can('inversiones.view')
                 <flux:sidebar.item icon="currency-dollar" :href="route('inversiones')"
                     :current="request()->routeIs('inversiones')" :badge="$navCounts['inversiones'] ?? null" wire:navigate>
-                    {{ __('Interes') }}
+                    {{ __('Inversión Ext.') }}
                 </flux:sidebar.item>
             @endcan
 

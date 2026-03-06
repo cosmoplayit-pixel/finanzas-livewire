@@ -7,7 +7,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6">
                 </path>
             </svg>
-            Inversiones
+            Inversión a la Empresa
         </h1>
         <p class="text-sm text-gray-500 mt-1 dark:text-neutral-400">
             Gestión de inversiones (creación, movimientos de capital y pago de utilidades) con historial por registro.

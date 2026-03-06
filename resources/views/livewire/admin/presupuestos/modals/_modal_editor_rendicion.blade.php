@@ -233,19 +233,39 @@
                                             </td>
                                             <td class="p-3 text-center">
                                                 @if (!empty($m->foto_path))
-                                                    <button type="button" wire:click="verFoto({{ $m->id }})"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400 transition"
-                                                        title="Ver comprobante">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="2" stroke-linecap="round"
-                                                            stroke-linejoin="round">
-                                                            <rect x="3" y="3" width="18" height="18"
-                                                                rx="2" ry="2" />
-                                                            <circle cx="8.5" cy="8.5" r="1.5" />
-                                                            <path d="M21 15l-5-5L5 21" />
-                                                        </svg>
-                                                    </button>
+                                                    @php $esPdf = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION)) === 'pdf'; @endphp
+                                                    <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full transition
+                                                        {{ $esPdf
+                                                            ? 'text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40'
+                                                            : 'text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400' }}"
+                                                        title="{{ $esPdf ? 'Ver PDF' : 'Ver imagen' }}">
+                                                        @if ($esPdf)
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <path
+                                                                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                                <polyline points="14 2 14 8 20 8" />
+                                                                <line x1="16" y1="13" x2="8"
+                                                                    y2="13" />
+                                                                <line x1="16" y1="17" x2="8"
+                                                                    y2="17" />
+                                                                <polyline points="10 9 9 9 8 9" />
+                                                            </svg>
+                                                        @else
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <rect x="3" y="3" width="18" height="18"
+                                                                    rx="2" ry="2" />
+                                                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                                                <path d="M21 15l-5-5L5 21" />
+                                                            </svg>
+                                                        @endif
+                                                    </a>
                                                 @else
                                                     <span class="text-xs text-gray-300 dark:text-neutral-600">—</span>
                                                 @endif
@@ -298,21 +318,40 @@
                                         <div class="flex items-center gap-1 shrink-0">
                                             {{-- VER FOTO --}}
                                             @if (!empty($m->foto_path))
-                                                <button type="button" wire:click="verFoto({{ $m->id }})"
+                                                @php $esPdf = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION)) === 'pdf'; @endphp
+                                                <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
                                                     class="inline-flex items-center justify-center w-8 h-8 rounded-lg
-                                                    border border-gray-200 text-gray-700 hover:bg-gray-100
-                                                    dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
-                                                    title="Ver foto">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="1.8" stroke-linecap="round"
-                                                        stroke-linejoin="round">
-                                                        <rect x="3" y="3" width="18" height="18"
-                                                            rx="2" ry="2" />
-                                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                                        <path d="M21 15l-5-5L5 21" />
-                                                    </svg>
-                                                </button>
+                                                border transition
+                                                {{ $esPdf
+                                                    ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10'
+                                                    : 'border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800' }}"
+                                                    title="{{ $esPdf ? 'Ver PDF' : 'Ver imagen' }}">
+                                                    @if ($esPdf)
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path
+                                                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                            <polyline points="14 2 14 8 20 8" />
+                                                            <line x1="16" y1="13" x2="8"
+                                                                y2="13" />
+                                                            <line x1="16" y1="17" x2="8"
+                                                                y2="17" />
+                                                            <polyline points="10 9 9 9 8 9" />
+                                                        </svg>
+                                                    @else
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="1.8" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <rect x="3" y="3" width="18" height="18"
+                                                                rx="2" ry="2" />
+                                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                                            <path d="M21 15l-5-5L5 21" />
+                                                        </svg>
+                                                    @endif
+                                                </a>
                                             @endif
 
                                             {{-- ELIMINAR --}}
@@ -474,19 +513,39 @@
                                             </td>
                                             <td class="p-3 text-center">
                                                 @if (!empty($m->foto_path))
-                                                    <button type="button" wire:click="verFoto({{ $m->id }})"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400 transition"
-                                                        title="Ver comprobante">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="2" stroke-linecap="round"
-                                                            stroke-linejoin="round">
-                                                            <rect x="3" y="3" width="18" height="18"
-                                                                rx="2" ry="2" />
-                                                            <circle cx="8.5" cy="8.5" r="1.5" />
-                                                            <path d="M21 15l-5-5L5 21" />
-                                                        </svg>
-                                                    </button>
+                                                    @php $esPdf = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION)) === 'pdf'; @endphp
+                                                    <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full transition
+                                                        {{ $esPdf
+                                                            ? 'text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40'
+                                                            : 'text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400' }}"
+                                                        title="{{ $esPdf ? 'Ver PDF' : 'Ver imagen' }}">
+                                                        @if ($esPdf)
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <path
+                                                                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                                <polyline points="14 2 14 8 20 8" />
+                                                                <line x1="16" y1="13" x2="8"
+                                                                    y2="13" />
+                                                                <line x1="16" y1="17" x2="8"
+                                                                    y2="17" />
+                                                                <polyline points="10 9 9 9 8 9" />
+                                                            </svg>
+                                                        @else
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <rect x="3" y="3" width="18" height="18"
+                                                                    rx="2" ry="2" />
+                                                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                                                <path d="M21 15l-5-5L5 21" />
+                                                            </svg>
+                                                        @endif
+                                                    </a>
                                                 @else
                                                     <span class="text-xs text-gray-300 dark:text-neutral-600">—</span>
                                                 @endif
@@ -547,21 +606,40 @@
                                         {{-- Acciones (foto + eliminar) --}}
                                         <div class="shrink-0 flex items-center gap-2">
                                             @if (!empty($m->foto_path))
-                                                <button type="button" wire:click="verFoto({{ $m->id }})"
+                                                @php $esPdf = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION)) === 'pdf'; @endphp
+                                                <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
                                                     class="inline-flex items-center justify-center w-9 h-9 rounded-lg
-                                   border border-gray-200 text-gray-700 hover:bg-gray-100
-                                   dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
-                                                    title="Ver foto">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="1.8" stroke-linecap="round"
-                                                        stroke-linejoin="round">
-                                                        <rect x="3" y="3" width="18" height="18"
-                                                            rx="2" ry="2" />
-                                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                                        <path d="M21 15l-5-5L5 21" />
-                                                    </svg>
-                                                </button>
+                                                    border transition
+                                                    {{ $esPdf
+                                                        ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10'
+                                                        : 'border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800' }}"
+                                                    title="{{ $esPdf ? 'Ver PDF' : 'Ver imagen' }}">
+                                                    @if ($esPdf)
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path
+                                                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                            <polyline points="14 2 14 8 20 8" />
+                                                            <line x1="16" y1="13" x2="8"
+                                                                y2="13" />
+                                                            <line x1="16" y1="17" x2="8"
+                                                                y2="17" />
+                                                            <polyline points="10 9 9 9 8 9" />
+                                                        </svg>
+                                                    @else
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="1.8" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <rect x="3" y="3" width="18" height="18"
+                                                                rx="2" ry="2" />
+                                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                                            <path d="M21 15l-5-5L5 21" />
+                                                        </svg>
+                                                    @endif
+                                                </a>
                                             @endif
 
                                             @can('agente_presupuestos.delete_movement')
@@ -660,3 +738,50 @@
         </div>
     @endslot
 </x-ui.modal>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        {{-- Confirmación antes de eliminar movimiento --}}
+        window.addEventListener('swal:delete-movimiento', (e) => {
+            const {
+                id,
+                monto
+            } = e.detail;
+            Swal.fire({
+                title: '¿Eliminar movimiento?',
+                html: `Se eliminará el movimiento por <strong>${monto}</strong>.<br>Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#6b7280',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Livewire.dispatch('doDeleteMovimiento', {
+                        id: id
+                    });
+                }
+            });
+        });
+
+        {{-- Error al eliminar (banco sin fondos, etc.) --}}
+        window.addEventListener('swal:error', (e) => {
+            // Pequeño delay para que el Swal de confirmación termine de cerrarse
+            setTimeout(() => {
+                const detail = e.detail ?? {};
+                Swal.fire({
+                    icon: 'error',
+                    title: detail.title ?? 'No se puede realizar',
+                    html: detail.html ?
+                        `<p style="font-size:0.92em; color:#555; line-height:1.6;">${detail.html}</p>` :
+                        (detail.text ?? detail.message ?? ''),
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#ef4444',
+                });
+            }, 350);
+        });
+
+    });
+</script>

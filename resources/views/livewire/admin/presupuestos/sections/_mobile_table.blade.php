@@ -121,7 +121,7 @@
             {{-- PANEL DETALLE --}}
             <div class="{{ $open ? 'block' : 'hidden' }} border-t border-gray-200 dark:border-neutral-700">
                 <div class="p-3 overflow-x-auto">
-                    @include('livewire.admin.presupuestos._mobile_table_panel')
+                    @include('livewire.admin.presupuestos.sections._mobile_table_panel')
                 </div>
             </div>
 

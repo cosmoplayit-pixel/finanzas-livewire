@@ -16,8 +16,6 @@
             $cuenta = $p->banco?->numero_cuenta ?? '—';
             $monedaBanco = $p->banco?->moneda ?? null;
             $nroTx = $p->nro_transaccion ?? '—';
-
-            $tieneRendicion = !empty($p->rendicion_id);
         @endphp
 
         <div wire:key="panel-mobile-{{ $rowKey }}-pres-{{ $p->id }}"
@@ -38,50 +36,23 @@
 
                         @can('agente_presupuestos.view_detail')
                             <div class="ml-auto shrink-0">
-                                @if (empty($p->rendicion_id))
-                                    <button type="button" wire:click="crearRendicion({{ $p->id }})"
-                                        wire:loading.attr="disabled" wire:target="crearRendicion({{ $p->id }})"
-                                        wire:loading.class="opacity-60 cursor-not-allowed"
-                                        class="inline-flex items-center gap-1 px-3 py-1 rounded-md
+                                {{-- Un solo botón: presupuesto ya es rendición --}}
+                                <button type="button" wire:click="openRendicionEditor({{ $p->id }})"
+                                    wire:loading.attr="disabled" wire:target="openRendicionEditor({{ $p->id }})"
+                                    wire:loading.class="opacity-60 cursor-not-allowed"
+                                    class="inline-flex items-center gap-1 px-3 py-1 rounded-md
                                     text-xs font-semibold transition
                                     bg-emerald-600 text-white hover:bg-emerald-700
                                     dark:bg-emerald-500 dark:hover:bg-emerald-400"
-                                        title="Crear rendición">
+                                    title="Ver movimientos">
 
-                                        {{-- ICONO CREAR --}}
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                            viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M12 4.5v15m7.5-7.5h-15" />
-                                        </svg>
-                                        Crear
-
-                                    </button>
-                                @else
-                                    <button type="button" wire:click="openRendicionEditor({{ $p->rendicion_id }})"
-                                        wire:loading.attr="disabled"
-                                        wire:target="openRendicionEditor({{ $p->rendicion_id }})"
-                                        wire:loading.class="opacity-60 cursor-not-allowed"
-                                        class="inline-flex items-center gap-1 px-3 py-1 rounded-md
-                                    text-xs font-semibold transition
-                                    bg-gray-100 text-gray-700 hover:bg-gray-200
-                                    dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-                                        title="Ver rendición">
-
-                                        {{-- ICONO VER --}}
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
-                                            viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.062 12.348a1 1 0 010-.696C3.423 7.51 7.36 4.5 12 4.5
-                                            c4.638 0 8.576 3.01 9.938 7.152a1 1 0 010 .696
-                                            C20.576 16.49 16.638 19.5 12 19.5
-                                            c-4.64 0-8.577-3.01-9.938-7.152z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                        Ver
-                                    </button>
-                                @endif
-
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
+                                        viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                    </svg>
+                                    Movimientos
+                                </button>
                             </div>
                         @endcan
                     </div>

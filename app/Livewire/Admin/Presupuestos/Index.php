@@ -1,5 +1,6 @@
 <?php
-namespace App\Livewire\Admin;
+
+namespace App\Livewire\Admin\Presupuestos;
 
 use App\Models\Empresa;
 use App\Queries\AgentePresupuestosResumenQuery;
@@ -7,27 +8,31 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
-class AgentePresupuestos extends Component
+class Index extends Component
 {
-    use WithPagination;
+    // Traits de lógica del módulo
+    use \App\Livewire\Admin\Presupuestos\Modals\PresupuestoModal;
+    use \App\Livewire\Admin\Presupuestos\Modals\PresupuestosPanel;
+    use \App\Livewire\Admin\Presupuestos\Modals\RendicionEditorModal;
+    use \App\Livewire\Admin\Presupuestos\Modals\RendicionEliminarModal;
     use WithFileUploads;
+    use WithPagination;
 
-    // Separación por responsabilidades (traits)
-    use \App\Livewire\Admin\Concerns\AgentePresupuestoModal;
-    use \App\Livewire\Admin\Concerns\AgentePresupuestosPanel;
-    use \App\Livewire\Admin\Concerns\RendicionEditor;
-
-    // tabla filtros y orden
+    // Filtros y orden de tabla
     public string $search = '';
+
     public int $perPage = 10;
+
     public bool $soloPendientes = true;
+
     public string $moneda = 'all'; // all | BOB | USD
 
     // Admin
     public string $empresaFilter = 'all';
 
     // Orden
-    public string $sortField = 'agente'; // agente | moneda | total_presupuesto | total_rendido | total_saldo | total_presupuestos
+    public string $sortField = 'agente';
+
     public string $sortDirection = 'asc';
 
     public array $totales = [];
@@ -44,16 +49,15 @@ class AgentePresupuestos extends Component
 
     public function mount(): void
     {
-        if (!$this->isAdmin()) {
+        if (! $this->isAdmin()) {
             $this->empresaFilter = (string) $this->userEmpresaId();
         }
 
-        // El modal usa esta fecha como default
         $this->fecha_presupuesto = now()->format('Y-m-d\TH:i');
     }
 
     // =========================================================
-    // HOOKS (tabla)
+    // HOOKS
     // =========================================================
     public function updatedSearch(): void
     {
@@ -63,12 +67,6 @@ class AgentePresupuestos extends Component
     public function updatedPerPage(): void
     {
         $this->resetPage();
-    }
-
-    public function updatedSoloPendientes(): void
-    {
-        $this->resetPage();
-        $this->reloadOpenPanels(); // recarga los paneles abiertos
     }
 
     public function updatedEmpresaFilter(): void
@@ -81,14 +79,19 @@ class AgentePresupuestos extends Component
         $this->resetPage();
     }
 
-    // Ordenar por campo
+    public function updatedSoloPendientes(): void
+    {
+        $this->resetPage();
+        $this->reloadOpenPanels();
+    }
+
     public function sortBy(string $field): void
     {
         if ($this->sortField === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+
             return;
         }
-
         $this->sortField = $field;
         $this->sortDirection = 'asc';
     }
@@ -110,14 +113,13 @@ class AgentePresupuestos extends Component
             'sortDirection' => $this->sortDirection,
         ];
 
-        $query = new AgentePresupuestosResumenQuery();
+        $query = new AgentePresupuestosResumenQuery;
         $agentesResumen = $query->paginate($filters, $this->perPage);
         $this->totales = $query->totales($filters);
 
-        // Modal data (solo cuando está abierto)
         [$bancos, $agentes] = $this->modalCatalogos();
 
-        return view('livewire.admin.agente-presupuestos', [
+        return view('livewire.admin.presupuestos.index', [
             'agentesResumen' => $agentesResumen,
             'bancos' => $bancos,
             'agentes' => $agentes,

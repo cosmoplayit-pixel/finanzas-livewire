@@ -32,20 +32,6 @@
                 @enderror
             </div>
 
-            <div>
-                <label class="block text-sm mb-1">Fecha de pago: <span class="text-red-500">*</span></label>
-                <input type="datetime-local" wire:model="fecha_pago"
-                    class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700">
-                @error('fecha_pago')
-                    <div class="text-red-600 text-xs">{{ $message }}</div>
-                @enderror
-            </div>
-        </div>
-
-
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-
             {{-- Banco --}}
             <div>
                 <label class="block text-sm mb-1">Banco destino: <span class="text-red-500">*</span></label>
@@ -62,6 +48,10 @@
                     <div class="text-red-600 text-xs">{{ $message }}</div>
                 @enderror
             </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
 
             {{-- Monto --}}
             <div>
@@ -86,6 +76,17 @@
                 <input wire:model="nro_operacion"
                     class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700">
                 @error('nro_operacion')
+                    <div class="text-red-600 text-xs">{{ $message }}</div>
+                @enderror
+            </div>
+
+
+            {{-- Fecha de Pago --}}
+            <div>
+                <label class="block text-sm mb-1">Fecha de pago: <span class="text-red-500">*</span></label>
+                <input type="datetime-local" wire:model="fecha_pago"
+                    class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700">
+                @error('fecha_pago')
                     <div class="text-red-600 text-xs">{{ $message }}</div>
                 @enderror
             </div>

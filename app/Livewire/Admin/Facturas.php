@@ -686,6 +686,7 @@ class Facturas extends Component
                 'title' => 'No se puede eliminar',
                 'text' => 'Esta factura tiene pagos registrados. Elimínalos primero.',
             ]);
+
             return;
         }
 
@@ -705,7 +706,7 @@ class Facturas extends Component
 
     public function confirmarEliminarFactura(FacturaService $service): void
     {
-        if (!$this->deleteFacturaId) {
+        if (! $this->deleteFacturaId) {
             return;
         }
 
@@ -713,12 +714,14 @@ class Facturas extends Component
 
         if (trim($this->deleteFacturaPassword) === '') {
             $this->addError('deleteFacturaPassword', 'Ingrese su contraseña.');
+
             return;
         }
 
         $user = auth()->user();
-        if (!$user || !Hash::check($this->deleteFacturaPassword, (string) $user->password)) {
+        if (! $user || ! Hash::check($this->deleteFacturaPassword, (string) $user->password)) {
             $this->addError('deleteFacturaPassword', 'Contraseña incorrecta.');
+
             return;
         }
 
@@ -773,12 +776,25 @@ class Facturas extends Component
             // Si el error es por saldo insuficiente del banco, mostramos SweetAlert específico
             if (str_contains($msg, 'saldo del banco quedaría negativo')) {
                 $bancoNombre = $pago->banco?->nombre ?? $pago->destino_banco_nombre_snapshot ?? 'Banco';
-                $montoLabel = $this->money((float) ($pago->monto ?? 0));
+                $moneda = $pago->moneda ?? '';
+                $montoMov = (float) ($pago->monto ?? 0);
+                $saldoBanco = (float) ($pago->banco?->monto ?? 0);
+                $faltante = max(0, $montoMov - $saldoBanco);
 
-                $this->dispatch('swal:banco-sin-saldo',
-                    banco: $bancoNombre,
-                    monto: $montoLabel,
-                );
+                $fmtMonto = number_format($montoMov, 2, ',', '.').' '.$moneda;
+                $fmtSaldo = number_format($saldoBanco, 2, ',', '.').' '.$moneda;
+                $fmtFaltante = number_format($faltante, 2, ',', '.').' '.$moneda;
+
+                $html = "El banco <strong>{$bancoNombre}</strong> no tiene saldo suficiente para revertir este movimiento.";
+                $html .= '<br><br>';
+                $html .= "<table style='margin: 0 auto; width: auto; min-width: 220px; font-size:0.9em; text-align:left; border-collapse:collapse;'>";
+                $html .= "<tr><td style='padding:4px 16px 4px 0; color:#6b7280;'>Saldo disponible:</td><td style='padding:4px 0; font-weight:600; text-align:right;'>{$fmtSaldo}</td></tr>";
+                $html .= "<tr><td style='padding:4px 16px 4px 0; color:#6b7280;'>Monto a revertir:</td><td style='padding:4px 0; font-weight:600; text-align:right;'>{$fmtMonto}</td></tr>";
+                $html .= "<tr style='border-top:1px solid #e5e7eb;'><td style='padding:8px 16px 4px 0; color:#ef4444; font-weight:600;'>Falta:</td><td style='padding:8px 0 4px; font-weight:700; color:#ef4444; text-align:right;'>{$fmtFaltante}</td></tr>";
+                $html .= '</table>';
+
+                $this->dispatch('swal:banco-sin-saldo', html: $html);
+
                 return;
             }
 

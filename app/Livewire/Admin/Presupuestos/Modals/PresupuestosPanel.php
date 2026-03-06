@@ -1,44 +1,46 @@
-<?php namespace App\Livewire\Admin\Concerns;
+<?php
 
-use App\Models\AgentePresupuesto;
+namespace App\Livewire\Admin\Presupuestos\Modals;
+
 use App\Models\AgenteServicio;
-use App\Models\RendicionService;
-use App\Services\RendicionService as RendicionDomainService;
+use App\Models\Rendicion;
 use App\Queries\AgentePresupuestosResumenQuery;
 
-trait AgentePresupuestosPanel
+trait PresupuestosPanel
 {
-    // UI anti doble click (crear rendición)
+    // UI anti doble click
     public bool $creatingRendicion = false;
 
     // Paneles inline
     public array $panelsOpen = [];
+
     public array $panelData = [];
+
     public array $panelTotalFalta = [];
+
     public array $panelAgenteMeta = [];
+
     public array $panelEstado = []; // ALL | OPEN | CLOSED
 
-    // Helpers
     protected function normalizeMoneda(?string $moneda): string
     {
         $m = strtoupper(trim((string) $moneda));
+
         return in_array($m, ['BOB', 'USD'], true) ? $m : 'BOB';
     }
 
-    // Clave única por fila agente+moneda
     protected function rowKey(int $agenteId, string $moneda): string
     {
-        return $agenteId . '|' . $this->normalizeMoneda($moneda);
+        return $agenteId.'|'.$this->normalizeMoneda($moneda);
     }
 
-    // TOGGLE panel inline
     public function togglePanel(int $agenteId, string $moneda): void
     {
         $moneda = $this->normalizeMoneda($moneda);
         $key = $this->rowKey($agenteId, $moneda);
 
         $isOpen = (bool) ($this->panelsOpen[$key] ?? false);
-        $this->panelsOpen[$key] = !$isOpen;
+        $this->panelsOpen[$key] = ! $isOpen;
 
         if ($this->panelsOpen[$key]) {
             $this->loadPanel($agenteId, $moneda);
@@ -57,13 +59,13 @@ trait AgentePresupuestosPanel
             'sortDirection' => $this->sortDirection,
         ];
 
-        $query = new AgentePresupuestosResumenQuery();
+        $query = new AgentePresupuestosResumenQuery;
         $agentesResumen = $query->paginate($filters, $this->perPage);
 
         foreach ($agentesResumen as $row) {
             $key = $this->rowKey((int) $row->agente_servicio_id, $row->moneda);
             $this->panelsOpen[$key] = $expand;
-            
+
             if ($expand) {
                 $this->loadPanel((int) $row->agente_servicio_id, $row->moneda);
             } else {
@@ -72,22 +74,21 @@ trait AgentePresupuestosPanel
         }
     }
 
-    // Cargar datos del panel inline
     protected function loadPanel(int $agenteId, string $moneda): void
     {
         $moneda = $this->normalizeMoneda($moneda);
         $rowKey = $this->rowKey($agenteId, $moneda);
-
         $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
 
         $agente = AgenteServicio::query()
-            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->find($agenteId);
 
-        if (!$agente) {
+        if (! $agente) {
             $this->panelData[$rowKey] = [];
             $this->panelTotalFalta[$rowKey] = 0;
             $this->panelAgenteMeta[$rowKey] = ['nombre' => '—', 'ci' => '—'];
+
             return;
         }
 
@@ -96,11 +97,13 @@ trait AgentePresupuestosPanel
             'ci' => $agente->ci ?? '—',
         ];
 
-        $rows = AgentePresupuesto::query()
-            ->with(['rendicion', 'banco'])
+        // Ahora cargamos directamente de rendiciones (tabla unificada)
+        $rows = Rendicion::query()
+            ->with(['banco'])
+            ->withCount('movimientos')
             ->where('agente_servicio_id', $agenteId)
             ->where('moneda', $moneda)
-            ->when($empresaId, fn($q) => $q->where('empresa_id', $empresaId))
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('estado', $this->soloPendientes ? 'abierto' : 'cerrado')
             ->orderByDesc('fecha_presupuesto')
             ->orderByDesc('id')
@@ -110,26 +113,12 @@ trait AgentePresupuestosPanel
         $this->panelTotalFalta[$rowKey] = (float) $rows->sum('saldo_por_rendir');
     }
 
-    // RENDICIÓN: crear + abrir editor
-    public function crearRendicion(int $presupuestoId, RendicionDomainService $service): void
+    /**
+     * Abre el editor de movimientos de una rendición.
+     * Ya no crea rendición separada — la rendición ya existe desde que se crea el presupuesto.
+     */
+    public function abrirEditorRendicion(int $rendicionId): void
     {
-        if ($this->creatingRendicion) {
-            return;
-        }
-
-        $this->creatingRendicion = true;
-
-        try {
-            $p0 = AgentePresupuesto::query()
-                ->when(!$this->isAdmin(), fn($q) => $q->where('empresa_id', $this->userEmpresaId()))
-                ->findOrFail($presupuestoId);
-
-            $rend = $service->crearDesdePresupuesto($p0, auth()->user());
-
-            $this->openRendicionEditor((int) $rend->id);
-            session()->flash('success', 'Rendición creada.');
-        } finally {
-            $this->creatingRendicion = false;
-        }
+        $this->openRendicionEditor($rendicionId);
     }
 }

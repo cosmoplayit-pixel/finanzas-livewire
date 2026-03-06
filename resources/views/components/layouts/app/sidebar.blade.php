@@ -633,16 +633,21 @@
 
             // FACTURAS: BANCO SIN SALDO al eliminar pago
             Livewire.on('swal:banco-sin-saldo', ({
+                html,
                 monto,
                 banco
             }) => {
-                Swal.fire({
-                    title: 'No se puede eliminar el pago',
-                    html: `El banco <strong>${banco ?? 'destino'}</strong> no tiene saldo suficiente para revertir este movimiento.<br><br>Saldo necesario: <strong>${monto ?? ''}</strong>`,
-                    icon: 'error',
-                    confirmButtonText: 'Entendido',
-                    confirmButtonColor: '#dc2626',
-                });
+                setTimeout(() => {
+                    Swal.fire({
+                        title: 'No se puede eliminar el pago',
+                        html: html ?
+                            `<p style="font-size:0.92em; color:#555; line-height:1.6;">${html}</p>` :
+                            `El banco <strong>${banco ?? 'destino'}</strong> no tiene saldo suficiente para revertir este movimiento.<br><br>Saldo necesario: <strong>${monto ?? ''}</strong>`,
+                        icon: 'error',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#dc2626',
+                    });
+                }, 350);
             });
 
             // Scroll restore

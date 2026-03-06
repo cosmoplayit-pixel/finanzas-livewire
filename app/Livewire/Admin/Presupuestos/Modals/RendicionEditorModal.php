@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Admin\Concerns;
+namespace App\Livewire\Admin\Presupuestos\Modals;
 
 use App\Models\Banco;
 use App\Models\Entidad;
@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 
-trait RendicionEditor
+trait RendicionEditorModal
 {
     // ✅ NUEVO/CLAVE: estado del editor (abierto|cerrado)
     public string $editorEstado = 'abierto';
@@ -211,31 +211,24 @@ trait RendicionEditor
         $this->editorRendicionId = (int) $r->id;
         $this->openEditor = true;
 
-        $this->editorRendicionNro = $r->nro_rendicion ?? null;
-        $this->editorAgenteNombre = $r->agente?->nombre ?? null;
-        $this->editorFecha = $r->fecha_rendicion ? (string) $r->fecha_rendicion : null;
-        $this->editorMonedaBase = (string) $r->moneda;
+        $this->editorRendicionNro  = $r->nro_rendicion ?? null;
+        $this->editorAgenteNombre  = $r->agente?->nombre ?? null;
+        $this->editorFecha         = $r->fecha_presupuesto ? (string) $r->fecha_presupuesto : null;
+        $this->editorMonedaBase    = (string) $r->moneda;
 
-        $this->editorPresupuestoTotal = (float) ($r->presupuesto_total ?? 0);
-        $this->editorRendidoTotal = (float) ($r->rendido_total ?? 0);
-        $this->editorSaldo = (float) ($r->saldo ?? 0);
+        $this->editorPresupuestoTotal = (float) ($r->monto ?? 0);
+        $this->editorRendidoTotal     = (float) ($r->rendido_total ?? 0);
+        $this->editorSaldo            = (float) ($r->saldo_por_rendir ?? 0);
 
-        // ✅ CLAVE: setear editorEstado aquí (Opción B)
-        // Si tu tabla rendiciones NO tiene columna "estado", deriva de fecha_cierre
-        if (isset($r->estado) && $r->estado) {
-            $this->editorEstado = (string) $r->estado; // 'abierto'|'cerrado'
-        } else {
-            $this->editorEstado = $r->fecha_cierre ? 'cerrado' : 'abierto';
-        }
+        $this->editorEstado = $r->estado ?: ($r->fecha_cierre ? 'cerrado' : 'abierto');
 
         $this->loadEditorCatalogos();
         $this->loadEditorMovimientos();
 
         $this->resetMovimientoForm();
 
-        // defaults
-        $this->mov_fecha = now()->format('d-m-Y H:i');
-        $this->mov_moneda = $this->editorMonedaBase ?: 'BOB';
+        $this->mov_fecha   = now()->format('d-m-Y H:i');
+        $this->mov_moneda  = $this->editorMonedaBase ?: 'BOB';
         $this->recalcMovimientoConversion();
 
         $this->openMovimientoModal = false;
@@ -536,11 +529,11 @@ trait RendicionEditor
             $montoBaseFloat = $this->toFloatDecimal($montoSource);
         }
 
-        // SALDO "QUE SE DEBE" O PRESUPUESTO RESTANTE:
-        $this->mov_saldo_actual_preview = round((float) ($this->editorSaldo ?? 0), 2);
+        // Calcular impacto
+        // SALDO del presupuesto restante:
+        $this->mov_saldo_actual_preview  = round((float) ($this->editorSaldo ?? 0), 2);
         $this->mov_saldo_despues_preview = round($this->mov_saldo_actual_preview - $montoBaseFloat, 2);
-
-        $this->mov_monto_excede_saldo = $this->mov_saldo_despues_preview < 0;
+        $this->mov_monto_excede_saldo    = $this->mov_saldo_despues_preview < 0;
 
         // BANCO (SÓLO DEVOLUCIÓN)
         $this->mov_banco_actual_preview = 0;
@@ -614,10 +607,45 @@ trait RendicionEditor
             ->when(! $this->isAdmin(), fn ($q) => $q->where('empresa_id', $this->userEmpresaId()))
             ->findOrFail($this->editorRendicionId);
 
-        $service->eliminarMovimiento($r, $movId, auth()->user());
+        // Pre-cargamos datos del movimiento para enriquecer el mensaje de error
+        $mov = RendicionMovimiento::with('banco')->find($movId);
 
-        $this->openRendicionEditor((int) $r->id);
-        session()->flash('success', 'Movimiento eliminado.');
+        try {
+            $service->eliminarMovimiento($r, $movId, auth()->user());
+
+            $this->openRendicionEditor((int) $r->id);
+            session()->flash('success', 'Movimiento eliminado.');
+        } catch (DomainException $e) {
+            $bancoNombre  = $mov?->banco?->nombre ?? null;
+            $moneda       = $mov?->moneda ?? '';
+            $montoMov     = (float) ($mov?->monto ?? 0);          // lo que se necesita revertir
+            $saldoBanco   = (float) ($mov?->banco?->monto ?? 0);  // saldo actual del banco
+            $faltante     = max(0, $montoMov - $saldoBanco);      // cuánto falta
+
+            $fmtMonto    = number_format($montoMov,  2, ',', '.') . ' ' . $moneda;
+            $fmtSaldo    = number_format($saldoBanco, 2, ',', '.') . ' ' . $moneda;
+            $fmtFaltante = number_format($faltante,  2, ',', '.') . ' ' . $moneda;
+
+            $html = '';
+            if ($bancoNombre) {
+                $html .= "El banco <strong>{$bancoNombre}</strong> no tiene saldo suficiente para revertir este movimiento.";
+            }
+            $html .= "<br><br>";
+            $html .= "<table style='margin: 0 auto; width: auto; min-width: 220px; font-size:0.9em; text-align:left; border-collapse:collapse;'>";
+            $html .= "<tr><td style='padding:4px 16px 4px 0; color:#6b7280;'>Saldo disponible:</td><td style='padding:4px 0; font-weight:600; text-align:right;'>{$fmtSaldo}</td></tr>";
+            $html .= "<tr><td style='padding:4px 16px 4px 0; color:#6b7280;'>Monto a revertir:</td><td style='padding:4px 0; font-weight:600; text-align:right;'>{$fmtMonto}</td></tr>";
+            $html .= "<tr style='border-top:1px solid #e5e7eb;'><td style='padding:8px 16px 4px 0; color:#ef4444; font-weight:600;'>Falta:</td><td style='padding:8px 0 4px; font-weight:700; color:#ef4444; text-align:right;'>{$fmtFaltante}</td></tr>";
+            $html .= "</table>";
+
+            if (! $html) {
+                $html = $e->getMessage();
+            }
+
+            $this->dispatch('swal:error',
+                title: 'No se puede eliminar',
+                html: $html,
+            );
+        }
     }
 
     // =========================================================
@@ -735,12 +763,10 @@ trait RendicionEditor
             return;
         }
 
-        // ✅ bloquear si ya está cerrada
         if ($this->editorEstado === 'cerrado') {
             return;
         }
 
-        // ✅ bloquear si aún hay saldo
         if ((float) ($this->editorSaldo ?? 0) > 0) {
             return;
         }
@@ -754,10 +780,8 @@ trait RendicionEditor
             $service->cerrarRendicion($r, auth()->user());
             session()->flash('success', 'Rendición cerrada.');
 
-            // ✅ refrescar editor para recalcular saldo/estado y bloquear botón
             $this->openRendicionEditor((int) $r->id);
 
-            // ✅ refrescar paneles (si existe en tu componente)
             if (method_exists($this, 'reloadOpenPanels')) {
                 $this->reloadOpenPanels();
             }

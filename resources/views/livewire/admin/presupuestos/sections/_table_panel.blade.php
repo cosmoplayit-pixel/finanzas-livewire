@@ -129,76 +129,60 @@
                                     @can('agente_presupuestos.view_detail')
                                         <td class="p-3 whitespace-nowrap align-middle">
                                             <div class="flex items-center justify-center gap-2">
+                                                {{-- ABRIR MOVIMIENTOS --}}
+                                                <button type="button"
+                                                    wire:click="openRendicionEditor({{ $p->id }})"
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="openRendicionEditor({{ $p->id }})"
+                                                    wire:loading.class="cursor-not-allowed opacity-60"
+                                                    wire:loading.class.remove="cursor-pointer hover:bg-blue-700 hover:border-blue-700 shadow-sm"
+                                                    class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 shadow-sm dark:bg-blue-500 dark:border-blue-500 dark:hover:bg-blue-400 dark:hover:border-blue-400"
+                                                    title="Movimientos">
 
-                                                {{-- CREAR RENDICIÓN --}}
-                                                @if (empty($p->rendicion_id))
-                                                    <button type="button" wire:click="crearRendicion({{ $p->id }})"
-                                                        wire:loading.attr="disabled"
-                                                        wire:target="crearRendicion({{ $p->id }})"
-                                                        wire:loading.class="cursor-not-allowed opacity-60"
-                                                        wire:loading.class.remove="cursor-pointer hover:bg-emerald-600 hover:border-emerald-600 shadow-sm"
-                                                        class="px-3 py-1.5 rounded-md border transition-all cursor-pointer text-xs font-semibold
-                                                    bg-[#00b06b] text-white border-[#00b06b]
-                                                    hover:bg-emerald-600 hover:border-emerald-600 hover:shadow-sm shadow-sm
-                                                    dark:bg-emerald-500 dark:border-emerald-500 dark:hover:bg-emerald-400 dark:hover:border-emerald-400
-                                                    inline-flex items-center justify-center gap-2">
+                                                    <span wire:loading.remove
+                                                        wire:target="openRendicionEditor({{ $p->id }})"
+                                                        class="inline-flex">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path
+                                                                d="M19 7V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" />
+                                                            <path d="M21 12H17a2 2 0 0 0 0 4h4v-4Z" />
+                                                        </svg>
+                                                    </span>
 
-                                                        {{-- Texto normal --}}
-                                                        <span wire:loading.remove
-                                                            wire:target="crearRendicion({{ $p->id }})">
-                                                            Crear
-                                                        </span>
+                                                    <span wire:loading
+                                                        wire:target="openRendicionEditor({{ $p->id }})"
+                                                        class="inline-flex items-center">
+                                                        <svg class="w-5 h-5 animate-spin" viewBox="0 0 24 24" fill="none"
+                                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path d="M21 12a9 9 0 1 1-3-6.7" />
+                                                        </svg>
+                                                    </span>
+                                                </button>
 
-                                                        {{-- Spinner --}}
-                                                        <span wire:loading
-                                                            wire:target="crearRendicion({{ $p->id }})"
-                                                            class="inline-flex items-center">
-                                                            <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24"
-                                                                fill="none">
-                                                                <circle class="opacity-25" cx="12" cy="12"
-                                                                    r="10" stroke="currentColor" stroke-width="4" />
-                                                                <path class="opacity-75" fill="currentColor"
-                                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                                                            </svg>
-                                                        </span>
-                                                    </button>
-
-
-                                                    {{-- VER RENDICIÓN --}}
-                                                @else
-                                                    <button type="button"
-                                                        wire:click="openRendicionEditor({{ $p->rendicion_id }})"
-                                                        wire:loading.attr="disabled"
-                                                        wire:target="openRendicionEditor({{ $p->rendicion_id }})"
-                                                        wire:loading.class="cursor-not-allowed opacity-60"
-                                                        wire:loading.class.remove="cursor-pointer hover:bg-gray-100 hover:border-gray-200 shadow-sm"
-                                                        class="px-3.5 py-1.5 rounded-md border transition-all cursor-pointer text-xs font-semibold
-                                                    bg-gray-50 text-gray-700 border-gray-200 shadow-sm
-                                                    hover:bg-gray-100 hover:border-gray-300 hover:text-gray-900
-                                                    dark:bg-neutral-800 dark:text-neutral-200 dark:border-neutral-700
-                                                    dark:hover:bg-neutral-700 dark:hover:border-neutral-600
-                                                    inline-flex items-center justify-center gap-2">
-
-                                                        {{-- Texto normal --}}
-                                                        <span wire:loading.remove
-                                                            wire:target="openRendicionEditor({{ $p->rendicion_id }})">
-                                                            Ver
-                                                        </span>
-
-                                                        {{-- Spinner --}}
-                                                        <span wire:loading
-                                                            wire:target="openRendicionEditor({{ $p->rendicion_id }})"
-                                                            class="inline-flex items-center">
-                                                            <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24"
-                                                                fill="none">
-                                                                <circle class="opacity-25" cx="12" cy="12"
-                                                                    r="10" stroke="currentColor" stroke-width="4" />
-                                                                <path class="opacity-75" fill="currentColor"
-                                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                                                            </svg>
-                                                        </span>
-                                                    </button>
-                                                @endif
+                                                {{-- ELIMINAR --}}
+                                                @php
+                                                    $hasMovimientos = ($p->movimientos_count ?? 0) > 0;
+                                                @endphp
+                                                <button type="button" {{ $hasMovimientos ? 'disabled' : '' }}
+                                                    @if (!$hasMovimientos) wire:click="abrirEliminarRendicionModal({{ $p->id }})" @endif
+                                                    class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition-all
+                                                           {{ $hasMovimientos
+                                                               ? 'bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700 shadow-none'
+                                                               : 'bg-white text-red-600 border-red-300 cursor-pointer hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 hover:shadow-sm' }}"
+                                                    title="{{ $hasMovimientos ? 'Tiene movimientos: no se puede eliminar' : 'Eliminar presupuesto' }}">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M3 6h18" />
+                                                        <path d="M8 6V4h8v2" />
+                                                        <path d="M6 6l1 16h10l1-16" />
+                                                        <path d="M10 11v6" />
+                                                        <path d="M14 11v6" />
+                                                    </svg>
+                                                </button>
                                             </div>
                                         </td>
                                     @endcan

@@ -208,7 +208,7 @@
                       </tr>
 
                       {{-- PANEL DETALLE PRESUPUESTOS --}}
-                      @include('livewire.admin.presupuestos._table_panel')
+                      @include('livewire.admin.presupuestos.sections._table_panel')
                       {{-- FIN PANEL DETALLE PRESUPUESTOS --}}
 
                   </tbody>

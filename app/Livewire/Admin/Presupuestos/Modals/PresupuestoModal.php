@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Livewire\Admin\Concerns;
+namespace App\Livewire\Admin\Presupuestos\Modals;
 
 use App\Models\AgenteServicio;
 use App\Models\Banco;
-use App\Services\AgentePresupuestoService;
+use App\Services\RendicionService;
 use DomainException;
 
-trait AgentePresupuestoModal
+trait PresupuestoModal
 {
     // MODAL CREAR PRESUPUESTO
     public bool $openModal = false;
@@ -41,21 +41,20 @@ trait AgentePresupuestoModal
 
     public bool $monto_excede_saldo = false;
 
-    // Reglas de validación para presupuesto
+    // Reglas de validación
     protected function presupuestoRules(): array
     {
         return [
             'banco_id' => ['required', 'exists:bancos,id'],
             'agente_servicio_id' => ['required', 'exists:agentes_servicio,id'],
             'fecha_presupuesto' => ['required', 'date'],
-            'nro_transaccion' => ['required', 'string', 'max:50'],
+            'nro_transaccion' => ['nullable', 'string', 'max:50'],
             'monto' => ['required', 'numeric', 'min:0.01'],
-            'foto_comprobante' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'], // Max 5MB
+            'foto_comprobante' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
             'observacion' => ['nullable', 'string', 'max:2000'],
         ];
     }
 
-    // Abrir modal
     public function openCreate(): void
     {
         $this->resetErrorBag();
@@ -67,14 +66,12 @@ trait AgentePresupuestoModal
         $this->openModal = true;
     }
 
-    // Cerrar modal
     public function closeModal(): void
     {
         $this->resetPresupuestoForm();
         $this->openModal = false;
     }
 
-    // Al cambiar monto formateado
     public function updatedMontoFormatted($value): void
     {
         $value = trim((string) $value);
@@ -102,13 +99,11 @@ trait AgentePresupuestoModal
         $this->recalcularPreviews();
     }
 
-    // Al cambiar nro transacción
     public function updatedNroTransaccion($value): void
     {
         $this->nro_transaccion = trim((string) $value);
     }
 
-    // Al cambiar banco
     public function updatedBancoId(): void
     {
         $this->cargarBancoPreview();
@@ -116,14 +111,12 @@ trait AgentePresupuestoModal
         $this->recalcularPreviews();
     }
 
-    // Al cambiar agente
     public function updatedAgenteServicioId(): void
     {
         $this->cargarAgentePreview();
         $this->recalcularPreviews();
     }
 
-    // Puede guardar presupuesto
     public function getPuedeGuardarProperty(): bool
     {
         if (! $this->banco_id) {
@@ -141,15 +134,11 @@ trait AgentePresupuestoModal
         if (trim((string) $this->fecha_presupuesto) === '') {
             return false;
         }
-        if (trim((string) $this->nro_transaccion) === '') {
-            return false;
-        }
 
         return true;
     }
 
-    // Guardar presupuesto
-    public function savePresupuesto(AgentePresupuestoService $svc): void
+    public function savePresupuesto(RendicionService $svc): void
     {
         $data = $this->validate($this->presupuestoRules());
 
@@ -174,7 +163,6 @@ trait AgentePresupuestoModal
             }
         }
 
-        $mon = (string) $banco->moneda;
         $fecha = date('Y-m-d H:i:00', strtotime($data['fecha_presupuesto']));
 
         $path = null;
@@ -183,25 +171,25 @@ trait AgentePresupuestoModal
         }
 
         try {
-            $svc->crear(
+            $rendicion = $svc->crear(
                 agente: $agente,
                 banco: $banco,
                 monto: (float) $this->monto,
-                moneda: $mon,
-                fecha: $fecha,
-                nro_transaccion: $data['nro_transaccion'],
+                moneda: (string) $banco->moneda,
+                fechaPresupuesto: $fecha,
+                nroTransaccion: $data['nro_transaccion'] ?? null,
                 observacion: $data['observacion'] ?? null,
-                foto_comprobante: $path,
+                fotoComprobante: $path,
                 user: auth()->user(),
             );
 
             $this->closeModal();
 
-            // Abrir panel inline de esa fila (lo maneja el trait Panel)
-            $rk = $this->rowKey((int) $agente->id, $mon);
+            // Abrir panel inline de esa fila
+            $rk = $this->rowKey((int) $agente->id, (string) $banco->moneda);
             $this->panelsOpen[$rk] = true;
             $this->panelEstado[$rk] = $this->panelEstado[$rk] ?? 'ALL';
-            $this->loadPanel((int) $agente->id, $mon);
+            $this->loadPanel((int) $agente->id, (string) $banco->moneda);
 
             session()->flash('success', 'Presupuesto registrado correctamente.');
         } catch (DomainException $e) {
@@ -209,7 +197,6 @@ trait AgentePresupuestoModal
         }
     }
 
-    // Cargar preview banco
     protected function cargarBancoPreview(): void
     {
         $this->monedaBanco = '';
@@ -236,7 +223,6 @@ trait AgentePresupuestoModal
         $this->saldo_banco_actual_preview = round((float) ($b->monto ?? 0), 2);
     }
 
-    // Cargar preview agente
     protected function cargarAgentePreview(): void
     {
         $this->saldo_agente_actual_preview = 0;
@@ -264,37 +250,25 @@ trait AgentePresupuestoModal
         }
     }
 
-    // Recalcular previews
     protected function recalcularPreviews(): void
     {
         $m = round((float) $this->monto, 2);
-
         $antesBanco = round((float) $this->saldo_banco_actual_preview, 2);
         $this->monto_excede_saldo = (bool) ($this->banco_id && $m > 0 && $m > $antesBanco);
-
         $this->saldo_banco_despues_preview = round($antesBanco - $m, 2);
 
         $antesAgente = round((float) $this->saldo_agente_actual_preview, 2);
         $this->saldo_agente_despues_preview = round($antesAgente + $m, 2);
     }
 
-    // Reset form presupuesto
     protected function resetPresupuestoForm(): void
     {
         $this->reset([
-            'banco_id',
-            'agente_servicio_id',
-            'monedaBanco',
-            'fecha_presupuesto',
-            'nro_transaccion',
-            'observacion',
-            'foto_comprobante',
-            'monto_formatted',
-            'monto',
-            'saldo_banco_actual_preview',
-            'saldo_banco_despues_preview',
-            'saldo_agente_actual_preview',
-            'saldo_agente_despues_preview',
+            'banco_id', 'agente_servicio_id', 'monedaBanco',
+            'fecha_presupuesto', 'nro_transaccion', 'observacion',
+            'foto_comprobante', 'monto_formatted', 'monto',
+            'saldo_banco_actual_preview', 'saldo_banco_despues_preview',
+            'saldo_agente_actual_preview', 'saldo_agente_despues_preview',
             'monto_excede_saldo',
         ]);
 
@@ -305,9 +279,6 @@ trait AgentePresupuestoModal
         $this->monto_excede_saldo = false;
     }
 
-    /**
-     * Para render(): devuelve [bancos, agentes] SOLO cuando el modal está abierto.
-     */
     protected function modalCatalogos(): array
     {
         $bancos = collect();

@@ -13,7 +13,8 @@ use App\Livewire\Admin\Proyectos;
 use App\Livewire\Admin\Bancos;
 use App\Livewire\Admin\Facturas;
 use App\Livewire\Admin\AgentesServicio;
-use App\Livewire\Admin\AgentePresupuestos;
+use App\Livewire\Admin\AgentePresupuestos;  // legacy alias
+use App\Livewire\Admin\Presupuestos\Index as PresupuestosIndex;
 
 use App\Livewire\Admin\BoletasGarantia\Index as BoletasGarantiaIndex;
 use App\Livewire\Admin\Inversiones\Index as InversionesIndex;
@@ -115,7 +116,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     // AGENTE PRESUPUESTOS + RENDICIÓN (UNIFICADO)
     // =======================
     Route::middleware(['permission:agente_presupuestos.view'])->group(function () {
-        Route::get('/agente_presupuestos', AgentePresupuestos::class)->name('agente_presupuestos');
+        Route::get('/agente_presupuestos', PresupuestosIndex::class)->name('agente_presupuestos');
     });
 
     // =======================

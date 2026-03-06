@@ -125,10 +125,11 @@ class ViewServiceProvider extends ServiceProvider
                     ->count();
             }
 
-            // AGENTE PRESUPUESTOS + RENDICIÓN (UNIFICADO)
+            // AGENTE PRESUPUESTOS / RENDICIONES (tabla unificada)
             if ($user->can('agente_presupuestos.view')) {
-                $navCounts['agente_presupuestos'] = DB::table('agente_presupuestos')
+                $navCounts['agente_presupuestos'] = DB::table('rendiciones')
                     ->where('active', true)
+                    ->where('estado', 'abierto')
                     ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
                         $q->where('empresa_id', $empresaId);
                     })

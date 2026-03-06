@@ -19,38 +19,51 @@ class CreateModal extends Component
     public bool $open = false;
 
     public string $codigo = '';
+
     public string $nombre_completo = '';
+
     public string $fecha_inicio = '';
+
     public ?string $fecha_vencimiento = null;
 
     public float $capital = 0.0;
+
     public float $porcentaje_utilidad = 0.0; // SOLO PRIVADO
 
     public string $capital_formatted = '';
+
     public string $porcentaje_utilidad_formatted = '';
 
     public string $moneda = 'BOB';
+
     public string $tipo = ''; // '' | PRIVADO | BANCO
 
     public $banco_id = null;
+
     public bool $moneda_locked = false;
 
     // ===== SOLO BANCO =====
     public ?int $plazo_meses = null;
+
     public ?int $dia_pago = null;
+
     public ?float $tasa_anual = null;
 
     // Solo 1 opción
     public string $sistema = 'FRANCESA';
 
     public string $tasa_anual_formatted = '';
+
     public string $plazo_meses_formatted = '';
+
     public string $dia_pago_formatted = '';
 
     public $comprobante = null;
 
     public float $saldo_banco_actual_preview = 0.0;
+
     public float $saldo_banco_aumento_preview = 0.0;
+
     public float $saldo_banco_despues_preview = 0.0;
 
     // Getter: mostrar campos BANCO
@@ -88,7 +101,35 @@ class CreateModal extends Component
     public function openModal(): void
     {
         $this->resetForm();
+        $this->codigo = $this->generateUniqueCodigo();
         $this->open = true;
+    }
+
+    protected function generateUniqueCodigo(): string
+    {
+        try {
+            $base = \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $this->fecha_inicio)->format('ymd').'-';
+        } catch (\Throwable $e) {
+            $base = now()->format('ymd').'-';
+        }
+
+        $empresaId = auth()->user()->empresa_id;
+        $inversiones = \App\Models\Inversion::query()
+            ->where('empresa_id', $empresaId)
+            ->where('codigo', 'like', $base.'%')
+            ->pluck('codigo');
+
+        $maxSuffix = 0;
+        foreach ($inversiones as $c) {
+            // Tomar solo la última parte numérica después del último guión
+            $parts = explode('-', $c);
+            $lastPart = (int) end($parts);
+            if ($lastPart > $maxSuffix) {
+                $maxSuffix = $lastPart;
+            }
+        }
+
+        return $base.($maxSuffix + 1);
     }
 
     public function close(): void
@@ -103,7 +144,6 @@ class CreateModal extends Component
         $this->resetValidation();
 
         $this->reset([
-            'codigo',
             'nombre_completo',
             'fecha_vencimiento',
             'capital',
@@ -168,6 +208,7 @@ class CreateModal extends Component
         if ($value === '') {
             $this->resetErrorBag();
             $this->resetValidation();
+
             return;
         }
 
@@ -225,6 +266,7 @@ class CreateModal extends Component
         if (empty($this->banco_id)) {
             $this->moneda_locked = false;
             $this->moneda = $this->moneda ?: 'BOB';
+
             return;
         }
 
@@ -232,9 +274,10 @@ class CreateModal extends Component
             ->where('empresa_id', auth()->user()->empresa_id)
             ->find($this->banco_id);
 
-        if (!$banco) {
+        if (! $banco) {
             $this->banco_id = null;
             $this->moneda_locked = false;
+
             return;
         }
 
@@ -292,12 +335,14 @@ class CreateModal extends Component
         $plazo = (int) ($this->plazo_meses ?? 0);
         if ($plazo <= 0) {
             $this->fecha_vencimiento = null;
+
             return;
         }
 
         $ini = trim((string) $this->fecha_inicio);
         if ($ini === '') {
             $this->fecha_vencimiento = null;
+
             return;
         }
 
@@ -305,6 +350,7 @@ class CreateModal extends Component
             $start = Carbon::createFromFormat('Y-m-d', $ini)->startOfDay();
         } catch (\Throwable) {
             $this->fecha_vencimiento = null;
+
             return;
         }
 
@@ -329,7 +375,7 @@ class CreateModal extends Component
             ->where('empresa_id', auth()->user()->empresa_id)
             ->find($this->banco_id);
 
-        if (!$banco) {
+        if (! $banco) {
             return;
         }
 
@@ -348,7 +394,12 @@ class CreateModal extends Component
     protected function rules(): array
     {
         $rules = [
-            'codigo' => ['required', 'string', 'max:150'],
+            'codigo' => [
+                'required',
+                'string',
+                'max:150',
+                Rule::unique('inversions', 'codigo')->where('empresa_id', auth()->user()->empresa_id),
+            ],
             'nombre_completo' => ['required', 'string', 'max:150'],
 
             'fecha_inicio' => ['required', 'date'],
@@ -400,6 +451,8 @@ class CreateModal extends Component
             $this->porcentaje_utilidad = 0.0;
             $this->porcentaje_utilidad_formatted = $this->fmtNumber(0.0, 2);
         }
+
+        $this->codigo = $this->generateUniqueCodigo();
 
         $this->validate();
 

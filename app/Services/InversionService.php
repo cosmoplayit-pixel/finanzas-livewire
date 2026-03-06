@@ -71,8 +71,8 @@ class InversionService
                 'sistema' => $data['sistema'] ?? null,
             ]);
 
-            // Código final
-            $inv->codigo = $codigoBase.'-'.$inv->id;
+            // Código final: usar el que llegó del modal (ya es único, ej: 260306-1)
+            $inv->codigo = $codigoBase;
             $inv->save();
 
             // Moneda banco (si aplica)

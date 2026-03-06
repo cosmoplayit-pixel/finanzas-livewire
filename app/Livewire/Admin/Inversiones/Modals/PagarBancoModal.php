@@ -513,6 +513,11 @@ class PagarBancoModal extends Component
         $this->recalcImpacto();
     }
 
+    public function updatedFecha($value): void
+    {
+        $this->validateBusinessRulesLive();
+    }
+
     // parsea total, valida reglas, recalcula interés y recalcula impacto
     public function updatedMontoTotalFormatted($value): void
     {
@@ -592,6 +597,20 @@ class PagarBancoModal extends Component
             $this->addError('monto_total', 'El monto total no puede ser menor al capital.');
         }
 
+        // 2.5) Fecha contable >= fecha inicio
+        if ($this->inversion && $this->fecha) {
+            try {
+                // strict length check to avoid parsing partial dates
+                if (strlen($this->fecha) === 10) {
+                    $f = \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $this->fecha)->startOfDay();
+                    $ini = \Illuminate\Support\Carbon::parse($this->inversion->fecha_inicio)->startOfDay();
+                    if ($f < $ini) {
+                        $this->addError('fecha', 'La fecha (contable) no puede ser anterior a la fecha inicio ('.$ini->format('d/m/Y').').');
+                    }
+                }
+            } catch (\Exception $e) {}
+        }
+
         // 3) Saldo banco suficiente para debitar el TOTAL (mismo criterio que recalcImpacto)
         if (!$this->inversion) {
             return;
@@ -660,6 +679,21 @@ class PagarBancoModal extends Component
         if ($total + 0.000001 < $capital) {
             $this->addError('monto_total', 'El monto total no puede ser menor al capital.');
             throw new DomainException('Total menor al capital.');
+        }
+
+        if ($this->inversion && $this->fecha) {
+            try {
+                if (strlen($this->fecha) === 10) {
+                    $f = \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $this->fecha)->startOfDay();
+                    $ini = \Illuminate\Support\Carbon::parse($this->inversion->fecha_inicio)->startOfDay();
+                    if ($f < $ini) {
+                        $this->addError('fecha', 'La fecha (contable) no puede ser anterior a la fecha inicio ('.$ini->format('d/m/Y').').');
+                        throw new DomainException('La fecha contable no puede ser menor a la fecha de inicio.');
+                    }
+                }
+            } catch (\Exception $e) {
+                if ($e instanceof DomainException) throw $e;
+            }
         }
     }
 

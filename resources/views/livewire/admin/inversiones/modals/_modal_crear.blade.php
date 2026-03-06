@@ -32,17 +32,7 @@
                         @enderror
                     </div>
 
-                    {{-- Código --}}
-                    <div class="col-span-1">
-                        <label class="block text-sm mb-1">Código <span class="text-red-500">*</span></label>
-                        <input wire:model.live="codigo" placeholder="Ej: 260101"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                        @error('codigo')
-                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
+
 
                     {{-- Nombre --}}
                     <div class="col-span-2 lg:col-span-1">
@@ -68,23 +58,24 @@
                         @enderror
                     </div>
 
-                    {{-- Fecha vencimiento (AUTO, OCULTA al inicio y DESHABILITADA) --}}
-                    <div class="col-span-1">
-                        <label class="block text-sm mb-1">Fecha vencimiento <span class="text-red-500">*</span></label>
-                        <input type="date" wire:model="fecha_vencimiento" disabled
-                            class="w-full cursor-not-allowed rounded-lg border px-3 py-2
+                    {{-- Banco (OCULTO hasta elegir tipo) --}}
+                    @if ($showTipoSelectedFields)
+
+                        {{-- Fecha vencimiento --}}
+                        <div class="col-span-1">
+                            <label class="block text-sm mb-1">Fecha vencimiento <span
+                                    class="text-red-500">*</span></label>
+                            <input type="date" wire:model="fecha_vencimiento" disabled
+                                class="w-full cursor-not-allowed rounded-lg border px-3 py-2
                                        bg-gray-50 dark:bg-neutral-800
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                        opacity-80 focus:outline-none" />
-                        @error('fecha_vencimiento')
-                            <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
+                            @error('fecha_vencimiento')
+                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
 
 
-
-                    {{-- Banco (OCULTO hasta elegir tipo) --}}
-                    @if ($showTipoSelectedFields)
                         <div class="col-span-1">
                             <label class="block text-sm mb-1">Banco <span class="text-red-500">*</span></label>
                             <select wire:model.live="banco_id"

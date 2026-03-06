@@ -26,6 +26,7 @@
     {{-- Modales --}}
     @includeWhen($openFacturaModal, 'livewire.admin.facturas._modal_factura')
     @includeWhen($openPagoModal, 'livewire.admin.facturas._modal_pago')
+    @includeWhen($openEliminarFacturaModal, 'livewire.admin.facturas._modal_eliminar_factura')
 
     {{-- VISOR FOTO --}}
     <div wire:key="foto-bg-{{ $openFotoModal ? '1' : '0' }}-{{ md5($fotoUrl ?? '') }}">

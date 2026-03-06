@@ -330,6 +330,7 @@
                         @can('facturas.pay')
                             <td class="p-2 whitespace-nowrap align-middle" @click.stop>
                                 <div class="flex items-center justify-center gap-2">
+                                    {{-- Botón pagar --}}
                                     <button type="button"
                                         @if (!$r['cerrado_acc']) wire:click="openPago({{ $r['id'] }})" @endif
                                         wire:loading.attr="disabled" wire:target="openPago({{ $r['id'] }})"
@@ -372,6 +373,30 @@
                                             </span>
                                         @endif
                                     </button>
+
+                                    {{-- Botón eliminar factura (solo si no tiene pagos) --}}
+                                    @can('facturas.delete')
+                                        <button type="button"
+                                            @if ($r['sin_pagos']) wire:click="abrirEliminarFacturaModal({{ $r['id'] }})" @endif
+                                            wire:loading.attr="disabled"
+                                            wire:target="abrirEliminarFacturaModal({{ $r['id'] }})"
+                                            @disabled(!$r['sin_pagos'])
+                                            class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition
+                                            {{ !$r['sin_pagos']
+                                                ? 'bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700'
+                                                : 'bg-white text-red-600 border-red-300 cursor-pointer hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20' }}"
+                                            title="{{ !$r['sin_pagos'] ? 'Tiene pagos: no se puede eliminar' : 'Eliminar factura' }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <path d="M3 6h18" />
+                                                <path d="M8 6V4h8v2" />
+                                                <path d="M6 6l1 16h10l1-16" />
+                                                <path d="M10 11v6" />
+                                                <path d="M14 11v6" />
+                                            </svg>
+                                        </button>
+                                    @endcan
                                 </div>
                             </td>
                         @endcan

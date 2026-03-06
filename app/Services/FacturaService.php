@@ -108,4 +108,31 @@ class FacturaService
             'active' => true,
         ]);
     }
+
+    /**
+     * Elimina una factura si no tiene pagos registrados.
+     * También elimina el archivo del comprobante del storage.
+     *
+     * @throws DomainException Si la factura tiene pagos
+     */
+    public function eliminarFactura(Factura $factura, User $user): void
+    {
+        // Control multi-empresa
+        $proyecto = $factura->proyecto;
+        if ($user->empresa_id === null || (int) ($proyecto?->empresa_id ?? 0) !== (int) $user->empresa_id) {
+            throw new DomainException('No tienes permiso para eliminar facturas de otra empresa.');
+        }
+
+        // Solo se puede eliminar si no tiene pagos
+        if ($factura->pagos()->exists()) {
+            throw new DomainException('No se puede eliminar la factura porque tiene pagos registrados.');
+        }
+
+        // Eliminar comprobante del storage si existe
+        if (!empty($factura->foto_comprobante)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($factura->foto_comprobante);
+        }
+
+        $factura->delete();
+    }
 }

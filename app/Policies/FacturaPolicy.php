@@ -71,4 +71,28 @@ class FacturaPolicy
 
         return (int) ($factura->proyecto?->empresa_id ?? 0) === (int) $empresaId;
     }
+
+    /**
+     * Autoriza la eliminación de una factura.
+     *
+     * Reglas:
+     * - El usuario debe tener el permiso facturas.delete
+     * - La factura debe pertenecer a la empresa del usuario
+     */
+    public function delete(User $user, Factura $factura): bool
+    {
+        if (!$user->can('facturas.delete')) {
+            return false;
+        }
+
+        $empresaId = $user->empresa_id;
+
+        if (!$empresaId) {
+            return false;
+        }
+
+        $factura->loadMissing(['proyecto']);
+
+        return (int) ($factura->proyecto?->empresa_id ?? 0) === (int) $empresaId;
+    }
 }

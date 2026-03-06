@@ -631,6 +631,20 @@
                 });
             });
 
+            // FACTURAS: BANCO SIN SALDO al eliminar pago
+            Livewire.on('swal:banco-sin-saldo', ({
+                monto,
+                banco
+            }) => {
+                Swal.fire({
+                    title: 'No se puede eliminar el pago',
+                    html: `El banco <strong>${banco ?? 'destino'}</strong> no tiene saldo suficiente para revertir este movimiento.<br><br>Saldo necesario: <strong>${monto ?? ''}</strong>`,
+                    icon: 'error',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#dc2626',
+                });
+            });
+
             // Scroll restore
             Livewire.on('scroll:restore', () => {
                 const y = window.__lw_scrollY ?? 0;

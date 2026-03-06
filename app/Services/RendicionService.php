@@ -220,7 +220,7 @@ class RendicionService
             // Foto
             $path = null;
             if ($foto) {
-                $path = $foto->store('rendiciones', 'public');
+                $path = $foto->store("empresas/{$r->empresa_id}/agente_presupuestos/rendiciones", 'public');
             }
 
             // Crear movimiento

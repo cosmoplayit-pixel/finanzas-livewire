@@ -6,9 +6,9 @@ use App\Models\Banco;
 use App\Models\Factura;
 use App\Models\FacturaPago;
 use App\Models\User;
-use App\Services\FacturaFinance;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Servicio de dominio para la gestión de Pagos de Facturas.
@@ -68,7 +68,7 @@ class FacturaPagoService
             /**
              * Regla: la retención solo puede pagarse cuando el pago normal está completo.
              */
-            if ($tipo === 'retencion' && !FacturaFinance::puedePagarRetencion($factura)) {
+            if ($tipo === 'retencion' && ! FacturaFinance::puedePagarRetencion($factura)) {
                 throw new DomainException(
                     'No puedes pagar la retención hasta completar el pago normal de la factura.',
                 );
@@ -78,7 +78,7 @@ class FacturaPagoService
              * Validación del banco destino (y lock para actualizar saldo).
              */
             $banco = null;
-            if (!empty($data['banco_id'])) {
+            if (! empty($data['banco_id'])) {
                 $banco = Banco::query()->lockForUpdate()->findOrFail((int) $data['banco_id']);
 
                 if ($empresaId && (int) $banco->empresa_id !== (int) $empresaId) {
@@ -123,7 +123,7 @@ class FacturaPagoService
 
                 if ($montoIngresado > $saldoNormal) {
                     throw new DomainException(
-                        'El monto excede el saldo normal pendiente. Máximo permitido: Bs ' .
+                        'El monto excede el saldo normal pendiente. Máximo permitido: Bs '.
                             number_format($saldoNormal, 2, ',', '.'),
                     );
                 }
@@ -134,7 +134,7 @@ class FacturaPagoService
 
                 if ($montoIngresado > $retPendiente) {
                     throw new DomainException(
-                        'El monto excede la retención pendiente. Máximo permitido: Bs ' .
+                        'El monto excede la retención pendiente. Máximo permitido: Bs '.
                             number_format($retPendiente, 2, ',', '.'),
                     );
                 }
@@ -203,7 +203,7 @@ class FacturaPagoService
              * Si hay banco destino, lo bloqueamos y restamos el saldo.
              */
             $banco = null;
-            if (!empty($pago->banco_id)) {
+            if (! empty($pago->banco_id)) {
                 $banco = Banco::query()->lockForUpdate()->find($pago->banco_id);
 
                 // Si existe, validamos empresa por seguridad adicional
@@ -226,6 +226,11 @@ class FacturaPagoService
                 }
 
                 $banco->decrement('monto', $monto);
+            }
+
+            // Eliminar archivo del comprobante si existe
+            if (! empty($pago->foto_comprobante)) {
+                Storage::disk('public')->delete($pago->foto_comprobante);
             }
 
             $pago->delete();

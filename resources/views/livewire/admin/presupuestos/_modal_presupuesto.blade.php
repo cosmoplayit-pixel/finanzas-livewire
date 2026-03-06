@@ -80,6 +80,23 @@
                     @enderror
                 </div>
 
+                {{-- NRO TRANSACCIÓN --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Nro. Transacción: <span class="text-red-500">*</span>
+                    </label>
+                    <input wire:model.live="nro_transaccion"
+                        class="w-full rounded-lg border px-3 py-2
+                               bg-white dark:bg-neutral-900
+                               border-gray-300/60 dark:border-neutral-700/60
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                    @error('nro_transaccion')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
+
                 {{-- FECHA --}}
                 <div>
                     <label class="block text-sm mb-1">
@@ -92,22 +109,6 @@
                                text-gray-900 dark:text-neutral-100
                                focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                     @error('fecha_presupuesto')
-                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                {{-- NRO TRANSACCIÓN --}}
-                <div>
-                    <label class="block text-sm mb-1">
-                        Nro. Transacción: <span class="text-red-500">*</span>
-                    </label>
-                    <input wire:model.live="nro_transaccion" placeholder="Ej: 156285"
-                        class="w-full rounded-lg border px-3 py-2
-                               bg-white dark:bg-neutral-900
-                               border-gray-300/60 dark:border-neutral-700/60
-                               text-gray-900 dark:text-neutral-100
-                               focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                    @error('nro_transaccion')
                         <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                     @enderror
                 </div>

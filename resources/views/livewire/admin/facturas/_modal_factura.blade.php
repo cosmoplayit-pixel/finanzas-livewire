@@ -53,20 +53,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {{-- Número --}}
-            <div>
-                <label class="block text-sm mb-1">Nro. Factura: <span class="text-red-500">*</span></label>
-                <input wire:model="numero" autocomplete="off"
-                    class="w-full rounded border px-3 py-2
-                       bg-white dark:bg-neutral-900
-                       border-gray-300 dark:border-neutral-700
-                       text-gray-900 dark:text-neutral-100
-                       focus:outline-none focus:ring-2
-                       focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                @error('numero')
-                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                @enderror
-            </div>
 
             {{-- Monto --}}
             <div>
@@ -80,6 +66,21 @@
                focus:outline-none focus:ring-2
                focus:ring-gray-300 dark:focus:ring-neutral-700" />
                 @error('monto_facturado')
+                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                @enderror
+            </div>
+
+            {{-- Número --}}
+            <div>
+                <label class="block text-sm mb-1">Nro. Factura: <span class="text-red-500">*</span></label>
+                <input wire:model="numero" autocomplete="off"
+                    class="w-full rounded border px-3 py-2
+                       bg-white dark:bg-neutral-900
+                       border-gray-300 dark:border-neutral-700
+                       text-gray-900 dark:text-neutral-100
+                       focus:outline-none focus:ring-2
+                       focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                @error('numero')
                     <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                 @enderror
             </div>

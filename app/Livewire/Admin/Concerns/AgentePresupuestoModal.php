@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Livewire\Admin\Concerns;
 
 use App\Models\AgenteServicio;
@@ -12,23 +13,30 @@ trait AgentePresupuestoModal
     public bool $openModal = false;
 
     public ?int $banco_id = null;
+
     public ?int $agente_servicio_id = null;
 
     public string $monedaBanco = '';
+
     public string $fecha_presupuesto = '';
+
     public string $nro_transaccion = '';
+
     public ?string $observacion = null;
 
     public string $monto_formatted = '';
+
     public float $monto = 0;
 
     public $foto_comprobante;
 
     // Previews
     public float $saldo_banco_actual_preview = 0;
+
     public float $saldo_banco_despues_preview = 0;
 
     public float $saldo_agente_actual_preview = 0;
+
     public float $saldo_agente_despues_preview = 0;
 
     public bool $monto_excede_saldo = false;
@@ -75,15 +83,17 @@ trait AgentePresupuestoModal
             $this->monto = 0;
             $this->monto_formatted = '';
             $this->recalcularPreviews();
+
             return;
         }
 
         $clean = str_replace('.', '', $value);
         $clean = str_replace(',', '.', $clean);
 
-        if (!is_numeric($clean)) {
+        if (! is_numeric($clean)) {
             $this->monto = 0;
             $this->recalcularPreviews();
+
             return;
         }
 
@@ -116,10 +126,10 @@ trait AgentePresupuestoModal
     // Puede guardar presupuesto
     public function getPuedeGuardarProperty(): bool
     {
-        if (!$this->banco_id) {
+        if (! $this->banco_id) {
             return false;
         }
-        if (!$this->agente_servicio_id) {
+        if (! $this->agente_servicio_id) {
             return false;
         }
         if (round((float) $this->monto, 2) <= 0) {
@@ -146,6 +156,7 @@ trait AgentePresupuestoModal
         $this->recalcularPreviews();
         if ($this->monto_excede_saldo) {
             $this->addError('monto', 'El monto no puede ser mayor al saldo actual del banco.');
+
             return;
         }
 
@@ -154,7 +165,7 @@ trait AgentePresupuestoModal
         $banco = Banco::query()->findOrFail((int) $data['banco_id']);
         $agente = AgenteServicio::query()->findOrFail((int) $data['agente_servicio_id']);
 
-        if (!$this->isAdmin()) {
+        if (! $this->isAdmin()) {
             if ((int) $banco->empresa_id !== (int) $empresaId) {
                 abort(403);
             }
@@ -168,7 +179,7 @@ trait AgentePresupuestoModal
 
         $path = null;
         if ($this->foto_comprobante) {
-            $path = $this->foto_comprobante->store('comprobantes/agente_presupuestos', 'public');
+            $path = $this->foto_comprobante->store("empresas/{$empresaId}/agente_presupuestos/presupuesto", 'public');
         }
 
         try {
@@ -204,18 +215,20 @@ trait AgentePresupuestoModal
         $this->monedaBanco = '';
         $this->saldo_banco_actual_preview = 0;
 
-        if (!$this->banco_id) {
+        if (! $this->banco_id) {
             return;
         }
 
         $b = Banco::query()->find($this->banco_id);
-        if (!$b) {
+        if (! $b) {
             $this->banco_id = null;
+
             return;
         }
 
-        if (!$this->isAdmin() && (int) $b->empresa_id !== (int) $this->userEmpresaId()) {
+        if (! $this->isAdmin() && (int) $b->empresa_id !== (int) $this->userEmpresaId()) {
             $this->banco_id = null;
+
             return;
         }
 
@@ -227,18 +240,20 @@ trait AgentePresupuestoModal
     protected function cargarAgentePreview(): void
     {
         $this->saldo_agente_actual_preview = 0;
-        if (!$this->agente_servicio_id) {
+        if (! $this->agente_servicio_id) {
             return;
         }
 
         $a = AgenteServicio::query()->find($this->agente_servicio_id);
-        if (!$a) {
+        if (! $a) {
             $this->agente_servicio_id = null;
+
             return;
         }
 
-        if (!$this->isAdmin() && (int) $a->empresa_id !== (int) $this->userEmpresaId()) {
+        if (! $this->isAdmin() && (int) $a->empresa_id !== (int) $this->userEmpresaId()) {
             $this->agente_servicio_id = null;
+
             return;
         }
 
@@ -298,18 +313,18 @@ trait AgentePresupuestoModal
         $bancos = collect();
         $agentes = collect();
 
-        if (!($this->openModal ?? false)) {
+        if (! ($this->openModal ?? false)) {
             return [$bancos, $agentes];
         }
 
         $bancos = Banco::query()
-            ->when(!$this->isAdmin(), fn($b) => $b->where('empresa_id', $this->userEmpresaId()))
+            ->when(! $this->isAdmin(), fn ($b) => $b->where('empresa_id', $this->userEmpresaId()))
             ->where('active', true)
             ->orderBy('nombre')
             ->get(['id', 'empresa_id', 'nombre', 'numero_cuenta', 'moneda', 'monto']);
 
         $agentes = AgenteServicio::query()
-            ->when(!$this->isAdmin(), fn($a) => $a->where('empresa_id', $this->userEmpresaId()))
+            ->when(! $this->isAdmin(), fn ($a) => $a->where('empresa_id', $this->userEmpresaId()))
             ->where('active', true)
             ->orderBy('nombre')
             ->get(['id', 'empresa_id', 'nombre', 'ci', 'saldo_bob', 'saldo_usd']);

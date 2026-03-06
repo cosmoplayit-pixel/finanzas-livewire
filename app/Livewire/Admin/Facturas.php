@@ -12,6 +12,7 @@ use App\Services\FacturaFinance;
 use App\Services\FacturaPagoService;
 use App\Services\FacturaService;
 use DomainException;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Url;
 use Livewire\Component;
@@ -120,6 +121,13 @@ class Facturas extends Component
 
     // UI: tabla pagos desplegables
     public array $panelsOpen = [];
+
+    // Modal: eliminar factura con contraseña
+    public bool $openEliminarFacturaModal = false;
+
+    public string $deleteFacturaPassword = '';
+
+    public ?int $deleteFacturaId = null;
 
     public function togglePanel(int $facturaId): void
     {
@@ -448,7 +456,7 @@ class Facturas extends Component
             $path = null;
 
             if ($this->foto_comprobante) {
-                $path = $this->foto_comprobante->store('empresas/'.$this->empresaId().'/facturas', 'public');
+                $path = $this->foto_comprobante->store('empresas/'.$this->empresaId().'/facturas/facturas_nuevas', 'public');
             }
 
             $service->crearFactura(
@@ -640,7 +648,7 @@ class Facturas extends Component
             $path = null;
 
             if ($this->pago_foto_comprobante) {
-                $path = $this->pago_foto_comprobante->store('empresas/'.$this->empresaId().'/facturas-pagos', 'public');
+                $path = $this->pago_foto_comprobante->store('empresas/'.$this->empresaId().'/facturas/facturas_pagas', 'public');
             }
 
             $service->registrarPago(
@@ -666,6 +674,71 @@ class Facturas extends Component
         }
     }
 
+    // Modal: abrir eliminar factura
+    public function abrirEliminarFacturaModal(int $facturaId): void
+    {
+        $factura = Factura::with('proyecto')->findOrFail($facturaId);
+        $this->authorize('delete', $factura);
+
+        if ($factura->pagos()->exists()) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'No se puede eliminar',
+                'text' => 'Esta factura tiene pagos registrados. Elimínalos primero.',
+            ]);
+            return;
+        }
+
+        $this->resetErrorBag('deleteFacturaPassword');
+        $this->deleteFacturaPassword = '';
+        $this->deleteFacturaId = $facturaId;
+        $this->openEliminarFacturaModal = true;
+    }
+
+    public function closeEliminarFacturaModal(): void
+    {
+        $this->openEliminarFacturaModal = false;
+        $this->resetErrorBag('deleteFacturaPassword');
+        $this->deleteFacturaPassword = '';
+        $this->deleteFacturaId = null;
+    }
+
+    public function confirmarEliminarFactura(FacturaService $service): void
+    {
+        if (!$this->deleteFacturaId) {
+            return;
+        }
+
+        $this->resetErrorBag('deleteFacturaPassword');
+
+        if (trim($this->deleteFacturaPassword) === '') {
+            $this->addError('deleteFacturaPassword', 'Ingrese su contraseña.');
+            return;
+        }
+
+        $user = auth()->user();
+        if (!$user || !Hash::check($this->deleteFacturaPassword, (string) $user->password)) {
+            $this->addError('deleteFacturaPassword', 'Contraseña incorrecta.');
+            return;
+        }
+
+        try {
+            $factura = Factura::with('proyecto')->findOrFail($this->deleteFacturaId);
+            $this->authorize('delete', $factura);
+            $service->eliminarFactura($factura, $user);
+
+            session()->flash('success', 'Factura eliminada correctamente.');
+            $this->closeEliminarFacturaModal();
+            $this->resetPage();
+        } catch (DomainException $e) {
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'No se pudo eliminar',
+                'text' => $e->getMessage(),
+            ]);
+        }
+    }
+
     // SweetAlert: prepara eliminación.
     public function confirmDeletePago(int $pagoId): void
     {
@@ -687,7 +760,7 @@ class Facturas extends Component
     #[On('doDeletePago')]
     public function doDeletePago(int $id, FacturaPagoService $service): void
     {
-        $pago = FacturaPago::with(['factura.proyecto'])->findOrFail($id);
+        $pago = FacturaPago::with(['factura.proyecto', 'banco'])->findOrFail($id);
         $this->authorize('delete', $pago);
 
         try {
@@ -695,7 +768,25 @@ class Facturas extends Component
             session()->flash('success', 'Pago eliminado correctamente.');
             $this->resetPage();
         } catch (DomainException $e) {
-            $this->addError('tipo', $e->getMessage());
+            $msg = $e->getMessage();
+
+            // Si el error es por saldo insuficiente del banco, mostramos SweetAlert específico
+            if (str_contains($msg, 'saldo del banco quedaría negativo')) {
+                $bancoNombre = $pago->banco?->nombre ?? $pago->destino_banco_nombre_snapshot ?? 'Banco';
+                $montoLabel = $this->money((float) ($pago->monto ?? 0));
+
+                $this->dispatch('swal:banco-sin-saldo',
+                    banco: $bancoNombre,
+                    monto: $montoLabel,
+                );
+                return;
+            }
+
+            $this->dispatch('swal', [
+                'icon' => 'error',
+                'title' => 'No se pudo eliminar',
+                'text' => $msg,
+            ]);
         }
     }
 
@@ -832,6 +923,8 @@ class Facturas extends Component
             'ret_pendiente' => $retPend > 0 ? $this->money($retPend) : null,
 
             'cerrado_acc' => $cerradoAcc,
+
+            'sin_pagos' => ($f->pagos ?? collect())->isEmpty(),
 
             'pagos' => $pagosVm,
         ];

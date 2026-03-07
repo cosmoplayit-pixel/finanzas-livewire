@@ -188,61 +188,68 @@
 
         </div>
 
-        {{-- IMPACTO FINANCIERO (NO TOCAR) --}}
-        <div class="rounded-lg border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden">
+        {{-- IMPACTO FINANCIERO --}}
+        <div class="rounded-lg border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden mt-4">
             <div class="px-3 sm:px-4 py-2 border-b dark:border-neutral-700">
                 <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">
                     Impacto financiero
                 </div>
-                <div class="text-xs text-gray-500 dark:text-neutral-400">
-                    Vista previa del movimiento.
-                </div>
             </div>
+            <div class="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
 
-            <div class="p-3 sm:p-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-
-                    <div class="rounded-lg bg-white dark:bg-neutral-900/30 border dark:border-neutral-700 p-3">
-                        <div class="text-xs font-semibold text-gray-700 dark:text-neutral-200 mb-2">Banco</div>
-
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs text-gray-500 dark:text-neutral-400">Saldo actual</span>
-                            <span class="font-medium tabular-nums">
-                                {{ number_format((float) $saldo_banco_actual_preview, 2, ',', '.') }}
-                                <span class="text-xs">{{ $monedaBanco === 'USD' ? '$' : 'Bs' }}</span>
-                            </span>
-                        </div>
-
-                        <div class="flex items-center justify-between mt-1">
-                            <span class="text-xs text-gray-500 dark:text-neutral-400">Saldo después</span>
-                            <span class="font-medium tabular-nums">
-                                {{ number_format((float) $saldo_banco_despues_preview, 2, ',', '.') }}
-                                <span class="text-xs">{{ $monedaBanco === 'USD' ? '$' : 'Bs' }}</span>
-                            </span>
-                        </div>
+                {{-- BANCO --}}
+                <div class="space-y-3 md:border-r md:border-gray-200 md:dark:border-neutral-700 md:pr-6">
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                        BANCO {{ $monedaBanco ? "({$monedaBanco})" : '' }}
                     </div>
-
-                    <div class="rounded-lg bg-white dark:bg-neutral-900/30 border dark:border-neutral-700 p-3">
-                        <div class="text-xs font-semibold text-gray-700 dark:text-neutral-200 mb-2">Agente</div>
-
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs text-gray-500 dark:text-neutral-400">Saldo actual</span>
-                            <span class="font-medium tabular-nums">
-                                {{ number_format((float) $saldo_agente_actual_preview, 2, ',', '.') }}
-                                <span class="text-xs">{{ $monedaBanco === 'USD' ? '$' : 'Bs' }}</span>
-                            </span>
-                        </div>
-
-                        <div class="flex items-center justify-between mt-1">
-                            <span class="text-xs text-gray-500 dark:text-neutral-400">Saldo después</span>
-                            <span class="font-medium tabular-nums">
-                                {{ number_format((float) $saldo_agente_despues_preview, 2, ',', '.') }}
-                                <span class="text-xs">{{ $monedaBanco === 'USD' ? '$' : 'Bs' }}</span>
-                            </span>
-                        </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600 dark:text-neutral-400">Saldo actual</span>
+                        <span class="font-medium text-gray-900 dark:text-neutral-100">
+                            {{ number_format((float) $saldo_banco_actual_preview, 2, ',', '.') }}
+                        </span>
                     </div>
-
+                    <div class="flex items-center justify-between text-sm text-red-600 dark:text-red-400">
+                        <span>Egreso</span>
+                        <span class="font-medium">
+                            - {{ $monto_formatted ?: '0,00' }}
+                        </span>
+                    </div>
+                    <div
+                        class="pt-2 border-t border-gray-200 dark:border-neutral-700 flex items-center justify-between text-sm">
+                        <span class="font-medium text-gray-900 dark:text-neutral-100">Nuevo saldo</span>
+                        <span
+                            class="font-bold {{ $monto_excede_saldo ? 'text-red-600' : 'text-gray-900 dark:text-neutral-100' }}">
+                            {{ number_format((float) $saldo_banco_despues_preview, 2, ',', '.') }}
+                        </span>
+                    </div>
                 </div>
+
+                {{-- AGENTE (SALDO A RENDIR) --}}
+                <div class="space-y-3">
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                        AGENTE {{ $monedaBanco ? "({$monedaBanco})" : '' }}
+                    </div>
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-600 dark:text-neutral-400">Saldo actual</span>
+                        <span class="font-medium text-gray-900 dark:text-neutral-100">
+                            {{ number_format((float) $saldo_agente_actual_preview, 2, ',', '.') }}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm text-emerald-600 dark:text-emerald-400">
+                        <span>Asignación</span>
+                        <span class="font-medium">
+                            + {{ $monto_formatted ?: '0,00' }}
+                        </span>
+                    </div>
+                    <div
+                        class="pt-2 border-t border-gray-200 dark:border-neutral-700 flex items-center justify-between text-sm">
+                        <span class="font-medium text-gray-900 dark:text-neutral-100">Nuevo saldo</span>
+                        <span class="font-bold text-gray-900 dark:text-neutral-100">
+                            {{ number_format((float) $saldo_agente_despues_preview, 2, ',', '.') }}
+                        </span>
+                    </div>
+                </div>
+
             </div>
         </div>
 

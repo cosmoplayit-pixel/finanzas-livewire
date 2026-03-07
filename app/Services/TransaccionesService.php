@@ -42,7 +42,7 @@ class TransaccionesService
         }
 
         // 2. Agente Presupuestos - Asignación (Egresos)
-        $presupuestos = DB::table('agente_presupuestos as ap')
+        $presupuestos = DB::table('rendiciones as ap')
             ->selectRaw("
                 ap.id as original_id,
                 'Ag. Presupuestos' as modulo,
@@ -82,13 +82,12 @@ class TransaccionesService
                 'COMPLETADO' as estado,
                 rm.foto_path as comprobante,
                 rm.observacion as notas,
-                CONCAT('/presupuestos/', ap.id) as url_origen,
+                CONCAT('/presupuestos/', r.id) as url_origen,
                 rm.created_at,
                 rm.empresa_id
             ")
             ->join('rendiciones as r', 'rm.rendicion_id', '=', 'r.id')
-            ->join('agente_presupuestos as ap', 'r.id', '=', 'ap.rendicion_id')
-            ->join('agentes_servicio as ag', 'ap.agente_servicio_id', '=', 'ag.id')
+            ->join('agentes_servicio as ag', 'r.agente_servicio_id', '=', 'ag.id')
             ->where('rm.tipo', 'DEVOLUCION')
             ->whereNotNull('rm.banco_id');
 

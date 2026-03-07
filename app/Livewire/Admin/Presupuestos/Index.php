@@ -27,6 +27,11 @@ class Index extends Component
 
     public string $moneda = 'all'; // all | BOB | USD
 
+    // Fecha
+    public string $f_fecha_desde = '';
+
+    public string $f_fecha_hasta = '';
+
     // Admin
     public string $empresaFilter = 'all';
 
@@ -85,6 +90,37 @@ class Index extends Component
         $this->reloadOpenPanels();
     }
 
+    public function updatedFFechaDesde(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFFechaHasta(): void
+    {
+        $this->resetPage();
+    }
+
+    public function setFechaEsteAnio(): void
+    {
+        $this->f_fecha_desde = now()->startOfYear()->format('Y-m-d');
+        $this->f_fecha_hasta = now()->endOfYear()->format('Y-m-d');
+        $this->resetPage();
+    }
+
+    public function setFechaAnioPasado(): void
+    {
+        $this->f_fecha_desde = now()->subYear()->startOfYear()->format('Y-m-d');
+        $this->f_fecha_hasta = now()->subYear()->endOfYear()->format('Y-m-d');
+        $this->resetPage();
+    }
+
+    public function clearFecha(): void
+    {
+        $this->f_fecha_desde = '';
+        $this->f_fecha_hasta = '';
+        $this->resetPage();
+    }
+
     public function sortBy(string $field): void
     {
         if ($this->sortField === $field) {
@@ -104,13 +140,15 @@ class Index extends Component
         $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
 
         $filters = [
-            'empresaId' => $empresaId,
-            'empresaFilter' => $this->empresaFilter,
-            'search' => $this->search,
-            'moneda' => $this->moneda,
-            'soloPendientes' => $this->soloPendientes,
-            'sortField' => $this->sortField,
-            'sortDirection' => $this->sortDirection,
+            'empresaId'       => $empresaId,
+            'empresaFilter'   => $this->empresaFilter,
+            'search'          => $this->search,
+            'moneda'          => $this->moneda,
+            'soloPendientes'  => $this->soloPendientes,
+            'sortField'       => $this->sortField,
+            'sortDirection'   => $this->sortDirection,
+            'f_fecha_desde'   => $this->f_fecha_desde,
+            'f_fecha_hasta'   => $this->f_fecha_hasta,
         ];
 
         $query = new AgentePresupuestosResumenQuery;

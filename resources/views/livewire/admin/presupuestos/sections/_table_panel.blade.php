@@ -27,6 +27,7 @@
                                 <th class="p-3.5 w-[240px] font-bold">Banco</th>
                                 <th class="p-3.5 w-[160px] font-bold">Nro Transacción</th>
                                 <th class="p-3.5 w-[170px] font-bold">Fecha</th>
+                                <th class="p-3.5 text-center w-[100px] font-bold">Estado</th>
                                 <th class="p-3.5 text-right w-[140px] font-bold">Presupuesto</th>
                                 <th class="p-3.5 text-right w-[130px] font-bold">Rendido</th>
                                 <th class="p-3.5 text-right w-[140px] font-bold">Saldo por rendir</th>
@@ -110,6 +111,28 @@
                                         {{ $fechaTxt }}
                                     </td>
 
+                                    <td class="p-3.5 text-center whitespace-nowrap">
+                                        @php
+                                            $estadoStr = strtoupper($p->estado ?? '');
+                                            $bgEstado = match ($estadoStr) {
+                                                'ABIERTO'
+                                                    => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
+                                                'CERRADO'
+                                                    => 'bg-gray-100 text-gray-600 dark:bg-neutral-800 dark:text-neutral-400 border border-gray-200 dark:border-neutral-700',
+                                                'ANULADO'
+                                                    => 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800',
+                                                ''
+                                                    => 'bg-gray-50 text-gray-400 dark:bg-neutral-800 dark:text-neutral-500',
+                                                default
+                                                    => 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800',
+                                            };
+                                        @endphp
+                                        <span
+                                            class="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded {{ $bgEstado }}">
+                                            {{ $estadoStr ?: '—' }}
+                                        </span>
+                                    </td>
+
                                     <td
                                         class="p-3.5 text-right tabular-nums text-gray-900 dark:text-neutral-100 font-medium tracking-tight">
                                         {{ number_format($monto, 2, ',', '.') }}
@@ -189,7 +212,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="p-8 text-center bg-white dark:bg-neutral-900/10">
+                                    <td colspan="8" class="p-8 text-center bg-white dark:bg-neutral-900/10">
                                         <div
                                             class="flex flex-col items-center justify-center text-gray-400 dark:text-neutral-500">
                                             <svg class="w-10 h-10 mb-3 opacity-20" fill="none"

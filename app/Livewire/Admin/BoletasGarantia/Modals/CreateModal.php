@@ -328,6 +328,9 @@ class CreateModal extends Component
         $entidades = Entidad::query()
             ->where('empresa_id', $empresaId)
             ->where('active', true)
+            ->whereHas('proyectos', function ($q) {
+                $q->where('active', true);
+            })
             ->orderBy('nombre')
             ->get();
         $bancos = Banco::query()

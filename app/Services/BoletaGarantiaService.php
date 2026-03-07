@@ -173,4 +173,28 @@ class BoletaGarantiaService
             $bg->save();
         });
     }
+
+    public function eliminarBoleta(BoletaGarantia $boleta, int $userId): void
+    {
+        DB::transaction(function () use ($boleta) {
+            /** @var BoletaGarantia $bg */
+            $bg = BoletaGarantia::query()->lockForUpdate()->findOrFail($boleta->id);
+
+            if ($bg->devoluciones()->count() > 0) {
+                throw new DomainException('No se puede eliminar la boleta porque tiene devoluciones registradas.');
+            }
+
+            /** @var Banco $bancoEgreso */
+            $bancoEgreso = Banco::query()
+                ->lockForUpdate()
+                ->where('id', $bg->banco_egreso_id)
+                ->firstOrFail();
+
+            // Devolver la retención al banco
+            $bancoEgreso->monto += $bg->retencion;
+            $bancoEgreso->save();
+
+            $bg->delete();
+        });
+    }
 }

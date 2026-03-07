@@ -64,7 +64,7 @@
                                 <span class="mx-1">|</span>{{ $monedaBanco }}
                             @endif
                         </div>
-                        <div class="flex items-center">
+                        <div class="flex items-center mt-0.5">
                             <span>Tx: {{ $nroTx }} <span class="mx-1">·</span> {{ $fechaTxt }}</span>
                             @if ($p->foto_comprobante)
                                 <a href="{{ asset('storage/' . $p->foto_comprobante) }}" target="_blank"
@@ -77,6 +77,26 @@
                                     </svg>
                                 </a>
                             @endif
+                        </div>
+                        <div class="mt-1.5">
+                            @php
+                                $estadoStr = strtoupper($p->estado ?? '');
+                                $bgEstado = match ($estadoStr) {
+                                    'ABIERTO'
+                                        => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
+                                    'CERRADO'
+                                        => 'bg-gray-100 text-gray-600 dark:bg-neutral-800 dark:text-neutral-400 border border-gray-200 dark:border-neutral-700',
+                                    'ANULADO'
+                                        => 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800',
+                                    '' => 'bg-gray-50 text-gray-400 dark:bg-neutral-800 dark:text-neutral-500',
+                                    default
+                                        => 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800',
+                                };
+                            @endphp
+                            <span
+                                class="inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded {{ $bgEstado }}">
+                                {{ $estadoStr ?: '—' }}
+                            </span>
                         </div>
                     </div>
 

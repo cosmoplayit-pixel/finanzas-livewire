@@ -1,4 +1,16 @@
 {{-- FILTROS --}}
+@php
+    $filtrosActivos = 0;
+    if (isset($soloPendientes)) {
+        $filtrosActivos++; // El estado (Abiertos/Cerrados) siempre es un filtro activo
+    }
+    if (($moneda ?? 'all') !== 'all') {
+        $filtrosActivos++;
+    }
+    if (!empty($f_fecha_desde) || !empty($f_fecha_hasta)) {
+        $filtrosActivos++;
+    }
+@endphp
 <div x-data="{ openFilters: false }" class="relative mb-6">
 
     <div class="rounded-xl border bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden">
@@ -46,12 +58,19 @@
                     <div>
                         <label class="block mb-1 text-transparent select-none text-[13px]">&nbsp;</label>
                         <button type="button" @click.stop="openFilters = !openFilters"
-                            class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition">
+                            class="relative w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition
+                                   {{ $filtrosActivos > 0 ? 'border-blue-500 dark:border-blue-500' : '' }}">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                             </svg>
                             Avanzados
+                            @if ($filtrosActivos > 0)
+                                <span
+                                    class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+                                    {{ $filtrosActivos }}
+                                </span>
+                            @endif
                         </button>
                     </div>
                 </div>
@@ -81,12 +100,19 @@
                 <div class="md:col-span-3 lg:col-span-2">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Filtros</label>
                     <button type="button" @click.stop="openFilters = !openFilters"
-                        class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition">
+                        class="relative w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition
+                               {{ $filtrosActivos > 0 ? 'border-blue-500 dark:border-blue-500' : '' }}">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                         </svg>
                         Opciones
+                        @if ($filtrosActivos > 0)
+                            <span
+                                class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+                                {{ $filtrosActivos }}
+                            </span>
+                        @endif
                     </button>
                 </div>
             </div>
@@ -100,10 +126,18 @@
 
         {{-- Header --}}
         <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
-            <div class="font-semibold text-gray-800 dark:text-neutral-100">Filtros Avanzados</div>
+            <div class="flex items-center gap-2">
+                <div class="font-semibold text-gray-800 dark:text-neutral-100">Filtros Avanzados</div>
+                @if ($filtrosActivos > 0)
+                    <span
+                        class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+                        {{ $filtrosActivos }} activo{{ $filtrosActivos > 1 ? 's' : '' }}
+                    </span>
+                @endif
+            </div>
         </div>
 
-        <div class="px-4 pb-4 space-y-4 pt-3" x-data="{ secEstado: true, secMoneda: true }">
+        <div class="px-4 pb-4 space-y-4 pt-3" x-data="{ secEstado: true, secMoneda: true, secFecha: true }">
 
             {{-- ESTADO --}}
             <div class="border-b border-gray-200 dark:border-neutral-700 pb-3">
@@ -142,7 +176,7 @@
             </div>
 
             {{-- MONEDA --}}
-            <div class="pb-3">
+            <div class="border-b border-gray-200 dark:border-neutral-700 pb-3">
                 <button type="button" class="w-full flex items-center justify-between"
                     @click="secMoneda = !secMoneda">
                     <span class="font-semibold text-gray-800 dark:text-neutral-100">Moneda</span>
@@ -159,6 +193,53 @@
                         <option value="BOB">BOB</option>
                         <option value="USD">USD</option>
                     </select>
+                </div>
+            </div>
+
+            {{-- FECHA --}}
+            <div class="pb-3">
+                <button type="button" class="w-full flex items-center justify-between"
+                    @click="secFecha = !secFecha">
+                    <span class="font-semibold text-gray-800 dark:text-neutral-100">Fecha (Presupuesto)</span>
+                    <span class="text-gray-400" x-text="secFecha ? '▾' : '▸'"></span>
+                </button>
+
+                <div x-show="secFecha" class="mt-3 space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-600 dark:text-neutral-300 mb-1">Desde</label>
+                            <input id="presup_fecha_desde" type="date" wire:model.live="f_fecha_desde"
+                                class="w-full border rounded-lg px-3 py-2 bg-white text-gray-900 border-gray-300
+                                       dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                        </div>
+
+                        <div>
+                            <label class="block text-xs text-gray-600 dark:text-neutral-300 mb-1">Hasta</label>
+                            <input id="presup_fecha_hasta" type="date" wire:model.live="f_fecha_hasta"
+                                class="w-full border rounded-lg px-3 py-2 bg-white text-gray-900 border-gray-300
+                                       dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                        </div>
+                    </div>
+
+                    {{-- Acciones rápidas --}}
+                    <div class="flex gap-2 flex-wrap">
+                        <button type="button" wire:click="setFechaEsteAnio"
+                            class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+                            Este año
+                        </button>
+
+                        <button type="button" wire:click="setFechaAnioPasado"
+                            class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+                            Año pasado
+                        </button>
+
+                        <button type="button" wire:click="clearFecha"
+                            class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+                            Limpiar fecha
+                        </button>
+                    </div>
                 </div>
             </div>
 

@@ -51,6 +51,18 @@ class AgentePresupuestosResumenQuery
             $q->where('r.estado', 'cerrado');
         }
 
+        // FECHA RANGO
+        $fechaDesde = trim((string) ($filters['f_fecha_desde'] ?? ''));
+        $fechaHasta = trim((string) ($filters['f_fecha_hasta'] ?? ''));
+
+        if ($fechaDesde !== '') {
+            $q->whereDate('r.fecha_presupuesto', '>=', $fechaDesde);
+        }
+
+        if ($fechaHasta !== '') {
+            $q->whereDate('r.fecha_presupuesto', '<=', $fechaHasta);
+        }
+
         return $q;
     }
 

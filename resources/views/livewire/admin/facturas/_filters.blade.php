@@ -1,4 +1,19 @@
  {{-- FILTROS --}}
+ @php
+     $filtrosActivos = 0;
+     if (!empty($f_pago)) {
+         $filtrosActivos += is_array($f_pago) ? count($f_pago) : 1;
+     }
+     if (!empty($f_retencion)) {
+         $filtrosActivos += is_array($f_retencion) ? count($f_retencion) : 1;
+     }
+     if (!empty($f_cerrada)) {
+         $filtrosActivos += is_array($f_cerrada) ? count($f_cerrada) : 1;
+     }
+     if (!empty($f_fecha_desde) || !empty($f_fecha_hasta)) {
+         $filtrosActivos++;
+     }
+ @endphp
  <div x-data="{ openFilters: false }" class="relative mb-6">
 
      <div class="rounded-xl border bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden">
@@ -47,12 +62,19 @@
                      <div>
                          <label class="block mb-1 text-transparent select-none text-[13px]">&nbsp;</label>
                          <button type="button" @click.stop="openFilters = !openFilters"
-                             class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition">
+                             class="relative w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition
+                                    {{ $filtrosActivos > 0 ? 'border-blue-500 dark:border-blue-500' : '' }}">
                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                      d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                              </svg>
                              Avanzados
+                             @if ($filtrosActivos > 0)
+                                 <span
+                                     class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+                                     {{ $filtrosActivos }}
+                                 </span>
+                             @endif
                          </button>
                      </div>
                  </div>
@@ -83,12 +105,19 @@
                  <div class="md:col-span-3 lg:col-span-2">
                      <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Filtros</label>
                      <button type="button" @click.stop="openFilters = !openFilters"
-                         class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition">
+                         class="relative w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition
+                                {{ $filtrosActivos > 0 ? 'border-blue-500 dark:border-blue-500' : '' }}">
                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                          </svg>
                          Opciones
+                         @if ($filtrosActivos > 0)
+                             <span
+                                 class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+                                 {{ $filtrosActivos }}
+                             </span>
+                         @endif
                      </button>
                  </div>
              </div>
@@ -102,7 +131,15 @@
 
          {{-- Header --}}
          <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
-             <div class="font-semibold text-gray-800 dark:text-neutral-100">Filtros</div>
+             <div class="flex items-center gap-2">
+                 <div class="font-semibold text-gray-800 dark:text-neutral-100">Filtros</div>
+                 @if ($filtrosActivos > 0)
+                     <span
+                         class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+                         {{ $filtrosActivos }} activo{{ $filtrosActivos > 1 ? 's' : '' }}
+                     </span>
+                 @endif
+             </div>
          </div>
 
          <div class="px-4 pb-4 space-y-4" x-data="{ secPago: true, secRet: true, secFecha: true, secEstado: true }">

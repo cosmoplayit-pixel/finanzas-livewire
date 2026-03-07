@@ -1,19 +1,18 @@
 {{-- MODAL: NUEVA FACTURA (create) --}}
-<x-ui.modal wire:key="facturas-create-modal" model="openFacturaModal" title="Nueva Factura" maxWidth="md:max-w-2xl"
-    onClose="closeFactura">
-    <div class="space-y-4">
-        {{-- Entidad --}}
+<x-ui.modal wire:key="facturas-create-modal" model="openFacturaModal" title="Nueva Factura"
+    maxWidth="sm:max-w-xl md:max-w-2xl" onClose="closeFactura">
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+    <div class="space-y-4">
+        {{-- Entidad y Proyecto --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm mb-1">Entidad: <span class="text-red-500">*</span></label>
                 <select wire:model.live="entidad_id"
-                    class="cursor-pointer w-full rounded border px-3 py-2
-                   bg-white dark:bg-neutral-900
-                   border-gray-300 dark:border-neutral-700
-                   text-gray-900 dark:text-neutral-100
-                   focus:outline-none focus:ring-2
-                   focus:ring-gray-300 dark:focus:ring-neutral-700">
+                    class="w-full cursor-pointer rounded-lg border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300/60 dark:border-neutral-700/60
+                           text-gray-900 dark:text-neutral-100
+                           focus:outline-none focus:ring-2 focus:ring-gray-500/40">
                     <option value="">Seleccione...</option>
                     @foreach ($entidades as $e)
                         <option value="{{ $e->id }}" title="{{ $e->nombre }}">
@@ -26,17 +25,16 @@
                 @enderror
             </div>
 
-            {{-- Proyecto --}}
             <div>
                 <label class="block text-sm mb-1">Proyecto: <span class="text-red-500">*</span></label>
                 <select wire:model.live="proyecto_id" @disabled(!$entidad_id)
-                    class="cursor-pointer w-full rounded border px-3 py-2
-                   bg-white dark:bg-neutral-900
-                   border-gray-300 dark:border-neutral-700
-                   text-gray-900 dark:text-neutral-100
-                   focus:outline-none focus:ring-2
-                   focus:ring-gray-300 dark:focus:ring-neutral-700
-                   disabled:opacity-60 disabled:cursor-not-allowed">
+                    class="w-full cursor-pointer rounded-lg border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300/60 dark:border-neutral-700/60
+                           text-gray-900 dark:text-neutral-100
+                           focus:outline-none focus:ring-2 focus:ring-gray-500/40
+                           disabled:opacity-60 disabled:bg-gray-100 dark:disabled:bg-neutral-800
+                           disabled:cursor-not-allowed">
                     <option value="">
                         {{ $entidad_id ? 'Seleccione...' : 'Seleccione una entidad primero' }}
                     </option>
@@ -52,19 +50,18 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
             {{-- Monto --}}
             <div>
                 <label class="block text-sm mb-1">Monto Facturado: <span class="text-red-500">*</span></label>
                 <input type="text" inputmode="decimal" wire:model.lazy="monto_facturado_formatted" placeholder="0,00"
-                    class="w-full rounded border px-3 py-2
-               bg-white dark:bg-neutral-900
-               border-gray-300 dark:border-neutral-700
-               text-gray-900 dark:text-neutral-100
-               placeholder:text-gray-400 dark:placeholder:text-neutral-500
-               focus:outline-none focus:ring-2
-               focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                    class="w-full rounded-lg border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300/60 dark:border-neutral-700/60
+                           text-gray-900 dark:text-neutral-100
+                           placeholder:text-gray-400 dark:placeholder:text-neutral-500
+                           focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                 @error('monto_facturado')
                     <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                 @enderror
@@ -74,12 +71,11 @@
             <div>
                 <label class="block text-sm mb-1">Nro. Factura: <span class="text-red-500">*</span></label>
                 <input wire:model="numero" autocomplete="off"
-                    class="w-full rounded border px-3 py-2
-                       bg-white dark:bg-neutral-900
-                       border-gray-300 dark:border-neutral-700
-                       text-gray-900 dark:text-neutral-100
-                       focus:outline-none focus:ring-2
-                       focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                    class="w-full rounded-lg border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300/60 dark:border-neutral-700/60
+                           text-gray-900 dark:text-neutral-100
+                           focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                 @error('numero')
                     <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                 @enderror
@@ -89,39 +85,38 @@
             <div>
                 <label class="block text-sm mb-1">Fecha Emisión: <span class="text-red-500">*</span></label>
                 <input type="datetime-local" wire:model="fecha_emision"
-                    class="w-full rounded border px-3 py-2
-                       bg-white dark:bg-neutral-900
-                       border-gray-300 dark:border-neutral-700
-                       text-gray-900 dark:text-neutral-100
-                       focus:outline-none focus:ring-2
-                       focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                    class="w-full cursor-pointer rounded-lg border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300/60 dark:border-neutral-700/60
+                           text-gray-900 dark:text-neutral-100
+                           focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                 @error('fecha_emision')
                     <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                 @enderror
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             {{-- Retención % --}}
             <div>
                 <label class="block text-sm mb-1">Retención (%):</label>
                 <input type="number" wire:model.live="retencion_porcentaje" disabled
-                    class="w-full rounded border px-3 py-2
-                       bg-gray-100 dark:bg-neutral-800
-                       border-gray-300 dark:border-neutral-700
-                       text-gray-900 dark:text-neutral-100
-                       opacity-80 cursor-not-allowed" />
+                    class="w-full rounded-lg border px-3 py-2
+                           bg-gray-100 dark:bg-neutral-800
+                           border-gray-300/60 dark:border-neutral-700/60
+                           text-gray-900 dark:text-neutral-100
+                           opacity-80 cursor-not-allowed" />
             </div>
 
             {{-- Retención monto --}}
             <div>
                 <label class="block text-sm mb-1">Retención (Monto):</label>
                 <input type="number" step="0.01" disabled wire:model="retencion_monto"
-                    class="w-full rounded border px-3 py-2
-               bg-gray-100 dark:bg-neutral-800
-               border-gray-300 dark:border-neutral-700
-               text-gray-900 dark:text-neutral-100
-               opacity-80 cursor-not-allowed" />
+                    class="w-full rounded-lg border px-3 py-2
+                           bg-gray-100 dark:bg-neutral-800
+                           border-gray-300/60 dark:border-neutral-700/60
+                           text-gray-900 dark:text-neutral-100
+                           opacity-80 cursor-not-allowed" />
             </div>
 
 
@@ -129,25 +124,24 @@
             <div>
                 <label class="block text-sm mb-1">Monto Neto:</label>
                 <input type="number" step="0.01" disabled wire:model="monto_neto"
-                    class="w-full rounded border px-3 py-2
-               bg-gray-100 dark:bg-neutral-800
-               border-gray-300 dark:border-neutral-700
-               text-gray-900 dark:text-neutral-100
-               opacity-80 cursor-not-allowed" />
+                    class="w-full rounded-lg border px-3 py-2
+                           bg-gray-100 dark:bg-neutral-800
+                           border-gray-300/60 dark:border-neutral-700/60
+                           text-gray-900 dark:text-neutral-100
+                           opacity-80 cursor-not-allowed" />
             </div>
 
         </div>
 
         {{-- Detalle --}}
         <div>
-            <label class="block text-sm mb-1">Detalle:</label>
+            <label class="block text-sm mb-1">Detalle (Opcional):</label>
             <textarea wire:model="observacion_factura" rows="1"
-                class="w-full rounded border px-3 py-2
-                   bg-white dark:bg-neutral-900
-                   border-gray-300 dark:border-neutral-700
-                   text-gray-900 dark:text-neutral-100
-                   focus:outline-none focus:ring-2
-                   focus:ring-gray-300 dark:focus:ring-neutral-700"></textarea>
+                class="w-full rounded-lg border px-3 py-2
+                       bg-white dark:bg-neutral-900
+                       border-gray-300/60 dark:border-neutral-700/60
+                       text-gray-900 dark:text-neutral-100
+                       focus:outline-none focus:ring-2 focus:ring-gray-500/40"></textarea>
             @error('observacion_factura')
                 <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
             @enderror
@@ -155,30 +149,59 @@
 
         {{-- Comprobante (Imagen o PDF) --}}
         <div>
-            <label class="block text-sm mb-1">Respaldo (Imagen/PDF):</label>
+            <label class="block text-sm mb-1">Respaldo (Opcional):</label>
             <label
-                class="group h-11 flex items-center justify-between w-full rounded border border-dashed
-                border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900
-                px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
+                class="group flex items-center justify-between w-full rounded-lg border border-dashed
+                       border-gray-300/70 dark:border-neutral-700/70
+                       bg-white dark:bg-neutral-900 px-4 py-2 cursor-pointer
+                       hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
 
                 <div class="flex items-center gap-3 min-w-0">
                     <div
-                        class="w-7 h-7 rounded border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800
-                        flex items-center justify-center shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-600 dark:text-neutral-200"
-                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                            <polyline points="17 8 12 3 7 8" />
-                            <line x1="12" y1="3" x2="12" y2="15" />
-                        </svg>
+                        class="w-8 h-8 rounded-lg border border-gray-200/70 dark:border-neutral-700/70
+                               bg-gray-50 dark:bg-neutral-800 flex items-center justify-center shrink-0">
+                        @if (
+                            $foto_comprobante &&
+                                !is_string($foto_comprobante) &&
+                                strtolower($foto_comprobante->getClientOriginalExtension()) === 'pdf')
+                            {{-- Icono PDF --}}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-500" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                                <line x1="16" y1="13" x2="8" y2="13" />
+                                <line x1="16" y1="17" x2="8" y2="17" />
+                                <polyline points="10 9 9 9 8 9" />
+                            </svg>
+                        @elseif ($foto_comprobante && !is_string($foto_comprobante))
+                            {{-- Icono Imagen --}}
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-500" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                <polyline points="21 15 16 10 5 21" />
+                            </svg>
+                        @else
+                            {{-- Icono Upload --}}
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                        @endif
                     </div>
 
                     <div class="min-w-0">
-                        <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">Adjuntar
-                            archivo</div>
+                        <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">
+                            Adjuntar archivo
+                        </div>
                         <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
-                            @if ($foto_comprobante)
+                            @if ($foto_comprobante && !is_string($foto_comprobante))
                                 {{ $foto_comprobante->getClientOriginalName() }}
                             @else
                                 JPG, PNG o PDF (máx. 5MB)
@@ -187,55 +210,57 @@
                     </div>
                 </div>
 
-                <input type="file" wire:model.live="foto_comprobante" accept=".jpg,.jpeg,.png,.pdf" class="hidden" />
+                <input type="file" wire:model.live="foto_comprobante" accept=".jpg,.jpeg,.png,.pdf"
+                    class="hidden" />
             </label>
 
-            <div wire:loading wire:target="foto_comprobante" class="text-xs text-emerald-600 font-medium mt-1">
-                Cargando...
+            <div wire:loading wire:target="foto_comprobante" class="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                Subiendo archivo...
             </div>
             @error('foto_comprobante')
-                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
             @enderror
 
-            @if ($foto_comprobante)
-                <div class="mt-2 text-xs flex justify-end">
+            @if ($foto_comprobante && !is_string($foto_comprobante))
+                <div class="mt-2 text-right">
                     <button type="button" wire:click="$set('foto_comprobante', null)"
-                        class="cursor-pointer text-red-500 hover:text-red-600 font-medium">
+                        class="text-xs text-red-500 hover:text-red-700 underline">
                         Quitar archivo
                     </button>
                 </div>
             @endif
         </div>
+
+        <p class="text-xs text-gray-500 dark:text-neutral-400 mt-2">
+            <span class="text-red-500">*</span> Campos obligatorios.
+        </p>
+
     </div>
 
     {{-- Footer --}}
-    <x-slot:footer>
-        <button type="button" @click="close()"
-            class="cursor-pointer px-4 py-2 rounded border
-                   border-gray-300 dark:border-neutral-700
-                   text-gray-700 dark:text-neutral-200
-                   hover:bg-gray-200 dark:hover:bg-neutral-800
-                   transition-colors duration-150">
-            Cancelar
-        </button>
+    @slot('footer')
+        <div class="flex flex-col gap-2 w-full sm:flex-row sm:justify-end sm:gap-3">
 
-        <button type="button" wire:click="saveFactura" wire:loading.attr="disabled"
-            wire:target="saveFactura,foto_comprobante"
-            x-bind:disabled="!$wire.entidad_id || !$wire.proyecto_id || !$wire.numero || !$wire.monto_facturado_formatted || !$wire
-                .fecha_emision"
-            class="w-full sm:w-auto px-4 py-2 rounded inline-flex items-center justify-center gap-2
-           bg-black text-white cursor-pointer
-           hover:bg-gray-800 transition
-           disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="button" @click="close()"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg border cursor-pointer
+                       border-gray-300 dark:border-neutral-700
+                       text-gray-700 dark:text-neutral-200
+                       hover:bg-gray-100 dark:hover:bg-neutral-800">
+                Cancelar
+            </button>
 
-            {{-- Texto normal --}}
-            <span wire:loading.remove wire:target="saveFactura,foto_comprobante">Guardar</span>
+            <button type="button" wire:click="saveFactura" wire:loading.attr="disabled"
+                wire:target="saveFactura,foto_comprobante"
+                x-bind:disabled="!$wire.entidad_id || !$wire.proyecto_id || !$wire.numero || !$wire.monto_facturado_formatted || !$wire
+                    .fecha_emision"
+                class="w-full sm:w-auto px-4 py-2 rounded-lg cursor-pointer
+                       bg-black text-white hover:opacity-90
+                       disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2">
+                <span wire:loading.remove wire:target="saveFactura,foto_comprobante">Guardar</span>
+                <span wire:loading wire:target="foto_comprobante">Subiendo…</span>
+                <span wire:loading wire:target="saveFactura">Guardando…</span>
+            </button>
 
-            {{-- Texto subiendo --}}
-            <span wire:loading wire:target="foto_comprobante">Subiendo…</span>
-
-            {{-- Texto guardando --}}
-            <span wire:loading wire:target="saveFactura">Guardando…</span>
-        </button>
-    </x-slot:footer>
+        </div>
+    @endslot
 </x-ui.modal>

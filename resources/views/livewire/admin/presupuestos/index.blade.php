@@ -1,6 +1,6 @@
 @section('title', 'Presupuestos y Rendiciones')
 
-<div class="p-0 md:p-6 space-y-4">
+<div>
 
     @include('livewire.admin.presupuestos.sections._header')
     @include('livewire.admin.presupuestos.sections._alerts')

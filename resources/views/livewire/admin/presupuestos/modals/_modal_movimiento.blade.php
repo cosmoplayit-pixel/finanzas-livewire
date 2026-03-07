@@ -41,97 +41,9 @@
                 COMPRA
             ========================= --}}
             @if ($mov_modal_tipo === 'COMPRA')
-                {{-- FILA 1: FECHA / MONEDA / MONTO --}}
+
+                {{-- FILA 1: ENTIDAD / PROYECTO  / MONEDA --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                    <div>
-                        <label class="block text-sm mb-1">
-                            Fecha Pago: <span class="text-red-500">*</span>
-                        </label>
-                        <input type="datetime-local" wire:model.live="mov_fecha"
-                            class="cursor-pointer w-full rounded-lg border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300/60 dark:border-neutral-700/60
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                        @error('mov_fecha')
-                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm mb-1">
-                            Moneda: <span class="text-red-500">*</span>
-                        </label>
-                        <select wire:model.live="mov_moneda"
-                            class="cursor-pointer w-full rounded-lg border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300/60 dark:border-neutral-700/60
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40">
-                            <option value="BOB">BOB</option>
-                            <option value="USD">USD</option>
-                        </select>
-                        @error('mov_moneda')
-                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm mb-1">
-                            Monto: ({{ $mov_moneda }}) <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" wire:model.live.blur="mov_monto_formatted" placeholder="Ej: 1.234,56"
-                            class="w-full rounded-lg border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300/60 dark:border-neutral-700/60
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                        @error('mov_monto')
-                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-
-                {{-- TIPO DE CAMBIO (SI APLICA) --}}
-                @if ($mov_needs_tc)
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        <div>
-                            <label class="block text-sm mb-1">
-                                Tipo de cambio: <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" wire:model.live.blur="mov_tipo_cambio_formatted"
-                                placeholder="Ej: 6,96"
-                                class="w-full rounded-lg border px-3 py-2
-                                       bg-white dark:bg-neutral-900
-                                       border-gray-300/60 dark:border-neutral-700/60
-                                       text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                            @error('mov_tipo_cambio')
-                                <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm mb-1">
-                                Equivalente en moneda base: ({{ $baseMoneda }})
-                            </label>
-                            <input type="text" readonly value="{{ $mov_monto_base_preview ?? '—' }}" placeholder="—"
-                                class="w-full rounded-lg border px-3 py-2
-                                       bg-gray-50 dark:bg-neutral-900/50
-                                       border-gray-300/60 dark:border-neutral-700/60
-                                       text-gray-900 dark:text-neutral-100" />
-                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
-                                Se calcula automáticamente el monto.
-                            </div>
-                        </div>
-
-                    </div>
-                @endif
-
-                {{-- FILA 2: ENTIDAD / PROYECTO --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                     <div>
                         <label class="block text-sm mb-1">
@@ -177,9 +89,27 @@
                         @enderror
                     </div>
 
+                    <div>
+                        <label class="block text-sm mb-1">
+                            Moneda: <span class="text-red-500">*</span>
+                        </label>
+                        <select wire:model.live="mov_moneda"
+                            class="cursor-pointer w-full rounded-lg border px-3 py-2
+                                   bg-white dark:bg-neutral-900
+                                   border-gray-300/60 dark:border-neutral-700/60
+                                   text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                            <option value="BOB">BOB</option>
+                            <option value="USD">USD</option>
+                        </select>
+                        @error('mov_moneda')
+                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                 </div>
 
-                {{-- FILA 3: TIPO / NRO / OBS --}}
+                {{-- FILA 2: TIPO / NRO / OBS --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     <div>
@@ -205,7 +135,6 @@
                     <div>
                         <label class="block text-sm mb-1">Nro comprobante:</label>
                         <input type="text" wire:model.live="mov_nro_comprobante"
-                            placeholder="Ej: 12345 / N° / código"
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -217,7 +146,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm mb-1">Observación:</label>
+                        <label class="block text-sm mb-1">Detalle:</label>
                         <input type="text" wire:model.live="mov_observacion" placeholder="Ej: Compra de materiales…"
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
@@ -231,130 +160,23 @@
 
                 </div>
 
-                {{-- FOTO --}}
-                <div>
-                    <label class="block text-sm mb-1">Foto (opcional):</label>
-
-                    <label
-                        class="group flex items-center justify-between w-full rounded-lg border border-dashed
-                               border-gray-300/70 dark:border-neutral-700/70
-                               bg-white dark:bg-neutral-900 px-4 py-2 cursor-pointer
-                               hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
-
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div
-                                class="w-8 h-8 rounded-lg border border-gray-200/70 dark:border-neutral-700/70
-                                       bg-gray-50 dark:bg-neutral-800 flex items-center justify-center shrink-0">
-
-                                @if ($mov_foto && strtolower($mov_foto->getClientOriginalExtension()) === 'pdf')
-                                    {{-- Icono PDF --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-500"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                        <polyline points="14 2 14 8 20 8" />
-                                        <line x1="16" y1="13" x2="8" y2="13" />
-                                        <line x1="16" y1="17" x2="8" y2="17" />
-                                        <polyline points="10 9 9 9 8 9" />
-                                    </svg>
-                                @elseif ($mov_foto)
-                                    {{-- Icono Imagen --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-500"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="3" y="3" width="18" height="18" rx="2"
-                                            ry="2" />
-                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                        <polyline points="21 15 16 10 5 21" />
-                                    </svg>
-                                @else
-                                    {{-- Icono Upload --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                        class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                        <polyline points="17 8 12 3 7 8" />
-                                        <line x1="12" y1="3" x2="12" y2="15" />
-                                    </svg>
-                                @endif
-                            </div>
-
-                            <div class="min-w-0">
-                                <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">
-                                    Adjuntar archivo
-                                </div>
-                                <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
-                                    @if ($mov_foto)
-                                        {{ $mov_foto->getClientOriginalName() }}
-                                    @else
-                                        JPG, PNG o PDF (máx. 5MB)
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        <input type="file" wire:model="mov_foto" class="hidden" accept=".jpg,.jpeg,.png,.pdf" />
-                    </label>
-
-                    <div wire:loading wire:target="mov_foto"
-                        class="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                        Cargando...
-                    </div>
-
-                    @error('mov_foto')
-                        <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                    @enderror
-
-                    @if ($mov_foto)
-                        <div class="mt-2 text-right">
-                            <button type="button" wire:click="$set('mov_foto', null)"
-                                class="text-xs text-red-500 hover:text-red-700 font-medium underline">
-                                Quitar archivo
-                            </button>
-                        </div>
-                    @endif
-                </div>
-
-                {{-- IMPACTO FINANCIERO COMPRA --}}
-                <div
-                    class="rounded-lg border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden mt-4">
-                    <div class="px-3 sm:px-4 py-2 border-b dark:border-neutral-700">
-                        <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">
-                            Impacto financiero ({{ $baseMoneda }})
-                        </div>
-                    </div>
-                    <div class="p-3 sm:p-4 grid grid-cols-1 gap-4">
-                        <div class="flex items-center justify-between text-sm">
-                            <span class="text-gray-600 dark:text-neutral-400">Saldo a rendir actual</span>
-                            <span class="font-medium text-gray-900 dark:text-neutral-100">
-                                {{ number_format($mov_saldo_actual_preview, 2, ',', '.') }}
-                            </span>
-                        </div>
-                        <div class="flex items-center justify-between text-sm text-red-600 dark:text-red-400">
-                            <span>Monto a descontar</span>
-                            <span class="font-medium">
-                                - {{ $mov_monto_base_preview ?: '0,00' }}
-                            </span>
-                        </div>
-                        <div
-                            class="pt-2 border-t border-gray-200 dark:border-neutral-700 flex items-center justify-between text-sm">
-                            <span class="font-medium text-gray-900 dark:text-neutral-100">Nuevo saldo a rendir</span>
-                            <span
-                                class="font-bold {{ $mov_monto_excede_saldo ? 'text-red-600' : 'text-gray-900 dark:text-neutral-100' }}">
-                                {{ number_format($mov_saldo_despues_preview, 2, ',', '.') }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
-            {{-- =========================
-                DEVOLUCION
-            ========================= --}}
-            @if ($mov_modal_tipo === 'DEVOLUCION')
-                {{-- FILA 1: BANCO / MONEDA / MONTO --}}
+                {{-- FILA 3: MONTO / FECHA DE PAGO / FOTO --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    <div>
+                        <label class="block text-sm mb-1">
+                            Monto: ({{ $mov_moneda }}) <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" wire:model.live.blur="mov_monto_formatted" placeholder="0,00"
+                            class="w-full rounded-lg border px-3 py-2
+                                   bg-white dark:bg-neutral-900
+                                   border-gray-300/60 dark:border-neutral-700/60
+                                   text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                        @error('mov_monto')
+                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
                     <div>
                         <label class="block text-sm mb-1">
@@ -370,6 +192,180 @@
                             <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
                         @enderror
                     </div>
+
+                    {{-- FOTO --}}
+                    <div>
+                        <label class="block text-sm mb-1">Foto (opcional):</label>
+
+                        <label
+                            class="group flex items-center justify-between w-full rounded-lg border border-dashed
+                               border-gray-300/70 dark:border-neutral-700/70
+                               bg-white dark:bg-neutral-900 px-4 py-2 cursor-pointer
+                               hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
+
+                            <div class="flex items-center gap-3 min-w-0  h-6">
+                                <div
+                                    class="w-8 h-8 rounded-lg border border-gray-200/70 dark:border-neutral-700/70
+                                       bg-gray-50 dark:bg-neutral-800 flex items-center justify-center shrink-0">
+
+                                    @if ($mov_foto && strtolower($mov_foto->getClientOriginalExtension()) === 'pdf')
+                                        {{-- Icono PDF --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-500"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                            <polyline points="14 2 14 8 20 8" />
+                                            <line x1="16" y1="13" x2="8" y2="13" />
+                                            <line x1="16" y1="17" x2="8" y2="17" />
+                                            <polyline points="10 9 9 9 8 9" />
+                                        </svg>
+                                    @elseif ($mov_foto)
+                                        {{-- Icono Imagen --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-500"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"
+                                                ry="2" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                            <polyline points="21 15 16 10 5 21" />
+                                        </svg>
+                                    @else
+                                        {{-- Icono Upload --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                            class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                            <polyline points="17 8 12 3 7 8" />
+                                            <line x1="12" y1="3" x2="12" y2="15" />
+                                        </svg>
+                                    @endif
+                                </div>
+
+                                <div class="min-w-0">
+                                    <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">
+                                        Adjuntar archivo
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
+                                        @if ($mov_foto)
+                                            {{ $mov_foto->getClientOriginalName() }}
+                                        @else
+                                            JPG, PNG o PDF (máx. 5MB)
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <input type="file" wire:model="mov_foto" class="hidden"
+                                accept=".jpg,.jpeg,.png,.pdf" />
+                        </label>
+
+                        <div wire:loading wire:target="mov_foto"
+                            class="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
+                            Cargando...
+                        </div>
+
+                        @error('mov_foto')
+                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                        @enderror
+
+                        @if ($mov_foto)
+                            <div class="mt-2 text-right">
+                                <button type="button" wire:click="$set('mov_foto', null)"
+                                    class="text-xs text-red-500 hover:text-red-700 font-medium underline">
+                                    Quitar archivo
+                                </button>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- TIPO DE CAMBIO (SI APLICA) --}}
+                @if ($mov_needs_tc)
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                        <div>
+                            <label class="block text-sm mb-1">
+                                Tipo de cambio: <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" wire:model.live.blur="mov_tipo_cambio_formatted"
+                                placeholder="Ej: 6,96"
+                                class="w-full rounded-lg border px-3 py-2
+                                       bg-white dark:bg-neutral-900
+                                       border-gray-300/60 dark:border-neutral-700/60
+                                       text-gray-900 dark:text-neutral-100
+                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            @error('mov_tipo_cambio')
+                                <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm mb-1">
+                                Equivalente en moneda base: ({{ $baseMoneda }})
+                            </label>
+                            <input type="text" readonly value="{{ $mov_monto_base_preview ?? '—' }}"
+                                placeholder="—"
+                                class="w-full rounded-lg border px-3 py-2
+                                       bg-gray-50 dark:bg-neutral-900/50
+                                       border-gray-300/60 dark:border-neutral-700/60
+                                       text-gray-900 dark:text-neutral-100" />
+                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
+                                Se calcula automáticamente el monto.
+                            </div>
+                        </div>
+
+                    </div>
+                @endif
+
+                {{-- IMPACTO FINANCIERO COMPRA --}}
+                <div
+                    class="rounded-lg border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden mt-4">
+                    <div class="px-3 sm:px-4 py-2 border-b dark:border-neutral-700 flex justify-between items-center">
+                        <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto financiero</div>
+                        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                            ({{ $baseMoneda }})
+                        </div>
+                    </div>
+
+                    <div class="p-3 sm:p-4 pb-4">
+                        <div class="grid grid-cols-3 gap-3 text-sm divide-x divide-gray-200 dark:divide-neutral-700">
+                            <div class="text-center">
+                                <div class="text-gray-500 dark:text-neutral-400 mb-1 text-xs">Saldo a rendir actual
+                                </div>
+                                <div class="font-medium text-gray-900 dark:text-neutral-100">
+                                    {{ number_format($mov_saldo_actual_preview, 2, ',', '.') }}
+                                </div>
+                            </div>
+
+                            <div class="text-center pl-3">
+                                <div class="text-gray-500 dark:text-neutral-400 mb-1 text-xs">Monto a descontar</div>
+                                <div class="font-medium text-red-600 dark:text-red-400">
+                                    - {{ $mov_monto_base_preview ?: '0,00' }}
+                                </div>
+                            </div>
+
+                            <div class="text-center pl-3">
+                                <div class="text-gray-500 dark:text-neutral-400 mb-1 text-xs">Nuevo saldo a rendir
+                                </div>
+                                <div
+                                    class="font-bold {{ $mov_monto_excede_saldo ? 'text-red-600' : 'text-gray-900 dark:text-neutral-100' }}">
+                                    {{ number_format($mov_saldo_despues_preview, 2, ',', '.') }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            @endif
+
+            {{-- =========================
+                DEVOLUCION
+            ========================= --}}
+            @if ($mov_modal_tipo === 'DEVOLUCION')
+
+                {{-- FILA 1: BANCO / MONTO / NRO TRANSACCION --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     <div>
                         <label class="block text-sm mb-1">
@@ -397,13 +393,28 @@
                         <label class="block text-sm mb-1">
                             Monto: ({{ $mov_moneda }}) <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" wire:model.live.blur="mov_monto_formatted" placeholder="Ej: 1.234,56"
+                        <input type="text" wire:model.live.blur="mov_monto_formatted" placeholder="0,00"
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
                                    text-gray-900 dark:text-neutral-100
                                    focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                         @error('mov_monto')
+                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm mb-1">
+                            Nro transacción: <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" wire:model.live="mov_nro_transaccion"
+                            class="w-full rounded-lg border px-3 py-2
+                                   bg-white dark:bg-neutral-900
+                                   border-gray-300/60 dark:border-neutral-700/60
+                                   text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                        @error('mov_nro_transaccion')
                             <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
                         @enderror
                     </div>
@@ -448,29 +459,13 @@
                     </div>
                 @endif
 
-                {{-- FILA 2: NRO / OBS --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {{-- FILA 2: FECHA PAGO / DETALLE / FOTO --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     <div>
-                        <label class="block text-sm mb-1">
-                            Nro transacción: <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" wire:model.live="mov_nro_transaccion"
-                            placeholder="Ej: TRX-000123 / N° operación"
-                            class="w-full rounded-lg border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300/60 dark:border-neutral-700/60
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                        @error('mov_nro_transaccion')
-                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm mb-1">Observación: </label>
+                        <label class="block text-sm mb-1">Detalle: <span class="text-red-500">*</span> </label>
                         <input type="text" wire:model.live="mov_observacion"
-                            placeholder="Ej: Devolución de saldo no utilizado…"
+                            placeholder="Ej: Devolución de saldo..."
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -481,91 +476,107 @@
                         @enderror
                     </div>
 
-                </div>
+                    <div>
+                        <label class="block text-sm mb-1">
+                            Fecha Pago: <span class="text-red-500">*</span>
+                        </label>
+                        <input type="datetime-local" wire:model.live="mov_fecha"
+                            class="cursor-pointer w-full rounded-lg border px-3 py-2
+                                   bg-white dark:bg-neutral-900
+                                   border-gray-300/60 dark:border-neutral-700/60
+                                   text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                        @error('mov_fecha')
+                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                {{-- FOTO --}}
-                <div>
-                    <label class="block text-sm mb-1">Foto (opcional):</label>
+                    {{-- FOTO --}}
+                    <div>
+                        <label class="block text-sm mb-1">Foto (opcional):</label>
 
-                    <label
-                        class="group flex items-center justify-between w-full rounded-lg border border-dashed
+                        <label
+                            class="group flex items-center justify-between w-full rounded-lg border border-dashed
                                border-gray-300/70 dark:border-neutral-700/70
                                bg-white dark:bg-neutral-900 px-4 py-2 cursor-pointer
                                hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
 
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div
-                                class="w-8 h-8 rounded-lg border border-gray-200/70 dark:border-neutral-700/70
+                            <div class="flex items-center gap-3 min-w-0 h-7">
+                                <div
+                                    class="w-8 h-8 rounded-lg border border-gray-200/70 dark:border-neutral-700/70
                                        bg-gray-50 dark:bg-neutral-800 flex items-center justify-center shrink-0">
 
-                                @if ($mov_foto && strtolower($mov_foto->getClientOriginalExtension()) === 'pdf')
-                                    {{-- Icono PDF --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-500"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                        <polyline points="14 2 14 8 20 8" />
-                                        <line x1="16" y1="13" x2="8" y2="13" />
-                                        <line x1="16" y1="17" x2="8" y2="17" />
-                                        <polyline points="10 9 9 9 8 9" />
-                                    </svg>
-                                @elseif ($mov_foto)
-                                    {{-- Icono Imagen --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-500"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="3" y="3" width="18" height="18" rx="2"
-                                            ry="2" />
-                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                        <polyline points="21 15 16 10 5 21" />
-                                    </svg>
-                                @else
-                                    {{-- Icono Upload --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                        class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                        <polyline points="17 8 12 3 7 8" />
-                                        <line x1="12" y1="3" x2="12" y2="15" />
-                                    </svg>
-                                @endif
-                            </div>
-
-                            <div class="min-w-0">
-                                <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">
-                                    Adjuntar archivo
-                                </div>
-                                <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
-                                    @if ($mov_foto)
-                                        {{ $mov_foto->getClientOriginalName() }}
+                                    @if ($mov_foto && strtolower($mov_foto->getClientOriginalExtension()) === 'pdf')
+                                        {{-- Icono PDF --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-500"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                            <polyline points="14 2 14 8 20 8" />
+                                            <line x1="16" y1="13" x2="8" y2="13" />
+                                            <line x1="16" y1="17" x2="8" y2="17" />
+                                            <polyline points="10 9 9 9 8 9" />
+                                        </svg>
+                                    @elseif ($mov_foto)
+                                        {{-- Icono Imagen --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-500"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"
+                                                ry="2" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                            <polyline points="21 15 16 10 5 21" />
+                                        </svg>
                                     @else
-                                        JPG, PNG o PDF (máx. 5MB)
+                                        {{-- Icono Upload --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                            class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                            <polyline points="17 8 12 3 7 8" />
+                                            <line x1="12" y1="3" x2="12" y2="15" />
+                                        </svg>
                                     @endif
                                 </div>
+
+                                <div class="min-w-0">
+                                    <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">
+                                        Adjuntar archivo
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
+                                        @if ($mov_foto)
+                                            {{ $mov_foto->getClientOriginalName() }}
+                                        @else
+                                            JPG, PNG o PDF (máx. 5MB)
+                                        @endif
+                                    </div>
+                                </div>
                             </div>
+
+                            <input type="file" wire:model="mov_foto" class="hidden"
+                                accept=".jpg,.jpeg,.png,.pdf" />
+                        </label>
+
+                        <div wire:loading wire:target="mov_foto"
+                            class="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
+                            Cargando...
                         </div>
 
-                        <input type="file" wire:model="mov_foto" class="hidden" accept=".jpg,.jpeg,.png,.pdf" />
-                    </label>
+                        @error('mov_foto')
+                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                        @enderror
 
-                    <div wire:loading wire:target="mov_foto"
-                        class="text-xs text-blue-600 dark:text-blue-400 font-medium mt-1">
-                        Cargando...
+                        @if ($mov_foto)
+                            <div class="mt-2 text-right">
+                                <button type="button" wire:click="$set('mov_foto', null)"
+                                    class="text-xs text-red-500 hover:text-red-700 font-medium underline">
+                                    Quitar archivo
+                                </button>
+                            </div>
+                        @endif
                     </div>
 
-                    @error('mov_foto')
-                        <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                    @enderror
-
-                    @if ($mov_foto)
-                        <div class="mt-2 text-right">
-                            <button type="button" wire:click="$set('mov_foto', null)"
-                                class="text-xs text-red-500 hover:text-red-700 font-medium underline">
-                                Quitar archivo
-                            </button>
-                        </div>
-                    @endif
                 </div>
 
                 {{-- IMPACTO FINANCIERO DEVOLUCIÓN --}}

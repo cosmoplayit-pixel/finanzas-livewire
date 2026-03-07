@@ -37,9 +37,9 @@
                     <th class="w-[20%] p-2 select-none whitespace-nowrap">Boleta</th>
                     <th class="w-[7%]  p-2 select-none whitespace-nowrap text-center">Estado</th>
                     <th class="w-[8%]  p-2 select-none whitespace-nowrap text-center">Devuelto</th>
-                    @can('boletas_garantia.register_return')
+                    @canany(['boletas_garantia.register_return', 'boletas_garantia.delete'])
                         <th class="w-[7%]  p-2 whitespace-nowrap text-center">Acciones</th>
-                    @endcan
+                    @endcanany
                 </tr>
             </thead>
 
@@ -52,7 +52,12 @@
                     $devuelta = $totalDev >= (float) $bg->retencion;
 
                     // Calcular colspan dinámico para la tabla principal
-                    $colspan = 6 + (auth()->user()->can('boletas_garantia.register_return') ? 1 : 0);
+                    $colspan =
+                        6 +
+                        (auth()->user()->can('boletas_garantia.register_return') ||
+                        auth()->user()->can('boletas_garantia.delete')
+                            ? 1
+                            : 0);
 
                     // Calcular colspan dinámico para la tabla anidada de devoluciones
                     $colspanInner = 6 + (auth()->user()->can('boletas_garantia.delete') ? 1 : 0);
@@ -354,28 +359,50 @@
                         </td>
 
                         {{-- ACCIONES --}}
-                        @can('boletas_garantia.register_return')
+                        @canany(['boletas_garantia.register_return', 'boletas_garantia.delete'])
                             <td class="p-2 whitespace-nowrap align-middle" @click.stop>
                                 <div class="flex items-center justify-center gap-2">
 
-                                    <button type="button" wire:click="openDevolucion({{ $bg->id }})"
-                                        @disabled($rest <= 0)
-                                        class="inline-flex cursor-pointer items-center gap-1 px-3 py-1.5 rounded-lg border transition text-sm
-                                            {{ $rest <= 0
-                                                ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700'
-                                                : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700' }}">
-                                        {{-- icon corner-down-left (devolver) --}}
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                            stroke-linejoin="round">
-                                            <path d="M9 14 4 9l5-5" />
-                                            <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
-                                        </svg>
-                                    </button>
+                                    @can('boletas_garantia.register_return')
+                                        <button type="button" wire:click="openDevolucion({{ $bg->id }})"
+                                            @disabled($rest <= 0)
+                                            class="inline-flex cursor-pointer items-center gap-1 px-3 py-1.5 rounded-lg border transition text-sm
+                                                {{ $rest <= 0
+                                                    ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700'
+                                                    : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700' }}">
+                                            {{-- icon corner-down-left (devolver) --}}
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <path d="M9 14 4 9l5-5" />
+                                                <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+                                            </svg>
+                                        </button>
+                                    @endcan
+
+                                    @can('boletas_garantia.delete')
+                                        <button type="button" wire:click="abrirEliminarBoletaModal({{ $bg->id }})"
+                                            @disabled($hasDevoluciones)
+                                            class="inline-flex cursor-pointer items-center gap-1 px-3 py-1.5 rounded-lg border transition text-sm
+                                                {{ $hasDevoluciones
+                                                    ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700'
+                                                    : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:border-red-300 dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/40 dark:hover:bg-red-900/40' }}">
+                                            {{-- icon trash --}}
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <path d="M3 6h18" />
+                                                <path d="M8 6v-2c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2" />
+                                                <path d="M6 6l1 14c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2l1-14" />
+                                                <path d="M10 11v6" />
+                                                <path d="M14 11v6" />
+                                            </svg>
+                                        </button>
+                                    @endcan
 
                                 </div>
                             </td>
-                        @endcan
+                        @endcanany
                     </tr>
 
                     {{-- DETALLE (SOLO DEVOLUCIONES) --}}

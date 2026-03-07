@@ -1,5 +1,5 @@
 @section('title', 'Boletas de Garantía')
-<div class="p-0 md:p-6 space-y-4">
+<div>
 
     @include('livewire.admin.boletas-garantia.sections._header')
     @include('livewire.admin.boletas-garantia.sections._alerts')
@@ -13,6 +13,8 @@
     <livewire:admin.boletas-garantia.modals.create-modal />
     <livewire:admin.boletas-garantia.modals.devolucion-modal />
     <livewire:admin.boletas-garantia.listeners.delete-devolucion-listener />
+
+    @include('livewire.admin.boletas-garantia.modals._modal_eliminar_boleta')
 
     {{-- VISOR FOTO --}}
     <div wire:key="foto-bg-{{ $openFotoModal ? '1' : '0' }}-{{ md5($fotoUrl ?? '') }}">

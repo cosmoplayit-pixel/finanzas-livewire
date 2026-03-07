@@ -733,15 +733,19 @@
         document.addEventListener('livewire:init', () => {
             Livewire.on('swal:confirm-delete-devolucion', ({
                 boletaId,
-                devolucionId
+                devolucionId,
+                info
             }) => {
                 Swal.fire({
                     title: '¿Eliminar devolución?',
-                    text: 'Esta acción revertirá el saldo del banco.',
+                    text: info ? info : 'Esta acción revertirá el saldo del banco.',
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonText: 'Sí, eliminar',
                     cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    reverseButtons: true
                 }).then((res) => {
                     if (res.isConfirmed) {
                         Livewire.dispatch('bg:delete-devolucion', {

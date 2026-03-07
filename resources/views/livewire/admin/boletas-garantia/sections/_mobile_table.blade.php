@@ -245,7 +245,7 @@
                                             </div>
                                             @can('boletas_garantia.delete')
                                                 <button type="button" @click.stop
-                                                    wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }})"
+                                                    wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }}, 'Se eliminará la devolución de {{ $bg->moneda === 'USD' ? '$' : 'Bs' }} {{ number_format((float) $dv->monto, 2, ',', '.') }} asociada a la Boleta Nro. {{ $bg->nro_boleta ?? '' }}. Esta acción no se puede deshacer.')"
                                                     class="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 transition ml-1"
                                                     title="Eliminar">
                                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
@@ -262,23 +262,48 @@
                             </div>
                         </div>
                     @endif
-                    @can('boletas_garantia.register_return')
-                        {{-- BOTON ACCIONES --}}
-                        <div class="pt-1">
-                            <button type="button" @click.stop wire:click="openDevolucion({{ $bg->id }})"
-                                @disabled($rest <= 0)
-                                class="w-full px-4 py-2.5 rounded-lg border text-sm font-semibold transition flex justify-center items-center gap-2
-                                {{ $rest <= 0
-                                    ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700'
-                                    : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 shadow-sm' }}">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                </svg>
-                                Registrar Devolución
-                            </button>
+                    @php
+                        $hasDevoluciones = ($bg->devoluciones?->count() ?? 0) > 0;
+                    @endphp
+                    @canany(['boletas_garantia.register_return', 'boletas_garantia.delete'])
+                        {{-- BOTONES ACCIONES --}}
+                        <div class="pt-1 flex gap-2">
+                            @can('boletas_garantia.register_return')
+                                <button type="button" @click.stop wire:click="openDevolucion({{ $bg->id }})"
+                                    @disabled($rest <= 0)
+                                    class="flex-1 px-4 py-2.5 rounded-lg border text-sm font-semibold transition flex justify-center items-center gap-2
+                                    {{ $rest <= 0
+                                        ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700'
+                                        : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 shadow-sm' }}">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                    </svg>
+                                    Registrar Devolución
+                                </button>
+                            @endcan
+
+                            @can('boletas_garantia.delete')
+                                <button type="button" @click.stop wire:click="abrirEliminarBoletaModal({{ $bg->id }})"
+                                    @disabled($hasDevoluciones)
+                                    class="px-3.5 py-2.5 rounded-lg border text-sm font-semibold transition flex justify-center items-center gap-2
+                                    {{ $hasDevoluciones
+                                        ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700'
+                                        : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:border-red-300 shadow-sm dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/40 dark:hover:bg-red-900/40' }}"
+                                    title="Eliminar Boleta">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M3 6h18" />
+                                        <path d="M8 6v-2c0-1.1.9-2 2-2h4c1.1 0 2 .9 2 2v2" />
+                                        <path d="M6 6l1 14c0 1.1.9 2 2 2h6c1.1 0 2-.9 2-2l1-14" />
+                                        <path d="M10 11v6" />
+                                        <path d="M14 11v6" />
+                                    </svg>
+                                </button>
+                            @endcan
                         </div>
-                    @endcan
+                    @endcanany
 
                 </div>
             @endif

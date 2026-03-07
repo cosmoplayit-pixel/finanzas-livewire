@@ -6,6 +6,7 @@ use App\Models\BoletaGarantia;
 use App\Services\BoletaGarantiaService;
 use DomainException;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -57,6 +58,11 @@ class Index extends Component
     // Foto visor
     public bool $openFotoModal = false;
     public ?string $fotoUrl = null;
+
+    // Eliminar Boleta
+    public bool $openEliminarBoletaModal = false;
+    public ?int $deleteBoletaId = null;
+    public string $deleteBoletaPassword = '';
 
     public function mount(): void
     {
@@ -170,14 +176,71 @@ class Index extends Component
         $this->dispatch('bg:open-devolucion', boletaId: $boletaId);
     }
 
-    public function confirmDeleteDevolucion(int $boletaId, int $devolucionId): void
+    public function confirmDeleteDevolucion(int $boletaId, int $devolucionId, string $info = ''): void
     {
         // Disparar SweetAlert
         $this->dispatch(
             'swal:confirm-delete-devolucion',
             boletaId: $boletaId,
             devolucionId: $devolucionId,
+            info: $info,
         );
+    }
+
+    public function abrirEliminarBoletaModal(int $boletaId): void
+    {
+        $this->deleteBoletaId = $boletaId;
+        $this->deleteBoletaPassword = '';
+        $this->resetErrorBag('deleteBoletaPassword');
+        $this->openEliminarBoletaModal = true;
+    }
+
+    public function closeEliminarBoletaModal(): void
+    {
+        $this->openEliminarBoletaModal = false;
+        $this->resetErrorBag('deleteBoletaPassword');
+        $this->deleteBoletaPassword = '';
+        $this->deleteBoletaId = null;
+    }
+
+    public function confirmarEliminarBoleta(BoletaGarantiaService $service): void
+    {
+        if (! $this->deleteBoletaId) {
+            return;
+        }
+
+        $this->resetErrorBag('deleteBoletaPassword');
+
+        if (trim($this->deleteBoletaPassword) === '') {
+            $this->addError('deleteBoletaPassword', 'Ingrese su contraseña.');
+            return;
+        }
+
+        $user = Auth::user();
+        if (! $user || ! Hash::check($this->deleteBoletaPassword, (string) $user->password)) {
+            $this->addError('deleteBoletaPassword', 'Contraseña incorrecta.');
+            return;
+        }
+
+        try {
+            $bg = BoletaGarantia::query()
+                ->where('empresa_id', $this->userEmpresaId())
+                ->findOrFail($this->deleteBoletaId);
+
+            $service->eliminarBoleta($bg, $user->id);
+
+            $this->dispatch(
+                'toast',
+                type: 'success',
+                message: 'Boleta de garantía eliminada y retención devuelta al banco.',
+            );
+            
+            $this->closeEliminarBoletaModal();
+            $this->resetPage();
+        } catch (DomainException $e) {
+            $this->closeEliminarBoletaModal();
+            $this->dispatch('swal:error', text: $e->getMessage());
+        }
     }
 
     // Cuando algún modal guarda/elimina, refrescamos tabla

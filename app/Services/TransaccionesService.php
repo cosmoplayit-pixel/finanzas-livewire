@@ -28,7 +28,7 @@ class TransaccionesService
                 'COMPLETADO' as estado,
                 p.foto_comprobante as comprobante,
                 p.observacion as notas,
-                CONCAT('/facturas', CHAR(63), 'search=', f.numero, '&f_cerrada[]=abierta&f_cerrada[]=cerrada') as url_origen,
+                CONCAT('/facturas', CHAR(63), 'factura_id=', f.id, '&pago_id=', p.id) as url_origen,
                 p.created_at,
                 pr.empresa_id
             ")
@@ -56,7 +56,7 @@ class TransaccionesService
                 ap.estado as estado,
                 ap.foto_comprobante as comprobante,
                 ap.observacion as notas,
-                CONCAT('/presupuestos/', ap.id) as url_origen,
+                CONCAT('/agente_presupuestos', CHAR(63), 'presupuesto_id=', ap.id) as url_origen,
                 ap.created_at,
                 ap.empresa_id
             ")
@@ -82,7 +82,7 @@ class TransaccionesService
                 'COMPLETADO' as estado,
                 rm.foto_path as comprobante,
                 rm.observacion as notas,
-                CONCAT('/presupuestos/', r.id) as url_origen,
+                CONCAT('/agente_presupuestos', CHAR(63), 'presupuesto_id=', r.id, '&devolucion_id=', rm.id) as url_origen,
                 rm.created_at,
                 rm.empresa_id
             ")
@@ -110,7 +110,7 @@ class TransaccionesService
                 bg.estado as estado,
                 bg.foto_comprobante as comprobante,
                 bg.observacion as notas,
-                CONCAT('/boletas') as url_origen,
+                CONCAT('/boletas_garantia', CHAR(63), 'boleta_id=', bg.id) as url_origen,
                 bg.created_at,
                 bg.empresa_id
             ")
@@ -137,7 +137,7 @@ class TransaccionesService
                 'COMPLETADO' as estado,
                 bgd.foto_comprobante as comprobante,
                 bgd.observacion as notas,
-                CONCAT('/boletas') as url_origen,
+                CONCAT('/boletas_garantia', CHAR(63), 'boleta_id=', bg.id, '&devolucion_id=', bgd.id) as url_origen,
                 bgd.created_at,
                 bg.empresa_id
             ")
@@ -191,7 +191,7 @@ class TransaccionesService
                         ELSE NULL 
                     END
                 ) as notas,
-                CONCAT('/inversiones/', i.id, '/detalles') as url_origen,
+                CONCAT('/inversiones', CHAR(63), 'inversion_id=', i.id, '&movimiento_id=', im.id) as url_origen,
                 im.created_at,
                 i.empresa_id
             ")
@@ -205,6 +205,31 @@ class TransaccionesService
             $inversiones->where('i.empresa_id', $empresaId);
         }
 
+        // 7. Bancos (Ingreso Inicial)
+        $bancos = DB::table('bancos as b')
+            ->selectRaw("
+                b.id as original_id,
+                'Bancos' as modulo,
+                'INGRESO' as tipo_movimiento,
+                DATE(b.created_at) as fecha,
+                b.monto_inicial as monto,
+                b.moneda as moneda,
+                b.id as banco_id,
+                CONCAT('Monto Inicial - Banco ', b.nombre) as concepto,
+                CONCAT_WS(' - ', b.titular, b.numero_cuenta) as referencia,
+                'COMPLETADO' as estado,
+                NULL as comprobante,
+                'Monto inicial al crear la cuenta' as notas,
+                '/bancos' as url_origen,
+                b.created_at,
+                b.empresa_id
+            ")
+            ->where('b.monto_inicial', '>', 0);
+
+        if ($empresaId) {
+            $bancos->where('b.empresa_id', $empresaId);
+        }
+
         // Unimos todas las consultas
         return $facturas
             ->unionAll($presupuestos)
@@ -212,6 +237,7 @@ class TransaccionesService
             ->unionAll($boletas)
             ->unionAll($boletasDevoluciones)
             ->unionAll($inversiones)
+            ->unionAll($bancos)
             ->orderByDesc('fecha')
             ->orderByDesc('created_at');
     }

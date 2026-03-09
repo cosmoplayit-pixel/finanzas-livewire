@@ -1,6 +1,14 @@
   {{-- TABLA PRINCIPAL --}}
-  <div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm">
+  <div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm"
+      @if (isset($highlight_presupuesto_id) && $highlight_presupuesto_id) x-data
+      x-init="setTimeout(() => {
+          const panelEl = document.getElementById('presupuesto-panel-target-{{ (int) ($highlight_presupuesto_id ?? 0) }}');
+          const agentEl = document.getElementById('presupuesto-row-target-{{ (int) ($highlight_presupuesto_id ?? 0) }}');
+          const el = panelEl || agentEl;
+          if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      }, 700)" @endif>
       <div class="overflow-x-auto">
+
           <table wire:key="presupuestos-table" class="w-full table-fixed text-sm min-w-[1050px]">
               <thead
                   class="bg-slate-50/50 text-slate-600 dark:bg-neutral-900/50 dark:text-neutral-400 border-b border-gray-100 dark:border-neutral-800">
@@ -105,16 +113,28 @@
                       $rowKey = $agenteId . '|' . $rowMoneda; //clave compuesta
 
                       $open = (bool) ($panelsOpen[$rowKey] ?? false);
+
+                      // Verificar si este agente contiene el presupuesto objetivo
+                      $isTargetAgente =
+                          isset($highlight_presupuesto_id) &&
+                          $highlight_presupuesto_id &&
+                          collect($panelData[$rowKey] ?? [])->contains(
+                              fn($p) => (int) $p->id === (int) $highlight_presupuesto_id,
+                          );
                   @endphp
 
                   <tbody wire:key="agente-block-{{ $rowKey }}" x-data="{ open: @js($open) }"
                       class="divide-y divide-gray-100 dark:divide-neutral-800">
 
                       {{-- FILA PRINCIPAL --}}
-                      <tr class="border-t  border-gray-300 dark:border-neutral-800 hover:bg-slate-50/50 dark:hover:bg-neutral-900/60 transition-colors text-gray-700 dark:text-neutral-200 cursor-pointer"
+                      <tr class="border-t border-gray-300 dark:border-neutral-800 hover:bg-slate-50/50 dark:hover:bg-neutral-900/60 transition-colors text-gray-700 dark:text-neutral-200 cursor-pointer
+                           {{ $isTargetAgente ? 'bg-indigo-50/60 dark:bg-indigo-900/20' : '' }}"
+                          @if ($isTargetAgente) id="presupuesto-row-target-{{ (int) ($highlight_presupuesto_id ?? 0) }}" @endif
                           @click="open = !open; $wire.togglePanel({{ $agenteId }}, '{{ $rowMoneda }}')">
 
-                          <td class="p-3 whitespace-nowrap align-middle">
+                          <td
+                              class="p-3 whitespace-nowrap align-middle
+                              {{ $isTargetAgente ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}">
                               <div class="flex items-center justify-center gap-2">
                                   <button type="button"
                                       class="w-6 h-6 inline-flex items-center justify-center rounded border border-gray-200 bg-white text-gray-500 hover:border-gray-300 hover:text-gray-700 hover:shadow-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-neutral-200 transition-all cursor-pointer"

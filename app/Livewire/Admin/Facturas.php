@@ -45,6 +45,13 @@ class Facturas extends Component
     #[Url]
     public string $search = '';
 
+    // Navegación desde Transacciones: ID único de factura y pago a resaltar.
+    #[Url]
+    public ?int $factura_id = null;
+
+    #[Url]
+    public ?int $pago_id = null;
+
     public int $perPage = 5;
 
     // UI: totales globales.
@@ -157,9 +164,18 @@ class Facturas extends Component
 
     public function mount(): void
     {
-        // Default: abiertas.
-        if (empty($this->f_cerrada)) {
-            $this->f_cerrada = ['abierta'];
+        // Si viene factura_id desde Transacciones, auto-expandir y mostrar todas (abiertas+cerradas).
+        if ($this->factura_id) {
+            if (empty($this->f_cerrada)) {
+                $this->f_cerrada = ['abierta', 'cerrada'];
+            }
+            $this->panelsOpen[$this->factura_id] = true;
+            $this->perPage = 50;
+        } else {
+            // Default: abiertas.
+            if (empty($this->f_cerrada)) {
+                $this->f_cerrada = ['abierta'];
+            }
         }
     }
 
@@ -978,6 +994,7 @@ class Facturas extends Component
             'f_pago' => $this->f_pago ?? [],
             'f_retencion' => $this->f_retencion ?? [],
             'f_cerrada' => $this->f_cerrada ?? [],
+            'factura_id' => $this->factura_id,
         ];
 
         // IDs paginados.

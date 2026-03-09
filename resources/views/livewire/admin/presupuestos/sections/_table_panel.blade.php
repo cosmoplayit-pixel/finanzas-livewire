@@ -46,13 +46,26 @@
                                     $fechaTxt = $p->fecha_presupuesto
                                         ? \Carbon\Carbon::parse($p->fecha_presupuesto)->format('Y-m-d H:i')
                                         : '—';
+                                    $isHighlighted =
+                                        isset($highlight_presupuesto_id) &&
+                                        $highlight_presupuesto_id &&
+                                        (int) $p->id === (int) $highlight_presupuesto_id;
                                 @endphp
 
                                 <tr wire:key="panel-{{ $rowKey }}-pres-{{ $p->id }}"
-                                    class="hover:bg-slate-50/50 dark:hover:bg-neutral-900/40 transition-colors">
+                                    @if ($isHighlighted) id="presupuesto-panel-target-{{ $p->id }}" @endif
+                                    class="transition-colors
+                                    {{ $isHighlighted ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-slate-50/50 dark:hover:bg-neutral-900/40' }}">
                                     <td
-                                        class="p-3.5 whitespace-nowrap text-gray-700 dark:text-neutral-200 text-center font-medium">
-                                        {{ $loop->iteration }}
+                                        class="p-3.5 whitespace-nowrap text-gray-700 dark:text-neutral-200 text-center font-medium
+                                        {{ $isHighlighted ? 'border-l-4 border-amber-400' : 'border-l-4 border-transparent' }}">
+                                        @if ($isHighlighted)
+                                            <span
+                                                class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-400 text-white font-bold text-[10px] animate-pulse"
+                                                title="Este es el presupuesto de la transacción">{{ $loop->iteration }}</span>
+                                        @else
+                                            {{ $loop->iteration }}
+                                        @endif
                                     </td>
 
                                     <td class="p-3.5 align-middle">
@@ -93,7 +106,8 @@
                                         <div class="flex items-center gap-2">
                                             <span>{{ $p->nro_transaccion ?? '—' }}</span>
                                             @if ($p->foto_comprobante)
-                                                <a href="{{ asset('storage/' . $p->foto_comprobante) }}" target="_blank"
+                                                <a href="{{ asset('storage/' . $p->foto_comprobante) }}"
+                                                    target="_blank"
                                                     class="text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                                                     title="Ver Respaldo">
                                                     <svg class="size-4" xmlns="http://www.w3.org/2000/svg"

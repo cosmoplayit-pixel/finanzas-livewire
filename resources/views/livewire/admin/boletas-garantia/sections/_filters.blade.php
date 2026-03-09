@@ -86,10 +86,6 @@
                     <label
                         class="block text-xs mb-1 text-gray-600 dark:text-neutral-300 flex items-center justify-between">
                         Filtros
-                        <span
-                            class="text-[10px] px-1.5 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400">
-                            {{ count($f_tipo ?? []) + count($f_estado ?? []) + count($f_devoluciones ?? []) + (!empty($f_fecha_desde) ? 1 : 0) + (!empty($f_fecha_hasta) ? 1 : 0) }}
-                        </span>
                     </label>
                     <button type="button" @click.stop="openFilters = !openFilters"
                         class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition">
@@ -98,6 +94,10 @@
                                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                         </svg>
                         Opciones
+                        <span
+                            class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+                            {{ count($f_tipo ?? []) + count($f_estado ?? []) + count($f_devoluciones ?? []) + (!empty($f_fecha_desde) ? 1 : 0) + (!empty($f_fecha_hasta) ? 1 : 0) }}
+                        </span>
                     </button>
                 </div>
             </div>

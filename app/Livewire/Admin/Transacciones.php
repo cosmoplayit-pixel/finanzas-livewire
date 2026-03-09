@@ -19,9 +19,9 @@ class Transacciones extends Component
     // protected $paginationTheme = 'tailwind';
 
     // Filtros
-    public $moneda = ''; // Por defecto vacio = todas
+    public $perPage = 20;
 
-    public $banco_id = '';
+    public $periodo = 'all';
 
     public $date_from = '';
 
@@ -29,22 +29,18 @@ class Transacciones extends Component
 
     public $modulo = '';
 
-    public $tipo = '';
-
-    public $estado = '';
+    public $search = '';
 
     public $user_id = '';
 
-    public $search = '';
-
-    public $has_attachment = '';
+    public $banco_id = '';
 
     // Data lists para selects
     public $bancos = [];
 
     public $usuarios = [];
 
-    public $modulos_disponibles = ['Facturas', 'Ag. Presupuestos', 'Boletas Garantía', 'Inversiones'];
+    public $modulos_disponibles = ['Facturas', 'Ag. Presupuestos', 'Boletas Garantía', 'Inversiones', 'Bancos'];
 
     public function mount()
     {
@@ -71,24 +67,15 @@ class Transacciones extends Component
 
     public function updated($propertyName)
     {
-        // Automáticamente asignar moneda si se selecciona banco
-        if ($propertyName === 'banco_id') {
-            if ($this->banco_id) {
-                // Find the selected bank to determine its currency
-                $banco = $this->bancos->firstWhere('id', (int) $this->banco_id);
-                if ($banco) {
-                    $this->moneda = $banco->moneda;
-                }
-            } else {
-                $this->moneda = ''; // Show all if no bank is selected
-            }
-        }
-
         // Reset pagination when any filter changes
         if (in_array($propertyName, [
-            'banco_id', 'date_from', 'date_to', 'modulo', 'tipo', 'estado', 'user_id', 'search', 'has_attachment', 'moneda',
+            'perPage', 'periodo', 'banco_id', 'date_from', 'date_to', 'modulo', 'user_id', 'search',
         ])) {
             $this->resetPage();
+        }
+
+        if ($propertyName === 'periodo') {
+            $this->aplicarPeriodo();
         }
     }
 
@@ -100,10 +87,6 @@ class Transacciones extends Component
         $query = DB::query()->fromSub($service->obtenerTransaccionesQuery($empresaId), 't');
 
         // Apply filters
-        if ($this->moneda !== '') {
-            $query->where('t.moneda', $this->moneda);
-        }
-
         if ($this->banco_id !== '') {
             $query->where('t.banco_id', $this->banco_id);
         }
@@ -120,20 +103,6 @@ class Transacciones extends Component
             $query->where('t.modulo', $this->modulo);
         }
 
-        if ($this->tipo !== '') {
-            $query->where('t.tipo_movimiento', $this->tipo);
-        }
-
-        if ($this->estado !== '') {
-            $query->where('t.estado', $this->estado);
-        }
-
-        if ($this->has_attachment === 'yes') {
-            $query->whereNotNull('t.comprobante');
-        } elseif ($this->has_attachment === 'no') {
-            $query->whereNull('t.comprobante');
-        }
-
         if ($this->search) {
             $searchTerm = '%'.$this->search.'%';
             $query->where(function ($q) use ($searchTerm) {
@@ -146,18 +115,77 @@ class Transacciones extends Component
         return $query;
     }
 
+    public function aplicarPeriodo()
+    {
+        $now = now();
+        switch ($this->periodo) {
+            case 'today':
+                $this->date_from = $now->format('Y-m-d');
+                $this->date_to = $now->format('Y-m-d');
+                break;
+            case 'yesterday':
+                $this->date_from = $now->subDay()->format('Y-m-d');
+                $this->date_to = $this->date_from;
+                break;
+            case 'this_month':
+                $this->date_from = $now->startOfMonth()->format('Y-m-d');
+                $this->date_to = $now->endOfMonth()->format('Y-m-d');
+                break;
+            case 'last_month':
+                $this->date_from = $now->subMonth()->startOfMonth()->format('Y-m-d');
+                $this->date_to = $now->endOfMonth()->format('Y-m-d');
+                break;
+            case 'this_year':
+                $this->date_from = $now->startOfYear()->format('Y-m-d');
+                $this->date_to = $now->endOfYear()->format('Y-m-d');
+                break;
+            case 'all':
+                $this->date_from = '';
+                $this->date_to = '';
+                break;
+            case 'custom':
+                // no modificar date_from/to
+                break;
+        }
+    }
+
+    public function setFechaMesActual()
+    {
+        $this->periodo = 'custom';
+        $this->date_from = now()->startOfMonth()->format('Y-m-d');
+        $this->date_to = now()->endOfMonth()->format('Y-m-d');
+    }
+
+    public function setFechaEsteAnio()
+    {
+        $this->periodo = 'custom';
+        $this->date_from = now()->startOfYear()->format('Y-m-d');
+        $this->date_to = now()->endOfYear()->format('Y-m-d');
+    }
+
+    public function setFechaAnioPasado()
+    {
+        $this->periodo = 'custom';
+        $this->date_from = now()->subYear()->startOfYear()->format('Y-m-d');
+        $this->date_to = now()->subYear()->endOfYear()->format('Y-m-d');
+    }
+
+    public function clearFecha()
+    {
+        $this->periodo = 'all';
+        $this->date_from = '';
+        $this->date_to = '';
+    }
+
     public function limpiarFiltros()
     {
-        $this->moneda = '';
+        $this->periodo = 'all';
         $this->banco_id = '';
         $this->date_from = '';
         $this->date_to = '';
         $this->modulo = '';
-        $this->tipo = '';
-        $this->estado = '';
         $this->user_id = '';
         $this->search = '';
-        $this->has_attachment = '';
         $this->resetPage();
     }
 
@@ -183,7 +211,7 @@ class Transacciones extends Component
 
         $transacciones = $query
             ->orderByDesc('t.created_at')
-            ->paginate(20);
+            ->paginate($this->perPage);
 
         return view('livewire.admin.transacciones', [
             'transacciones' => $transacciones,

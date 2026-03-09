@@ -250,6 +250,9 @@ class Bancos extends Component
             $b->update($data);
             session()->flash('success', 'Banco actualizado correctamente.');
         } else {
+            // Guardar el monto inicial al crear el banco
+            $data['monto_inicial'] = $data['monto'] ?? 0;
+            
             Banco::create($data);
             session()->flash('success', 'Banco creado correctamente.');
         }

@@ -150,7 +150,13 @@
 
 
     {{-- ===================== TABLA BANCO (DESKTOP) ===================== --}}
-    <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
+    <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden"
+        @if ($highlight_movimiento_id) x-data x-init="setTimeout(() => {
+                const row = document.getElementById('mov-tgt-{{ $highlight_movimiento_id }}');
+                if (row) {
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300)" @endif>
         <div class="overflow-x-auto overflow-y-auto max-h-[75vh]">
             <table class="w-full text-[13px] min-w-[1200px] align-middle">
 
@@ -175,7 +181,11 @@
 
                 <tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
                     @forelse($movimientos as $m)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-neutral-900/50 align-middle font-extralight">
+                        @php
+                            $isTargetMovBanco = isset($highlight_movimiento_id) && $highlight_movimiento_id == $m['id'];
+                        @endphp
+                        <tr @if ($isTargetMovBanco) id="mov-tgt-{{ $m['id'] }}" @endif
+                            class="{{ $isTargetMovBanco ? 'bg-amber-50/60 dark:bg-amber-900/20 border-l-4 border-amber-400' : 'hover:bg-gray-50 dark:hover:bg-neutral-900/50' }} align-middle font-extralight transition-colors">
 
                             <td class="p-2 text-gray-900 dark:text-neutral-100 align-middle">
                                 {{ $m['idx'] }}

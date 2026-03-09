@@ -52,6 +52,9 @@ class Index extends Component
         }
     }
 
+    public ?int $highlight_presupuesto_id = null;
+    public ?int $highlight_devolucion_id = null;
+
     public function mount(): void
     {
         if (! $this->isAdmin()) {
@@ -59,7 +62,47 @@ class Index extends Component
         }
 
         $this->fecha_presupuesto = now()->format('Y-m-d\TH:i');
+
+        // Leer parámetros de la URL para destacar origen
+        $presupuestoId = (int) request()->query('presupuesto_id', 0);
+        $devolucionId  = (int) request()->query('devolucion_id', 0);
+
+        if ($presupuestoId > 0) {
+            $this->highlight_presupuesto_id = $presupuestoId;
+
+            if ($devolucionId > 0) {
+                $this->highlight_devolucion_id = $devolucionId;
+            }
+
+            // Buscar la rendición y expandir su panel
+            $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
+            $rendicion = \App\Models\Rendicion::query()
+                ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
+                ->find($presupuestoId);
+
+            if ($rendicion) {
+                $agenteId = (int) $rendicion->agente_servicio_id;
+                $moneda   = $this->normalizeMoneda($rendicion->moneda);
+                $rowKey   = $this->rowKey($agenteId, $moneda);
+
+                // Si el presupuesto está cerrado, desactivar filtro de pendientes
+                $estadoRendicion = strtolower((string) ($rendicion->estado ?? 'abierto'));
+                if ($estadoRendicion === 'cerrado') {
+                    $this->soloPendientes = false;
+                }
+
+                // Expandir el panel del agente
+                $this->panelsOpen[$rowKey] = true;
+                $this->loadPanel($agenteId, $moneda);
+
+                // Si viene del clic en devolución, abrir el modal de rendición
+                if ($devolucionId > 0) {
+                    $this->openRendicionEditor($presupuestoId);
+                }
+            }
+        }
     }
+
 
     // =========================================================
     // HOOKS

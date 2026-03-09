@@ -24,6 +24,10 @@ class Index extends Component
 
     public array $totales = [];
 
+    public ?int $highlight_inversion_id = null;
+
+    public ?int $highlight_movimiento_id = null;
+
     protected $listeners = [
         'inversionUpdated' => '$refresh',
     ];
@@ -34,6 +38,18 @@ class Index extends Component
         $this->fTipo = '';
         $this->fEstado = 'ACTIVA';
         $this->moneda = 'all';
+
+        $invId = request()->query('inversion_id');
+        $movId = request()->query('movimiento_id');
+
+        if ($invId) {
+            $this->highlight_inversion_id = (int) $invId;
+            $this->fEstado = ''; // Limpiar filtro para asegurar visibilidad
+        }
+
+        if ($movId) {
+            $this->highlight_movimiento_id = (int) $movId;
+        }
     }
 
     // Resetea paginación al buscar
@@ -68,7 +84,7 @@ class Index extends Component
     // Limpia filtros
     public function resetFilters(): void
     {
-        $this->reset(['search', 'fTipo', 'fEstado', 'moneda']);
+        $this->reset(['search', 'fTipo', 'fEstado', 'moneda', 'highlight_inversion_id', 'highlight_movimiento_id']);
         $this->resetPage();
     }
 
@@ -96,6 +112,11 @@ class Index extends Component
 
         if ($this->moneda !== 'all' && $this->moneda !== '') {
             $baseQ->where('moneda', $this->moneda);
+        }
+
+        // Si viene desde un enlace (Origen), mostrar solo ese resultado
+        if ($this->highlight_inversion_id) {
+            $baseQ->where('inversions.id', $this->highlight_inversion_id);
         }
 
         if ($this->fEstado !== '') {

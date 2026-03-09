@@ -22,6 +22,7 @@ class FacturaIndexQuery
     {
         $search = trim((string) ($params['search'] ?? ''));
         $empresaId = $params['empresaId'] ?? null;
+        $facturaId = isset($params['factura_id']) ? (int) $params['factura_id'] : null;
 
         $fFechaDesde = $params['f_fecha_desde'] ?? null; // YYYY-MM-DD|null
         $fFechaHasta = $params['f_fecha_hasta'] ?? null; // YYYY-MM-DD|null
@@ -63,8 +64,10 @@ class FacturaIndexQuery
             }, 'pagado_retencion')
             // Multi-empresa: estrictamente por empresa del usuario
             ->whereHas('proyecto', fn($qq) => $qq->where('empresa_id', $empresaId))
-            // Search
-            ->when($search !== '', function ($q) use ($search) {
+            // Si viene factura_id exacto (desde Transacciones), filtrar por ID (ignora texto)
+            ->when($facturaId, fn ($q) => $q->where('facturas.id', $facturaId))
+            // Search de texto (solo si no hay factura_id exacto)
+            ->when($search !== '' && !$facturaId, function ($q) use ($search) {
                 $s = '%' . $search . '%';
                 $q->where(function ($qq) use ($s) {
                     $qq->where('numero', 'like', $s)

@@ -1,5 +1,11 @@
 {{-- TABLET + DESKTOP: TABLA (COMPACTA) --}}
-<div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm">
+<div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm"
+    @if (isset($factura_id) && $factura_id) x-data
+    x-init="setTimeout(() => {
+        const targetId = {{ (int) ($pago_id ?? 0) }} > 0 ? 'pago-highlight-{{ (int) ($pago_id ?? 0) }}' : 'factura-row-target-{{ (int) ($factura_id ?? 0) }}';
+        const el = document.getElementById(targetId);
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }, 600)" @endif>
     <div class="overflow-x-auto">
         <table wire:key="facturas-table" class="w-full table-fixed text-sm min-w-[1100px] lg:min-w-0">
             <thead
@@ -52,12 +58,16 @@
                     wire:key="factura-tbody-{{ $r['id'] }}">
 
                     <tr class="border-t border-gray-300 dark:border-neutral-800 hover:bg-slate-50/50 dark:hover:bg-neutral-900/60 transition-colors text-gray-700 dark:text-neutral-200
-                         {{ $r['pagos'] ?? false ? 'cursor-pointer' : 'cursor-default' }}"
+                         {{ $r['pagos'] ?? false ? 'cursor-pointer' : 'cursor-default' }}
+                         {{ isset($factura_id) && $factura_id == $r['id'] ? 'bg-indigo-50/60 dark:bg-indigo-900/20' : '' }}"
                         @click="if (@js((bool) ($r['pagos'] ?? false))) $wire.togglePanel({{ $r['id'] }})"
-                        wire:key="factura-row-{{ $r['id'] }}">
+                        wire:key="factura-row-{{ $r['id'] }}"
+                        @if (isset($factura_id) && $factura_id == $r['id']) id="factura-row-target-{{ $r['id'] }}" @endif>
 
-                        {{-- Toggle --}}
-                        <td class="p-3 whitespace-nowrap align-middle">
+                        {{-- Toggle (con borde izquierdo de resaltado si es la factura objetivo) --}}
+                        <td
+                            class="p-3 whitespace-nowrap align-middle
+                            {{ isset($factura_id) && $factura_id == $r['id'] ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}">
                             <div class="flex items-center justify-center gap-2">
                                 <button type="button" @disabled(!($r['pagos'] ?? false))
                                     class="w-6 h-6 inline-flex items-center justify-center rounded border transition-all
@@ -408,7 +418,8 @@
                             <tr wire:key="factura-pagos-row-{{ $r['id'] }}"
                                 class="border-t border-gray-300 dark:border-neutral-800 bg-gray-50/50 dark:bg-neutral-900/40 border-b border-gray-100 dark:border-neutral-800">
 
-                                <td class="px-4 py-3"
+                                <td class="px-4 py-3
+                                    {{ isset($factura_id) && $factura_id == $r['id'] ? 'border-l-4 border-indigo-400' : '' }}"
                                     colspan="{{ 5 + (auth()->user()->can('facturas.pay') ? 1 : 0) }}">
                                     <div class="space-y-3 text-sm">
                                         <div
@@ -432,13 +443,26 @@
 
                                                 <tbody class="divide-y divide-gray-300 dark:divide-neutral-800">
                                                     @foreach ($r['pagos'] as $i => $pg)
+                                                        @php
+                                                            $isHighlighted = isset($pago_id) && $pago_id == $pg['id'];
+                                                        @endphp
                                                         <tr wire:key="factura-{{ $r['id'] }}-pago-{{ $pg['id'] }}"
-                                                            class="text-gray-700 dark:text-neutral-200 align-top">
+                                                            @if ($isHighlighted) id="pago-highlight-{{ $pg['id'] }}" @endif
+                                                            class="text-gray-700 dark:text-neutral-200 align-top transition-colors
+                                                            {{ $isHighlighted ? 'bg-amber-50 dark:bg-amber-900/20' : '' }}">
 
-                                                            <td class="p-2 align-middle">
+                                                            <td
+                                                                class="p-2 align-middle
+                                                                {{ $isHighlighted ? 'border-l-4 border-amber-400' : 'border-l-4 border-transparent' }}">
                                                                 <div
                                                                     class="flex items-center justify-center text-xs font-medium text-gray-700 dark:text-neutral-200">
-                                                                    {{ $i + 1 }}
+                                                                    @if ($isHighlighted)
+                                                                        <span
+                                                                            class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-400 text-white font-bold text-[10px] animate-pulse"
+                                                                            title="Este es el pago de la transacción">{{ $i + 1 }}</span>
+                                                                    @else
+                                                                        {{ $i + 1 }}
+                                                                    @endif
                                                                 </div>
                                                             </td>
 
@@ -629,11 +653,18 @@
             @endforeach
 
             @if (count($rows) === 0)
-                <tbody class="divide-y divide-gray-200 dark:divide-neutral-200" wire:key="factura-tbody-empty">
-                    <tr wire:key="factura-row-empty">
-                        <td class="p-4 text-center text-gray-500 dark:text-neutral-400"
-                            colspan="{{ 5 + (auth()->user()->can('facturas.pay') ? 1 : 0) }}">
-                            Sin resultados.
+                <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
+                    <tr>
+                        <td class="p-8 text-center" colspan="6">
+                            <div class="flex flex-col items-center justify-center text-gray-400 dark:text-neutral-500">
+                                <svg class="w-12 h-12 mb-3 opacity-20" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                                    </path>
+                                </svg>
+                                <span class="text-sm font-medium">Sin resultados.</span>
+                            </div>
                         </td>
                     </tr>
                 </tbody>

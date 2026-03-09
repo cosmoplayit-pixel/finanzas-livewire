@@ -17,14 +17,20 @@ class Index extends Component
 
     // Tabla
     public string $search = '';
+
     public int $perPage = 10;
 
     // Filtros
     public ?string $f_fecha_desde = null;
+
     public ?string $f_fecha_hasta = null;
+
     public string $moneda = 'all'; // all | BOB | USD
+
     public array $f_tipo = []; // SERIEDAD | CUMPLIMIENTO
+
     public array $f_estado = []; // abierta | devuelta
+
     public array $f_devoluciones = []; // con | sin
 
     // Paneles de la tabla
@@ -32,7 +38,7 @@ class Index extends Component
 
     public function togglePanel(int $boletaId): void
     {
-        $key = (string)$boletaId;
+        $key = (string) $boletaId;
         if (isset($this->panelsOpen[$key])) {
             unset($this->panelsOpen[$key]);
         } else {
@@ -42,13 +48,14 @@ class Index extends Component
 
     public function toggleAllPanels(bool $expand, array $ids = []): void
     {
-        if (!$expand) {
+        if (! $expand) {
             $this->panelsOpen = [];
+
             return;
         }
 
         foreach ($ids as $id) {
-            $this->panelsOpen[(string)$id] = true;
+            $this->panelsOpen[(string) $id] = true;
         }
     }
 
@@ -57,18 +64,62 @@ class Index extends Component
 
     // Foto visor
     public bool $openFotoModal = false;
+
     public ?string $fotoUrl = null;
 
     // Eliminar Boleta
     public bool $openEliminarBoletaModal = false;
+
     public ?int $deleteBoletaId = null;
+
     public string $deleteBoletaPassword = '';
+
+    public ?int $highlight_boleta_id = null;
+
+    public ?int $highlight_devolucion_id = null;
 
     public function mount(): void
     {
         $this->f_tipo = ['SERIEDAD', 'CUMPLIMIENTO'];
         $this->f_estado = ['abierta'];
         $this->f_devoluciones = [];
+
+        // Leer parámetros de la URL para destacar origen
+        $boletaId = (int) request()->query('boleta_id', 0);
+        $devolucionId = (int) request()->query('devolucion_id', 0);
+
+        if ($boletaId > 0) {
+            $this->highlight_boleta_id = $boletaId;
+
+            if ($devolucionId > 0) {
+                $this->highlight_devolucion_id = $devolucionId;
+            }
+
+            // Buscar boleta y expandir su panel
+            $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
+            $boleta = \App\Models\BoletaGarantia::query()
+                ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
+                ->find($boletaId);
+
+            if ($boleta) {
+                // Expandir panel solo si es una devolución (hay devolucion_id)
+                if ($devolucionId > 0) {
+                    $this->panelsOpen[(string) $boletaId] = true;
+                }
+
+                // Si la boleta está devuelta, limpiar el filtro "solo abiertas"
+                $estado = strtolower((string) ($boleta->estado ?? 'abierta'));
+                if ($estado !== 'abierta' && ! in_array($estado, $this->f_estado)) {
+                    $this->f_estado = []; // Reseteamos el filtro para mostrar todas o podemos incluir su estado
+                }
+            }
+        }
+    }
+
+    // Helper isAdmin()
+    private function isAdmin(): bool
+    {
+        return Auth::user()?->hasRole('Administrador') ?? false;
     }
 
     // =========================
@@ -85,7 +136,8 @@ class Index extends Component
     private function normalizeFilter(array $values): array
     {
         $values = array_map('strval', $values);
-        $values = array_values(array_filter($values, fn($v) => $v !== ''));
+        $values = array_values(array_filter($values, fn ($v) => $v !== ''));
+
         return array_values(array_unique($values));
     }
 
@@ -97,7 +149,7 @@ class Index extends Component
             'devoluciones' => 'f_devoluciones',
         ];
 
-        if (!isset($map[$group])) {
+        if (! isset($map[$group])) {
             return;
         }
 
@@ -150,14 +202,17 @@ class Index extends Component
     {
         $this->resetPage();
     }
+
     public function updatingFFechaHasta(): void
     {
         $this->resetPage();
     }
+
     public function updatingSearch(): void
     {
         $this->resetPage();
     }
+
     public function updatingPerPage(): void
     {
         $this->resetPage();
@@ -213,12 +268,14 @@ class Index extends Component
 
         if (trim($this->deleteBoletaPassword) === '') {
             $this->addError('deleteBoletaPassword', 'Ingrese su contraseña.');
+
             return;
         }
 
         $user = Auth::user();
         if (! $user || ! Hash::check($this->deleteBoletaPassword, (string) $user->password)) {
             $this->addError('deleteBoletaPassword', 'Contraseña incorrecta.');
+
             return;
         }
 
@@ -234,7 +291,7 @@ class Index extends Component
                 type: 'success',
                 message: 'Boleta de garantía eliminada y retención devuelta al banco.',
             );
-            
+
             $this->closeEliminarBoletaModal();
             $this->resetPage();
         } catch (DomainException $e) {
@@ -285,14 +342,14 @@ class Index extends Component
         }
 
         $estados = $this->normalizeFilter($this->f_estado ?? []);
-        if (!empty($estados)) {
+        if (! empty($estados)) {
             $boletasQuery->whereIn('estado', $estados);
         }
 
-        if (!empty($this->f_fecha_desde)) {
+        if (! empty($this->f_fecha_desde)) {
             $boletasQuery->whereDate('fecha_emision', '>=', $this->f_fecha_desde);
         }
-        if (!empty($this->f_fecha_hasta)) {
+        if (! empty($this->f_fecha_hasta)) {
             $boletasQuery->whereDate('fecha_emision', '<=', $this->f_fecha_hasta);
         }
 
@@ -312,7 +369,7 @@ class Index extends Component
             'total_devuelto_bob' => \App\Models\BoletaGarantiaDevolucion::whereIn('boleta_garantia_id', $bobIds)->sum('monto') ?? 0,
             'total_devuelto_usd' => \App\Models\BoletaGarantiaDevolucion::whereIn('boleta_garantia_id', $usdIds)->sum('monto') ?? 0,
         ];
-        
+
         $totales['saldo_total_bob'] = max(0, $totales['total_retencion_bob'] - $totales['total_devuelto_bob']);
         $totales['saldo_total_usd'] = max(0, $totales['total_retencion_usd'] - $totales['total_devuelto_usd']);
 

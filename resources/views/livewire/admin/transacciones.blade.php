@@ -154,107 +154,190 @@
         </div>
     </div>
 
-    {{-- Filtros Toolbar --}}
-    <div class="bg-white rounded-xl border border-gray-200 shadow-sm mb-6">
-        <div class="p-4 border-b border-gray-200 bg-gray-50 rounded-t-xl flex justify-between items-center">
-            <h3 class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                    </path>
-                </svg>
-                Filtros Avanzados
-            </h3>
-            <button wire:click="limpiarFiltros" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-                Limpiar Filtros
-            </button>
+    {{-- FILTROS --}}
+    @php
+        $filtrosActivos = 0;
+        if (!empty($banco_id)) {
+            $filtrosActivos++;
+        }
+        if (!empty($modulo)) {
+            $filtrosActivos++;
+        }
+        if (!empty($date_from) || !empty($date_to) || $periodo !== 'all') {
+            $filtrosActivos++;
+        }
+    @endphp
+
+    <div x-data="{ openFilters: false }" class="relative mb-6">
+        <div
+            class="rounded-xl border border-gray-200 bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden shadow-sm">
+            {{-- DESKTOP --}}
+            <div class="p-4">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    {{-- Búsqueda --}}
+                    <div class="md:col-span-6 lg:col-span-8">
+                        <label
+                            class="block text-xs mb-1 text-gray-600 dark:text-neutral-300 font-medium">Búsqueda</label>
+                        <div class="relative">
+                            <input type="text" wire:model.live.debounce.500ms="search"
+                                placeholder="Concepto, referencia, notas..."
+                                class="w-full rounded-lg border px-3 py-2 pl-9 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 transition-all shadow-sm" />
+                            <div class="absolute left-3 top-2.5 text-gray-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Mostrar (PerPage) --}}
+                    <div class="md:col-span-3 lg:col-span-2">
+                        <label
+                            class="block text-xs mb-1 text-gray-600 dark:text-neutral-300 font-medium">Mostrar</label>
+                        <select wire:model.live="perPage"
+                            class="w-full rounded-lg border border-gray-300 bg-white dark:bg-neutral-900 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 transition-all shadow-sm">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+
+                    {{-- Botón Opciones --}}
+                    <div class="md:col-span-3 lg:col-span-2">
+                        <label
+                            class="block text-xs mb-1 text-gray-600 dark:text-neutral-300 font-medium">Filtros</label>
+                        <button type="button" @click.stop="openFilters = !openFilters"
+                            class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition shadow-sm">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
+                            Opciones
+                            <span
+                                class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+                                {{ $filtrosActivos }}
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
 
-            {{-- Búsqueda --}}
-            <div class="col-span-1 sm:col-span-2 lg:col-span-1">
-                <label class="block text-xs font-medium text-gray-700 mb-1">Buscar</label>
-                <div class="relative">
-                    <input wire:model.live.debounce.500ms="search" type="text"
-                        placeholder="Concepto, ref, notas..."
-                        class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
+        {{-- Panel Flotante --}}
+        <div x-show="openFilters" x-cloak @click.outside="openFilters = false"
+            @keydown.escape.window="openFilters = false" x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 translate-y-2 scale-95"
+            class="absolute right-0 top-full mt-2 w-full sm:w-[360px] z-50 rounded-xl border border-gray-200 bg-white shadow-xl dark:border-neutral-700 dark:bg-neutral-900 overflow-hidden"
+            wire:ignore.self>
+
+            <div
+                class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
+                <div class="font-semibold text-gray-800 dark:text-neutral-100">Filtros Avanzados</div>
+                <button wire:click="limpiarFiltros"
+                    class="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
+                    Limpiar Filtros
+                </button>
+            </div>
+
+            <div class="px-4 pb-4 space-y-4 pt-3 max-h-[60vh] overflow-y-auto" x-data="{ secBanco: true, secModulo: true, secFecha: true }">
+
+                {{-- Banco --}}
+                <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
+                    <button type="button" class="w-full flex items-center justify-between"
+                        @click="secBanco = !secBanco">
+                        <span class="font-semibold text-gray-800 dark:text-neutral-100">Banco / Cuenta</span>
+                        <span class="text-gray-400" x-text="secBanco ? '▾' : '▸'"></span>
+                    </button>
+                    <div x-show="secBanco" class="mt-3">
+                        <select wire:model.live="banco_id"
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-600 transition-all">
+                            <option value="">-- Todos los bancos --</option>
+                            @foreach ($bancos as $b)
+                                <option value="{{ $b->id }}">{{ $b->nombre }} -
+                                    {{ $b->numero_cuenta ?? 'Sin Nro' }} ({{ $b->moneda }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Módulo --}}
+                <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
+                    <button type="button" class="w-full flex items-center justify-between"
+                        @click="secModulo = !secModulo">
+                        <span class="font-semibold text-gray-800 dark:text-neutral-100">Módulo Origen</span>
+                        <span class="text-gray-400" x-text="secModulo ? '▾' : '▸'"></span>
+                    </button>
+                    <div x-show="secModulo" class="mt-3">
+                        <select wire:model.live="modulo"
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-600 transition-all">
+                            <option value="">-- Todos los módulos --</option>
+                            @foreach ($modulos_disponibles as $mod)
+                                <option value="{{ $mod }}">{{ $mod }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+
+                {{-- Fecha --}}
+                <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
+                    <button type="button" class="w-full flex items-center justify-between"
+                        @click="secFecha = !secFecha">
+                        <span class="font-semibold text-gray-800 dark:text-neutral-100">Fecha</span>
+                        <span class="text-gray-400" x-text="secFecha ? '▾' : '▸'"></span>
+                    </button>
+                    <div x-show="secFecha" x-cloak class="mt-3 space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-gray-600 dark:text-neutral-300 mb-1">Desde</label>
+                                <input type="date" wire:model.live="date_from"
+                                    class="w-full border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
+                                           dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
+                                           focus:outline-none focus:ring-2 focus:ring-offset-0
+                                           focus:ring-gray-300 dark:focus:ring-neutral-600" />
+                            </div>
+
+                            <div>
+                                <label class="block text-xs text-gray-600 dark:text-neutral-300 mb-1">Hasta</label>
+                                <input type="date" wire:model.live="date_to"
+                                    class="w-full border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
+                                           dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
+                                           focus:outline-none focus:ring-2 focus:ring-offset-0
+                                           focus:ring-gray-300 dark:focus:ring-neutral-600" />
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" wire:click="setFechaMesActual"
+                                class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50
+                                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors">
+                                Mes actual
+                            </button>
+
+                            <button type="button" wire:click="setFechaEsteAnio"
+                                class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50
+                                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors">
+                                Este año
+                            </button>
+
+                            <button type="button" wire:click="clearFecha"
+                                class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50
+                                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors">
+                                Limpiar fecha
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            {{-- Banco --}}
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Banco / Cuenta</label>
-                <select wire:model.live="banco_id"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    <option value="">-- Todos los bancos --</option>
-                    @foreach ($bancos as $b)
-                        <option value="{{ $b->id }}">{{ $b->nombre }} - {{ $b->numero_cuenta }}
-                            ({{ $b->moneda }})
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Tipo --}}
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Tipo de Mov.</label>
-                <select wire:model.live="tipo"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    <option value="">-- Todos --</option>
-                    <option value="INGRESO">Ingresos solo</option>
-                    <option value="EGRESO">Egresos solo</option>
-                </select>
-            </div>
-
-            {{-- Módulo --}}
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Módulo Origen</label>
-                <select wire:model.live="modulo"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    <option value="">-- Todos --</option>
-                    @foreach ($modulos_disponibles as $mod)
-                        <option value="{{ $mod }}">{{ $mod }}</option>
-                    @endforeach
-                </select>
-            </div>
-
-            {{-- Rango de Fechas --}}
-            <div class="col-span-1 sm:col-span-2 flex gap-2">
-                <div class="flex-1">
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Desde</label>
-                    <input wire:model.live="date_from" type="date"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div class="flex-1">
-                    <label class="block text-xs font-medium text-gray-700 mb-1">Hasta</label>
-                    <input wire:model.live="date_to" type="date"
-                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                </div>
-            </div>
-
-            {{-- Con/Sin Comprobante --}}
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Comprobante</label>
-                <select wire:model.live="has_attachment"
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    <option value="">-- Todos --</option>
-                    <option value="yes">Con adjunto</option>
-                    <option value="no">Sin adjunto</option>
-                </select>
-            </div>
-
-            {{-- Estado --}}
-            <div>
-                <label class="block text-xs font-medium text-gray-700 mb-1">Estado</label>
-                <input wire:model.live.debounce.300ms="estado" type="text" placeholder="Ej: PAGADO, PENDIENTE..."
-                    class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-            </div>
-
         </div>
     </div>
 
@@ -278,7 +361,7 @@
                             Monto</th>
                         <th scope="col"
                             class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Estado / Adjunto</th>
+                            Comprobante</th>
                         <th scope="col"
                             class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Acciones</th>
@@ -331,16 +414,6 @@
                                 <div class="text-xs font-medium text-gray-500">{{ $t->moneda }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <div class="mb-1">
-                                    <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {{ strtoupper($t->estado) === 'PAGADO' || strtoupper($t->estado) === 'COMPLETADO'
-                                            ? 'bg-emerald-100 text-emerald-800'
-                                            : (strtoupper($t->estado) === 'PENDIENTE'
-                                                ? 'bg-amber-100 text-amber-800'
-                                                : 'bg-gray-100 text-gray-800') }}">
-                                        {{ $t->estado ?: 'N/A' }}
-                                    </span>
-                                </div>
                                 <div class="flex justify-center">
                                     @if ($t->comprobante)
                                         <a href="{{ Storage::url($t->comprobante) }}" target="_blank"
@@ -367,13 +440,15 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 @if ($t->url_origen)
-                                    <a href="{{ $t->url_origen }}"
-                                        class="text-indigo-600 hover:text-indigo-900 inline-flex items-center gap-1 group">
+                                    <a href="{{ $t->url_origen }}" target="_blank" rel="noopener noreferrer"
+                                        class="text-indigo-600 hover:text-indigo-900 inline-flex items-center gap-1 group"
+                                        title="Abrir origen en nueva pestaña">
                                         Origen
-                                        <svg class="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        <svg class="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity"
                                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                            </path>
                                         </svg>
                                     </a>
                                 @endif

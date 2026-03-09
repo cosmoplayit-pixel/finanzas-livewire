@@ -1,5 +1,13 @@
 {{-- MOBILE --}}
-<div class="md:hidden space-y-3">
+<div class="md:hidden space-y-3"
+    @if (isset($highlight_boleta_id) && $highlight_boleta_id) x-data
+    x-init="setTimeout(() => {
+        const devolucionEl = document.getElementById('devolucion-mob-panel-target-{{ (int) ($highlight_devolucion_id ?? 0) }}');
+        const boletaEl = document.getElementById('boleta-mob-row-target-{{ (int) ($highlight_boleta_id ?? 0) }}');
+        const el = devolucionEl || boletaEl;
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }, 700)" @endif>
+
     @forelse($boletas as $bg)
         @php
             $isOpen = (bool) ($panelsOpen[$bg->id] ?? false);
@@ -8,8 +16,14 @@
             $devuelta = $totalDev >= (float) $bg->retencion;
         @endphp
 
-        <div class="rounded-xl border bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden"
+        @php
+            $isTargetBoleta = isset($highlight_boleta_id) && $highlight_boleta_id == $bg->id;
+        @endphp
+        <div @if ($isTargetBoleta) id="boleta-mob-row-target-{{ $bg->id }}" @endif
+            class="rounded-xl border dark:bg-neutral-900/40 overflow-hidden
+            {{ $isTargetBoleta ? 'bg-indigo-50/60 border-indigo-400 dark:border-indigo-400/50' : 'bg-white border-gray-200 dark:border-neutral-700' }}"
             wire:key="boleta-mob-{{ $bg->id }}">
+
 
             {{-- HEADER --}}
             <button type="button" @click="$wire.togglePanel({{ $bg->id }})"
@@ -192,8 +206,14 @@
                             </div>
                             <div class="space-y-1.5">
                                 @foreach ($bg->devoluciones as $dv)
-                                    <div
-                                        class="flex items-center justify-between text-xs bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 p-2 rounded shadow-sm">
+                                    @php
+                                        $isDevHighlighted =
+                                            isset($highlight_devolucion_id) &&
+                                            (int) $highlight_devolucion_id === (int) $dv->id;
+                                    @endphp
+                                    <div @if ($isDevHighlighted) id="devolucion-mob-panel-target-{{ $dv->id }}" @endif
+                                        class="flex items-center justify-between text-xs dark:bg-neutral-900 border p-2 rounded shadow-sm transition-colors
+                                        {{ $isDevHighlighted ? 'bg-amber-50 border-amber-400 dark:border-amber-400/50' : 'bg-white border-gray-200 dark:border-neutral-700' }}">
                                         <div class="min-w-0 flex-1 pr-2">
                                             <div class="font-medium text-gray-800 dark:text-neutral-200 truncate">
                                                 {{ $dv->banco?->nombre ?? '—' }} <span

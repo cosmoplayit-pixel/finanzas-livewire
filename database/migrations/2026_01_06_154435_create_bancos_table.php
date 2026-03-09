@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('bancos', function (Blueprint $table) {
@@ -17,6 +18,7 @@ return new class extends Migration {
             $table->string('numero_cuenta', 50);
             $table->enum('moneda', ['BOB', 'USD']);
             $table->decimal('monto', 14, 2)->default(0);
+            $table->decimal('monto_inicial', 15, 2)->default(0);
             $table->enum('tipo_cuenta', ['AHORRO', 'CORRIENTE'])->nullable();
             $table->boolean('active')->default(true);
             $table->timestamps();

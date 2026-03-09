@@ -138,8 +138,13 @@
     </div>
 
     {{-- ===================== MOVIMIENTOS (MOBILE = CARDS) ===================== --}}
-    <div
-        class="rounded-2xl border border-gray-200 bg-white overflow-hidden dark:border-neutral-700 dark:bg-neutral-900/30">
+    <div class="rounded-2xl border border-gray-200 bg-white overflow-hidden dark:border-neutral-700 dark:bg-neutral-900/30"
+        @if ($highlight_movimiento_id) x-data x-init="setTimeout(() => {
+                const card = document.getElementById('mov-mob-tgt-{{ $highlight_movimiento_id }}');
+                if (card) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300)" @endif>
 
         {{-- Header listado --}}
         <div class="px-3 py-2 border-b border-gray-200 dark:border-neutral-700">
@@ -227,7 +232,15 @@
                     }
                 @endphp
 
-                <div class="rounded-2xl border border-gray-200 p-3 dark:border-neutral-700 {{ $bgGrad }}">
+                @php
+                    $isTargetMovBancoMob = isset($highlight_movimiento_id) && $highlight_movimiento_id == $m['id'];
+                    $borderHighlight = $isTargetMovBancoMob
+                        ? 'border-amber-400 bg-amber-50/40 dark:bg-amber-900/10'
+                        : 'border-gray-200 dark:border-neutral-700 ' . $bgGrad;
+                @endphp
+
+                <div @if ($isTargetMovBancoMob) id="mov-mob-tgt-{{ $m['id'] }}" @endif
+                    class="rounded-2xl border p-3 {{ $borderHighlight }} transition-colors">
 
                     {{-- HEADER (MOBILE CARD) --}}
                     <div class="flex items-start justify-between gap-3">

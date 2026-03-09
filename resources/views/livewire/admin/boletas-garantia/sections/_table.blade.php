@@ -1,5 +1,13 @@
 {{-- TABLET + DESKTOP --}}
-<div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm">
+<div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm"
+    @if (isset($highlight_boleta_id) && $highlight_boleta_id) x-data
+    x-init="setTimeout(() => {
+        const devolucionEl = document.getElementById('devolucion-panel-target-{{ (int) ($highlight_devolucion_id ?? 0) }}');
+        const boletaEl = document.getElementById('boleta-row-target-{{ (int) ($highlight_boleta_id ?? 0) }}');
+        const el = devolucionEl || boletaEl;
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    }, 700)" @endif>
+
     <div class="overflow-x-auto">
         <table wire:key="boletas-table" class="w-full table-fixed text-sm min-w-[1100px] lg:min-w-0">
 
@@ -68,13 +76,20 @@
                     wire:key="boleta-row-{{ $bg->id }}">
 
                     {{-- CLICK EN LA FILA: despliega/oculta detalle --}}
-                    <tr class="border-t border-gray-300 dark:border-neutral-800 hover:bg-slate-50/50 dark:hover:bg-neutral-900/60 transition-colors text-gray-700 dark:text-neutral-200
-                        {{ $hasDevoluciones ? 'cursor-pointer' : 'cursor-default' }}"
+                    @php
+                        $isTargetBoleta = isset($highlight_boleta_id) && $highlight_boleta_id == $bg->id;
+                    @endphp
+                    <tr @if ($isTargetBoleta) id="boleta-row-target-{{ $bg->id }}" @endif
+                        class="border-t border-gray-300 dark:border-neutral-800 transition-colors text-gray-700 dark:text-neutral-200
+                        {{ $hasDevoluciones ? 'cursor-pointer' : 'cursor-default' }}
+                        {{ $isTargetBoleta ? 'bg-indigo-50/60 dark:bg-indigo-900/20' : 'hover:bg-slate-50/50 dark:hover:bg-neutral-900/60' }}"
                         @click="if (@js($hasDevoluciones)) $wire.togglePanel({{ $bg->id }})">
 
                         {{-- ID + toggle (no disparar click de fila) --}}
-                        <td class="p-2 whitespace-nowrap align-middle">
+                        <td
+                            class="p-2 whitespace-nowrap align-middle {{ $isTargetBoleta ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}">
                             <div class="flex items-center justify-center gap-2">
+
                                 <button type="button" @disabled(!$hasDevoluciones)
                                     class="w-6 h-6 inline-flex items-center justify-center rounded border transition-all
                                         {{ $hasDevoluciones
@@ -408,8 +423,9 @@
                     {{-- DETALLE (SOLO DEVOLUCIONES) --}}
                     @if ($hasDevoluciones && $isOpen)
                         <tr
-                            class="bg-gray-50/60 dark:bg-neutral-900/40 border-t border-gray-200 dark:border-neutral-700">
-                            <td class="p-3 md:p-4" colspan="{{ $colspan }}">
+                            class="border-t border-gray-200 dark:border-neutral-700 bg-gray-50/60 dark:bg-neutral-900/40">
+                            <td class="p-3 md:p-4 {{ $isTargetBoleta ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}"
+                                colspan="{{ $colspan }}">
 
                                 <div
                                     class="rounded-lg border bg-white dark:bg-neutral-900 dark:border-neutral-800 overflow-hidden">
@@ -433,9 +449,25 @@
 
                                                 <tbody class="divide-y divide-gray-200 dark:divide-neutral-800">
                                                     @forelse(($bg->devoluciones ?? collect()) as $dv)
-                                                        <tr class="text-gray-700 dark:text-neutral-200">
+                                                        @php
+                                                            $isDevHighlighted =
+                                                                isset($highlight_devolucion_id) &&
+                                                                (int) $highlight_devolucion_id === (int) $dv->id;
+                                                        @endphp
+                                                        <tr @if ($isDevHighlighted) id="devolucion-panel-target-{{ $dv->id }}" @endif
+                                                            class="text-gray-700 dark:text-neutral-200 transition-colors
+                                                            {{ $isDevHighlighted ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-slate-50 dark:hover:bg-neutral-900/40' }}">
 
-                                                            <td class="p-2 text-center">{{ $loop->iteration }}</td>
+                                                            <td
+                                                                class="p-2 text-center font-medium {{ $isDevHighlighted ? 'border-l-4 border-amber-400' : 'border-l-4 border-transparent' }}">
+                                                                @if ($isDevHighlighted)
+                                                                    <span
+                                                                        class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-400 text-white font-bold text-[10px] animate-pulse"
+                                                                        title="Esta es la devolución de la transacción">{{ $loop->iteration }}</span>
+                                                                @else
+                                                                    {{ $loop->iteration }}
+                                                                @endif
+                                                            </td>
 
                                                             <td class="p-2">
                                                                 <div

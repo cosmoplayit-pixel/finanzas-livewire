@@ -120,15 +120,15 @@
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
                     <div class="md:col-span-6 lg:col-span-8">
                         <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
-                        <input type="text" wire:model.live.debounce.300ms="search"
+                        <input type="search" wire:model.live.debounce.300ms="search"
                             placeholder="Buscar Banco o Nro. de Cuenta..." autocomplete="off"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                     </div>
 
                     <div class="md:col-span-3 lg:col-span-2">
                         <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Mostrar</label>
                         <select wire:model.live="perPage"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                            class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
@@ -138,7 +138,7 @@
                     <div class="md:col-span-3 lg:col-span-2">
                         <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Filtros</label>
                         <button type="button" @click.stop="openFilters = !openFilters"
-                            class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition cursor-pointer">
+                            class="w-full cursor-pointer flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition cursor-pointer">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -229,7 +229,13 @@
                     </div>
 
                     <div class="flex justify-between gap-3">
-                        <span class="font-medium">Monto:</span>
+                        <span class="font-medium">Monto Inicial:</span>
+                        <span
+                            class="truncate text-gray-500">{{ number_format((float) ($b->monto_inicial ?? 0), 2, ',', '.') }}</span>
+                    </div>
+
+                    <div class="flex justify-between gap-3">
+                        <span class="font-medium">Monto Actual:</span>
                         <span class="truncate">{{ number_format((float) ($b->monto ?? 0), 2, ',', '.') }}</span>
                     </div>
 
@@ -304,7 +310,7 @@
     {{-- TABLET + DESKTOP: TABLA (misma plantilla estilo Proyectos, SIN expandible) --}}
     <div
         class="hidden md:block border border-gray-200 rounded-xl bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden shadow-sm mt-4">
-        <table class="w-full table-fixed text-[13px] text-left">
+        <table class="w-full table-auto text-[13px] text-left">
             <thead
                 class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200
                    border-b border-gray-200 dark:border-neutral-200">
@@ -350,7 +356,8 @@
                         @endif
                     </th>
 
-                    <th class="p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('titular')">
+                    <th class="p-2 cursor-pointer select-none whitespace-nowrap hidden xl:table-cell"
+                        wire:click="sortBy('titular')">
                         Titular
                         @if ($sortField === 'titular')
                             @if ($sortDirection === 'asc')
@@ -388,9 +395,29 @@
                         @endif
                     </th>
 
+                    <th class="w-[130px] p-2 cursor-pointer select-none whitespace-nowrap text-right hidden xl:table-cell"
+                        wire:click="sortBy('monto_inicial')">
+                        Monto Inicial
+                        @if ($sortField === 'monto_inicial')
+                            @if ($sortDirection === 'asc')
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 15l7-7 7 7"></path>
+                                </svg>
+                            @else
+                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            @endif
+                        @endif
+                    </th>
+
                     <th class="w-[130px] p-2 cursor-pointer select-none whitespace-nowrap text-right"
                         wire:click="sortBy('monto')">
-                        Monto
+                        Monto Actual
                         @if ($sortField === 'monto')
                             @if ($sortDirection === 'asc')
                                 <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
@@ -408,7 +435,7 @@
                         @endif
                     </th>
 
-                    <th class="w-[90px] p-2 cursor-pointer select-none whitespace-nowrap"
+                    <th class="w-[90px] p-2 cursor-pointer select-none whitespace-nowrap hidden xl:table-cell"
                         wire:click="sortBy('moneda')">
                         Moneda
                         @if ($sortField === 'moneda')
@@ -455,14 +482,31 @@
                     @endcanany
                 </tr>
             </thead>
-            <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
-                @foreach ($bancos as $b)
-                    <tr wire:key="banco-{{ $b->id }}"
-                        class="hover:bg-slate-50/50 dark:hover:bg-neutral-900/40 transition-colors">
+            @foreach ($bancos as $b)
+                <tbody wire:key="banco-{{ $b->id }}" x-data="{ open: false }"
+                    class="divide-y divide-gray-200 dark:divide-neutral-200">
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-neutral-900/40 transition-colors">
 
-                        {{-- ID --}}
-                        <td class="p-2 text-center whitespace-nowrap">
-                            {{ $b->id }}
+                        {{-- ID + botón expandible --}}
+                        <td class="p-1 text-center whitespace-nowrap" x-data="{ showToggle: !window.matchMedia('(min-width: 1280px)').matches }"
+                            x-init="const mq = window.matchMedia('(min-width: 1280px)');
+                            const handler = e => showToggle = !e.matches;
+                            mq.addEventListener('change', handler);">
+                            <button type="button" x-show="showToggle" x-cloak
+                                class="w-6 h-6 inline-flex items-center justify-center rounded-md border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 hover:text-gray-900 dark:border-neutral-700 dark:text-neutral-400 dark:bg-neutral-900 dark:hover:text-white transition-colors cursor-pointer shadow-sm"
+                                @click.stop="open = !open" :aria-expanded="open">
+                                <svg x-show="!open" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <svg x-show="open" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M20 12H4"></path>
+                                </svg>
+                            </button>
+                            <span class="ml-1">{{ $b->id }}</span>
                         </td>
 
                         {{-- Banco --}}
@@ -473,7 +517,7 @@
                         </td>
 
                         {{-- Titular --}}
-                        <td class="p-2 min-w-0">
+                        <td class="p-2 min-w-0 hidden xl:table-cell">
                             <span class="block truncate max-w-full" title="{{ $b->titular ?? '-' }}">
                                 {{ $b->titular ?? '-' }}
                             </span>
@@ -486,13 +530,19 @@
                             </span>
                         </td>
 
-                        {{-- Monto --}}
-                        <td class="p-2 whitespace-nowrap text-right tabular-nums">
+                        {{-- Monto Inicial --}}
+                        <td
+                            class="p-2 whitespace-nowrap text-right tabular-nums text-gray-500 dark:text-neutral-400 hidden xl:table-cell">
+                            {{ number_format((float) ($b->monto_inicial ?? 0), 2, ',', '.') }}
+                        </td>
+
+                        {{-- Monto Actual --}}
+                        <td class="p-2 whitespace-nowrap text-right tabular-nums font-semibold">
                             {{ number_format((float) ($b->monto ?? 0), 2, ',', '.') }}
                         </td>
 
                         {{-- Moneda --}}
-                        <td class="p-2 whitespace-nowrap">
+                        <td class="p-2 whitespace-nowrap hidden xl:table-cell">
                             {{ $b->moneda ?? '-' }}
                         </td>
 
@@ -602,14 +652,48 @@
                         @endcanany
 
                     </tr>
-                @endforeach
-            </tbody>
+
+                    {{-- Detalle expandible SOLO cuando NO es xl --}}
+                    @php
+                        // En md (<xl): ID, Banco, Nro. Cuenta, Monto Actual, Estado = 5
+                        // + Acciones si tiene permisos
+                        $colspan =
+                            5 + (auth()->user()->can('bancos.update') || auth()->user()->can('bancos.toggle') ? 1 : 0);
+                    @endphp
+
+                    <tr x-show="open" x-cloak
+                        class="xl:hidden bg-gray-100/60 dark:bg-neutral-900/40 border-b border-gray-200 dark:border-neutral-200">
+                        <td class="pl-20 py-2" colspan="{{ $colspan }}">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                                <div class="space-y-1">
+                                    <span
+                                        class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Titular</span>
+                                    <span
+                                        class="block text-gray-900 dark:text-neutral-200 truncate">{{ $b->titular ?? '—' }}</span>
+                                </div>
+                                <div class="space-y-1">
+                                    <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Monto
+                                        Inicial</span>
+                                    <span
+                                        class="block text-gray-900 dark:text-neutral-200 tabular-nums">{{ number_format((float) ($b->monto_inicial ?? 0), 2, ',', '.') }}</span>
+                                </div>
+                                <div class="space-y-1">
+                                    <span
+                                        class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Moneda</span>
+                                    <span
+                                        class="block text-gray-900 dark:text-neutral-200">{{ $b->moneda ?? '—' }}</span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            @endforeach
 
             @if ($bancos->count() === 0)
                 <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
                     @php
                         $colspan =
-                            7 + (auth()->user()->can('bancos.update') || auth()->user()->can('bancos.toggle') ? 1 : 0);
+                            8 + (auth()->user()->can('bancos.update') || auth()->user()->can('bancos.toggle') ? 1 : 0);
                     @endphp
                     <tr>
                         <td class="p-4 text-center text-gray-500 dark:text-neutral-400"
@@ -688,7 +772,7 @@
                 {{-- Monto (solo editable en create) --}}
                 <div>
                     <label class="block text-sm mb-1">
-                        Monto
+                        Monto Inicial
                         @if (!$bancoId)
                             <span class="text-red-500">*</span>
                         @endif

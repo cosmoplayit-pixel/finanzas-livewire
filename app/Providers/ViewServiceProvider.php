@@ -146,6 +146,16 @@ class ViewServiceProvider extends ServiceProvider
                     ->count();
             }
 
+            // INVERSIONES
+            if ($user->can('inversiones.view')) {
+                $navCounts['inversiones'] = DB::table('inversions')
+                    ->where('estado', 'ACTIVA')
+                    ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                        $q->where('empresa_id', $empresaId);
+                    })
+                    ->count();
+            }
+
             $view->with('navCounts', $navCounts);
         });
     }

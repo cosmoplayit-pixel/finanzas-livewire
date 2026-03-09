@@ -1,5 +1,12 @@
 {{-- DESKTOP: TABLA INVERSIONES --}}
-<div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm">
+<div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm"
+    @if (isset($highlight_inversion_id) && $highlight_inversion_id) x-data
+    x-init="setTimeout(() => {
+        const el = document.getElementById('inversion-row-target-{{ (int) $highlight_inversion_id }}');
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        @if (isset($highlight_movimiento_id) && $highlight_movimiento_id)
+            $wire.dispatch('openMovimientosInversionWithHighlight', { inversionId: {{ (int) $highlight_inversion_id }}, movimientoId: {{ (int) $highlight_movimiento_id }} }); @endif
+    }, 700)" @endif>
     <div class="overflow-x-auto">
         <table class="w-full text-sm font-sans min-w-[1350px] lg:min-w-0">
 
@@ -21,11 +28,16 @@
 
             <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
                 @forelse ($inversiones as $inv)
-                    <tr
-                        class="text-left text-gray-700 dark:text-neutral-200 border-t border-gray-100 dark:border-neutral-800 hover:bg-slate-50/50 dark:hover:bg-neutral-900/60 transition-colors">
+                    @php
+                        $isTargetInv = isset($highlight_inversion_id) && $highlight_inversion_id == $inv->id;
+                    @endphp
+                    <tr @if ($isTargetInv) id="inversion-row-target-{{ $inv->id }}" @endif
+                        class="text-left text-gray-700 dark:text-neutral-200 border-t border-gray-100 dark:border-neutral-800 transition-colors
+                        {{ $isTargetInv ? 'bg-indigo-50/60 dark:bg-indigo-900/20' : 'hover:bg-slate-50/50 dark:hover:bg-neutral-900/60' }}">
 
                         {{-- CODIGO --}}
-                        <td class="p-3 text-center text-gray-900 dark:text-neutral-100">
+                        <td
+                            class="p-3 text-center text-gray-900 dark:text-neutral-100 {{ $isTargetInv ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}">
                             {{ $inv->codigo }}
                         </td>
 
@@ -349,11 +361,21 @@
 
                     </tr>
                 @empty
+
                     <tr>
-                        <td colspan="7" class="p-6 text-center text-gray-500 dark:text-neutral-400">
-                            No hay inversiones registradas.
+                        <td class="p-8 text-center" colspan="6">
+                            <div class="flex flex-col items-center justify-center text-gray-400 dark:text-neutral-500">
+                                <svg class="w-12 h-12 mb-3 opacity-20" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                                    </path>
+                                </svg>
+                                <span class="text-sm font-medium">Sin resultados.</span>
+                            </div>
                         </td>
                     </tr>
+
                 @endforelse
             </tbody>
 

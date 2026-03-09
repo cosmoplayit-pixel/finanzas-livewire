@@ -1,9 +1,18 @@
 {{-- MOBILE: TABLA INVERSIONES (<= md) - PRO UI (COMPACT) --}}
-<div class="md:hidden space-y-2">
+<div class="md:hidden space-y-2"
+    @if (isset($highlight_inversion_id) && $highlight_inversion_id) x-data
+    x-init="setTimeout(() => {
+        const el = document.getElementById('inversion-mob-target-{{ (int) $highlight_inversion_id }}');
+        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        @if (isset($highlight_movimiento_id) && $highlight_movimiento_id)
+            $wire.dispatch('openMovimientosInversionWithHighlight', { inversionId: {{ (int) $highlight_inversion_id }}, movimientoId: {{ (int) $highlight_movimiento_id }} }); @endif
+    }, 700)" @endif
+    >
     @forelse ($inversiones as $inv)
 
         @php
             $isPrivado = $inv->tipo === 'PRIVADO';
+            $isTargetInvMob = isset($highlight_inversion_id) && $highlight_inversion_id == $inv->id;
 
             // Acentos por tipo
             $accentBar = $isPrivado ? 'bg-blue-500 dark:bg-green-400' : 'bg-teal-500 dark:bg-teal-400';
@@ -11,6 +20,12 @@
             $cardBg = $isPrivado
                 ? 'bg-gradient-to-b from-blue-50/60 to-white dark:from-blue-900/10 dark:to-neutral-900/30'
                 : 'bg-gradient-to-b from-teal-50/60 to-white dark:from-teal-900/10 dark:to-neutral-900/30';
+
+            // Override background if highlighted
+            if ($isTargetInvMob) {
+                $cardBg = 'bg-indigo-50/80 dark:bg-indigo-900/30 border-2 border-indigo-400 shadow-md';
+                $accentBar = 'bg-indigo-500 hidden'; // Hide original accent bar or change it
+            }
 
             $typeBadge = $isPrivado
                 ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200'
@@ -20,7 +35,8 @@
             $utilPendiente = $isPrivado && ($inv->resumen['estado_utilidad'] ?? null) === 'PENDIENTE';
         @endphp
 
-        <div class="rounded-2xl border border-gray-200 dark:border-neutral-700 overflow-hidden {{ $cardBg }}">
+        <div @if ($isTargetInvMob) id="inversion-mob-target-{{ $inv->id }}" @endif
+            class="rounded-2xl border border-gray-200 dark:border-neutral-700 overflow-hidden {{ $cardBg }} transition-all">
 
             {{-- Accent bar --}}
             <div class="h-1 {{ $accentBar }}"></div>

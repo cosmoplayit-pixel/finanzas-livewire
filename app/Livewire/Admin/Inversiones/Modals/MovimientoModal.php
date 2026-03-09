@@ -19,7 +19,10 @@ class MovimientoModal extends Component
     public ?Inversion $inversion = null;
 
     /** @var array<int, array<string,mixed>> */
+    /** @var array<int, array<string,mixed>> */
     public array $movimientos = [];
+
+    public ?int $highlight_movimiento_id = null;
 
     // Foto visor
     public bool $openFotoModal = false;
@@ -124,6 +127,17 @@ class MovimientoModal extends Component
     {
         $this->resetErrorBag();
         $this->resetValidation();
+        $this->highlight_movimiento_id = null;
+        $this->loadData($inversionId);
+        $this->openMovimientosModal = true;
+    }
+
+    #[On('openMovimientosInversionWithHighlight')]
+    public function openMovimientosWithHighlight(int $inversionId, int $movimientoId): void
+    {
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->highlight_movimiento_id = $movimientoId;
         $this->loadData($inversionId);
         $this->openMovimientosModal = true;
     }
@@ -150,6 +164,7 @@ class MovimientoModal extends Component
             'isBanco',
             'bloqueado',
             'inversionId',
+            'highlight_movimiento_id',
             'moneda',
             'inversionNombre',
             'inversionCodigo',

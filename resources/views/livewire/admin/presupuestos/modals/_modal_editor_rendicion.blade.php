@@ -1,5 +1,7 @@
 <x-ui.modal wire:key="rendicion-editor-{{ $editorRendicionId ?? 'none' }}" model="openEditor"
     maxWidth="sm:max-w-4xl lg:max-w-7xl" onClose="closeEditor">
+
+
     <x-slot:title>
         <div class="flex items-center gap-4">
             <span>Planilla de Rendición</span>
@@ -196,11 +198,26 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-100 dark:divide-neutral-800/80">
                                     @foreach ($editorDevoluciones ?? [] as $i => $m)
-                                        <tr
-                                            class="hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10 transition group">
+                                        @php
+                                            $isDevHighlighted =
+                                                isset($highlight_devolucion_id) &&
+                                                $highlight_devolucion_id &&
+                                                (int) $m->id === (int) $highlight_devolucion_id;
+                                        @endphp
+                                        <tr @if ($isDevHighlighted) id="devolucion-highlight-{{ $m->id }}" @endif
+                                            class="transition group
+                                            {{ $isDevHighlighted ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10' }}">
                                             <td
-                                                class="p-3 text-center text-gray-400 dark:text-neutral-500 font-medium">
-                                                {{ $i + 1 }}
+                                                class="p-3 text-center font-medium
+                                                {{ $isDevHighlighted ? 'border-l-4 border-amber-400' : 'border-l-4 border-transparent' }}">
+                                                @if ($isDevHighlighted)
+                                                    <span
+                                                        class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-400 text-white font-bold text-[10px] animate-pulse"
+                                                        title="Esta es la devolución de la transacción">{{ $i + 1 }}</span>
+                                                @else
+                                                    <span
+                                                        class="text-gray-400 dark:text-neutral-500">{{ $i + 1 }}</span>
+                                                @endif
                                             </td>
                                             <td
                                                 class="p-3 text-gray-600 dark:text-neutral-300 whitespace-nowrap text-center">
@@ -782,6 +799,36 @@
                 });
             }, 350);
         });
+
+        {{-- Auto-scroll hacia la devolución destacada cuando el modal se abre desde Transacciones --}}
+        @php $highlightDevId = (int) ($highlight_devolucion_id ?? 0); @endphp
+        @if ($highlightDevId > 0)
+            (function() {
+                const devId = {{ $highlightDevId }};
+                let alreadyScrolled = false;
+                document.addEventListener('livewire:navigated', () => {
+                    alreadyScrolled = false;
+                });
+                // Observar cambios en el DOM: cuando aparece #devolucion-highlight-{id}
+                const observer = new MutationObserver(() => {
+                    if (alreadyScrolled) return;
+                    const el = document.getElementById('devolucion-highlight-' + devId);
+                    if (el) {
+                        alreadyScrolled = true;
+                        setTimeout(() => el.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        }), 400);
+                    }
+                });
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+                // Limpiar observer después de 10s
+                setTimeout(() => observer.disconnect(), 10000);
+            })();
+        @endif
 
     });
 </script>

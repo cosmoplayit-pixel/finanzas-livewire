@@ -156,6 +156,8 @@ class ViewServiceProvider extends ServiceProvider
                     ->count();
             }
 
+            // tra
+
             $view->with('navCounts', $navCounts);
         });
     }

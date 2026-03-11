@@ -49,9 +49,9 @@
         {{-- COLUMNA ACTIVOS --}}
         <div
             class="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden flex flex-col h-full">
-            <div class="bg-blue-600 px-6 py-2">
+            <div class="bg-indigo-600 px-6 py-2">
                 <h3 class="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-3">
-                    <i class="fa-solid fa-arrow-trend-up text-blue-200"></i>
+                    <i class="fa-solid fa-arrow-trend-up text-indigo-200"></i>
                     Activos
                 </h3>
             </div>
@@ -143,9 +143,6 @@
                                 <span class="text-[13px] font-black text-slate-700 dark:text-neutral-200 uppercase">Ctas
                                     X
                                     Cobrar Proyectos</span>
-                                <span
-                                    class="block text-[10px] text-slate-400 font-bold uppercase mt-0.5 tracking-tighter opacity-70">(Saldo
-                                    + Ret. Pendiente)</span>
                             </td>
                             <td
                                 class="px-6 py-4 text-right text-sm font-black text-slate-700 dark:text-neutral-200 tabular-nums">
@@ -161,9 +158,7 @@
                                 <span class="text-[13px] font-black text-slate-700 dark:text-neutral-200 uppercase">Ctas
                                     X
                                     Cobrar Boletas</span>
-                                <span
-                                    class="block text-[10px] text-slate-400 font-bold uppercase mt-0.5 tracking-tighter opacity-70">(Saldo
-                                    por devolver)</span>
+
                             </td>
                             <td
                                 class="px-6 py-4 text-right text-sm font-black text-slate-700 dark:text-neutral-200 tabular-nums">
@@ -195,10 +190,10 @@
                                 class="px-6 py-4 text-right text-[11px] font-black text-slate-700 dark:text-neutral-200 uppercase tracking-widest">
                                 Total Activos</td>
                             <td
-                                class="px-6 py-4 text-right text-sm font-extrabold text-slate-700 dark:text-neutral-200 tabular-nums">
+                                class="px-6 py-4 text-right text-sm font-extrabold text-indigo-600 dark:text-indigo-400 tabular-nums">
                                 {{ fmtBs($totalActivosBob) }} Bs</td>
                             <td
-                                class="px-6 py-4 text-right text-sm font-extrabold text-slate-700 dark:text-neutral-200 tabular-nums">
+                                class="px-6 py-4 text-right text-sm font-extrabold text-indigo-600 dark:text-indigo-400 tabular-nums">
                                 $ {{ fmtBs($totalActivosUsd) }}</td>
                         </tr>
                     </tfoot>
@@ -209,9 +204,9 @@
         {{-- COLUMNA DEUDAS --}}
         <div
             class="bg-white dark:bg-neutral-900 rounded-2xl border border-slate-200 dark:border-neutral-800 shadow-sm overflow-hidden flex flex-col h-full">
-            <div class="bg-red-600 px-6 py-2">
+            <div class="bg-rose-600 px-6 py-2">
                 <h3 class="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-3">
-                    <i class="fa-solid fa-hand-holding-dollar text-red-200"></i>
+                    <i class="fa-solid fa-hand-holding-dollar text-rose-200"></i>
                     Deudas
                 </h3>
             </div>
@@ -261,8 +256,7 @@
                         <tr class="hover:bg-slate-50 dark:hover:bg-neutral-800/20 transition-colors">
                             <td class="px-6 py-4 text-sm font-medium text-slate-400">3</td>
                             <td class="px-6 py-1.5">
-                                <span
-                                    class="text-[13px] font-black text-slate-700 dark:text-neutral-200 uppercase">Inv.
+                                <span class="text-[13px] font-black text-slate-700 dark:text-neutral-200 uppercase">Inv.
                                     Bancos (Capital)</span>
                             </td>
                             <td
@@ -313,10 +307,10 @@
                                 class="px-6 py-4 text-right text-[11px] font-black text-slate-700 dark:text-neutral-200 uppercase tracking-widest">
                                 Total Deudas</td>
                             <td
-                                class="px-6 py-4 text-right text-sm font-extrabold text-slate-700 dark:text-neutral-200 tabular-nums">
+                                class="px-6 py-4 text-right text-sm font-extrabold text-rose-600 dark:text-rose-400 tabular-nums">
                                 {{ fmtBs($totalDeudasBob) }} Bs</td>
                             <td
-                                class="px-6 py-4 text-right text-sm font-extrabold text-slate-700 dark:text-neutral-200 tabular-nums">
+                                class="px-6 py-4 text-right text-sm font-extrabold text-rose-600 dark:text-rose-400 tabular-nums">
                                 $ {{ fmtBs($totalDeudasUsd) }}</td>
                         </tr>
                     </tfoot>
@@ -496,7 +490,7 @@
                     {{ (float) ($agentesServicioBob + $agentesServicioUsd * $tipoCambio) }}
                 ],
                 labels: ['Efectivo', 'Bancos', 'Proyectos', 'Boletas', 'Agentes'],
-                colors: ['#f59e0b', '#3b82f6', '#10b981', '#06b6d4', '#8b5cf6'],
+                colors: ['#0d9488', '#4f46e5', '#f59e0b', '#be185d', '#7c3aed'],
                 legend: {
                     position: 'bottom',
                     fontSize: '11px',
@@ -535,7 +529,7 @@
                     {{ (float) ($impuestosNacionalesBob + $impuestosNacionalesUsd * $tipoCambio) }}
                 ],
                 labels: ['Privados', 'Bancos', 'Impuestos'],
-                colors: ['#f43f5e', '#ef4444', '#6366f1'],
+                colors: ['#ef4444', '#06b6d4', '#8b5cf6'],
                 legend: {
                     position: 'bottom',
                     fontSize: '11px',

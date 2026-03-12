@@ -70,41 +70,59 @@
         </div>
     </div>
 
-    {{-- TABLAS --}}
+    {{--
+    BREAKPOINTS:
+      mobile  (<md)   → tab bar, 1 columna, sin bordes/rounded
+      tablet  (md-xl) → sin tab bar, grid 2 cols (Activos+Deudas arriba, Patrimonio abajo full)
+      pc      (xl+)   → sin tab bar, grid 3 cols
+--}}
+
     <div x-data="{ tab: 'activos' }" class="space-y-0">
 
-        {{-- ── TAB BAR (solo móvil) ── --}}
-        <div
-            class="flex lg:hidden sticky top-0 z-10 bg-white dark:bg-neutral-950 border-b border-slate-200 dark:border-neutral-800 shadow-sm">
-            <button @click="tab = 'activos'"
-                :class="tab === 'activos' ?
-                    'border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50/60 dark:bg-indigo-900/20' :
-                    'text-slate-400 dark:text-neutral-500'"
-                class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all">
-                <i class="fa-solid fa-arrow-trend-up text-[13px]"></i>Activos
-            </button>
-            <button @click="tab = 'deudas'"
-                :class="tab === 'deudas' ?
-                    'border-b-2 border-rose-600 text-rose-600 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-900/20' :
-                    'text-slate-400 dark:text-neutral-500'"
-                class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all">
-                <i class="fa-solid fa-hand-holding-dollar text-[13px]"></i>Deudas
-            </button>
-            <button @click="tab = 'patrimonio'"
-                :class="tab === 'patrimonio' ?
-                    'border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20' :
-                    'text-slate-400 dark:text-neutral-500'"
-                class="flex-1 py-4 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all">
-                <i class="fa-solid fa-gem text-[13px]"></i>Patrimonio
-            </button>
-        </div>
+        {{--
+        GRID:
+          mobile  → 1 col
+          tablet  → 2 cols (Activos + Deudas en fila, Patrimonio abajo ocupa las 2)
+          pc      → 3 cols
+    --}}
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+            {{-- ── TAB BAR: ocupa todo el ancho, oculto en xl ── --}}
+            <div
+                class="col-span-full xl:hidden sticky top-0 z-10 bg-white dark:bg-neutral-950 border border-slate-200 dark:border-neutral-800 shadow-sm rounded-xl overflow-hidden">
+                <div class="flex">
+                    <button @click="tab = 'activos'"
+                        :class="tab === 'activos' ?
+                            'border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50/60 dark:bg-indigo-900/20' :
+                            'text-slate-400 dark:text-neutral-500'"
+                        class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-arrow-trend-up text-[13px]"></i>Activos
+                    </button>
+                    <button @click="tab = 'deudas'"
+                        :class="tab === 'deudas' ?
+                            'border-b-2 border-rose-600 text-rose-600 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-900/20' :
+                            'text-slate-400 dark:text-neutral-500'"
+                        class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-hand-holding-dollar text-[13px]"></i>Deudas
+                    </button>
+                    <button @click="tab = 'patrimonio'"
+                        :class="tab === 'patrimonio' ?
+                            'border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20' :
+                            'text-slate-400 dark:text-neutral-500'"
+                        class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all">
+                        <i class="fa-solid fa-gem text-[13px]"></i>Patrimonio
+                    </button>
+                </div>
+            </div>
 
             {{-- ══════════════ ACTIVOS ══════════════ --}}
             <div x-show="tab === 'activos'" x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
-                class="lg:!block bg-white dark:bg-neutral-900 rounded-none lg:rounded-2xl border-0 lg:border border-slate-200 dark:border-neutral-800 shadow-none lg:shadow-sm overflow-hidden flex flex-col">
+                class="xl:!block col-span-full xl:col-span-1 bg-white dark:bg-neutral-900
+                   rounded-none xl:rounded-2xl
+                   border-0 xl:border border-slate-200 dark:border-neutral-800
+                   shadow-none xl:shadow-sm
+                   overflow-hidden flex flex-col">
 
                 <div class="bg-indigo-600 px-4 py-2">
                     <h3 class="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-3">
@@ -244,8 +262,7 @@
                                     {{ fmtBs($totalActivosBob) }} <span class="text-[9px] opacity-60">Bs</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-indigo-600 dark:text-indigo-400 tabular-nums whitespace-nowrap">
-                                    <span class="text-[9px] opacity-60">$</span> {{ fmtBs($totalActivosUsd) }}
-                                </td>
+                                    <span class="text-[9px] opacity-60">$</span> {{ fmtBs($totalActivosUsd) }}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -255,7 +272,11 @@
             {{-- ══════════════ DEUDAS ══════════════ --}}
             <div x-show="tab === 'deudas'" x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
-                class="lg:!block bg-white dark:bg-neutral-900 rounded-none lg:rounded-2xl border-0 lg:border border-slate-200 dark:border-neutral-800 shadow-none lg:shadow-sm overflow-hidden flex flex-col">
+                class="xl:!block col-span-full xl:col-span-1 bg-white dark:bg-neutral-900
+                   rounded-none xl:rounded-2xl
+                   border-0 xl:border border-slate-200 dark:border-neutral-800
+                   shadow-none xl:shadow-sm
+                   overflow-hidden flex flex-col">
 
                 <div class="bg-rose-600 px-4 py-2">
                     <h3 class="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-3">
@@ -361,18 +382,25 @@
                                     {{ fmtBs($totalDeudasBob) }} <span class="text-[9px]">Bs</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-rose-600 dark:text-rose-400 tabular-nums whitespace-nowrap">
-                                    <span class="text-[9px]">$</span> {{ fmtBs($totalDeudasUsd) }}
-                                </td>
+                                    <span class="text-[9px]">$</span> {{ fmtBs($totalDeudasUsd) }}</td>
                             </tr>
                         </tfoot>
                     </table>
                 </div>
             </div>
 
-            {{-- ══════════════ PATRIMONIO ══════════════ --}}
+            {{-- ══════════════ PATRIMONIO ══════════════
+             Tablet: ocupa las 2 columnas (md:col-span-2)
+             PC:     ocupa 1 columna (lg:col-span-1)
+        ══════════════════════════════════════════ --}}
             <div x-show="tab === 'patrimonio'" x-transition:enter="transition ease-out duration-200"
                 x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0"
-                class="lg:!block bg-white dark:bg-neutral-900 rounded-none lg:rounded-2xl border-0 lg:border border-slate-200 dark:border-neutral-800 shadow-none lg:shadow-sm overflow-hidden flex flex-col">
+                class="xl:!block md:col-span-2 xl:col-span-1
+                   bg-white dark:bg-neutral-900
+                   rounded-none xl:rounded-2xl
+                   border-0 xl:border border-slate-200 dark:border-neutral-800
+                   shadow-none xl:shadow-sm
+                   overflow-hidden flex flex-col">
 
                 <div class="bg-emerald-600 px-4 py-2">
                     <h3 class="text-[11px] font-black text-white uppercase tracking-widest flex items-center gap-3">
@@ -381,6 +409,10 @@
                 </div>
 
                 <div class="overflow-x-auto">
+                    {{--
+                    Tablet: tabla ocupa el doble de ancho → más espacio para Nombre.
+                    Usamos las mismas proporciones % — se escalan solas.
+                --}}
                     <table class="w-full text-left border-collapse table-fixed">
                         <colgroup>
                             <col style="width:8%">
@@ -433,8 +465,7 @@
                                     {{ fmtBs($totalPatrimonioBob) }} <span class="text-[9px]">Bs</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums whitespace-nowrap">
-                                    <span class="text-[9px]">$</span> {{ fmtBs($totalPatrimonioUsd) }}
-                                </td>
+                                    <span class="text-[9px]">$</span> {{ fmtBs($totalPatrimonioUsd) }}</td>
                             </tr>
                         </tfoot>
                     </table>
@@ -442,7 +473,7 @@
             </div>
 
         </div>{{-- /grid --}}
-    </div>
+    </div>{{-- /x-data --}}
 
     {{-- SALDO NETO FINAL Y CONSOLIDADO --}}
     <div class="space-y-3">

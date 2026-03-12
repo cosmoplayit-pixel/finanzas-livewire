@@ -1,7 +1,21 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="dark">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
+    <script>
+        // Force light mode on first visit if no preference is set
+        if (!localStorage.getItem('flux.appearance')) {
+            localStorage.setItem('flux.appearance', 'light');
+        }
+
+        // Apply dark mode immediately if preferred to prevent flash
+        if (localStorage.getItem('flux.appearance') === 'dark' || (localStorage.getItem('flux.appearance') === 'system' &&
+                window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
     @include('partials.head')
 </head>
 
@@ -17,6 +31,12 @@
             <div class="flex flex-col gap-6">
                 {{ $slot }}
             </div>
+            <flux:menu.item icon="sun" x-show="$flux.appearance === 'dark'" @click="$flux.appearance = 'light'">
+                {{ __('Modo Claro') }}
+            </flux:menu.item>
+            <flux:menu.item icon="moon" x-show="$flux.appearance === 'light'" @click="$flux.appearance = 'dark'">
+                {{ __('Modo Oscuro') }}
+            </flux:menu.item>
         </div>
     </div>
     @fluxScripts

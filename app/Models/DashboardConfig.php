@@ -14,12 +14,27 @@ class DashboardConfig extends Model
         'impuestos_nacionales_bob',
         'impuestos_nacionales_usd',
         'tipo_cambio',
+        'patrimonio_herramientas_bob', 'patrimonio_herramientas_usd',
+        'patrimonio_materiales_bob', 'patrimonio_materiales_usd',
+        'patrimonio_mobiliario_bob', 'patrimonio_mobiliario_usd',
+        'patrimonio_vehiculos_bob', 'patrimonio_vehiculos_usd',
+        'patrimonio_inmuebles_bob', 'patrimonio_inmuebles_usd',
     ];
 
     protected $casts = [
         'impuestos_nacionales_bob' => 'decimal:2',
         'impuestos_nacionales_usd' => 'decimal:2',
         'tipo_cambio'              => 'decimal:2',
+        'patrimonio_herramientas_bob' => 'decimal:2',
+        'patrimonio_herramientas_usd' => 'decimal:2',
+        'patrimonio_materiales_bob' => 'decimal:2',
+        'patrimonio_materiales_usd' => 'decimal:2',
+        'patrimonio_mobiliario_bob' => 'decimal:2',
+        'patrimonio_mobiliario_usd' => 'decimal:2',
+        'patrimonio_vehiculos_bob' => 'decimal:2',
+        'patrimonio_vehiculos_usd' => 'decimal:2',
+        'patrimonio_inmuebles_bob' => 'decimal:2',
+        'patrimonio_inmuebles_usd' => 'decimal:2',
     ];
 
     public function empresa(): BelongsTo

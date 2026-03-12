@@ -67,6 +67,55 @@ class Dashboard extends Component
 
     public string $impuestosNacionalesUsdFormatted = '';
 
+    // ─────────── PATRIMONIO ────────────────────────────────────────────────
+    public float $patrimonioHerramientasBob = 0;
+
+    public float $patrimonioHerramientasUsd = 0;
+
+    public string $patrimonioHerramientasBobFormatted = '';
+
+    public string $patrimonioHerramientasUsdFormatted = '';
+
+    public float $patrimonioMaterialesBob = 0;
+
+    public float $patrimonioMaterialesUsd = 0;
+
+    public string $patrimonioMaterialesBobFormatted = '';
+
+    public string $patrimonioMaterialesUsdFormatted = '';
+
+    public float $patrimonioMobiliarioBob = 0;
+
+    public float $patrimonioMobiliarioUsd = 0;
+
+    public string $patrimonioMobiliarioBobFormatted = '';
+
+    public string $patrimonioMobiliarioUsdFormatted = '';
+
+    public float $patrimonioVehiculosBob = 0;
+
+    public float $patrimonioVehiculosUsd = 0;
+
+    public string $patrimonioVehiculosBobFormatted = '';
+
+    public string $patrimonioVehiculosUsdFormatted = '';
+
+    public float $patrimonioInmueblesBob = 0;
+
+    public float $patrimonioInmueblesUsd = 0;
+
+    public string $patrimonioInmueblesBobFormatted = '';
+
+    public string $patrimonioInmueblesUsdFormatted = '';
+
+    public float $totalPatrimonioBob = 0;
+
+    public float $totalPatrimonioUsd = 0;
+
+    public float $totalPatrimonioConsolidatedBob = 0;
+
+    // ──────────────────────────────────────────────────────────────────────
+
     public float $totalActivosBob = 0;
 
     public float $totalActivosUsd = 0;
@@ -144,13 +193,37 @@ class Dashboard extends Component
         $cfg = DashboardConfig::forEmpresa($this->empresaId);
         $this->impuestosNacionalesBob = (float) $cfg->impuestos_nacionales_bob;
         $this->impuestosNacionalesUsd = (float) $cfg->impuestos_nacionales_usd;
-        $this->impuestosNacionalesBobFormatted = $this->impuestosNacionalesBob > 0
-            ? number_format($this->impuestosNacionalesBob, 2, ',', '.') : '';
-        $this->impuestosNacionalesUsdFormatted = $this->impuestosNacionalesUsd > 0
-            ? number_format($this->impuestosNacionalesUsd, 2, ',', '.') : '';
+        $this->impuestosNacionalesBobFormatted = number_format($this->impuestosNacionalesBob, 2, ',', '.');
+        $this->impuestosNacionalesUsdFormatted = number_format($this->impuestosNacionalesUsd, 2, ',', '.');
 
         $this->tipoCambio = (float) ($cfg->tipo_cambio > 0 ? $cfg->tipo_cambio : 1.00);
         $this->tipoCambioFormatted = number_format($this->tipoCambio, 2, ',', '.');
+
+        // Patrimonio inicialización
+        $this->patrimonioHerramientasBob = (float) $cfg->patrimonio_herramientas_bob;
+        $this->patrimonioHerramientasUsd = (float) $cfg->patrimonio_herramientas_usd;
+        $this->patrimonioHerramientasBobFormatted = number_format($this->patrimonioHerramientasBob, 2, ',', '.');
+        $this->patrimonioHerramientasUsdFormatted = number_format($this->patrimonioHerramientasUsd, 2, ',', '.');
+
+        $this->patrimonioMaterialesBob = (float) $cfg->patrimonio_materiales_bob;
+        $this->patrimonioMaterialesUsd = (float) $cfg->patrimonio_materiales_usd;
+        $this->patrimonioMaterialesBobFormatted = number_format($this->patrimonioMaterialesBob, 2, ',', '.');
+        $this->patrimonioMaterialesUsdFormatted = number_format($this->patrimonioMaterialesUsd, 2, ',', '.');
+
+        $this->patrimonioMobiliarioBob = (float) $cfg->patrimonio_mobiliario_bob;
+        $this->patrimonioMobiliarioUsd = (float) $cfg->patrimonio_mobiliario_usd;
+        $this->patrimonioMobiliarioBobFormatted = number_format($this->patrimonioMobiliarioBob, 2, ',', '.');
+        $this->patrimonioMobiliarioUsdFormatted = number_format($this->patrimonioMobiliarioUsd, 2, ',', '.');
+
+        $this->patrimonioVehiculosBob = (float) $cfg->patrimonio_vehiculos_bob;
+        $this->patrimonioVehiculosUsd = (float) $cfg->patrimonio_vehiculos_usd;
+        $this->patrimonioVehiculosBobFormatted = number_format($this->patrimonioVehiculosBob, 2, ',', '.');
+        $this->patrimonioVehiculosUsdFormatted = number_format($this->patrimonioVehiculosUsd, 2, ',', '.');
+
+        $this->patrimonioInmueblesBob = (float) $cfg->patrimonio_inmuebles_bob;
+        $this->patrimonioInmueblesUsd = (float) $cfg->patrimonio_inmuebles_usd;
+        $this->patrimonioInmueblesBobFormatted = number_format($this->patrimonioInmueblesBob, 2, ',', '.');
+        $this->patrimonioInmueblesUsdFormatted = number_format($this->patrimonioInmueblesUsd, 2, ',', '.');
 
         $this->loadData();
     }
@@ -161,24 +234,140 @@ class Dashboard extends Component
     {
         $clean = str_replace(['.', ','], ['', '.'], trim($value));
         $this->impuestosNacionalesBob = is_numeric($clean) ? (float) $clean : 0;
+
+        // Re-formatear para mostrar puntos y comas
+        $this->impuestosNacionalesBobFormatted = number_format($this->impuestosNacionalesBob, 2, ',', '.');
+
         $this->saveConfig();
         $this->recalculate();
+        $this->dispatch('charts-updated');
     }
 
     public function updatedImpuestosNacionalesUsdFormatted(string $value): void
     {
         $clean = str_replace(['.', ','], ['', '.'], trim($value));
         $this->impuestosNacionalesUsd = is_numeric($clean) ? (float) $clean : 0;
+
+        // Re-formatear para mostrar puntos y comas
+        $this->impuestosNacionalesUsdFormatted = number_format($this->impuestosNacionalesUsd, 2, ',', '.');
+
         $this->saveConfig();
         $this->recalculate();
+        $this->dispatch('charts-updated');
     }
 
     public function updatedTipoCambioFormatted(string $value): void
     {
         $clean = str_replace(['.', ','], ['', '.'], trim($value));
         $this->tipoCambio = is_numeric($clean) && (float) $clean > 0 ? (float) $clean : 1.00;
+
+        // Re-formatear para mostrar coma decimal
+        $this->tipoCambioFormatted = number_format($this->tipoCambio, 2, ',', '.');
+
         $this->saveConfig();
         $this->recalculate();
+        $this->dispatch('charts-updated');
+    }
+
+    // --- PATRIMONIO UPDATED ---
+    public function updatedPatrimonioHerramientasBobFormatted($value)
+    {
+        $clean = str_replace(['.', ','], ['', '.'], trim($value));
+        $this->patrimonioHerramientasBob = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioHerramientasBobFormatted = number_format($this->patrimonioHerramientasBob, 2, ',', '.');
+        $this->saveConfig();
+        $this->recalculate();
+        $this->dispatch('charts-updated');
+    }
+
+    public function updatedPatrimonioHerramientasUsdFormatted($value)
+    {
+        $clean = str_replace(['.', ','], ['', '.'], trim($value));
+        $this->patrimonioHerramientasUsd = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioHerramientasUsdFormatted = number_format($this->patrimonioHerramientasUsd, 2, ',', '.');
+        $this->saveConfig();
+        $this->recalculate();
+        $this->dispatch('charts-updated');
+    }
+
+    public function updatedPatrimonioMaterialesBobFormatted($value)
+    {
+        $clean = str_replace(['.', ','], ['', '.'], trim($value));
+        $this->patrimonioMaterialesBob = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioMaterialesBobFormatted = number_format($this->patrimonioMaterialesBob, 2, ',', '.');
+        $this->saveConfig();
+        $this->recalculate();
+        $this->dispatch('charts-updated');
+    }
+
+    public function updatedPatrimonioMaterialesUsdFormatted($value)
+    {
+        $clean = str_replace(['.', ','], ['', '.'], trim($value));
+        $this->patrimonioMaterialesUsd = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioMaterialesUsdFormatted = number_format($this->patrimonioMaterialesUsd, 2, ',', '.');
+        $this->saveConfig();
+        $this->recalculate();
+        $this->dispatch('charts-updated');
+    }
+
+    public function updatedPatrimonioMobiliarioBobFormatted($value)
+    {
+        $clean = str_replace(['.', ','], ['', '.'], trim($value));
+        $this->patrimonioMobiliarioBob = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioMobiliarioBobFormatted = number_format($this->patrimonioMobiliarioBob, 2, ',', '.');
+        $this->saveConfig();
+        $this->recalculate();
+        $this->dispatch('charts-updated');
+    }
+
+    public function updatedPatrimonioMobiliarioUsdFormatted($value)
+    {
+        $clean = str_replace(['.', ','], ['', '.'], trim($value));
+        $this->patrimonioMobiliarioUsd = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioMobiliarioUsdFormatted = number_format($this->patrimonioMobiliarioUsd, 2, ',', '.');
+        $this->saveConfig();
+        $this->recalculate();
+        $this->dispatch('charts-updated');
+    }
+
+    public function updatedPatrimonioVehiculosBobFormatted($value)
+    {
+        $clean = str_replace(['.', ','], ['', '.'], trim($value));
+        $this->patrimonioVehiculosBob = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioVehiculosBobFormatted = number_format($this->patrimonioVehiculosBob, 2, ',', '.');
+        $this->saveConfig();
+        $this->recalculate();
+        $this->dispatch('charts-updated');
+    }
+
+    public function updatedPatrimonioVehiculosUsdFormatted($value)
+    {
+        $clean = str_replace(['.', ','], ['', '.'], trim($value));
+        $this->patrimonioVehiculosUsd = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioVehiculosUsdFormatted = number_format($this->patrimonioVehiculosUsd, 2, ',', '.');
+        $this->saveConfig();
+        $this->recalculate();
+        $this->dispatch('charts-updated');
+    }
+
+    public function updatedPatrimonioInmueblesBobFormatted($value)
+    {
+        $clean = str_replace(['.', ','], ['', '.'], trim($value));
+        $this->patrimonioInmueblesBob = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioInmueblesBobFormatted = number_format($this->patrimonioInmueblesBob, 2, ',', '.');
+        $this->saveConfig();
+        $this->recalculate();
+        $this->dispatch('charts-updated');
+    }
+
+    public function updatedPatrimonioInmueblesUsdFormatted($value)
+    {
+        $clean = str_replace(['.', ','], ['', '.'], trim($value));
+        $this->patrimonioInmueblesUsd = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioInmueblesUsdFormatted = number_format($this->patrimonioInmueblesUsd, 2, ',', '.');
+        $this->saveConfig();
+        $this->recalculate();
+        $this->dispatch('charts-updated');
     }
 
     protected function saveConfig(): void
@@ -192,6 +381,16 @@ class Dashboard extends Component
                 'impuestos_nacionales_bob' => $this->impuestosNacionalesBob,
                 'impuestos_nacionales_usd' => $this->impuestosNacionalesUsd,
                 'tipo_cambio' => $this->tipoCambio,
+                'patrimonio_herramientas_bob' => $this->patrimonioHerramientasBob,
+                'patrimonio_herramientas_usd' => $this->patrimonioHerramientasUsd,
+                'patrimonio_materiales_bob' => $this->patrimonioMaterialesBob,
+                'patrimonio_materiales_usd' => $this->patrimonioMaterialesUsd,
+                'patrimonio_mobiliario_bob' => $this->patrimonioMobiliarioBob,
+                'patrimonio_mobiliario_usd' => $this->patrimonioMobiliarioUsd,
+                'patrimonio_vehiculos_bob' => $this->patrimonioVehiculosBob,
+                'patrimonio_vehiculos_usd' => $this->patrimonioVehiculosUsd,
+                'patrimonio_inmuebles_bob' => $this->patrimonioInmueblesBob,
+                'patrimonio_inmuebles_usd' => $this->patrimonioInmueblesUsd,
             ]
         );
     }
@@ -382,6 +581,11 @@ class Dashboard extends Component
         $efectivoBob = collect($this->efectivoBancos)->sum('bob') + collect($this->otrosBancos)->sum('bob');
         $efectivoUsd = collect($this->efectivoBancos)->sum('usd') + collect($this->otrosBancos)->sum('usd');
 
+        // Cálculo Patrimonio
+        $this->totalPatrimonioBob = $this->patrimonioHerramientasBob + $this->patrimonioMaterialesBob + $this->patrimonioMobiliarioBob + $this->patrimonioVehiculosBob + $this->patrimonioInmueblesBob;
+        $this->totalPatrimonioUsd = $this->patrimonioHerramientasUsd + $this->patrimonioMaterialesUsd + $this->patrimonioMobiliarioUsd + $this->patrimonioVehiculosUsd + $this->patrimonioInmueblesUsd;
+        $this->totalPatrimonioConsolidatedBob = $this->totalPatrimonioBob + ($this->totalPatrimonioUsd * $this->tipoCambio);
+
         $this->totalActivosBob = $efectivoBob + $this->cuentasProyectosBob + $this->cuentasBoletasBob + $this->agentesServicioBob;
         $this->totalActivosUsd = $efectivoUsd + $this->cuentasProyectosUsd + $this->cuentasBoletasUsd + $this->agentesServicioUsd;
         $this->totalActivosConsolidatedBob = $this->totalActivosBob + ($this->totalActivosUsd * $this->tipoCambio);
@@ -392,11 +596,11 @@ class Dashboard extends Component
             + $this->invBancoCapitalUsd + $this->invBancoCuotasUsd + $this->impuestosNacionalesUsd;
         $this->totalDeudasConsolidatedBob = $this->totalDeudasBob + ($this->totalDeudasUsd * $this->tipoCambio);
 
-        $this->saldoNetoBob = $this->totalActivosBob - $this->totalDeudasBob;
-        $this->saldoNetoUsd = $this->totalActivosUsd - $this->totalDeudasUsd;
+        $this->saldoNetoBob = ($this->totalActivosBob + $this->totalPatrimonioBob) - $this->totalDeudasBob;
+        $this->saldoNetoUsd = ($this->totalActivosUsd + $this->totalPatrimonioUsd) - $this->totalDeudasUsd;
 
-        $this->saldoNetoInBsCombined = $this->saldoNetoBob + ($this->saldoNetoUsd * $this->tipoCambio);
-        $this->saldoNetoInUsdCombined = $this->saldoNetoUsd + ($this->tipoCambio > 0 ? ($this->saldoNetoBob / $this->tipoCambio) : 0);
+        $this->saldoNetoInBsCombined = $this->totalActivosConsolidatedBob + $this->totalPatrimonioConsolidatedBob - $this->totalDeudasConsolidatedBob;
+        $this->saldoNetoInUsdCombined = $this->tipoCambio > 0 ? ($this->saldoNetoInBsCombined / $this->tipoCambio) : 0;
     }
 
     public function render()

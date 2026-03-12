@@ -70,21 +70,9 @@
         </div>
     </div>
 
-    {{--
-    BREAKPOINTS:
-      mobile  (<md)   → tab bar, 1 columna, sin bordes/rounded
-      tablet  (md-xl) → sin tab bar, grid 2 cols (Activos+Deudas arriba, Patrimonio abajo full)
-      pc      (xl+)   → sin tab bar, grid 3 cols
---}}
-
+    {{-- TABLAS --}}
     <div x-data="{ tab: 'activos' }" class="space-y-0">
 
-        {{--
-        GRID:
-          mobile  → 1 col
-          tablet  → 2 cols (Activos + Deudas en fila, Patrimonio abajo ocupa las 2)
-          pc      → 3 cols
-    --}}
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
 
             {{-- ── TAB BAR: ocupa todo el ancho, oculto en xl ── --}}
@@ -262,7 +250,8 @@
                                     {{ fmtBs($totalActivosBob) }} <span class="text-[9px] opacity-60">Bs</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-indigo-600 dark:text-indigo-400 tabular-nums whitespace-nowrap">
-                                    <span class="text-[9px] opacity-60">$</span> {{ fmtBs($totalActivosUsd) }}</td>
+                                    <span class="text-[9px] opacity-60">$</span> {{ fmtBs($totalActivosUsd) }}
+                                </td>
                             </tr>
                         </tfoot>
                     </table>
@@ -382,7 +371,8 @@
                                     {{ fmtBs($totalDeudasBob) }} <span class="text-[9px]">Bs</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-rose-600 dark:text-rose-400 tabular-nums whitespace-nowrap">
-                                    <span class="text-[9px]">$</span> {{ fmtBs($totalDeudasUsd) }}</td>
+                                    <span class="text-[9px]">$</span> {{ fmtBs($totalDeudasUsd) }}
+                                </td>
                             </tr>
                         </tfoot>
                     </table>
@@ -465,7 +455,8 @@
                                     {{ fmtBs($totalPatrimonioBob) }} <span class="text-[9px]">Bs</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums whitespace-nowrap">
-                                    <span class="text-[9px]">$</span> {{ fmtBs($totalPatrimonioUsd) }}</td>
+                                    <span class="text-[9px]">$</span> {{ fmtBs($totalPatrimonioUsd) }}
+                                </td>
                             </tr>
                         </tfoot>
                     </table>
@@ -473,7 +464,7 @@
             </div>
 
         </div>{{-- /grid --}}
-    </div>{{-- /x-data --}}
+    </div>
 
     {{-- SALDO NETO FINAL Y CONSOLIDADO --}}
     <div class="space-y-3">
@@ -651,7 +642,7 @@
                         ]
                     }],
                     xaxis: {
-                        categories: ['Activos', 'Deudas', 'Patrimonio'],
+                        categories: ['C.C.', 'Deudas', 'Patrimonio'],
                         labels: {
                             style: {
                                 colors: '#94a3b8',

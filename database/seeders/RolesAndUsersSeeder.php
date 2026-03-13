@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Empresa;
-use App\Models\User;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -81,7 +81,7 @@ class RolesAndUsersSeeder extends Seeder
             'bancos.create',
             'bancos.update',
             'bancos.toggle',
- 
+
             // Agentes de Servicio
             'agentes_servicio.view',
             'agentes_servicio.create',
@@ -91,7 +91,7 @@ class RolesAndUsersSeeder extends Seeder
             // FACTURAS
             'facturas.view',
             'facturas.create',
-            'facturas.pay', 
+            'facturas.pay',
             'facturas.delete',
 
             // Agentes de Presupuestos
@@ -100,8 +100,7 @@ class RolesAndUsersSeeder extends Seeder
             'agente_presupuestos.view_detail',
             'agente_presupuestos.register_movement',
             'agente_presupuestos.delete_movement',
-            'agente_presupuestos.close_movement',         
-
+            'agente_presupuestos.close_movement',
 
             // Boletas de Garantia
             'boletas_garantia.view',
@@ -162,9 +161,8 @@ class RolesAndUsersSeeder extends Seeder
         |--------------------------------------------------------------------------
         */
 
-        // Administrador: TODO
+        // Administrador
         $adminRole->syncPermissions([
-            'dashboard.view',
 
             'users.view',
             'users.create',
@@ -201,13 +199,13 @@ class RolesAndUsersSeeder extends Seeder
             'bancos.view',
             'bancos.create',
             'bancos.update',
-            'bancos.toggle',          
+            'bancos.toggle',
 
             'agentes_servicio.view',
             'agentes_servicio.create',
             'agentes_servicio.update',
             'agentes_servicio.toggle',
-            
+
             'facturas.view',
             'facturas.create',
             'facturas.pay',
@@ -218,7 +216,7 @@ class RolesAndUsersSeeder extends Seeder
             'agente_presupuestos.register_movement',
             'agente_presupuestos.view_detail',
             'agente_presupuestos.delete_movement',
-            'agente_presupuestos.close_movement',   
+            'agente_presupuestos.close_movement',
 
             'boletas_garantia.view',
             'boletas_garantia.create',
@@ -241,7 +239,7 @@ class RolesAndUsersSeeder extends Seeder
             'bancos.view',
             'facturas.view',
             'agentes_servicio.view',
-            'agente_presupuestos.view',           
+            'agente_presupuestos.view',
             'boletas_garantia.view',
             'inversiones.view',
         ]);

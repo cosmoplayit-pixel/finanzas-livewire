@@ -90,6 +90,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware(['permission:proyectos.view'])
         ->get('/proyectos', Proyectos::class)
         ->name('proyectos');
+        
+    Route::middleware(['permission:proyectos.view'])
+        ->get('/proyectos/resumen', \App\Livewire\Admin\Proyectos\Resumen::class)
+        ->name('proyectos.resumen');
 
     // =======================
     // FACTURAS

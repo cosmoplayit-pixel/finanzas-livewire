@@ -232,6 +232,7 @@ trait RendicionEditorModal
         $this->recalcMovimientoConversion();
 
         $this->openMovimientoModal = false;
+        $this->dispatch('rendicion-editor-opened');
     }
 
     public function closeEditor(): void

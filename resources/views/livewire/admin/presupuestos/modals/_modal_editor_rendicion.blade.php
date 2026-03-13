@@ -486,10 +486,26 @@
                                 </thead>
                                 <tbody class="divide-y divide-gray-100 dark:divide-neutral-800/80">
                                     @foreach ($editorCompras ?? [] as $i => $m)
-                                        <tr class="hover:bg-blue-50/30 dark:hover:bg-blue-900/10 transition group">
+                                        @php
+                                            $isMovHighlighted =
+                                                isset($highlight_movimiento_id) &&
+                                                $highlight_movimiento_id &&
+                                                (int) $m->id === (int) $highlight_movimiento_id;
+                                        @endphp
+                                        <tr @if ($isMovHighlighted) id="movimiento-highlight-{{ $m->id }}" @endif
+                                            class="transition group
+                                            {{ $isMovHighlighted ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-blue-50/30 dark:hover:bg-blue-900/10' }}">
                                             <td
-                                                class="p-3 text-center text-gray-400 dark:text-neutral-500 font-medium">
-                                                {{ $i + 1 }}
+                                                class="p-3 text-center font-medium
+                                                {{ $isMovHighlighted ? 'border-l-4 border-blue-400' : 'border-l-4 border-transparent' }}">
+                                                @if ($isMovHighlighted)
+                                                    <span
+                                                        class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-400 text-white font-bold text-[10px] animate-pulse"
+                                                        title="Este es el movimiento seleccionado">{{ $i + 1 }}</span>
+                                                @else
+                                                    <span
+                                                        class="text-gray-400 dark:text-neutral-500">{{ $i + 1 }}</span>
+                                                @endif
                                             </td>
                                             <td
                                                 class="p-3 text-gray-600 dark:text-neutral-300 whitespace-nowrap text-center">
@@ -830,5 +846,17 @@
             })();
         @endif
 
+        {{-- Scroll al elemento resaltado cuando se abre el modal --}}
+        Livewire.on('rendicion-editor-opened', () => {
+            setTimeout(() => {
+                const highlighted = document.querySelector('[id*="-highlight-"]');
+                if (highlighted) {
+                    highlighted.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                }
+            }, 500);
+        });
     });
 </script>

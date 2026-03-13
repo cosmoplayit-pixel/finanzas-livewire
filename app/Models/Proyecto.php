@@ -56,6 +56,14 @@ class Proyecto extends Model
     }
 
     /**
+     * Relación: el Proyecto tiene muchos movimientos de rendición (Compras/Deoluciones)
+     */
+    public function rendicionMovimientos(): HasMany
+    {
+        return $this->hasMany(RendicionMovimiento::class);
+    }
+
+    /**
      * Helpers opcionales para cálculos
      */
     public function retencionPct(): float

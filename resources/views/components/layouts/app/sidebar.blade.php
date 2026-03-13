@@ -113,6 +113,11 @@
                     :badge="$navCounts['proyectos'] ?? null" wire:navigate>
                     {{ __('Proyectos') }}
                 </flux:sidebar.item>
+
+                <flux:sidebar.item icon="chart-pie" :href="route('proyectos.resumen')"
+                    :current="request()->routeIs('proyectos.resumen')" wire:navigate>
+                    {{ __('Resumen Proyectos') }}
+                </flux:sidebar.item>
             @endcan
 
             @can('bancos.view')
@@ -791,6 +796,7 @@
             });
         });
     </script>
+
 
     @stack('js')
 </body>

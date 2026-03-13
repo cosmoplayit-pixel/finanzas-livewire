@@ -230,12 +230,28 @@ class Dashboard extends Component
 
     // ─── Watchers Config ─────────────────────────────────────────────────
 
+    // Helper robusto para limpiar números con formato boliviano (. mil, , decimal)
+    protected function cleanNumeric($value): float
+    {
+        if (is_numeric($value)) return (float) $value;
+        
+        // 1. Quitar espacios
+        $value = trim($value);
+        if ($value === '') return 0;
+
+        // 2. Si hay múltiples puntos (ej: 1.000.000,00), asumimos que el punto es separador de miles
+        // Si solo hay un separador, necesitamos saber cuál es.
+        
+        // Caso común: 1.234,56 -> Primero quitamos los puntos, luego el coma se vuelve punto
+        $clean = str_replace('.', '', $value); // Quitamos todos los puntos
+        $clean = str_replace(',', '.', $clean); // La coma decimal se vuelve punto decimal de PHP
+        
+        return is_numeric($clean) ? (float) $clean : 0;
+    }
+
     public function updatedImpuestosNacionalesBobFormatted(string $value): void
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->impuestosNacionalesBob = is_numeric($clean) ? (float) $clean : 0;
-
-        // Re-formatear para mostrar puntos y comas
+        $this->impuestosNacionalesBob = $this->cleanNumeric($value);
         $this->impuestosNacionalesBobFormatted = number_format($this->impuestosNacionalesBob, 2, ',', '.');
 
         $this->saveConfig();
@@ -245,10 +261,7 @@ class Dashboard extends Component
 
     public function updatedImpuestosNacionalesUsdFormatted(string $value): void
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->impuestosNacionalesUsd = is_numeric($clean) ? (float) $clean : 0;
-
-        // Re-formatear para mostrar puntos y comas
+        $this->impuestosNacionalesUsd = $this->cleanNumeric($value);
         $this->impuestosNacionalesUsdFormatted = number_format($this->impuestosNacionalesUsd, 2, ',', '.');
 
         $this->saveConfig();
@@ -258,8 +271,8 @@ class Dashboard extends Component
 
     public function updatedTipoCambioFormatted(string $value): void
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->tipoCambio = is_numeric($clean) && (float) $clean > 0 ? (float) $clean : 1.00;
+        $this->tipoCambio = $this->cleanNumeric($value);
+        if ($this->tipoCambio <= 0) $this->tipoCambio = 1.00;
 
         // Re-formatear para mostrar coma decimal
         $this->tipoCambioFormatted = number_format($this->tipoCambio, 2, ',', '.');
@@ -272,8 +285,7 @@ class Dashboard extends Component
     // --- PATRIMONIO UPDATED ---
     public function updatedPatrimonioHerramientasBobFormatted($value)
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->patrimonioHerramientasBob = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioHerramientasBob = $this->cleanNumeric($value);
         $this->patrimonioHerramientasBobFormatted = number_format($this->patrimonioHerramientasBob, 2, ',', '.');
         $this->saveConfig();
         $this->recalculate();
@@ -282,8 +294,7 @@ class Dashboard extends Component
 
     public function updatedPatrimonioHerramientasUsdFormatted($value)
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->patrimonioHerramientasUsd = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioHerramientasUsd = $this->cleanNumeric($value);
         $this->patrimonioHerramientasUsdFormatted = number_format($this->patrimonioHerramientasUsd, 2, ',', '.');
         $this->saveConfig();
         $this->recalculate();
@@ -292,8 +303,7 @@ class Dashboard extends Component
 
     public function updatedPatrimonioMaterialesBobFormatted($value)
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->patrimonioMaterialesBob = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioMaterialesBob = $this->cleanNumeric($value);
         $this->patrimonioMaterialesBobFormatted = number_format($this->patrimonioMaterialesBob, 2, ',', '.');
         $this->saveConfig();
         $this->recalculate();
@@ -302,8 +312,7 @@ class Dashboard extends Component
 
     public function updatedPatrimonioMaterialesUsdFormatted($value)
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->patrimonioMaterialesUsd = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioMaterialesUsd = $this->cleanNumeric($value);
         $this->patrimonioMaterialesUsdFormatted = number_format($this->patrimonioMaterialesUsd, 2, ',', '.');
         $this->saveConfig();
         $this->recalculate();
@@ -312,8 +321,7 @@ class Dashboard extends Component
 
     public function updatedPatrimonioMobiliarioBobFormatted($value)
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->patrimonioMobiliarioBob = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioMobiliarioBob = $this->cleanNumeric($value);
         $this->patrimonioMobiliarioBobFormatted = number_format($this->patrimonioMobiliarioBob, 2, ',', '.');
         $this->saveConfig();
         $this->recalculate();
@@ -322,8 +330,7 @@ class Dashboard extends Component
 
     public function updatedPatrimonioMobiliarioUsdFormatted($value)
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->patrimonioMobiliarioUsd = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioMobiliarioUsd = $this->cleanNumeric($value);
         $this->patrimonioMobiliarioUsdFormatted = number_format($this->patrimonioMobiliarioUsd, 2, ',', '.');
         $this->saveConfig();
         $this->recalculate();
@@ -332,8 +339,7 @@ class Dashboard extends Component
 
     public function updatedPatrimonioVehiculosBobFormatted($value)
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->patrimonioVehiculosBob = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioVehiculosBob = $this->cleanNumeric($value);
         $this->patrimonioVehiculosBobFormatted = number_format($this->patrimonioVehiculosBob, 2, ',', '.');
         $this->saveConfig();
         $this->recalculate();
@@ -342,8 +348,7 @@ class Dashboard extends Component
 
     public function updatedPatrimonioVehiculosUsdFormatted($value)
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->patrimonioVehiculosUsd = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioVehiculosUsd = $this->cleanNumeric($value);
         $this->patrimonioVehiculosUsdFormatted = number_format($this->patrimonioVehiculosUsd, 2, ',', '.');
         $this->saveConfig();
         $this->recalculate();
@@ -352,8 +357,7 @@ class Dashboard extends Component
 
     public function updatedPatrimonioInmueblesBobFormatted($value)
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->patrimonioInmueblesBob = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioInmueblesBob = $this->cleanNumeric($value);
         $this->patrimonioInmueblesBobFormatted = number_format($this->patrimonioInmueblesBob, 2, ',', '.');
         $this->saveConfig();
         $this->recalculate();
@@ -362,8 +366,7 @@ class Dashboard extends Component
 
     public function updatedPatrimonioInmueblesUsdFormatted($value)
     {
-        $clean = str_replace(['.', ','], ['', '.'], trim($value));
-        $this->patrimonioInmueblesUsd = is_numeric($clean) ? (float) $clean : 0;
+        $this->patrimonioInmueblesUsd = $this->cleanNumeric($value);
         $this->patrimonioInmueblesUsdFormatted = number_format($this->patrimonioInmueblesUsd, 2, ',', '.');
         $this->saveConfig();
         $this->recalculate();
@@ -601,6 +604,11 @@ class Dashboard extends Component
 
         $this->saldoNetoInBsCombined = $this->totalActivosConsolidatedBob + $this->totalPatrimonioConsolidatedBob - $this->totalDeudasConsolidatedBob;
         $this->saldoNetoInUsdCombined = $this->tipoCambio > 0 ? ($this->saldoNetoInBsCombined / $this->tipoCambio) : 0;
+    }
+
+    public function fmtBs(float $n): string
+    {
+        return number_format($n, 2, ',', '.');
     }
 
     public function render()

@@ -1,17 +1,5 @@
 @section('title', 'Panel de Control')
 
-@php
-    /**
-     * Helper: formato numero con separador de miles (.) y decimales (,) estilo boliviano.
-     */
-    if (!function_exists('fmtBs')) {
-        function fmtBs(float $n): string
-        {
-            return number_format($n, 2, ',', '.');
-        }
-    }
-@endphp
-
 <div class="space-y-3 animate__animated animate__fadeIn">
 
     {{-- GRAFICOS --}}
@@ -34,7 +22,7 @@
                 {{ (float) ($cuentasBoletasBob + $cuentasBoletasUsd * $tipoCambio) }},
                 {{ (float) ($agentesServicioBob + $agentesServicioUsd * $tipoCambio) }}
             ]'
-            data-total="{{ fmtBs($totalActivosConsolidatedBob) }}">
+            data-total="{{ $this->fmtBs($totalActivosConsolidatedBob) }}">
             <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Distribución de Activos (Bs)
             </h3>
             <div id="chart-activos" wire:ignore style="min-height: 200px;"></div>
@@ -47,7 +35,7 @@
                 {{ (float) ($invBancoCapitalBob + $invBancoCuotasBob + ($invBancoCapitalUsd + $invBancoCuotasUsd) * $tipoCambio) }},
                 {{ (float) ($impuestosNacionalesBob + $impuestosNacionalesUsd * $tipoCambio) }}
             ]'
-            data-total="{{ fmtBs($totalDeudasConsolidatedBob) }}">
+            data-total="{{ $this->fmtBs($totalDeudasConsolidatedBob) }}">
             <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Distribución de Deudas (Bs)
             </h3>
             <div id="chart-deudas" wire:ignore style="min-height: 200px;"></div>
@@ -62,7 +50,7 @@
                 {{ (float) ($patrimonioVehiculosBob + $patrimonioVehiculosUsd * $tipoCambio) }},
                 {{ (float) ($patrimonioInmueblesBob + $patrimonioInmueblesUsd * $tipoCambio) }}
             ]'
-            data-total="{{ fmtBs($totalPatrimonioConsolidatedBob) }}">
+            data-total="{{ $this->fmtBs($totalPatrimonioConsolidatedBob) }}">
             <h3 class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2">Distribución de Patrimonio
                 (Bs)
             </h3>
@@ -158,7 +146,7 @@
                                                     class="flex justify-between text-[11px] text-slate-500 dark:text-neutral-400">
                                                     <span>{{ $b['nombre'] }}</span>
                                                     <span
-                                                        class="font-bold tabular-nums">{{ $b['bob'] > 0 ? fmtBs($b['bob']) . ' Bs' : '$ ' . fmtBs($b['usd']) }}</span>
+                                                        class="font-bold tabular-nums">{{ $b['bob'] > 0 ? $this->fmtBs($b['bob']) . ' Bs' : '$ ' . $this->fmtBs($b['usd']) }}</span>
                                                 </div>
                                             @endforeach
                                         </div>
@@ -166,10 +154,10 @@
                                 </td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ fmtBs(collect($efectivoBancos)->sum('bob')) }}</td>
+                                    {{ $this->fmtBs(collect($efectivoBancos)->sum('bob')) }}</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ collect($efectivoBancos)->sum('usd') > 0 ? fmtBs(collect($efectivoBancos)->sum('usd')) : '—' }}
+                                    {{ collect($efectivoBancos)->sum('usd') > 0 ? $this->fmtBs(collect($efectivoBancos)->sum('usd')) : '—' }}
                                 </td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-neutral-800/20 transition-colors">
@@ -188,7 +176,7 @@
                                                     class="flex justify-between text-[11px] text-slate-500 dark:text-neutral-400">
                                                     <span>{{ $b['nombre'] }}</span>
                                                     <span
-                                                        class="font-bold tabular-nums">{{ $b['bob'] > 0 ? fmtBs($b['bob']) . ' Bs' : '$ ' . fmtBs($b['usd']) }}</span>
+                                                        class="font-bold tabular-nums">{{ $b['bob'] > 0 ? $this->fmtBs($b['bob']) . ' Bs' : '$ ' . $this->fmtBs($b['usd']) }}</span>
                                                 </div>
                                             @endforeach
                                         </div>
@@ -196,10 +184,10 @@
                                 </td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ fmtBs(collect($otrosBancos)->sum('bob')) }}</td>
+                                    {{ $this->fmtBs(collect($otrosBancos)->sum('bob')) }}</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ collect($otrosBancos)->sum('usd') > 0 ? fmtBs(collect($otrosBancos)->sum('usd')) : '—' }}
+                                    {{ collect($otrosBancos)->sum('usd') > 0 ? $this->fmtBs(collect($otrosBancos)->sum('usd')) : '—' }}
                                 </td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-neutral-800/20 transition-colors">
@@ -209,7 +197,7 @@
                                         X Cobrar Proyectos</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ fmtBs($cuentasProyectosBob) }}</td>
+                                    {{ $this->fmtBs($cuentasProyectosBob) }}</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
                                     —</td>
@@ -221,10 +209,10 @@
                                         X Cobrar Boletas</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ $cuentasBoletasBob > 0 ? fmtBs($cuentasBoletasBob) : '—' }}</td>
+                                    {{ $cuentasBoletasBob > 0 ? $this->fmtBs($cuentasBoletasBob) : '—' }}</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ $cuentasBoletasUsd > 0 ? fmtBs($cuentasBoletasUsd) : '—' }}</td>
+                                    {{ $cuentasBoletasUsd > 0 ? $this->fmtBs($cuentasBoletasUsd) : '—' }}</td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-neutral-800/20 transition-colors">
                                 <td class="px-2 py-4 text-[11px] font-medium text-slate-400">5</td>
@@ -233,10 +221,10 @@
                                         X Rendir Agentes</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ fmtBs($agentesServicioBob) }}</td>
+                                    {{ $this->fmtBs($agentesServicioBob) }}</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ $agentesServicioUsd > 0 ? fmtBs($agentesServicioUsd) : '—' }}</td>
+                                    {{ $agentesServicioUsd > 0 ? $this->fmtBs($agentesServicioUsd) : '—' }}</td>
                             </tr>
                         </tbody>
                         <tfoot
@@ -247,10 +235,11 @@
                                     Total Activos</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-indigo-600 dark:text-indigo-400 tabular-nums whitespace-nowrap">
-                                    {{ fmtBs($totalActivosBob) }} <span class="text-[9px] opacity-60">Bs</span></td>
+                                    {{ $this->fmtBs($totalActivosBob) }} <span class="text-[9px] opacity-60">Bs</span>
+                                </td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-indigo-600 dark:text-indigo-400 tabular-nums whitespace-nowrap">
-                                    <span class="text-[9px] opacity-60">$</span> {{ fmtBs($totalActivosUsd) }}
+                                    <span class="text-[9px] opacity-60">$</span> {{ $this->fmtBs($totalActivosUsd) }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -304,10 +293,10 @@
                                         Privados (Capital)</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ fmtBs($invPrivadoCapitalBob) }}</td>
+                                    {{ $this->fmtBs($invPrivadoCapitalBob) }}</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ $invPrivadoCapitalUsd > 0 ? fmtBs($invPrivadoCapitalUsd) : '—' }}</td>
+                                    {{ $invPrivadoCapitalUsd > 0 ? $this->fmtBs($invPrivadoCapitalUsd) : '—' }}</td>
                             </tr>
                             <tr class="hover:bg-slate-50 dark:hover:bg-neutral-800/20 transition-colors">
                                 <td class="px-2 py-4 text-[11px] font-medium text-slate-400">2</td>
@@ -316,7 +305,7 @@
                                         Privados (Interés)</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ fmtBs($invPrivadoCuotasBob) }}</td>
+                                    {{ $this->fmtBs($invPrivadoCuotasBob) }}</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
                                     —</td>
@@ -328,7 +317,7 @@
                                         Bancos (Capital)</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ fmtBs($invBancoCapitalBob) }}</td>
+                                    {{ $this->fmtBs($invBancoCapitalBob) }}</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
                                     —</td>
@@ -340,7 +329,7 @@
                                         Bancos (Interés)</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
-                                    {{ fmtBs($invBancoCuotasBob) }}</td>
+                                    {{ $this->fmtBs($invBancoCuotasBob) }}</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-slate-700 dark:text-neutral-200 tabular-nums whitespace-nowrap">
                                     —</td>
@@ -368,10 +357,10 @@
                                     Total Deudas</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-rose-600 dark:text-rose-400 tabular-nums whitespace-nowrap">
-                                    {{ fmtBs($totalDeudasBob) }} <span class="text-[9px]">Bs</span></td>
+                                    {{ $this->fmtBs($totalDeudasBob) }} <span class="text-[9px]">Bs</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-rose-600 dark:text-rose-400 tabular-nums whitespace-nowrap">
-                                    <span class="text-[9px]">$</span> {{ fmtBs($totalDeudasUsd) }}
+                                    <span class="text-[9px]">$</span> {{ $this->fmtBs($totalDeudasUsd) }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -452,10 +441,10 @@
                                     Total Patrimonio</td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums whitespace-nowrap">
-                                    {{ fmtBs($totalPatrimonioBob) }} <span class="text-[9px]">Bs</span></td>
+                                    {{ $this->fmtBs($totalPatrimonioBob) }} <span class="text-[9px]">Bs</span></td>
                                 <td
                                     class="px-2 py-4 text-right text-[12px] font-black text-emerald-600 dark:text-emerald-400 tabular-nums whitespace-nowrap">
-                                    <span class="text-[9px]">$</span> {{ fmtBs($totalPatrimonioUsd) }}
+                                    <span class="text-[9px]">$</span> {{ $this->fmtBs($totalPatrimonioUsd) }}
                                 </td>
                             </tr>
                         </tfoot>
@@ -497,7 +486,7 @@
                         'text-xl sm:text-2xl font-black tabular-nums',
                         $saldoNetoBob >= 0 ? 'text-emerald-600' : 'text-red-600',
                     ])>
-                        {{ fmtBs($saldoNetoBob) }} <small class="text-sm sm:text-base opacity-60">Bs</small>
+                        {{ $this->fmtBs($saldoNetoBob) }} <small class="text-sm sm:text-base opacity-60">Bs</small>
                     </span>
                 </div>
                 <div class="w-px h-8 bg-slate-200 dark:bg-neutral-800"></div>
@@ -507,7 +496,7 @@
                         'text-xl sm:text-2xl font-black tabular-nums',
                         $saldoNetoUsd >= 0 ? 'text-emerald-600' : 'text-red-600',
                     ])>
-                        <small class="text-sm sm:text-base opacity-60">$</small> {{ fmtBs($saldoNetoUsd) }}
+                        <small class="text-sm sm:text-base opacity-60">$</small> {{ $this->fmtBs($saldoNetoUsd) }}
                     </span>
                 </div>
             </div>
@@ -537,8 +526,9 @@
                         <span
                             class="text-[9px] sm:text-[11px] font-black text-indigo-400 uppercase tracking-widest text-center sm:text-right whitespace-nowrap">Saldo
                             Total Consolidado</span>
-                        <span class="text-lg sm:text-3xl font-black tabular-nums text-white leading-tight">
-                            {{ fmtBs($saldoNetoInBsCombined) }} <small
+                        <span
+                            class="text-lg sm:text-3xl font-black tabular-nums text-white leading-tight whitespace-nowrap">
+                            {{ $this->fmtBs($saldoNetoInBsCombined) }} <small
                                 class="text-xs sm:text-base opacity-60">Bs</small>
                         </span>
                     </div>
@@ -549,9 +539,10 @@
                         <span
                             class="text-[9px] sm:text-[11px] font-black text-indigo-400 uppercase tracking-widest text-center sm:text-right whitespace-nowrap">Saldo
                             Total Consolidado</span>
-                        <span class="text-lg sm:text-3xl font-black tabular-nums text-indigo-400 leading-tight">
+                        <span
+                            class="text-lg sm:text-3xl font-black tabular-nums text-indigo-400 leading-tight whitespace-nowrap">
                             <small class="text-xs sm:text-base opacity-60">$</small>
-                            {{ fmtBs($saldoNetoInUsdCombined) }}
+                            {{ $this->fmtBs($saldoNetoInUsdCombined) }}
                         </span>
                     </div>
                 </div>
@@ -562,250 +553,3 @@
     </div>
 
 </div>
-
-@push('js')
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script>
-        (function() {
-            let charts = {
-                balance: null,
-                activos: null,
-                deudas: null,
-                patrimonio: null
-            };
-
-            const initCharts = () => {
-                const balanceEl = document.querySelector("#chart-balance");
-                const activosEl = document.querySelector("#chart-activos");
-                const deudasEl = document.querySelector("#chart-deudas");
-                const patrimonioEl = document.querySelector("#chart-patrimonio");
-
-                const balanceData = document.querySelector("#data-balance");
-                const activosData = document.querySelector("#data-activos");
-                const deudasData = document.querySelector("#data-deudas");
-                const patrimonioData = document.querySelector("#data-patrimonio");
-
-                if (!balanceEl || !activosEl || !deudasEl || !patrimonioEl || !balanceData || !activosData || !
-                    deudasData || !patrimonioData) return;
-
-                // Destruir si ya existen
-                if (charts.balance) charts.balance.destroy();
-                if (charts.activos) charts.activos.destroy();
-                if (charts.deudas) charts.deudas.destroy();
-                if (charts.patrimonio) charts.patrimonio.destroy();
-
-                const totalActivos = parseFloat(balanceData.dataset.activos);
-                const totalDeudas = parseFloat(balanceData.dataset.deudas);
-                const totalPatrimonio = parseFloat(balanceData.dataset.patrimonio);
-                const activosVals = JSON.parse(activosData.dataset.vals);
-                const deudasVals = JSON.parse(deudasData.dataset.vals);
-                const patrimonioVals = JSON.parse(patrimonioData.dataset.vals);
-                const totalActivosTxt = activosData.dataset.total;
-                const totalDeudasTxt = deudasData.dataset.total;
-                const totalPatrimonioTxt = patrimonioData.dataset.total;
-
-                // 1. Balance General
-                charts.balance = new ApexCharts(balanceEl, {
-                    chart: {
-                        height: 250,
-                        type: 'bar',
-                        toolbar: {
-                            show: false
-                        },
-                        fontFamily: 'Inter, ui-sans-serif, system-ui'
-                    },
-                    plotOptions: {
-                        bar: {
-                            borderRadius: 6,
-                            columnWidth: '55%',
-                            distributed: true
-                        }
-                    },
-                    dataLabels: {
-                        enabled: false
-                    },
-                    colors: ['#3b82f6', '#ef4444', '#10b981'],
-                    series: [{
-                        name: 'Monto Consolidado (Bs)',
-                        data: [{
-                                x: 'Activos',
-                                y: totalActivos
-                            },
-                            {
-                                x: 'Deudas',
-                                y: totalDeudas
-                            },
-                            {
-                                x: 'Patrimonio',
-                                y: totalPatrimonio
-                            }
-                        ]
-                    }],
-                    xaxis: {
-                        categories: ['C.C.', 'Deudas', 'Patrimonio'],
-                        labels: {
-                            style: {
-                                colors: '#94a3b8',
-                                fontSize: '11px',
-                                fontWeight: 600
-                            }
-                        }
-                    },
-                    yaxis: {
-                        labels: {
-                            style: {
-                                colors: '#94a3b8'
-                            },
-                            formatter: (v) => v.toLocaleString()
-                        }
-                    },
-                    grid: {
-                        borderColor: '#f1f5f9',
-                        strokeDashArray: 4
-                    },
-                    tooltip: {
-                        y: {
-                            formatter: (val) => val.toLocaleString() + ' Bs'
-                        }
-                    }
-                });
-
-                // 2. Activos Donut
-                charts.activos = new ApexCharts(activosEl, {
-                    chart: {
-                        height: 260,
-                        type: 'donut',
-                        fontFamily: 'Inter, ui-sans-serif, system-ui'
-                    },
-                    series: activosVals,
-                    labels: ['Efectivo', 'Bancos', 'Proyectos', 'Boletas', 'Agentes'],
-                    colors: ['#0d9488', '#4f46e5', '#f59e0b', '#be185d', '#a299b1ff'],
-                    legend: {
-                        position: 'bottom',
-                        fontSize: '11px',
-                        fontWeight: 600
-                    },
-                    plotOptions: {
-                        pie: {
-                            donut: {
-                                size: '70%',
-                                labels: {
-                                    show: true,
-                                    total: {
-                                        show: true,
-                                        label: 'Activos (Bs)',
-                                        fontSize: '13px',
-                                        formatter: () => totalActivosTxt
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    dataLabels: {
-                        enabled: false
-                    }
-                });
-
-                // 3. Deudas Donut
-                charts.deudas = new ApexCharts(deudasEl, {
-                    chart: {
-                        height: 260,
-                        type: 'donut',
-                        fontFamily: 'Inter, ui-sans-serif, system-ui'
-                    },
-                    series: deudasVals,
-                    labels: ['Privados', 'Bancos', 'Impuestos'],
-                    colors: ['#ef4444', '#06b6d4', '#8b5cf6'],
-                    legend: {
-                        position: 'bottom',
-                        fontSize: '11px',
-                        fontWeight: 600
-                    },
-                    plotOptions: {
-                        pie: {
-                            donut: {
-                                size: '70%',
-                                labels: {
-                                    show: true,
-                                    total: {
-                                        show: true,
-                                        label: 'Deudas (Bs)',
-                                        fontSize: '13px',
-                                        formatter: () => totalDeudasTxt
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    dataLabels: {
-                        enabled: false
-                    }
-                });
-
-                // 4. Patrimonio Donut
-                charts.patrimonio = new ApexCharts(patrimonioEl, {
-                    chart: {
-                        height: 260,
-                        type: 'donut',
-                        fontFamily: 'Inter, ui-sans-serif, system-ui'
-                    },
-                    series: patrimonioVals,
-                    labels: ['Herramientas', 'Materiales', 'Mobiliario', 'Vehículos', 'Inmuebles'],
-                    colors: ['#10b981', '#e05e58ff', '#2764b9ff', '#e2e44eff', '#9e1cd5ff'],
-                    legend: {
-                        position: 'bottom',
-                        fontSize: '11px',
-                        fontWeight: 600
-                    },
-                    plotOptions: {
-                        pie: {
-                            donut: {
-                                size: '70%',
-                                labels: {
-                                    show: true,
-                                    total: {
-                                        show: true,
-                                        label: 'Patrimonio (Bs)',
-                                        fontSize: '13px',
-                                        formatter: () => totalPatrimonioTxt
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    dataLabels: {
-                        enabled: false
-                    }
-                });
-
-                charts.balance.render();
-                charts.activos.render();
-                charts.deudas.render();
-                charts.patrimonio.render();
-            };
-
-            // Hook de Livewire para detectar cuando se actualiza el componente
-            document.addEventListener('livewire:init', () => {
-                Livewire.on('charts-updated', () => {
-                    // Darle un tiempo pequeño para que el DOM se actualice con los nuevos data-attributes
-                    setTimeout(initCharts, 20);
-                });
-            });
-
-            // Al cargar
-            if (window.ApexCharts) {
-                initCharts();
-            } else {
-                let attempts = 0;
-                const interval = setInterval(() => {
-                    attempts++;
-                    if (window.ApexCharts) {
-                        clearInterval(interval);
-                        initCharts();
-                    }
-                    if (attempts > 100) clearInterval(interval);
-                }, 50);
-            }
-        })();
-    </script>
-@endpush

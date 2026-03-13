@@ -54,6 +54,7 @@ class Index extends Component
 
     public ?int $highlight_presupuesto_id = null;
     public ?int $highlight_devolucion_id = null;
+    public ?int $highlight_movimiento_id = null;
 
     public function mount(): void
     {
@@ -65,10 +66,15 @@ class Index extends Component
 
         // Leer parámetros de la URL para destacar origen
         $presupuestoId = (int) request()->query('presupuesto_id', 0);
-        $devolucionId  = (int) request()->query('devolucion_id', 0);
-
         if ($presupuestoId > 0) {
+            $movimientoId  = (int) request()->query('movimiento_id', 0);
+            $devolucionId  = (int) request()->query('devolucion_id', 0);
+
             $this->highlight_presupuesto_id = $presupuestoId;
+
+            if ($movimientoId > 0) {
+                $this->highlight_movimiento_id = $movimientoId;
+            }
 
             if ($devolucionId > 0) {
                 $this->highlight_devolucion_id = $devolucionId;
@@ -95,8 +101,8 @@ class Index extends Component
                 $this->panelsOpen[$rowKey] = true;
                 $this->loadPanel($agenteId, $moneda);
 
-                // Si viene del clic en devolución, abrir el modal de rendición
-                if ($devolucionId > 0) {
+                // Si viene del clic en movimiento o devolución, abrir el modal de rendición
+                if ($movimientoId > 0 || $devolucionId > 0) {
                     $this->openRendicionEditor($presupuestoId);
                 }
             }

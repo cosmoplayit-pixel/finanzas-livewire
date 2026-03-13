@@ -16,25 +16,33 @@ class Usuarios extends Component
     use WithPagination;
 
     public string $search = '';
+
     public int $perPage = 10;
 
     // Modal
     public bool $openModal = false;
+
     public ?int $userId = null;
 
     // Form
     public string $name = '';
+
     public string $email = '';
+
     public string $role = '';
+
     public string $password = '';
+
     public string $password_confirmation = '';
+
     public string $status = 'all'; // all | active | inactive
 
-    // ✅ MULTI-EMPRESA
+    // MULTI-EMPRESA
     public ?int $empresa_id = null;
 
     // Orden
     public string $sortField = 'id';
+
     public string $sortDirection = 'asc';
 
     /**
@@ -44,23 +52,26 @@ class Usuarios extends Component
     private function rootAdminEmail(): ?string
     {
         $email = env('ROOT_ADMIN_EMAIL');
+
         return is_string($email) && trim($email) !== '' ? trim($email) : null;
     }
 
     private function isRootUser(User $u): bool
     {
         $rootEmail = $this->rootAdminEmail();
+
         return $rootEmail !== null && strtolower($u->email) === strtolower($rootEmail);
     }
 
     private function currentUserIsRoot(): bool
     {
         $me = auth()->user();
+
         return $me instanceof User ? $this->isRootUser($me) : false;
     }
 
     /**
-     * ✅ Reglas
+     * Reglas
      */
     protected function rules(): array
     {
@@ -76,9 +87,9 @@ class Usuarios extends Component
             ],
             'role' => ['required', Rule::in($roleNames)],
 
-            // ✅ Empresa obligatoria si NO es Administrador
+            // Empresa obligatoria si NO es Administrador
             'empresa_id' => [
-                Rule::requiredIf(fn() => $this->role !== 'Administrador'),
+                Rule::requiredIf(fn () => $this->role !== 'Administrador'),
                 'nullable',
                 'exists:empresas,id',
             ],
@@ -89,7 +100,7 @@ class Usuarios extends Component
     }
 
     /**
-     * ✅ Si cambia el rol a Administrador, limpiar empresa.
+     * Si cambia el rol a Administrador, limpiar empresa.
      */
     public function updatedRole($value): void
     {
@@ -120,9 +131,10 @@ class Usuarios extends Component
 
         $u = User::query()->with('roles')->findOrFail($id);
 
-        // 🔒 Root Admin: no se puede editar por terceros
-        if ($this->isRootUser($u) && !$this->currentUserIsRoot()) {
+        // Root Admin: no se puede editar por terceros
+        if ($this->isRootUser($u) && ! $this->currentUserIsRoot()) {
             session()->flash('error', 'No puedes editar al Administrador principal del sistema.');
+
             return;
         }
 
@@ -131,10 +143,10 @@ class Usuarios extends Component
         $this->email = $u->email;
         $this->role = $u->getRoleNames()->first() ?? '';
 
-        // ✅ MULTI-EMPRESA: cargar empresa actual
+        // MULTI-EMPRESA: cargar empresa actual
         $this->empresa_id = $u->empresa_id;
 
-        // ✅ Defensivo
+        // Defensivo
         if ($this->role === 'Administrador') {
             $this->empresa_id = null;
         }
@@ -146,7 +158,7 @@ class Usuarios extends Component
     {
         $data = $this->validate();
 
-        // ✅ Si es admin global, forzar empresa_id = null
+        // Si es admin global, forzar empresa_id = null
         if ($data['role'] === 'Administrador') {
             $data['empresa_id'] = null;
         }
@@ -155,12 +167,13 @@ class Usuarios extends Component
         if ($this->userId) {
             $u = User::query()->with('roles')->findOrFail($this->userId);
 
-            // 🔒 Root Admin: bloquear modificación por terceros
-            if ($this->isRootUser($u) && !$this->currentUserIsRoot()) {
+            // Root Admin: bloquear modificación por terceros
+            if ($this->isRootUser($u) && ! $this->currentUserIsRoot()) {
                 session()->flash(
                     'error',
                     'No puedes modificar al Administrador principal del sistema.',
                 );
+
                 return;
             }
 
@@ -168,10 +181,10 @@ class Usuarios extends Component
             $currentIsAdmin = $u->hasRole('Administrador');
             $newRoleIsAdmin = $data['role'] === 'Administrador';
 
-            if ($currentIsAdmin && !$newRoleIsAdmin) {
+            if ($currentIsAdmin && ! $newRoleIsAdmin) {
                 $activeAdmins = User::query()
                     ->where('active', true)
-                    ->whereHas('roles', fn($q) => $q->where('name', 'Administrador'))
+                    ->whereHas('roles', fn ($q) => $q->where('name', 'Administrador'))
                     ->count();
 
                 if ($activeAdmins <= 1) {
@@ -179,6 +192,7 @@ class Usuarios extends Component
                         'error',
                         'No puedes quitar el rol al último Administrador activo.',
                     );
+
                     return;
                 }
             }
@@ -186,7 +200,7 @@ class Usuarios extends Component
             // 2) Guardar datos básicos
             $u->name = $data['name'];
 
-            // 🔒 Root Admin: mantener email estable (recomendado)
+            // Root Admin: mantener email estable (recomendado)
             if ($this->isRootUser($u)) {
                 $data['email'] = $u->email;
             }
@@ -194,7 +208,7 @@ class Usuarios extends Component
 
             $u->empresa_id = $data['empresa_id'];
 
-            if (!empty($data['password'])) {
+            if (! empty($data['password'])) {
                 $u->password = Hash::make($data['password']);
             }
 
@@ -231,17 +245,19 @@ class Usuarios extends Component
     {
         if (auth()->id() === $id) {
             session()->flash('error', 'No puedes desactivar tu propio usuario.');
+
             return;
         }
 
         $u = User::query()->with('roles')->findOrFail($id);
 
-        // 🔒 Root Admin: no permitir desactivarlo
+        // Root Admin: no permitir desactivarlo
         if ($this->isRootUser($u)) {
             session()->flash(
                 'error',
                 'No se puede desactivar al Administrador principal del sistema.',
             );
+
             return;
         }
 
@@ -249,16 +265,17 @@ class Usuarios extends Component
         if ($u->hasRole('Administrador')) {
             $activeAdmins = User::query()
                 ->where('active', true)
-                ->whereHas('roles', fn($q) => $q->where('name', 'Administrador'))
+                ->whereHas('roles', fn ($q) => $q->where('name', 'Administrador'))
                 ->count();
 
             if ($u->active && $activeAdmins <= 1) {
                 session()->flash('error', 'No puedes desactivar al último Administrador activo.');
+
                 return;
             }
         }
 
-        $u->active = !$u->active;
+        $u->active = ! $u->active;
         $u->save();
 
         session()->flash('success', $u->active ? 'Usuario activado.' : 'Usuario desactivado.');
@@ -305,9 +322,9 @@ class Usuarios extends Component
 
     public function render()
     {
-        // 🔒 Campos permitidos para ordenar
+        // Campos permitidos para ordenar
         $allowedSorts = ['id', 'name', 'email', 'active', 'role', 'empresa_id'];
-        if (!in_array($this->sortField, $allowedSorts, true)) {
+        if (! in_array($this->sortField, $allowedSorts, true)) {
             $this->sortField = 'id';
         }
 
@@ -322,8 +339,8 @@ class Usuarios extends Component
                     );
                 });
             })
-            ->when($this->status === 'active', fn($q) => $q->where('active', true))
-            ->when($this->status === 'inactive', fn($q) => $q->where('active', false))
+            ->when($this->status === 'active', fn ($q) => $q->where('active', true))
+            ->when($this->status === 'inactive', fn ($q) => $q->where('active', false))
             ->when(
                 $this->sortField === 'role',
                 function ($q) {

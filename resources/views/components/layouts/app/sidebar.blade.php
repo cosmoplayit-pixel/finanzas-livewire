@@ -47,7 +47,8 @@
                dark:border-zinc-700 dark:bg-zinc-900/70">
 
         <flux:sidebar.header>
-            <flux:sidebar.brand :href="route('dashboard')"
+            <flux:sidebar.brand
+                :href="auth()->user()->hasRole('Administrador') ? route('usuarios') : route('dashboard')"
                 logo="https://cdn.jsdelivr.net/npm/lucide-static@0.479.0/icons/circle-dollar-sign.svg"
                 logo:dark="https://cdn.jsdelivr.net/npm/lucide-static@0.479.0/icons/circle-dollar-sign.svg"
                 name="{{ config('app.name') }}" />
@@ -61,11 +62,14 @@
 
             {{-- DASHBOARD --}}
 
-            <flux:sidebar.group heading="{{ __('Dashboard') }}" class="grid"> </flux:sidebar.group>
+            @can('dashboard.view')
+                <flux:sidebar.group heading="{{ __('Dashboard') }}" class="grid"> </flux:sidebar.group>
+            @endcan
 
             @can('dashboard.view')
-                <flux:sidebar.item icon="home" :href="route('dashboard')" :current="request()->routeIs('dashboard')"
-                    wire:navigate>
+                <flux:sidebar.item icon="home"
+                    :href="auth()->user()->hasRole('Administrador') ? route('usuarios') : route('dashboard')"
+                    :current="request()->routeIs('dashboard')" wire:navigate>
                     {{ __('Panel de Control') }}
                 </flux:sidebar.item>
             @endcan

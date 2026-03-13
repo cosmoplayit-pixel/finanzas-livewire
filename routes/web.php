@@ -1,25 +1,22 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Laravel\Fortify\Features;
-use Livewire\Volt\Volt;
-
+use App\Livewire\Admin\AgentesServicio;
+use App\Livewire\Admin\Bancos;
+use App\Livewire\Admin\BoletasGarantia\Index as BoletasGarantiaIndex;
 use App\Livewire\Admin\Dashboard;
-use App\Livewire\Admin\Usuarios;
-use App\Livewire\Admin\Roles;
 use App\Livewire\Admin\Empresas;
 use App\Livewire\Admin\Entidades;
-use App\Livewire\Admin\Proyectos;
-use App\Livewire\Admin\Bancos;
 use App\Livewire\Admin\Facturas;
-use App\Livewire\Admin\AgentesServicio;
-use App\Livewire\Admin\AgentePresupuestos;  // legacy alias
-use App\Livewire\Admin\Presupuestos\Index as PresupuestosIndex;
-
-use App\Livewire\Admin\BoletasGarantia\Index as BoletasGarantiaIndex;
 use App\Livewire\Admin\Inversiones\Index as InversionesIndex;
+use App\Livewire\Admin\Presupuestos\Index as PresupuestosIndex;
+use App\Livewire\Admin\Proyectos;
+use App\Livewire\Admin\Roles;
+// legacy alias
+use App\Livewire\Admin\Usuarios;
+use Illuminate\Support\Facades\Route;
+use Livewire\Volt\Volt;
 
-Route::get('/', fn() => redirect()->route('login'))->name('home');
+Route::get('/', fn () => redirect()->route('login'))->name('home');
 
 /**
  * Dashboard / Panel
@@ -44,17 +41,6 @@ Route::middleware(['auth', 'active'])->group(function () {
     Volt::route('ajustes/contrasena', 'settings.password')->name('user-password.edit');
 
     Volt::route('ajustes/apariencia', 'settings.appearance')->name('appearance.edit');
-
-    Volt::route('settings/two-factor', 'settings.two-factor')
-        ->middleware(
-            when(
-                Features::canManageTwoFactorAuthentication() &&
-                    Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
-                ['password.confirm'],
-                [],
-            ),
-        )
-        ->name('two-factor.show');
 
     // =======================
     // USUARIOS
@@ -90,7 +76,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::middleware(['permission:proyectos.view'])
         ->get('/proyectos', Proyectos::class)
         ->name('proyectos');
-        
+
     Route::middleware(['permission:proyectos.view'])
         ->get('/proyectos/resumen', \App\Livewire\Admin\Proyectos\Resumen::class)
         ->name('proyectos.resumen');
@@ -141,6 +127,6 @@ Route::middleware(['auth', 'active'])->group(function () {
     // TRANSACCIONES
     // =======================
     // Route::middleware(['permission:transacciones.view'])->group(function () {
-        Route::get('/transacciones', \App\Livewire\Admin\Transacciones::class)->name('transacciones');
+    Route::get('/transacciones', \App\Livewire\Admin\Transacciones::class)->name('transacciones');
     // });
 });

@@ -185,7 +185,14 @@ class Dashboard extends Component
     public function mount(): void
     {
         $user = Auth::user();
-        $this->isAdmin = $user?->hasRole('Administrador') ?? false;
+        
+        // Si es administrador, redirigir a usuarios en vez del panel
+        if ($user?->hasRole('Administrador')) {
+            $this->redirectRoute('usuarios');
+            return;
+        }
+
+        $this->isAdmin = false;
         $this->empresaId = $user?->empresa_id ? (int) $user->empresa_id : null;
         $this->empresaNombre = $user?->empresa?->nombre ?? '';
         $this->fechaHoy = now()->format('d/m/Y');

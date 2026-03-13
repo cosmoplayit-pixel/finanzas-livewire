@@ -31,7 +31,7 @@ class FortifyServiceProvider extends ServiceProvider
     {
         $this->configureActions();
         $this->configureViews();
-        $this->configureAuthentication(); // ✅ valida active en login
+        $this->configureAuthentication();
         $this->configureRateLimiting();
     }
 
@@ -49,13 +49,11 @@ class FortifyServiceProvider extends ServiceProvider
      */
     private function configureViews(): void
     {
-        Fortify::loginView(fn() => view('livewire.auth.login'));
-        Fortify::verifyEmailView(fn() => view('livewire.auth.verify-email'));
-        Fortify::twoFactorChallengeView(fn() => view('livewire.auth.two-factor-challenge'));
-        Fortify::confirmPasswordView(fn() => view('livewire.auth.confirm-password'));
-        Fortify::registerView(fn() => view('livewire.auth.register'));
-        Fortify::resetPasswordView(fn() => view('livewire.auth.reset-password'));
-        Fortify::requestPasswordResetLinkView(fn() => view('livewire.auth.forgot-password'));
+        Fortify::loginView(fn () => view('livewire.auth.login'));
+        Fortify::verifyEmailView(fn () => view('livewire.auth.verify-email'));
+        Fortify::twoFactorChallengeView(fn () => view('livewire.auth.two-factor-challenge'));
+        Fortify::resetPasswordView(fn () => view('livewire.auth.reset-password'));
+        Fortify::requestPasswordResetLinkView(fn () => view('livewire.auth.forgot-password'));
     }
 
     /**
@@ -69,12 +67,12 @@ class FortifyServiceProvider extends ServiceProvider
             $user = User::where('email', $request->input('email'))->first();
 
             // Si no existe el usuario o password incorrecto, Fortify manejará el error genérico
-            if (!$user || !Hash::check($request->input('password'), $user->password)) {
+            if (! $user || ! Hash::check($request->input('password'), $user->password)) {
                 return null;
             }
 
-            // ✅ Bloqueo por estado
-            if (!(bool) $user->active) {
+            // Bloqueo por estado
+            if (! (bool) $user->active) {
                 throw ValidationException::withMessages([
                     Fortify::username() => 'Su cuenta se encuentra desactivada. Contacte al administrador.',
                 ]);
@@ -95,7 +93,7 @@ class FortifyServiceProvider extends ServiceProvider
 
         RateLimiter::for('login', function (Request $request) {
             $throttleKey = Str::transliterate(
-                Str::lower($request->input(Fortify::username())) . '|' . $request->ip(),
+                Str::lower($request->input(Fortify::username())).'|'.$request->ip(),
             );
 
             return Limit::perMinute(5)->by($throttleKey);

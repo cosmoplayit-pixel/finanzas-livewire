@@ -117,11 +117,6 @@
                     :badge="$navCounts['proyectos'] ?? null" wire:navigate>
                     {{ __('Proyectos') }}
                 </flux:sidebar.item>
-
-                <flux:sidebar.item icon="chart-pie" :href="route('proyectos.resumen')"
-                    :current="request()->routeIs('proyectos.resumen')" wire:navigate>
-                    {{ __('Resumen Proyectos') }}
-                </flux:sidebar.item>
             @endcan
 
             @can('bancos.view')
@@ -140,7 +135,8 @@
             @endcan
 
             {{-- GESTIÓN FINANCIERA --}}
-            @canany(['facturas.view', 'agente_presupuestos.view', 'boletas_garantia.view', 'inversiones.view'])
+            @canany(['facturas.view', 'agente_presupuestos.view', 'boletas_garantia.view', 'inversiones.view',
+                'proyectos.resumen'])
                 <flux:sidebar.group heading="{{ __('Gestión Financiera') }}" class="grid"> </flux:sidebar.group>
             @endcanany
 
@@ -156,6 +152,14 @@
                     :current="request()->routeIs('agente_presupuestos')"
                     :badge="$navCounts['agente_presupuestos'] ?? null" wire:navigate>
                     {{ __('Presupuestos') }}
+                </flux:sidebar.item>
+            @endcan
+
+            @can('proyectos.resumen')
+                <flux:sidebar.item icon="chart-pie" :href="route('proyectos.resumen')"
+                    :current="request()->routeIs('proyectos.resumen')" :badge="$navCounts['proyectos_resumen'] ?? null"
+                    wire:navigate>
+                    {{ __('Resumen Proyectos') }}
                 </flux:sidebar.item>
             @endcan
 

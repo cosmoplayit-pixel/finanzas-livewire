@@ -156,7 +156,18 @@ class ViewServiceProvider extends ServiceProvider
                     ->count();
             }
 
-            // tra
+            // RESUMEN PROYECTOS (Solo proyectos que tienen movimientos: facturas o compras)
+            if ($user->can('proyectos.resumen')) {
+                $navCounts['proyectos_resumen'] = Proyecto::where('active', true)
+                    ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                        $q->where('empresa_id', $empresaId);
+                    })
+                    ->where(function ($q) {
+                        $q->whereHas('facturas', fn ($f) => $f->where('active', true))
+                            ->orWhereHas('rendicionMovimientos', fn ($m) => $m->where('active', true)->where('tipo', 'COMPRA'));
+                    })
+                    ->count();
+            }
 
             $view->with('navCounts', $navCounts);
         });

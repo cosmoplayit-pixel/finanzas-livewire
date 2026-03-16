@@ -33,24 +33,17 @@
         </div>
     </div>
 
-    {{-- ALERTAS (LIGHT/DARK) --}}
+    {{-- ALERTAS --}}
     @if (session('success'))
-        <div
-            class="mb-6 p-4 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20 flex items-center gap-3">
-            <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-            </svg>
+        <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 3000)" x-show="show" x-transition.opacity.duration.500ms
+            class="p-3 mb-4  rounded bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-200">
             {{ session('success') }}
         </div>
     @endif
+
     @if (session('error'))
-        <div
-            class="mb-6 p-4 rounded-lg bg-red-50 text-red-800 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 flex items-center gap-3">
-            <svg class="w-5 h-5 text-red-600 dark:text-red-400 shrink-0" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
+        <div x-data="{ show: true }" x-init="setTimeout(() => show = false, 4000)" x-show="show" x-transition.opacity.duration.500ms
+            class="p-3 mb-4 rounded bg-red-100 text-red-800 dark:bg-red-500/15 dark:text-red-200">
             {{ session('error') }}
         </div>
     @endif

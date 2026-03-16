@@ -10,30 +10,20 @@ use App\Livewire\Admin\Facturas;
 use App\Livewire\Admin\Inversiones\Index as InversionesIndex;
 use App\Livewire\Admin\Presupuestos\Index as PresupuestosIndex;
 use App\Livewire\Admin\Proyectos;
+use App\Livewire\Admin\Proyectos\Resumen;
 use App\Livewire\Admin\Roles;
-// legacy alias
+use App\Livewire\Admin\Transacciones;
 use App\Livewire\Admin\Usuarios;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
 Route::get('/', fn () => redirect()->route('login'))->name('home');
 
-/**
- * Dashboard / Panel
- * ✅ auth + verified + active
- */
 Route::get('panel', Dashboard::class)
     ->middleware(['auth', 'verified', 'active'])
     ->name('dashboard');
 
-/**
- * Rutas protegidas
- * ✅ auth + active
- */
 Route::middleware(['auth', 'active'])->group(function () {
-    // =======================
-    // Ajustes de Perfil (Volt)
-    // =======================
     Route::redirect('ajustes', 'ajustes/perfil');
 
     Volt::route('ajustes/perfil', 'settings.profile')->name('profile.edit');
@@ -42,91 +32,66 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     Volt::route('ajustes/apariencia', 'settings.appearance')->name('appearance.edit');
 
-    // =======================
-    // USUARIOS
-    // =======================
     Route::middleware(['permission:users.view'])
         ->get('/usuarios', Usuarios::class)
         ->name('usuarios');
 
-    // =======================
     // ROLES
-    // =======================
     Route::middleware(['permission:roles.view'])
         ->get('/roles', Roles::class)
         ->name('roles');
 
-    // =======================
     // EMPRESAS
-    // =======================
     Route::middleware(['permission:empresas.view'])
         ->get('/empresas', Empresas::class)
         ->name('empresas');
 
-    // =======================
     // ENTIDADES
-    // =======================
     Route::middleware(['permission:entidades.view'])
         ->get('/entidades', Entidades::class)
         ->name('entidades');
 
-    // =======================
     // PROYECTOS
-    // =======================
     Route::middleware(['permission:proyectos.view'])
         ->get('/proyectos', Proyectos::class)
         ->name('proyectos');
 
-    Route::middleware(['permission:proyectos.view'])
-        ->get('/proyectos/resumen', \App\Livewire\Admin\Proyectos\Resumen::class)
+    Route::middleware(['permission:proyectos.resumen'])
+        ->get('/proyectos/resumen', Resumen::class)
         ->name('proyectos.resumen');
 
-    // =======================
     // FACTURAS
-    // =======================
     Route::middleware(['permission:facturas.view'])
         ->get('/facturas', Facturas::class)
         ->name('facturas');
 
-    // =======================
     // BANCOS
-    // =======================
     Route::middleware(['permission:bancos.view'])
         ->get('/bancos', Bancos::class)
         ->name('bancos');
 
-    // =======================
     // AGENTES DE SERVICIO
-    // =======================
     Route::middleware(['permission:agentes_servicio.view'])
         ->get('/agentes_servicio', AgentesServicio::class)
         ->name('agentes_servicio');
 
-    // =======================
     // AGENTE PRESUPUESTOS + RENDICIÓN (UNIFICADO)
-    // =======================
     Route::middleware(['permission:agente_presupuestos.view'])->group(function () {
         Route::get('/agente_presupuestos', PresupuestosIndex::class)->name('agente_presupuestos');
     });
 
-    // =======================
     // BOLETAS DE GARANTÍA
-    // =======================
     Route::middleware(['permission:boletas_garantia.view'])->group(function () {
         Route::get('/boletas_garantia', BoletasGarantiaIndex::class)->name('boletas_garantia');
     });
 
-    // =======================
     // INVERSIONES
-    // =======================
     Route::middleware(['permission:inversiones.view'])->group(function () {
         Route::get('/inversiones', InversionesIndex::class)->name('inversiones');
     });
 
-    // =======================
     // TRANSACCIONES
-    // =======================
-    // Route::middleware(['permission:transacciones.view'])->group(function () {
-    Route::get('/transacciones', \App\Livewire\Admin\Transacciones::class)->name('transacciones');
-    // });
+    Route::middleware(['permission:transacciones.view'])->group(function () {
+        Route::get('/transacciones', Transacciones::class)->name('transacciones');
+    });
 });

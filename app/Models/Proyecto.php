@@ -14,6 +14,7 @@ class Proyecto extends Model
         'empresa_id', // ✅ MULTI-EMPRESA
         'entidad_id',
         'nombre',
+        'tipo',
         'codigo',
         'monto',
         'retencion', // porcentaje (ej: 3.50)

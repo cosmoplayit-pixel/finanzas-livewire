@@ -172,7 +172,7 @@
             @if ($pago_foto_comprobante && !is_string($pago_foto_comprobante))
                 <div class="mt-2 text-right">
                     <button type="button" wire:click="$set('pago_foto_comprobante', null)"
-                        class="text-xs text-red-500 hover:text-red-700 underline">
+                        class="text-xs text-red-500 hover:text-red-700 underline cursor-pointer">
                         Quitar archivo
                     </button>
                 </div>
@@ -183,12 +183,12 @@
         @if ($facturaId || $banco_id)
             <div
                 class="rounded-lg border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden mt-2">
-                <div class="px-3 sm:px-4 py-2 border-b dark:border-neutral-700">
+                <div class="px-3 sm:px-4 py-1 border-b dark:border-neutral-700">
                     <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">
                         Impacto financiero
                     </div>
                 </div>
-                <div class="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="px-2 py-1 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
 
                     {{-- FACTURA --}}
                     @if ($facturaId)
@@ -262,10 +262,6 @@
                 </div>
             </div>
         @endif
-
-        <p class="text-xs text-gray-500 dark:text-neutral-400 mt-2">
-            <span class="text-red-500">*</span> Campos obligatorios.
-        </p>
     </div>
 
     @slot('footer')

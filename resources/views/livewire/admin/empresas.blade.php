@@ -20,7 +20,7 @@
                 </span>
 
                 {{-- Texto loading --}}
-                          <span wire:loading wire:target="openCreate">
+                <span wire:loading wire:target="openCreate">
                     Abriendo…
                 </span>
             </button>
@@ -58,7 +58,7 @@
                    bg-white text-gray-900 border-gray-300
                    dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                    focus:outline-none focus:ring-2 focus:ring-offset-0
-                   focus:ring-gray-300 dark:focus:ring-neutral-600">
+                   focus:ring-gray-300 dark:focus:ring-neutral-600 cursor-pointer">
                 <option value="all">Todos</option>
                 <option value="active">Activos</option>
                 <option value="inactive">Inactivos</option>
@@ -70,7 +70,7 @@
                    bg-white text-gray-900 border-gray-300
                    dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                    focus:outline-none focus:ring-2 focus:ring-offset-0
-                   focus:ring-gray-300 dark:focus:ring-neutral-600">
+                   focus:ring-gray-300 dark:focus:ring-neutral-600 cursor-pointer">
                 <option value="10">10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
@@ -122,7 +122,7 @@
                 <div class="mt-4 flex  gap-2">
                     @can('empresas.update')
                         <button wire:click="openEdit({{ $u->id }})"
-                            class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50
+                            class="w-full px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 cursor-pointer
                                dark:border-neutral-700 dark:hover:bg-neutral-800">
                             Editar
                         </button>
@@ -135,7 +135,7 @@
                             active: {{ $u->active ? 'true' : 'false' }},
                             name: @js($u->nombre)
                         })"
-                            class="w-full px-3 py-1 rounded text-sm font-medium
+                            class="w-full px-3 py-1 rounded text-sm font-medium cursor-pointer
                         {{ $u->active
                             ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                             : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">

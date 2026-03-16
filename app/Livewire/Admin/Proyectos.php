@@ -13,31 +13,44 @@ class Proyectos extends Component
     use WithPagination;
 
     public string $search = '';
+
     public int $perPage = 10;
 
     public string $status = 'all'; // all | active | inactive
+
     public string $entidadFilter = 'all'; // all | {entidad_id}
 
     // Ordenamiento
     public string $sortField = 'id';
+
     public string $sortDirection = 'desc';
 
     // Modal
     public bool $openModal = false;
+
     public ?int $proyectoId = null;
 
     // Form
     public $entidad_id = '';
+
     public string $nombre = '';
+
+    public string $tipo = 'Propuesta';
+
     public string $codigo = '';
+
     public $monto = 0;
+
+    public string $monto_formatted = '0,00';
 
     // ✅ NUEVO: Retención (%)
     // Se almacena como decimal (ej: 7.50 => 7.50%)
     public $retencion = 0;
 
     public string $descripcion = '';
+
     public ?string $fecha_inicio = null; // yyyy-mm-dd
+
     public ?string $fecha_fin = null; // yyyy-mm-dd
 
     protected $listeners = [
@@ -59,17 +72,18 @@ class Proyectos extends Component
                 'max:255',
                 Rule::unique('proyectos', 'nombre')
                     ->ignore($this->proyectoId)
-                    ->where(fn($q) => $q->where('entidad_id', $this->entidad_id)),
+                    ->where(fn ($q) => $q->where('entidad_id', $this->entidad_id)),
             ],
+            'tipo' => ['required', 'string', 'in:Propuesta,Adjudicado'],
             'codigo' => [
                 'nullable',
                 'string',
                 'max:80',
                 Rule::unique('proyectos', 'codigo')
                     ->ignore($this->proyectoId)
-                    ->where(fn($q) => $q->where('entidad_id', $this->entidad_id)),
+                    ->where(fn ($q) => $q->where('entidad_id', $this->entidad_id)),
             ],
-            'monto' => ['required', 'numeric', 'min:0'],
+            'monto' => $this->tipo === 'Adjudicado' ? ['required', 'numeric', 'min:0'] : ['nullable', 'numeric', 'min:0'],
 
             // ✅ NUEVO: Retención (%)
             'retencion' => ['required', 'numeric', 'min:0', 'max:100'],
@@ -78,6 +92,14 @@ class Proyectos extends Component
             'fecha_inicio' => ['nullable', 'date'],
             'fecha_fin' => ['nullable', 'date', 'after_or_equal:fecha_inicio'],
         ];
+    }
+
+    public function updatedMontoFormatted(string $value): void
+    {
+        $clean = str_replace('.', '', $value);
+        $clean = str_replace(',', '.', $clean);
+        $this->monto = is_numeric($clean) ? (float) $clean : 0;
+        $this->monto_formatted = number_format($this->monto, 2, ',', '.');
     }
 
     public function updatingSearch(): void
@@ -105,6 +127,7 @@ class Proyectos extends Component
         $allowedSorts = [
             'id',
             'nombre',
+            'tipo',
             'codigo',
             'monto',
             'retencion', // ✅ NUEVO
@@ -114,7 +137,7 @@ class Proyectos extends Component
             'fecha_fin',
         ];
 
-        if (!in_array($field, $allowedSorts, true)) {
+        if (! in_array($field, $allowedSorts, true)) {
             return;
         }
 
@@ -141,8 +164,10 @@ class Proyectos extends Component
         $this->proyectoId = $p->id;
         $this->entidad_id = $p->entidad_id;
         $this->nombre = $p->nombre ?? '';
+        $this->tipo = $p->tipo ?: 'Propuesta';
         $this->codigo = $p->codigo ?? '';
         $this->monto = $p->monto ?? 0;
+        $this->monto_formatted = number_format((float) ($p->monto ?? 0), 2, ',', '.');
 
         // ✅ NUEVO
         $this->retencion = $p->retencion ?? 0;
@@ -181,7 +206,7 @@ class Proyectos extends Component
     public function toggleActive(int $id): void
     {
         $p = Proyecto::findOrFail($id);
-        $p->active = !$p->active;
+        $p->active = ! $p->active;
         $p->save();
 
         session()->flash('success', $p->active ? 'Proyecto activado.' : 'Proyecto desactivado.');
@@ -199,8 +224,10 @@ class Proyectos extends Component
         $this->proyectoId = null;
         $this->entidad_id = '';
         $this->nombre = '';
+        $this->tipo = 'Propuesta';
         $this->codigo = '';
         $this->monto = 0;
+        $this->monto_formatted = '';
 
         // ✅ NUEVO
         $this->retencion = 0;
@@ -217,8 +244,8 @@ class Proyectos extends Component
         // 🔹 ENTIDADES VISIBLES SEGÚN EMPRESA
         $entidades = Entidad::query()
             ->when(
-                !$user->hasRole('Administrador'),
-                fn($q) => $q->where('empresa_id', $user->empresa_id),
+                ! $user->hasRole('Administrador'),
+                fn ($q) => $q->where('empresa_id', $user->empresa_id),
             )
             ->orderBy('nombre')
             ->get(['id', 'nombre', 'sigla']);
@@ -227,7 +254,7 @@ class Proyectos extends Component
         $q = Proyecto::query()->with(['entidad:id,nombre,sigla']);
 
         // 🔐 FILTRO POR EMPRESA (NO ADMIN)
-        if (!$user->hasRole('Administrador')) {
+        if (! $user->hasRole('Administrador')) {
             $q->whereHas('entidad', function ($qq) use ($user) {
                 $qq->where('empresa_id', $user->empresa_id);
             });
@@ -254,6 +281,9 @@ class Proyectos extends Component
         // ↕️ ORDEN + PAGINACIÓN
         $proyectos = $q->orderBy($this->sortField, $this->sortDirection)->paginate($this->perPage);
 
-        return view('livewire.admin.proyectos', compact('proyectos', 'entidades'));
+        $monto_retenido = (float) $this->monto * ((float) ($this->retencion ?? 0) / 100);
+        $monto_neto = max(0, (float) $this->monto - $monto_retenido);
+
+        return view('livewire.admin.proyectos', compact('proyectos', 'entidades', 'monto_retenido', 'monto_neto'));
     }
 }

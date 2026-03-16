@@ -27,7 +27,7 @@
 
             {{-- HEADER --}}
             <button type="button" @click="$wire.togglePanel({{ $bg->id }})"
-                class="w-full px-4 py-3 flex items-start justify-between gap-3 text-left
+                class="w-full cursor-pointer px-4 py-3 flex items-start justify-between gap-3 text-left
                        hover:bg-gray-50 dark:hover:bg-neutral-900 transition">
 
                 <div class="min-w-0 flex-1">
@@ -233,7 +233,7 @@
                                                     @endphp
                                                     @if ($isImage)
                                                         <button type="button"
-                                                            class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+                                                            class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium hover:underline cursor-pointer"
                                                             @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $dv->foto_comprobante) }}' })">
                                                             <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24"
                                                                 stroke="currentColor">
@@ -266,7 +266,7 @@
                                             @can('boletas_garantia.delete')
                                                 <button type="button" @click.stop
                                                     wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }}, 'Se eliminará la devolución de {{ $bg->moneda === 'USD' ? '$' : 'Bs' }} {{ number_format((float) $dv->monto, 2, ',', '.') }} asociada a la Boleta Nro. {{ $bg->nro_boleta ?? '' }}. Esta acción no se puede deshacer.')"
-                                                    class="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 transition ml-1"
+                                                    class="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 transition ml-1 cursor-pointer"
                                                     title="Eliminar">
                                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
                                                         stroke="currentColor">
@@ -294,7 +294,7 @@
                                     class="flex-1 px-4 py-2.5 rounded-lg border text-sm font-semibold transition flex justify-center items-center gap-2
                                     {{ $rest <= 0
                                         ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700'
-                                        : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 shadow-sm' }}">
+                                        : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700 shadow-sm cursor-pointer' }}">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
@@ -309,7 +309,7 @@
                                     class="px-3.5 py-2.5 rounded-lg border text-sm font-semibold transition flex justify-center items-center gap-2
                                     {{ $hasDevoluciones
                                         ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700'
-                                        : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:border-red-300 shadow-sm dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/40 dark:hover:bg-red-900/40' }}"
+                                        : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:border-red-300 shadow-sm dark:bg-red-900/20 dark:text-red-400 dark:border-red-900/40 dark:hover:bg-red-900/40 cursor-pointer' }}"
                                     title="Eliminar Boleta">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"

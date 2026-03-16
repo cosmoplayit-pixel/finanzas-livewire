@@ -158,7 +158,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Entidad</label>
                     <select wire:model.live="entidadFilter"
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px]">
+                        class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px]">
                         <option value="all">Todas</option>
                         @foreach ($entidades as $en)
                             <option value="{{ $en->id }}">{{ \Illuminate\Support\Str::limit($en->nombre, 30) }}
@@ -170,7 +170,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Estado</label>
                     <select wire:model.live="status"
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px]">
+                        class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px]">
                         <option value="all">Todos</option>
                         <option value="active">Activos</option>
                         <option value="inactive">Inactivos</option>
@@ -204,6 +204,20 @@
                                 Inactivo
                             </span>
                         @endif
+
+                        <div class="mt-1 text-center">
+                            @if (($p->tipo ?? 'Propuesta') === 'Adjudicación')
+                                <span
+                                    class="px-2 py-1 rounded text-[10px] uppercase font-bold bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
+                                    Adjudicación
+                                </span>
+                            @else
+                                <span
+                                    class="px-2 py-1 rounded text-[10px] uppercase font-bold bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-200">
+                                    Propuesta
+                                </span>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
@@ -368,7 +382,7 @@
 
                     <th class="w-[165px] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
                         wire:click="sortBy('codigo')">
-                        Código
+                        CUCE – PAC – Otro
                         @if ($sortField === 'codigo')
                             @if ($sortDirection === 'asc')
                                 <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
@@ -566,6 +580,20 @@
                                     Inactivo
                                 </span>
                             @endif
+
+                            <div class="mt-2">
+                                @if (($p->tipo ?? 'Propuesta') === 'Adjudicado')
+                                    <span
+                                        class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
+                                        Adjudicado
+                                    </span>
+                                @else
+                                    <span
+                                        class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-200">
+                                        Propuesta
+                                    </span>
+                                @endif
+                            </div>
                         </td>
 
                         {{-- Acciones --}}
@@ -578,8 +606,8 @@
                                             wire:target="openEdit({{ $p->id }})" title="Editar proyecto"
                                             aria-label="Editar proyecto"
                                             class="cursor-pointer rounded p-1
-                           hover:bg-gray-100 dark:hover:bg-neutral-800
-                           disabled:opacity-50 disabled:cursor-not-allowed">
+                                            hover:bg-gray-100 dark:hover:bg-neutral-800
+                                            disabled:opacity-50 disabled:cursor-not-allowed">
 
                                             {{-- Ícono normal --}}
                                             <svg wire:loading.remove wire:target="openEdit({{ $p->id }})"
@@ -680,7 +708,7 @@
 
                                 <div class="space-y-1">
                                     <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">
-                                        Código
+                                        CUCE – PAC – Otro
                                     </span>
                                     <span class="block truncate">
                                         {{ $p->codigo ?? '-' }}
@@ -741,7 +769,28 @@
         <x-ui.modal wire:key="proyectos-modal" model="openModal" :title="$proyectoId ? 'Editar Proyecto' : 'Nuevo Proyecto'" maxWidth="sm:max-w-xl md:max-w-2xl"
             onClose="closeModal">
             {{-- BODY --}}
-            <div class="space-y-4">
+            <div class="space-y-3">
+
+                {{-- Tipo (OBLIGATORIO) - siempre visible --}}
+                <div>
+                    <label class="block text-sm mb-1">
+                        Tipo <span class="text-red-500">*</span>
+                    </label>
+                    <select wire:model.live="tipo"
+                        class="cursor-pointer w-full rounded border px-3 py-2
+                           bg-white dark:bg-neutral-900
+                           border-gray-300 dark:border-neutral-700
+                           text-gray-900 dark:text-neutral-100
+                           focus:outline-none focus:ring-2
+                           focus:ring-gray-300 dark:focus:ring-neutral-700">
+                        <option value="Propuesta">Propuesta</option>
+                        <option value="Adjudicado">Adjudicado</option>
+                    </select>
+                    @error('tipo')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 {{-- Entidad (OBLIGATORIO) --}}
                 <div>
                     <label class="block text-sm mb-1">
@@ -787,8 +836,8 @@
 
                 {{-- Código --}}
                 <div>
-                    <label class="block text-sm mb-1">Código</label>
-                    <input wire:model="codigo" autocomplete="off" placeholder="Ej: PRY-2026-001"
+                    <label class="block text-sm mb-1">CUCE – PAC – Otro</label>
+                    <input wire:model="codigo" autocomplete="off"
                         class="w-full rounded border px-3 py-2
                            bg-white dark:bg-neutral-900
                            border-gray-300 dark:border-neutral-700
@@ -804,91 +853,84 @@
                 {{-- Monto --}}
                 <div>
                     <label class="block text-sm mb-1">Monto del Proyecto</label>
-                    <input type="number" step="0.01" min="0" wire:model.live="monto" placeholder="0.00"
+                    <input type="text" inputmode="decimal" wire:model.blur="monto_formatted" placeholder="0,00"
                         class="w-full rounded border px-3 py-2
-                           bg-white dark:bg-neutral-900
-                           border-gray-300 dark:border-neutral-700
-                           text-gray-900 dark:text-neutral-100
-                           focus:outline-none focus:ring-2
-                           focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2
+                               focus:ring-gray-300 dark:focus:ring-neutral-700" />
                     @error('monto')
                         <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
-                {{-- Retención --}}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                        <label class="block text-sm mb-1">Retención (%)</label>
-                        <input type="number" step="0.01" min="0" max="100" wire:model.live="retencion"
-                            placeholder="0"
-                            class="w-full rounded border px-3 py-2
-                               bg-white dark:bg-neutral-900
-                               border-gray-300 dark:border-neutral-700
-                               text-gray-900 dark:text-neutral-100
-                               focus:outline-none focus:ring-2
-                               focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                        @error('retencion')
-                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                        @enderror
+                {{-- CAMPOS SOLO PARA ADJUDICADO --}}
+                @if ($tipo === 'Adjudicado')
+                    {{-- Retención (3 columnas) --}}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-sm mb-1">Retención (%)</label>
+                            <input type="number" step="0.01" min="0" max="100"
+                                wire:model.live="retencion" placeholder="0"
+                                class="w-full rounded border px-3 py-2
+                                   bg-white dark:bg-neutral-900
+                                   border-gray-300 dark:border-neutral-700
+                                   text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2
+                                   focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                            @error('retencion')
+                                <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Monto retenido</label>
+                            <input readonly value="{{ number_format($monto_retenido, 2, ',', '.') }}"
+                                class="w-full rounded border px-3 py-2
+                                   bg-gray-50 dark:bg-neutral-800
+                                   border-gray-200 dark:border-neutral-700
+                                   text-gray-500 dark:text-neutral-400 cursor-default" />
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Monto neto</label>
+                            <input readonly value="{{ number_format($monto_neto, 2, ',', '.') }}"
+                                class="w-full rounded border px-3 py-2
+                                   bg-gray-50 dark:bg-neutral-800
+                                   border-gray-200 dark:border-neutral-700
+                                   text-gray-500 dark:text-neutral-400 cursor-default" />
+                        </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm mb-1">Monto retenido</label>
-                        <input readonly
-                            value="{{ number_format((float) $monto * ((float) ($retencion ?? 0) / 100), 2, ',', '.') }}"
-                            class="w-full rounded border px-3 py-2
-                               bg-gray-50 dark:bg-neutral-800
-                               border-gray-200 dark:border-neutral-700
-                               text-gray-700 dark:text-neutral-200" />
+                    {{-- Fechas (2 columnas) --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm mb-1">Fecha inicio</label>
+                            <input type="date" wire:model="fecha_inicio"
+                                class="w-full rounded border px-3 py-2
+                                   bg-white dark:bg-neutral-900
+                                   border-gray-300 dark:border-neutral-700
+                                   text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2
+                                   focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                            @error('fecha_inicio')
+                                <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-1">Fecha fin</label>
+                            <input type="date" wire:model="fecha_fin"
+                                class="w-full rounded border px-3 py-2
+                                   bg-white dark:bg-neutral-900
+                                   border-gray-300 dark:border-neutral-700
+                                   text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2
+                                   focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                            @error('fecha_fin')
+                                <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
                     </div>
-
-                    <div>
-                        <label class="block text-sm mb-1">Monto neto</label>
-                        @php
-                            $m = (float) $monto;
-                            $r = (float) ($retencion ?? 0);
-                            $retenido = $m * ($r / 100);
-                            $neto = max(0, $m - $retenido);
-                        @endphp
-                        <input readonly value="{{ number_format($neto, 2, ',', '.') }}"
-                            class="w-full rounded border px-3 py-2
-                               bg-gray-50 dark:bg-neutral-800
-                               border-gray-200 dark:border-neutral-700
-                               text-gray-700 dark:text-neutral-200" />
-                    </div>
-                </div>
-
-                {{-- Fechas --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm mb-1">Fecha inicio</label>
-                        <input type="date" wire:model="fecha_inicio"
-                            class="w-full rounded border px-3 py-2
-                               bg-white dark:bg-neutral-900
-                               border-gray-300 dark:border-neutral-700
-                               text-gray-900 dark:text-neutral-100
-                               focus:outline-none focus:ring-2
-                               focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                        @error('fecha_inicio')
-                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm mb-1">Fecha fin</label>
-                        <input type="date" wire:model="fecha_fin"
-                            class="w-full rounded border px-3 py-2
-                               bg-white dark:bg-neutral-900
-                               border-gray-300 dark:border-neutral-700
-                               text-gray-900 dark:text-neutral-100
-                               focus:outline-none focus:ring-2
-                               focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                        @error('fecha_fin')
-                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
+                @endif
 
                 {{-- Nota --}}
                 <p class="text-xs text-gray-500 dark:text-neutral-400 pt-1">

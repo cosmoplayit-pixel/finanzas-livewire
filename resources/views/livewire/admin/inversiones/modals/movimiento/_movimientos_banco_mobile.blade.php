@@ -356,7 +356,7 @@
                                 {{-- Confirmar --}}
                                 @if ($canConfirm)
                                     <button type="button"
-                                        class="h-6 w-full rounded-lg px-3 text-[13px] font-semibold inline-flex items-center justify-center gap-2
+                                        class="h-6 w-full cursor-pointer rounded-lg px-3 text-[13px] font-semibold inline-flex items-center justify-center gap-2
                                         bg-emerald-600 text-white hover:bg-emerald-700"
                                         title="Abrir para confirmar / editar"
                                         wire:click="openConfirmarBanco({{ (int) $m['id'] }})">
@@ -382,7 +382,7 @@
                             {{-- Imagen --}}
                             @if ($hasImg)
                                 <button type="button" wire:click="verFotoMovimiento({{ (int) $m['id'] }})"
-                                    class="h-6 w-full rounded-lg inline-flex items-center justify-center border
+                                    class="h-6 w-full cursor-pointer rounded-lg inline-flex items-center justify-center border
                                        border-gray-200 bg-white text-gray-700 hover:bg-gray-50
                                        dark:border-neutral-700 dark:bg-neutral-900/40 dark:text-neutral-200 dark:hover:bg-neutral-800"
                                     title="Ver imagen">
@@ -414,7 +414,7 @@
                                 {{-- Eliminar --}}
                                 @if ($isCapitalInicial)
                                     <button type="button"
-                                        class="h-6 w-full rounded-lg inline-flex items-center justify-center gap-2 border
+                                        class="h-6 w-full cursor-pointer rounded-lg inline-flex items-center justify-center gap-2 border
                                         border-red-300 text-red-700 bg-white hover:bg-red-50
                                         dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
                                         title="Eliminar inversión completa" wire:click="abrirEliminarTodoModal">
@@ -431,7 +431,7 @@
                                 @elseif ($canDelete)
                                     @if ($isPag)
                                         <button type="button"
-                                            class="h-6 w-full rounded-lg inline-flex items-center justify-center gap-2 border
+                                            class="h-6 w-full cursor-pointer rounded-lg inline-flex items-center justify-center gap-2 border
                                             border-red-300 text-red-700 bg-white hover:bg-red-50
                                             dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
                                             title="Eliminar (requiere contraseña)"
@@ -449,7 +449,7 @@
                                     @else
                                         <div x-data class="w-full">
                                             <button type="button"
-                                                class="h-6 w-full rounded-lg inline-flex items-center justify-center gap-2 border
+                                                class="h-6 w-full cursor-pointer rounded-lg inline-flex items-center justify-center gap-2 border
                                                 border-red-300 text-red-700 bg-white hover:bg-red-50
                                                 dark:border-red-700 dark:bg-neutral-900/40 dark:text-red-300 dark:hover:bg-red-500/15"
                                                 title="Eliminar"

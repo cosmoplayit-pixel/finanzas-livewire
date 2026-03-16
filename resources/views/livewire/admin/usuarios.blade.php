@@ -154,7 +154,7 @@
                                                     active: {{ $u->active ? 'true' : 'false' }},
                                                     name: @js($u->name)
                                                 })"
-                                                class="w-full px-3 py-1 rounded text-sm font-medium
+                                                class="w-full px-3 py-1 rounded text-sm font-medium cursor-pointer
                                                 {{ $u->active
                                                     ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                                                     : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
@@ -485,7 +485,7 @@
                                focus:ring-gray-300 dark:focus:ring-neutral-700">
 
                             {{-- Ojo --}}
-                            <button type="button" @click="show = !show"
+                            <button type="button" @click="show = !show" class="cursor-pointer"
                                 class="absolute inset-y-0 right-0 px-3 flex items-center
                                text-gray-500 dark:text-neutral-400
                                hover:text-gray-700 dark:hover:text-neutral-200"
@@ -535,7 +535,7 @@
                                focus:ring-gray-300 dark:focus:ring-neutral-700">
 
                             {{-- Ojo --}}
-                            <button type="button" @click="show = !show"
+                            <button type="button" @click="show = !show" class="cursor-pointer"
                                 class="absolute inset-y-0 right-0 px-3 flex items-center
                                text-gray-500 dark:text-neutral-400
                                hover:text-gray-700 dark:hover:text-neutral-200"

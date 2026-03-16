@@ -115,7 +115,7 @@
                                                 {{ $r['proyecto_nombre'] }}
                                             </span>
                                             <button type="button"
-                                                class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
                                                 @click.stop="showFullProject = true">
                                                 Ver más
                                             </button>
@@ -124,7 +124,7 @@
                                         <div x-show="showFullProject" x-cloak class="min-w-0 leading-snug">
                                             <span class="break-words font-semibold">{{ $r['proyecto_nombre'] }}</span>
                                             <button type="button"
-                                                class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
                                                 @click.stop="showFullProject = false">
                                                 Ver menos
                                             </button>
@@ -260,7 +260,7 @@
                                                 </span>
 
                                                 <button type="button"
-                                                    class="shrink-0 text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                    class="shrink-0 text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
                                                     @click.stop="showFullDetalle = true">
                                                     Ver más
                                                 </button>
@@ -273,7 +273,7 @@
                                                 </span>
 
                                                 <button type="button"
-                                                    class="inline-flex align-baseline ml-2 text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                    class="inline-flex align-baseline ml-2 text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
                                                     @click.stop="showFullDetalle = false">
                                                     Ver menos
                                                 </button>
@@ -294,7 +294,7 @@
 
                                         @if ($r['factura_file']['is_image'])
                                             <button type="button"
-                                                class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+                                                class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline cursor-pointer"
                                                 @click.stop="$dispatch('open-image-modal', { url: '{{ $r['factura_file']['url'] }}' })">
                                                 Ver Respaldo Factura
                                             </button>
@@ -572,7 +572,7 @@
                                                                 @if ($pg['file'])
                                                                     @if ($pg['file']['is_image'])
                                                                         <button type="button"
-                                                                            class="inline-flex items-center justify-center w-7 h-7 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition"
+                                                                            class="inline-flex items-center justify-center w-7 h-7 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition cursor-pointer"
                                                                             title="Ver imagen"
                                                                             @click.stop="$dispatch('open-image-modal', { url: '{{ $pg['file']['url'] }}' })">
                                                                             <svg class="w-4 h-4" fill="none"

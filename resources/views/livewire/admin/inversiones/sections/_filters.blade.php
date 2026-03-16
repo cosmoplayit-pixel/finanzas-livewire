@@ -8,7 +8,7 @@
                     Filtros
                 </div>
                 <button type="button" @click="openMobile = !openMobile"
-                    class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-[13px] font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/60 transition">
+                    class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-[13px] font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/60 transition cursor-pointer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M21 4h-7" />
@@ -36,7 +36,7 @@
                     <div>
                         <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">Tipo</label>
                         <select wire:model.live="fTipo"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                            class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-500/40">
                             <option value="">Todos</option>
                             <option value="PRIVADO">Privado</option>
                             <option value="BANCO">Banco</option>
@@ -45,7 +45,7 @@
                     <div>
                         <label class="block mb-1 text-transparent select-none text-[13px]">&nbsp;</label>
                         <button type="button" @click.stop="openFilters = !openFilters"
-                            class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800  focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition">
+                            class="w-full cursor-pointer flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800  focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -71,7 +71,7 @@
                 <div class="md:col-span-3 lg:col-span-2">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Tipo</label>
                     <select wire:model.live="fTipo"
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                        class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40">
                         <option value="">Todos</option>
                         <option value="PRIVADO">Privado</option>
                         <option value="BANCO">Banco</option>
@@ -81,7 +81,7 @@
                 <div class="md:col-span-3 lg:col-span-2">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Filtros</label>
                     <button type="button" @click.stop="openFilters = !openFilters"
-                        class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition">
+                        class="w-full cursor-pointer flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -107,7 +107,8 @@
 
             {{-- ESTADO --}}
             <div class="border-b border-gray-200 dark:border-neutral-700 pb-3">
-                <button type="button" class="w-full flex items-center justify-between" @click="secEstado = !secEstado">
+                <button type="button" class="w-full flex items-center justify-between cursor-pointer"
+                    @click="secEstado = !secEstado">
                     <span class="font-semibold text-gray-800 dark:text-neutral-100">Estado</span>
                     <span class="text-gray-400" x-text="secEstado ? '▾' : '▸'"></span>
                 </button>
@@ -128,7 +129,7 @@
 
             {{-- MONEDA --}}
             <div class="pb-3">
-                <button type="button" class="w-full flex items-center justify-between"
+                <button type="button" class="w-full flex items-center justify-between cursor-pointer"
                     @click="secMoneda = !secMoneda">
                     <span class="font-semibold text-gray-800 dark:text-neutral-100">Moneda</span>
                     <span class="text-gray-400" x-text="secMoneda ? '▾' : '▸'"></span>

@@ -42,11 +42,11 @@
 
                     <th class="w-[35%] p-2 select-none whitespace-nowrap">Proyecto</th>
                     <th class="w-[18%] p-2 select-none whitespace-nowrap">Banco</th>
-                    <th class="w-[20%] p-2 select-none whitespace-nowrap">Boleta</th>
+                    <th class="w-[15%] p-2 select-none whitespace-nowrap">Boleta</th>
                     <th class="w-[7%]  p-2 select-none whitespace-nowrap text-center">Estado</th>
-                    <th class="w-[8%]  p-2 select-none whitespace-nowrap text-center">Devuelto</th>
+                    <th class="w-[10%]  p-2 select-none whitespace-nowrap text-center">Devuelto</th>
                     @canany(['boletas_garantia.register_return', 'boletas_garantia.delete'])
-                        <th class="w-[7%]  p-2 whitespace-nowrap text-center">Acciones</th>
+                        <th class="w-[10%]  p-2 whitespace-nowrap text-center">Acciones</th>
                     @endcanany
                 </tr>
             </thead>
@@ -141,7 +141,7 @@
                                             </span>
 
                                             <button type="button"
-                                                class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
                                                 @click.stop="showFullProject = true">
                                                 Ver más
                                             </button>
@@ -153,7 +153,7 @@
                                             </span>
 
                                             <button type="button"
-                                                class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
+                                                class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
                                                 @click.stop="showFullProject = false">
                                                 Ver menos
                                             </button>
@@ -571,7 +571,7 @@
                                                                     @endphp
                                                                     @if ($isImage)
                                                                         <button type="button"
-                                                                            class="inline-flex items-center justify-center w-7 h-7 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition"
+                                                                            class="inline-flex items-center justify-center w-7 h-7 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition cursor-pointer"
                                                                             title="Ver imagen"
                                                                             @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $dv->foto_comprobante) }}' })">
                                                                             <svg class="w-4 h-4" fill="none"

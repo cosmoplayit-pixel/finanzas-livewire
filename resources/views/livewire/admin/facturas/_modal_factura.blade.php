@@ -2,7 +2,7 @@
 <x-ui.modal wire:key="facturas-create-modal" model="openFacturaModal" title="Nueva Factura"
     maxWidth="sm:max-w-xl md:max-w-2xl" onClose="closeFactura">
 
-    <div class="space-y-4">
+    <div class="space-y-2 sm:space-y-3">
         {{-- Entidad y Proyecto --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -224,17 +224,12 @@
             @if ($foto_comprobante && !is_string($foto_comprobante))
                 <div class="mt-2 text-right">
                     <button type="button" wire:click="$set('foto_comprobante', null)"
-                        class="text-xs text-red-500 hover:text-red-700 underline">
+                        class="text-xs text-red-500 hover:text-red-700 underline cursor-pointer">
                         Quitar archivo
                     </button>
                 </div>
             @endif
         </div>
-
-        <p class="text-xs text-gray-500 dark:text-neutral-400 mt-2">
-            <span class="text-red-500">*</span> Campos obligatorios.
-        </p>
-
     </div>
 
     {{-- Footer --}}

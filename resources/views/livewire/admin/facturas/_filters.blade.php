@@ -24,7 +24,7 @@
                      Filtros
                  </div>
                  <button type="button" @click="openMobile = !openMobile"
-                     class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-[13px] font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/60 transition">
+                     class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-[13px] font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/60 transition cursor-pointer">
                      <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
                          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                          <path d="M21 4h-7" />
@@ -53,7 +53,7 @@
                      <div>
                          <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">Mostrar</label>
                          <select wire:model.live="perPage"
-                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-500/40 cursor-pointer">
                              <option value="5">5</option>
                              <option value="10">10</option>
                              <option value="50">50</option>
@@ -62,7 +62,7 @@
                      <div>
                          <label class="block mb-1 text-transparent select-none text-[13px]">&nbsp;</label>
                          <button type="button" @click.stop="openFilters = !openFilters"
-                             class="relative w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition
+                             class="relative w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition cursor-pointer
                                     {{ $filtrosActivos > 0 ? 'border-blue-500 dark:border-blue-500' : '' }}">
                              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -95,7 +95,7 @@
                  <div class="md:col-span-3 lg:col-span-2">
                      <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Mostrar</label>
                      <select wire:model.live="perPage"
-                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 cursor-pointer">
                          <option value="5">5</option>
                          <option value="10">10</option>
                          <option value="50">50</option>
@@ -105,7 +105,7 @@
                  <div class="md:col-span-3 lg:col-span-2">
                      <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Filtros</label>
                      <button type="button" @click.stop="openFilters = !openFilters"
-                         class="relative w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition
+                         class="relative w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition cursor-pointer
                                 {{ $filtrosActivos > 0 ? 'border-blue-500 dark:border-blue-500' : '' }}">
                          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -146,7 +146,8 @@
 
              {{-- PAGO --}}
              <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
-                 <button type="button" class="w-full flex items-center justify-between" @click="secPago = !secPago">
+                 <button type="button" class="w-full flex items-center justify-between cursor-pointer"
+                     @click="secPago = !secPago">
                      <span class="font-semibold text-gray-800 dark:text-neutral-100">Pago</span>
                      <span class="text-gray-400" x-text="secPago ? '▾' : '▸'"></span>
                  </button>
@@ -178,7 +179,8 @@
 
              {{-- RETENCIÓN --}}
              <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
-                 <button type="button" class="w-full flex items-center justify-between" @click="secRet = !secRet">
+                 <button type="button" class="w-full flex items-center justify-between cursor-pointer"
+                     @click="secRet = !secRet">
                      <span class="font-semibold text-gray-800 dark:text-neutral-100">Retención</span>
                      <span class="text-gray-400" x-text="secRet ? '▾' : '▸'"></span>
                  </button>
@@ -211,7 +213,7 @@
 
              {{-- ESTADO GLOBAL --}}
              <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
-                 <button type="button" class="w-full flex items-center justify-between"
+                 <button type="button" class="w-full flex items-center justify-between cursor-pointer"
                      @click="secEstado = !secEstado">
                      <span class="font-semibold text-gray-800 dark:text-neutral-100">Estado</span>
                      <span class="text-gray-400" x-text="secEstado ? '▾' : '▸'"></span>
@@ -239,7 +241,7 @@
 
              {{-- FECHA (RANGO) - Emisión --}}
              <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
-                 <button type="button" class="w-full flex items-center justify-between"
+                 <button type="button" class="w-full flex items-center justify-between cursor-pointer"
                      @click="secFecha = !secFecha">
                      <span class="font-semibold text-gray-800 dark:text-neutral-100">Fecha (Emisión)</span>
                      <span class="text-gray-400" x-text="secFecha ? '▾' : '▸'"></span>
@@ -251,14 +253,14 @@
                          <div>
                              <label class="block text-xs text-gray-600 dark:text-neutral-300 mb-1">Desde</label>
                              <input id="fecha_desde" type="date" wire:model.live="f_fecha_desde"
-                                 class="w-full border rounded px-3 py-2 bg-white text-gray-900 border-gray-300 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
+                                 class="w-full cursor-pointer border rounded px-3 py-2 bg-white text-gray-900 border-gray-300 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                                 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-gray-300 dark:focus:ring-neutral-600" />
                          </div>
 
                          <div>
                              <label class="block text-xs text-gray-600 dark:text-neutral-300 mb-1">Hasta</label>
                              <input id="fecha_hasta" type="date" wire:model.live="f_fecha_hasta"
-                                 class="w-full border rounded px-3 py-2 bg-white text-gray-900 border-gray-300 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
+                                 class="w-full cursor-pointer border rounded px-3 py-2 bg-white text-gray-900 border-gray-300 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                                 focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-gray-300 dark:focus:ring-neutral-600" />
                          </div>
                      </div>
@@ -266,17 +268,17 @@
                      {{-- Opcional: acciones rápidas --}}
                      <div class="flex gap-2">
                          <button type="button" wire:click="setFechaEsteAnio"
-                             class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+                             class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 cursor-pointer">
                              Este año
                          </button>
 
                          <button type="button" wire:click="setFechaAnioPasado"
-                             class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+                             class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 cursor-pointer">
                              Año pasado
                          </button>
 
                          <button type="button" wire:click="clearFecha"
-                             class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800">
+                             class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 cursor-pointer">
                              Limpiar fecha
                          </button>
                      </div>

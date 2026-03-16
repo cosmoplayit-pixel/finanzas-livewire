@@ -100,14 +100,14 @@
                          </svg>
                          @if ($isImageFactMob)
                              <button type="button"
-                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline"
+                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline cursor-pointer"
                                  @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $f->foto_comprobante) }}' })">
                                  Ver Respaldo
                              </button>
                          @else
                              <a href="{{ asset('storage/' . $f->foto_comprobante) }}" target="_blank"
                                  rel="noopener noreferrer"
-                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline">
+                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline cursor-pointer">
                                  Abrir PDF
                              </a>
                          @endif
@@ -196,7 +196,7 @@
                  <button type="button"
                      class="w-full px-3 py-2 rounded text-sm font-medium
                        border border-gray-300 text-gray-700 hover:bg-gray-50
-                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 cursor-pointer"
                      @click="open = !open">
                      <span x-show="!open">Ver pagos</span>
                      <span x-show="open" x-cloak>Ocultar pagos</span>
@@ -334,7 +334,7 @@
                                      <div class="text-xs">
                                          @if ($isImagePagoMob)
                                              <button type="button"
-                                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1"
+                                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer"
                                                  @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $pg->foto_comprobante) }}' })">
                                                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
                                                      stroke="currentColor">
@@ -347,7 +347,7 @@
                                          @else
                                              <a href="{{ asset('storage/' . $pg->foto_comprobante) }}"
                                                  target="_blank" rel="noopener noreferrer"
-                                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1">
+                                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer">
                                                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
                                                      stroke="currentColor">
                                                      <path stroke-linecap="round" stroke-linejoin="round"

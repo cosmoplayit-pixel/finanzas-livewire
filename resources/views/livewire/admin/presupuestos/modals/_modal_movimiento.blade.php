@@ -47,7 +47,7 @@
 
                     <div>
                         <label class="block text-sm mb-1">
-                            Entidad: <span class="text-red-500">*</span>
+                            Cliente: <span class="text-red-500">*</span>
                         </label>
                         <select wire:model.live="mov_entidad_id"
                             class="w-full cursor-pointer rounded-lg border px-3 py-2
@@ -380,7 +380,7 @@
                             <option value="">Seleccione…</option>
                             @foreach ($editorBancos as $b)
                                 <option value="{{ $b['id'] }}">
-                                    {{ $b['nombre'] }} — {{ $b['numero_cuenta'] }} ({{ $b['moneda'] }})
+                                    {{ $b['nombre'] }} — {{ $b['titular'] }} ({{ $b['moneda'] }})
                                 </option>
                             @endforeach
                         </select>
@@ -463,7 +463,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 
                     <div>
-                        <label class="block text-sm mb-1">Detalle: <span class="text-red-500">*</span> </label>
+                        <label class="block text-sm mb-1">Detalle:</label>
                         <input type="text" wire:model.live="mov_observacion"
                             placeholder="Ej: Devolución de saldo..."
                             class="w-full rounded-lg border px-3 py-2
@@ -646,11 +646,6 @@
                     </div>
                 </div>
             @endif
-
-            <p class="text-xs text-gray-500 dark:text-neutral-400">
-                <span class="text-red-500">*</span> Campos obligatorios.
-            </p>
-
         </div>
     </div>
 

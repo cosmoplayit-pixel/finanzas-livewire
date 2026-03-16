@@ -172,7 +172,7 @@
                                     class="text-red-500">*</span></label>
                             <select
                                 wire:key="banco-select-{{ $open ? 1 : 0 }}-{{ $movimientoId ?? 'new' }}-{{ (string) $banco_id }}"
-                                wire:model.live="banco_id" class="w-full rounded-lg border px-3 py-2">
+                                wire:model.live="banco_id" class="w-full cursor-pointer rounded-lg border px-3 py-2">
                                 <option value="">Seleccione…</option>
                                 @foreach ($bancos as $b)
                                     <option value="{{ (string) $b['id'] }}">
@@ -214,8 +214,7 @@
 
                         {{-- TOTAL --}}
                         <div class="col-span-1 md:col-span-1">
-                            <label class="block text-sm mb-1">Monto total <span
-                                    class="text-red-500">*</span></label>
+                            <label class="block text-sm mb-1">Monto total <span class="text-red-500">*</span></label>
                             <input type="text" wire:model.blur="monto_total_formatted" placeholder="0,00"
                                 class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100

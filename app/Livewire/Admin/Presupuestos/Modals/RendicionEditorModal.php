@@ -155,7 +155,8 @@ trait RendicionEditorModal
                 'integer',
                 Rule::exists('proyectos', 'id')
                     ->where('entidad_id', $this->mov_entidad_id)
-                    ->where('active', true),
+                    ->where('active', true)
+                    ->where('tipo', 'Adjudicado'),
             ];
             $base['mov_tipo_comprobante'] = [
                 'required',
@@ -175,7 +176,7 @@ trait RendicionEditorModal
     public function getPuedeGuardarMovimientoProperty(): bool
     {
         if ($this->mov_modal_tipo === 'COMPRA') {
-            if (! $this->mov_fecha || ! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_entidad_id || ! $this->mov_proyecto_id || ! $this->mov_tipo_comprobante) {
+            if (! $this->mov_fecha || ! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_entidad_id || ! $this->mov_proyecto_id) {
                 return false;
             }
         } elseif ($this->mov_modal_tipo === 'DEVOLUCION') {
@@ -211,14 +212,14 @@ trait RendicionEditorModal
         $this->editorRendicionId = (int) $r->id;
         $this->openEditor = true;
 
-        $this->editorRendicionNro  = $r->nro_rendicion ?? null;
-        $this->editorAgenteNombre  = $r->agente?->nombre ?? null;
-        $this->editorFecha         = $r->fecha_presupuesto ? (string) $r->fecha_presupuesto : null;
-        $this->editorMonedaBase    = (string) $r->moneda;
+        $this->editorRendicionNro = $r->nro_rendicion ?? null;
+        $this->editorAgenteNombre = $r->agente?->nombre ?? null;
+        $this->editorFecha = $r->fecha_presupuesto ? (string) $r->fecha_presupuesto : null;
+        $this->editorMonedaBase = (string) $r->moneda;
 
         $this->editorPresupuestoTotal = (float) ($r->monto ?? 0);
-        $this->editorRendidoTotal     = (float) ($r->rendido_total ?? 0);
-        $this->editorSaldo            = (float) ($r->saldo_por_rendir ?? 0);
+        $this->editorRendidoTotal = (float) ($r->rendido_total ?? 0);
+        $this->editorSaldo = (float) ($r->saldo_por_rendir ?? 0);
 
         $this->editorEstado = $r->estado ?: ($r->fecha_cierre ? 'cerrado' : 'abierto');
 
@@ -227,8 +228,8 @@ trait RendicionEditorModal
 
         $this->resetMovimientoForm();
 
-        $this->mov_fecha   = now()->format('d-m-Y H:i');
-        $this->mov_moneda  = $this->editorMonedaBase ?: 'BOB';
+        $this->mov_fecha = now()->format('d-m-Y H:i');
+        $this->mov_moneda = $this->editorMonedaBase ?: 'BOB';
         $this->recalcMovimientoConversion();
 
         $this->openMovimientoModal = false;
@@ -258,7 +259,9 @@ trait RendicionEditorModal
             ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('active', true)
             ->whereHas('proyectos', function ($q) use ($empresaId) {
-                $q->where('active', true);
+                $q->where('active', true)
+                    ->where('tipo', 'Adjudicado');
+
                 if ($empresaId) {
                     $q->where('empresa_id', $empresaId);
                 }
@@ -272,12 +275,12 @@ trait RendicionEditorModal
             ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('active', true)
             ->orderBy('nombre')
-            ->get(['id', 'nombre', 'numero_cuenta', 'moneda'])
+            ->get(['id', 'nombre', 'titular', 'moneda'])
             ->map(
                 fn ($b) => [
                     'id' => $b->id,
                     'nombre' => $b->nombre,
-                    'numero_cuenta' => $b->numero_cuenta,
+                    'titular' => $b->titular,
                     'moneda' => $b->moneda,
                 ],
             )
@@ -314,6 +317,7 @@ trait RendicionEditorModal
             ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('entidad_id', $entidadId)
             ->where('active', true)
+            ->where('tipo', 'Adjudicado')
             ->orderBy('nombre')
             ->get(['id', 'nombre'])
             ->map(fn ($p) => ['id' => $p->id, 'nombre' => $p->nombre])
@@ -532,9 +536,9 @@ trait RendicionEditorModal
 
         // Calcular impacto
         // SALDO del presupuesto restante:
-        $this->mov_saldo_actual_preview  = round((float) ($this->editorSaldo ?? 0), 2);
+        $this->mov_saldo_actual_preview = round((float) ($this->editorSaldo ?? 0), 2);
         $this->mov_saldo_despues_preview = round($this->mov_saldo_actual_preview - $montoBaseFloat, 2);
-        $this->mov_monto_excede_saldo    = $this->mov_saldo_despues_preview < 0;
+        $this->mov_monto_excede_saldo = $this->mov_saldo_despues_preview < 0;
 
         // BANCO (SÓLO DEVOLUCIÓN)
         $this->mov_banco_actual_preview = 0;
@@ -617,32 +621,33 @@ trait RendicionEditorModal
             $this->openRendicionEditor((int) $r->id);
             session()->flash('success', 'Movimiento eliminado.');
         } catch (DomainException $e) {
-            $bancoNombre  = $mov?->banco?->nombre ?? null;
-            $moneda       = $mov?->moneda ?? '';
-            $montoMov     = (float) ($mov?->monto ?? 0);          // lo que se necesita revertir
-            $saldoBanco   = (float) ($mov?->banco?->monto ?? 0);  // saldo actual del banco
-            $faltante     = max(0, $montoMov - $saldoBanco);      // cuánto falta
+            $bancoNombre = $mov?->banco?->nombre ?? null;
+            $moneda = $mov?->moneda ?? '';
+            $montoMov = (float) ($mov?->monto ?? 0);
+            $saldoBanco = (float) ($mov?->banco?->monto ?? 0);
+            $faltante = max(0, $montoMov - $saldoBanco);
 
-            $fmtMonto    = number_format($montoMov,  2, ',', '.') . ' ' . $moneda;
-            $fmtSaldo    = number_format($saldoBanco, 2, ',', '.') . ' ' . $moneda;
-            $fmtFaltante = number_format($faltante,  2, ',', '.') . ' ' . $moneda;
+            $fmtMonto = number_format($montoMov, 2, ',', '.').' '.$moneda;
+            $fmtSaldo = number_format($saldoBanco, 2, ',', '.').' '.$moneda;
+            $fmtFaltante = number_format($faltante, 2, ',', '.').' '.$moneda;
 
             $html = '';
             if ($bancoNombre) {
                 $html .= "El banco <strong>{$bancoNombre}</strong> no tiene saldo suficiente para revertir este movimiento.";
             }
-            $html .= "<br><br>";
+            $html .= '<br><br>';
             $html .= "<table style='margin: 0 auto; width: auto; min-width: 220px; font-size:0.9em; text-align:left; border-collapse:collapse;'>";
             $html .= "<tr><td style='padding:4px 16px 4px 0; color:#6b7280;'>Saldo disponible:</td><td style='padding:4px 0; font-weight:600; text-align:right;'>{$fmtSaldo}</td></tr>";
             $html .= "<tr><td style='padding:4px 16px 4px 0; color:#6b7280;'>Monto a revertir:</td><td style='padding:4px 0; font-weight:600; text-align:right;'>{$fmtMonto}</td></tr>";
             $html .= "<tr style='border-top:1px solid #e5e7eb;'><td style='padding:8px 16px 4px 0; color:#ef4444; font-weight:600;'>Falta:</td><td style='padding:8px 0 4px; font-weight:700; color:#ef4444; text-align:right;'>{$fmtFaltante}</td></tr>";
-            $html .= "</table>";
+            $html .= '</table>';
 
             if (! $html) {
                 $html = $e->getMessage();
             }
 
-            $this->dispatch('swal:error',
+            $this->dispatch(
+                'swal:error',
                 title: 'No se puede eliminar',
                 html: $html,
             );

@@ -50,7 +50,7 @@
                     class="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
                        dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                        focus:outline-none focus:ring-2 focus:ring-offset-0
-                       focus:ring-gray-300 dark:focus:ring-neutral-600">
+                       focus:ring-gray-300 dark:focus:ring-neutral-600 cursor-pointer">
                     <option value="all">Todos</option>
                     <option value="system">Sistema</option>
                     <option value="custom">Personalizados</option>
@@ -60,7 +60,7 @@
                     class="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
                        dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                        focus:outline-none focus:ring-2 focus:ring-offset-0
-                       focus:ring-gray-300 dark:focus:ring-neutral-600">
+                       focus:ring-gray-300 dark:focus:ring-neutral-600 cursor-pointer">
                     <option value="all">Todos</option>
                     <option value="active">Activos</option>
                     <option value="inactive">Inactivos</option>
@@ -70,7 +70,7 @@
                     class="w-full sm:w-auto border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
                        dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                        focus:outline-none focus:ring-2 focus:ring-offset-0
-                       focus:ring-gray-300 dark:focus:ring-neutral-600">
+                       focus:ring-gray-300 dark:focus:ring-neutral-600 cursor-pointer">
                     <option value="10">10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>
@@ -523,17 +523,17 @@
                             'label' => 'Pagar facturas',
                             'desc' => 'Permite registrar pagos a facturas.',
                         ],
-                        
+
                         'agente_presupuestos.close' => [
                             'label' => 'Cerrar presupuestos',
                             'desc' => 'Permite cerrar controles de presupuestos.',
                         ],
-                        
+
                         'agente_rendicion.close' => [
                             'label' => 'Cerrar rendición',
                             'desc' => 'Permite cerrar rendiciones de gastos.',
                         ],
-                        
+
                         'inversiones.movimiento' => [
                             'label' => 'Registrar movimiento',
                             'desc' => 'Permite registrar entradas y salidas a inversiones.',
@@ -628,7 +628,7 @@
                             <div x-data="{ open: true }" class="border rounded dark:border-neutral-800">
                                 {{-- Header del grupo --}}
                                 <div class="flex items-center justify-between p-3 gap-3">
-                                    <button type="button" class="text-left min-w-0" @click="open = !open">
+                                    <button type="button" class="text-left min-w-0 cursor-pointer" @click="open = !open">
                                         <div class="font-semibold truncate">{{ $groupTitle }}</div>
                                         <div class="text-xs text-gray-600 dark:text-neutral-400">
                                             Permisos del módulo {{ strtolower($groupTitle) }}.
@@ -637,14 +637,12 @@
 
                                     <div class="flex items-center gap-2 shrink-0">
                                         <button type="button"
-                                            class="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                           dark:border-neutral-700 dark:hover:bg-neutral-800"
+                                            class="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50 dark:border-neutral-700 dark:hover:bg-neutral-800 cursor-pointer"
                                             wire:click="selectAllGroup(@js($group))">
                                             Seleccionar todo
                                         </button>
                                         <button type="button"
-                                            class="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50
-                                           dark:border-neutral-700 dark:hover:bg-neutral-800"
+                                            class="text-xs px-2 py-1 rounded border border-gray-300 hover:bg-gray-50 dark:border-neutral-700 dark:hover:bg-neutral-800 cursor-pointer"
                                             wire:click="clearAllGroup(@js($group))">
                                             Quitar todo
                                         </button>

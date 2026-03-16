@@ -292,7 +292,7 @@ trait PresupuestoModal
             ->when(! $this->isAdmin(), fn ($b) => $b->where('empresa_id', $this->userEmpresaId()))
             ->where('active', true)
             ->orderBy('nombre')
-            ->get(['id', 'empresa_id', 'nombre', 'numero_cuenta', 'moneda', 'monto']);
+            ->get(['id', 'empresa_id', 'nombre', 'titular', 'moneda']);
 
         $agentes = AgenteServicio::query()
             ->when(! $this->isAdmin(), fn ($a) => $a->where('empresa_id', $this->userEmpresaId()))

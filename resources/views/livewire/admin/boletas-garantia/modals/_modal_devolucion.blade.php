@@ -9,24 +9,6 @@
 
             <div class="grid grid-cols-3 gap-3">
 
-                {{-- BANCO DESTINO --}}
-                <div class="col-span-2 sm:col-span-1">
-                    <label class="block text-sm mb-1">Banco destino <span class="text-red-500">*</span></label>
-                    <select wire:model.live="banco_id"
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
-                        <option value="">Seleccione…</option>
-                        @foreach ($bancos as $b)
-                            <option value="{{ $b->id }}">
-                                {{ $b->nombre }} — {{ $b->numero_cuenta }} ({{ $b->moneda }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('banco_id')
-                        <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
 
                 {{-- FECHA DEVOLUCIÓN --}}
                 <div class="col-span-2 sm:col-span-1">
@@ -34,20 +16,27 @@
                     <input type="datetime-local" wire:model.live="fecha_devolucion"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                     @error('fecha_devolucion')
                         <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                     @enderror
                 </div>
 
-                {{-- NRO TRANSACCIÓN --}}
-                <div class="col-span-1 sm:col-span-1">
-                    <label class="block text-sm mb-1">Nro. transacción</label>
-                    <input type="text" wire:model.live="nro_transaccion" placeholder="Opcional"
+                {{-- BANCO DESTINO --}}
+                <div class="col-span-2 sm:col-span-1">
+                    <label class="block text-sm mb-1">Banco destino <span class="text-red-500">*</span></label>
+                    <select wire:model.live="banco_id"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
-                    @error('nro_transaccion')
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40 cursor-pointer">
+                        <option value="">Seleccione…</option>
+                        @foreach ($bancos as $b)
+                            <option value="{{ $b->id }}">
+                                {{ $b->nombre }} | {{ $b->titular }} | {{ $b->moneda }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('banco_id')
                         <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                     @enderror
                 </div>
@@ -58,7 +47,7 @@
                     <input type="text" inputmode="decimal" wire:model.blur="devol_monto_formatted" placeholder="0,00"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
 
                     {{-- aviso excede --}}
                     @if ($devol_monto > $this->restante)
@@ -70,13 +59,25 @@
                     @enderror
                 </div>
 
+                {{-- NRO TRANSACCIÓN --}}
+                <div class="col-span-1 sm:col-span-1">
+                    <label class="block text-sm mb-1">Nro. transacción</label>
+                    <input type="text" wire:model.live="nro_transaccion" placeholder="Opcional"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                    @error('nro_transaccion')
+                        <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+
                 {{-- OBSERVACIÓN --}}
                 <div class="col-span-1 sm:col-span-1">
                     <label class="block text-sm mb-1">Observación</label>
                     <input type="text" wire:model.live="observacion" placeholder="Opcional"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2 focus:ring-emerald-500/40"></input>
+                                   focus:outline-none focus:ring-2 focus:ring-gray-500/40"></input>
                     @error('observacion')
                         <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                     @enderror
@@ -131,7 +132,7 @@
                     @if ($foto_comprobante)
                         <div class="mt-2 text-xs flex justify-end">
                             <button type="button" wire:click="$set('foto_comprobante', null)"
-                                class="text-red-500 hover:text-red-600 font-medium">
+                                class="text-red-500 hover:text-red-600 font-medium cursor-pointer">
                                 Quitar archivo
                             </button>
                         </div>
@@ -170,7 +171,7 @@
 
                     <div class="text-center pl-3">
                         <div class="text-gray-500 dark:text-neutral-400 mb-1 text-xs">Nuevo saldo</div>
-                        <div class="font-bold text-gray-900 dark:text-neutral-100">
+                        <div class="font-bold text-red-600 dark:text-red-400">
                             {{ number_format((float) $this->saldo_banco_despues_preview, 2, ',', '.') }}
                         </div>
                     </div>

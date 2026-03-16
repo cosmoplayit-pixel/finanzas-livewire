@@ -104,7 +104,7 @@
                         <div class="col-span-2 md:col-span-1">
                             <label class="block text-sm mb-1">Tipo de pago <span class="text-red-500">*</span></label>
                             <select wire:model.live="tipo_pago"
-                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                        focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
                                 <option value="INGRESO_CAPITAL">Ingreso a capital</option>
@@ -134,7 +134,7 @@
                                     Fecha final <span class="text-red-500">*</span>
                                 </label>
                                 <input type="date" wire:model.live="fecha"
-                                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                    class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                            focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
                                 @error('fecha')
@@ -147,7 +147,7 @@
                                     Fecha pago <span class="text-red-500">*</span>
                                 </label>
                                 <input type="date" wire:model.live="fecha_pago"
-                                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                    class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                            focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
                                 @error('fecha_pago')
@@ -183,7 +183,7 @@
                                 </label>
 
                                 <input type="date" wire:model.live="fecha_pago"
-                                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                    class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                     border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                     focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
 
@@ -199,7 +199,7 @@
                                 Debitar del banco <span class="text-red-500">*</span>
                             </label>
                             <select wire:model.live="banco_id"
-                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                        focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
                                 <option value="">Seleccione…</option>

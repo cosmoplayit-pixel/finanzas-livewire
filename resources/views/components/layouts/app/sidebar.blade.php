@@ -106,9 +106,9 @@
             @endcanany
 
             @can('entidades.view')
-                <flux:sidebar.item icon="building-office" :href="route('entidades')"
-                    :current="request()->routeIs('entidades')" :badge="$navCounts['entidades'] ?? null" wire:navigate>
-                    {{ __('Entidades') }}
+                <flux:sidebar.item icon="building-office" :href="route('clientes')"
+                    :current="request()->routeIs('clientes')" :badge="$navCounts['entidades'] ?? null" wire:navigate>
+                    {{ __('Clientes') }}
                 </flux:sidebar.item>
             @endcan
 
@@ -136,9 +136,17 @@
 
             {{-- GESTIÓN FINANCIERA --}}
             @canany(['facturas.view', 'agente_presupuestos.view', 'boletas_garantia.view', 'inversiones.view',
-                'proyectos.resumen'])
+                'proyectos.resumen', 'transacciones.view'])
                 <flux:sidebar.group heading="{{ __('Gestión Financiera') }}" class="grid"> </flux:sidebar.group>
             @endcanany
+
+            @can('boletas_garantia.view')
+                <flux:sidebar.item icon="shield-check" :href="route('boletas_garantia')"
+                    :current="request()->routeIs('boletas_garantia')" :badge="$navCounts['boletas_garantia'] ?? null"
+                    wire:navigate>
+                    {{ __('Boletas Garantía') }}
+                </flux:sidebar.item>
+            @endcan
 
             @can('facturas.view')
                 <flux:sidebar.item icon="document-text" :href="route('facturas')"
@@ -155,34 +163,32 @@
                 </flux:sidebar.item>
             @endcan
 
-            @can('proyectos.resumen')
-                <flux:sidebar.item icon="chart-pie" :href="route('proyectos.resumen')"
-                    :current="request()->routeIs('proyectos.resumen')" :badge="$navCounts['proyectos_resumen'] ?? null"
-                    wire:navigate>
-                    {{ __('Resumen Proyectos') }}
-                </flux:sidebar.item>
-            @endcan
-
-            @can('boletas_garantia.view')
-                <flux:sidebar.item icon="shield-check" :href="route('boletas_garantia')"
-                    :current="request()->routeIs('boletas_garantia')" :badge="$navCounts['boletas_garantia'] ?? null"
-                    wire:navigate>
-                    {{ __('Boletas Garantía') }}
-                </flux:sidebar.item>
-            @endcan
-
             @can('inversiones.view')
                 <flux:sidebar.item icon="currency-dollar" :href="route('inversiones')"
                     :current="request()->routeIs('inversiones')" :badge="$navCounts['inversiones'] ?? null" wire:navigate>
-                    {{ __('Inversión Ext.') }}
+                    {{ __('Inversión Externa') }}
                 </flux:sidebar.item>
             @endcan
 
-            {{-- TRANSACCIONES --}}
-            <flux:sidebar.item icon="arrows-right-left" :href="route('transacciones')"
-                :current="request()->routeIs('transacciones')" wire:navigate>
-                {{ __('Transacciones') }}
-            </flux:sidebar.item>
+            {{-- MOVIMIENTOS --}}
+            <flux:sidebar.group expandable heading="Movimientos" class="grid">
+
+                @can('proyectos.resumen')
+                    <flux:sidebar.item icon="chart-pie" :href="route('proyectos.resumen')"
+                        :current="request()->routeIs('proyectos.resumen')" wire:navigate>
+                        {{ __('Resumen Proyectos') }}
+                    </flux:sidebar.item>
+                @endcan
+
+                @can('transacciones.view')
+                    <flux:sidebar.item icon="arrows-right-left" :href="route('transacciones')"
+                        :current="request()->routeIs('transacciones')" wire:navigate>
+                        {{ __('Transacciones') }}
+                    </flux:sidebar.item>
+                @endcan
+
+            </flux:sidebar.group>
+
 
         </flux:sidebar.nav>
 

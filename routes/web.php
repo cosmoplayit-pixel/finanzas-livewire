@@ -46,10 +46,10 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->get('/empresas', Empresas::class)
         ->name('empresas');
 
-    // ENTIDADES
+    // CLIENTES
     Route::middleware(['permission:entidades.view'])
-        ->get('/entidades', Entidades::class)
-        ->name('entidades');
+        ->get('/clientes', Entidades::class)
+        ->name('clientes');
 
     // PROYECTOS
     Route::middleware(['permission:proyectos.view'])

@@ -71,21 +71,21 @@
                         :class="tab === 'activos' ?
                             'border-b-2 border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50/60 dark:bg-indigo-900/20' :
                             'text-slate-400 dark:text-neutral-500'"
-                        class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all">
+                        class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all cursor-pointer">
                         <i class="fa-solid fa-arrow-trend-up text-[13px]"></i>Activos
                     </button>
                     <button @click="tab = 'deudas'"
                         :class="tab === 'deudas' ?
                             'border-b-2 border-rose-600 text-rose-600 dark:text-rose-400 bg-rose-50/60 dark:bg-rose-900/20' :
                             'text-slate-400 dark:text-neutral-500'"
-                        class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all">
+                        class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all cursor-pointer">
                         <i class="fa-solid fa-hand-holding-dollar text-[13px]"></i>Deudas
                     </button>
                     <button @click="tab = 'patrimonio'"
                         :class="tab === 'patrimonio' ?
                             'border-b-2 border-emerald-600 text-emerald-600 dark:text-emerald-400 bg-emerald-50/60 dark:bg-emerald-900/20' :
                             'text-slate-400 dark:text-neutral-500'"
-                        class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all">
+                        class="flex-1 py-3 text-[10px] font-black uppercase tracking-widest flex flex-col items-center gap-1 transition-all cursor-pointer">
                         <i class="fa-solid fa-gem text-[13px]"></i>Patrimonio
                     </button>
                 </div>

@@ -196,7 +196,7 @@
                         <label
                             class="block text-xs mb-1 text-gray-600 dark:text-neutral-300 font-medium">Mostrar</label>
                         <select wire:model.live="perPage"
-                            class="w-full rounded-lg border border-gray-300 bg-white dark:bg-neutral-900 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 transition-all shadow-sm">
+                            class="w-full rounded-lg border border-gray-300 bg-white dark:bg-neutral-900 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400 transition-all shadow-sm cursor-pointer">
                             <option value="10">10</option>
                             <option value="20">20</option>
                             <option value="50">50</option>
@@ -209,7 +209,7 @@
                         <label
                             class="block text-xs mb-1 text-gray-600 dark:text-neutral-300 font-medium">Filtros</label>
                         <button type="button" @click.stop="openFilters = !openFilters"
-                            class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition shadow-sm">
+                            class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition shadow-sm cursor-pointer">
                             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -240,7 +240,7 @@
                 class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900">
                 <div class="font-semibold text-gray-800 dark:text-neutral-100">Filtros Avanzados</div>
                 <button wire:click="limpiarFiltros"
-                    class="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                    class="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1 cursor-pointer">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -253,14 +253,14 @@
 
                 {{-- Banco --}}
                 <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
-                    <button type="button" class="w-full flex items-center justify-between"
+                    <button type="button" class="w-full flex items-center justify-between cursor-pointer"
                         @click="secBanco = !secBanco">
                         <span class="font-semibold text-gray-800 dark:text-neutral-100">Banco / Cuenta</span>
                         <span class="text-gray-400" x-text="secBanco ? '▾' : '▸'"></span>
                     </button>
                     <div x-show="secBanco" class="mt-3">
                         <select wire:model.live="banco_id"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-600 transition-all">
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-600 transition-all cursor-pointer">
                             <option value="">-- Todos los bancos --</option>
                             @foreach ($bancos as $b)
                                 <option value="{{ $b->id }}">{{ $b->nombre }} -
@@ -272,14 +272,14 @@
 
                 {{-- Módulo --}}
                 <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
-                    <button type="button" class="w-full flex items-center justify-between"
+                    <button type="button" class="w-full flex items-center justify-between cursor-pointer"
                         @click="secModulo = !secModulo">
                         <span class="font-semibold text-gray-800 dark:text-neutral-100">Módulo Origen</span>
                         <span class="text-gray-400" x-text="secModulo ? '▾' : '▸'"></span>
                     </button>
                     <div x-show="secModulo" class="mt-3">
                         <select wire:model.live="modulo"
-                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-600 transition-all">
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-600 transition-all cursor-pointer">
                             <option value="">-- Todos los módulos --</option>
                             @foreach ($modulos_disponibles as $mod)
                                 <option value="{{ $mod }}">{{ $mod }}</option>
@@ -290,7 +290,7 @@
 
                 {{-- Fecha --}}
                 <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
-                    <button type="button" class="w-full flex items-center justify-between"
+                    <button type="button" class="w-full flex items-center justify-between cursor-pointer"
                         @click="secFecha = !secFecha">
                         <span class="font-semibold text-gray-800 dark:text-neutral-100">Fecha</span>
                         <span class="text-gray-400" x-text="secFecha ? '▾' : '▸'"></span>
@@ -300,7 +300,7 @@
                             <div>
                                 <label class="block text-xs text-gray-600 dark:text-neutral-300 mb-1">Desde</label>
                                 <input type="date" wire:model.live="date_from"
-                                    class="w-full border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
+                                    class="w-full cursor-pointer border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
                                            dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                                            focus:outline-none focus:ring-2 focus:ring-offset-0
                                            focus:ring-gray-300 dark:focus:ring-neutral-600" />
@@ -309,7 +309,7 @@
                             <div>
                                 <label class="block text-xs text-gray-600 dark:text-neutral-300 mb-1">Hasta</label>
                                 <input type="date" wire:model.live="date_to"
-                                    class="w-full border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
+                                    class="w-full cursor-pointer border rounded px-3 py-2 bg-white text-gray-900 border-gray-300
                                            dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700
                                            focus:outline-none focus:ring-2 focus:ring-offset-0
                                            focus:ring-gray-300 dark:focus:ring-neutral-600" />
@@ -319,19 +319,19 @@
                         <div class="flex flex-wrap gap-2">
                             <button type="button" wire:click="setFechaMesActual"
                                 class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50
-                                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors">
+                                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
                                 Mes actual
                             </button>
 
                             <button type="button" wire:click="setFechaEsteAnio"
                                 class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50
-                                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors">
+                                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
                                 Este año
                             </button>
 
                             <button type="button" wire:click="clearFecha"
                                 class="text-xs px-2 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50
-                                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors">
+                                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
                                 Limpiar fecha
                             </button>
                         </div>
@@ -466,7 +466,8 @@
                                 <p class="text-sm font-medium">No se encontraron transacciones con los filtros
                                     actuales.</p>
                                 <button wire:click="limpiarFiltros"
-                                    class="mt-2 text-sm text-indigo-600 font-medium hover:text-indigo-500">Limpiar los
+                                    class="mt-2 text-sm text-indigo-600 font-medium hover:text-indigo-500 cursor-pointer">Limpiar
+                                    los
                                     filtros</button>
                             </td>
                         </tr>

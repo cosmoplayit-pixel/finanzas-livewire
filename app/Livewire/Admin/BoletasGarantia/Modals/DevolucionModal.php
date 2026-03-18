@@ -21,13 +21,17 @@ class DevolucionModal extends Component
     public ?int $boletaId = null;
 
     public $banco_id = '';
+
     public ?string $fecha_devolucion = null; // datetime-local
+
     public string $nro_transaccion = '';
 
     public string $devol_monto_formatted = '';
+
     public float $devol_monto = 0;
 
     public string $observacion = '';
+
     public $foto_comprobante = null;
 
     /**
@@ -38,6 +42,7 @@ class DevolucionModal extends Component
 
     // Preview
     public float $saldo_banco_actual_preview = 0;
+
     public float $saldo_banco_despues_preview = 0;
 
     private function userEmpresaId(): int
@@ -110,6 +115,7 @@ class DevolucionModal extends Component
                 type: 'error',
                 message: 'La retención ya fue devuelta completamente.',
             );
+
             return;
         }
 
@@ -128,7 +134,7 @@ class DevolucionModal extends Component
         $this->open = true;
 
         // ✅ aviso si no se pudo detectar moneda
-        if (!$this->monedaBoleta) {
+        if (! $this->monedaBoleta) {
             $this->dispatch(
                 'toast',
                 type: 'warning',
@@ -166,6 +172,7 @@ class DevolucionModal extends Component
         if ($value === '') {
             $this->devol_monto = 0;
             $this->devol_monto_formatted = '';
+
             return;
         }
 
@@ -189,12 +196,12 @@ class DevolucionModal extends Component
         $this->saldo_banco_actual_preview = 0;
         $this->saldo_banco_despues_preview = 0;
 
-        if (!$this->banco_id) {
+        if (! $this->banco_id) {
             return;
         }
 
         $banco = Banco::query()->where('empresa_id', $this->userEmpresaId())->find((int) $this->banco_id);
-        if (!$banco) {
+        if (! $banco) {
             return;
         }
 
@@ -207,12 +214,12 @@ class DevolucionModal extends Component
 
     public function getRestanteProperty(): float
     {
-        if (!$this->boletaId) {
+        if (! $this->boletaId) {
             return 0;
         }
 
         $bg = BoletaGarantia::query()->find($this->boletaId);
-        if (!$bg) {
+        if (! $bg) {
             return 0;
         }
 
@@ -225,13 +232,13 @@ class DevolucionModal extends Component
 
     public function getPuedeGuardarProperty(): bool
     {
-        if (!$this->boletaId) {
+        if (! $this->boletaId) {
             return false;
         }
-        if (!$this->banco_id) {
+        if (! $this->banco_id) {
             return false;
         }
-        if (!$this->fecha_devolucion) {
+        if (! $this->fecha_devolucion) {
             return false;
         }
         if ($this->devol_monto <= 0) {
@@ -257,8 +264,9 @@ class DevolucionModal extends Component
             'foto_comprobante' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
-        if (!$this->boletaId) {
+        if (! $this->boletaId) {
             $this->dispatch('toast', type: 'error', message: 'Boleta inválida.');
+
             return;
         }
 
@@ -272,21 +280,22 @@ class DevolucionModal extends Component
             ->where('empresa_id', $empresaId)
             ->where('active', true)
             ->where('id', (int) $this->banco_id)
-            ->when($moneda, fn($q) => $q->where('moneda', $moneda))
+            ->when($moneda, fn ($q) => $q->where('moneda', $moneda))
             ->exists();
 
-        if (!$bancoOk) {
+        if (! $bancoOk) {
             $msg = $moneda
                 ? "Banco destino inválido. Debe ser en {$moneda}."
                 : 'Banco destino inválido.';
             $this->dispatch('toast', type: 'error', message: $msg);
+
             return;
         }
 
         try {
             $path = null;
             if ($this->foto_comprobante) {
-                $folder = 'empresas/' . $empresaId . '/boletas-garantia-devoluciones';
+                $folder = 'empresas/'.$empresaId.'/boletas_garantia/devoluciones';
                 $path = $this->foto_comprobante->store($folder, 'public');
             }
 
@@ -296,10 +305,8 @@ class DevolucionModal extends Component
                     'banco_id' => (int) $this->banco_id,
                     'fecha_devolucion' => $this->fecha_devolucion,
                     'monto' => (float) $this->devol_monto,
-                    'nro_transaccion' =>
-                        trim($this->nro_transaccion) !== '' ? trim($this->nro_transaccion) : null,
-                    'observacion' =>
-                        trim($this->observacion) !== '' ? trim($this->observacion) : null,
+                    'nro_transaccion' => trim($this->nro_transaccion) !== '' ? trim($this->nro_transaccion) : null,
+                    'observacion' => trim($this->observacion) !== '' ? trim($this->observacion) : null,
                     'foto_comprobante' => $path,
                 ],
                 (int) Auth::id(),
@@ -315,7 +322,7 @@ class DevolucionModal extends Component
 
     public function getTotalDevueltoProperty(): float
     {
-        if (!$this->boletaId) {
+        if (! $this->boletaId) {
             return 0.0;
         }
 
@@ -332,7 +339,7 @@ class DevolucionModal extends Component
         $bancos = Banco::query()
             ->where('empresa_id', $empresaId)
             ->where('active', true)
-            ->when($this->monedaBoleta, fn($q) => $q->where('moneda', $this->monedaBoleta))
+            ->when($this->monedaBoleta, fn ($q) => $q->where('moneda', $this->monedaBoleta))
             ->orderBy('nombre')
             ->get();
 

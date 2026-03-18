@@ -285,7 +285,7 @@
                             <div class="p-1.5 min-w-0 border-l border-gray-200 dark:border-neutral-700 text-right">
                                 <div
                                     class="text-[9px] font-bold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
-                                    Utilidad
+                                    Interés
                                 </div>
                                 <div
                                     class="mt-1 text-[11px] font-extrabold tabular-nums
@@ -328,7 +328,7 @@
                             <div class="p-1.5 min-w-0 border-l border-gray-200 dark:border-neutral-700 text-right">
                                 <div
                                     class="text-[9px] font-bold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
-                                    % Utilidad
+                                    % Interés
                                 </div>
                                 <div
                                     class="mt-1 text-[11px] font-semibold tabular-nums text-gray-900 dark:text-neutral-100 truncate">
@@ -349,19 +349,7 @@
                                         <button type="button"
                                             class="h-6 w-full cursor-pointer rounded-lg px-3 text-[13px] font-semibold inline-flex items-center justify-center gap-2
                                             bg-emerald-600 text-white hover:bg-emerald-700"
-                                            @click.prevent="
-                                            Swal.fire({
-                                                title: '¿Confirmar pago?',
-                                                text: 'Esto debitará el banco y marcará la utilidad como PAGADA.',
-                                                icon: 'warning',
-                                                showCancelButton: true,
-                                                confirmButtonText: 'Sí, confirmar',
-                                                cancelButtonText: 'Cancelar',
-                                                reverseButtons: true,
-                                                confirmButtonColor: '#16a34a',
-                                                cancelButtonColor: '#6b7280',
-                                            }).then((r) => { if (r.isConfirmed) { $wire.confirmarPagoUtilidad({{ (int) $m['id'] }}); } });
-                                        ">
+                                            @click.prevent="$dispatch('openPagarUtilidadConfirmar', { inversionId: {{ $inversionId }}, movimientoId: {{ $m['id'] }} })">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                                 stroke-linejoin="round">
@@ -535,7 +523,7 @@
 
                         <div class="rounded-xl bg-gray-50 px-3 py-2 dark:bg-neutral-900/60">
                             <div class="text-[9px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">
-                                Utilidad</div>
+                                Interés</div>
                             <div class="mt-1 font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
                                 {{ $tPag['sumUtilidadFmt'] ?? '0' }}
                             </div>
@@ -573,7 +561,7 @@
 
                         <div class="rounded-xl bg-gray-50 px-3 py-2 dark:bg-neutral-900/60">
                             <div class="text-[9px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">
-                                Utilidad</div>
+                                Interés</div>
                             <div class="mt-1 font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
                                 {{ $tVen['sumUtilidadFmt'] ?? '0' }}
                             </div>
@@ -611,7 +599,7 @@
 
                         <div class="rounded-xl bg-gray-50 px-3 py-2 dark:bg-neutral-900/60">
                             <div class="text-[9px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">
-                                Utilidad</div>
+                                Interés</div>
                             <div class="mt-1 font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
                                 {{ $tPen['sumUtilidadFmt'] ?? '0' }}
                             </div>

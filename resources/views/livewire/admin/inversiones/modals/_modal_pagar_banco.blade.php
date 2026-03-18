@@ -153,49 +153,56 @@
                             @enderror
                         </div>
 
-                        {{-- FECHA PAGO --}}
-                        <div class="col-span-1 md:col-span-1">
-                            <label class="block text-sm mb-1">Fecha pago <span class="text-red-500">*</span></label>
-                            <input type="date" wire:model.live="fecha_pago" @disabled($modoConfirmar)
-                                class="w-full rounded-lg border px-3 py-2
-                                {{ $modoConfirmar ? 'bg-gray-50 dark:bg-neutral-800 cursor-not-allowed opacity-80' : 'bg-white dark:bg-neutral-900' }}
-                                border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
-                            @error('fecha_pago')
-                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        {{-- FECHA PAGO (Solo en Confirmar) --}}
+                        @if ($modoConfirmar)
+                            <div class="col-span-1 md:col-span-1">
+                                <label class="block text-sm mb-1">Fecha pago <span class="text-red-500">*</span></label>
+                                <input type="date" wire:model.live="fecha_pago"
+                                    class="w-full rounded-lg border px-3 py-2
+                                    bg-white dark:bg-neutral-900
+                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                    focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                                @error('fecha_pago')
+                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @endif
 
-                        {{-- BANCO --}}
-                        <div class="col-span-2 md:col-span-1">
-                            <label class="block text-sm mb-1">Debitar del banco <span
-                                    class="text-red-500">*</span></label>
-                            <select
-                                wire:key="banco-select-{{ $open ? 1 : 0 }}-{{ $movimientoId ?? 'new' }}-{{ (string) $banco_id }}"
-                                wire:model.live="banco_id" class="w-full cursor-pointer rounded-lg border px-3 py-2">
-                                <option value="">Seleccione…</option>
-                                @foreach ($bancos as $b)
-                                    <option value="{{ (string) $b['id'] }}">
-                                        {{ $b['nombre'] }} — {{ $b['numero_cuenta'] }} ({{ $b['moneda'] }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('banco_id')
-                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        {{-- BANCO (Solo en Confirmar) --}}
+                        @if ($modoConfirmar)
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-sm mb-1">Debitar del banco <span
+                                        class="text-red-500">*</span></label>
+                                <select
+                                    wire:key="banco-select-{{ $open ? 1 : 0 }}-{{ $movimientoId ?? 'new' }}-{{ (string) $banco_id }}"
+                                    wire:model.live="banco_id"
+                                    class="w-full cursor-pointer rounded-lg border px-3 py-2">
+                                    <option value="">Seleccione…</option>
+                                    @foreach ($bancos as $b)
+                                        <option value="{{ (string) $b['id'] }}">
+                                            {{ $b['nombre'] }} — {{ $b['numero_cuenta'] }} ({{ $b['moneda'] }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('banco_id')
+                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @endif
 
-                        {{-- COMPROBANTE --}}
-                        <div class="col-span-1 md:col-span-1">
-                            <label class="block text-sm mb-1">Nro comprobante</label>
-                            <input type="text" wire:model.live="nro_comprobante" placeholder="Ej: 12345"
-                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
-                            @error('nro_comprobante')
-                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
+                        {{-- COMPROBANTE (Solo en Confirmar) --}}
+                        @if ($modoConfirmar)
+                            <div class="col-span-1 md:col-span-1">
+                                <label class="block text-sm mb-1">Nro comprobante</label>
+                                <input type="text" wire:model.live="nro_comprobante" placeholder="Ej: 12345"
+                                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                           focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                                @error('nro_comprobante')
+                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        @endif
 
                         {{-- TIPO CAMBIO --}}
                         @if ($hasTC)
@@ -250,50 +257,69 @@
                             @enderror
                         </div>
 
-                        {{-- FOTO --}}
-                        <div class="col-span-2 md:col-span-1">
-                            <label class="block text-sm mb-1">Foto comprobante (opcional)</label>
+                        {{-- FOTO (Solo en Confirmar) --}}
+                        @if ($modoConfirmar)
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-sm mb-1 text-gray-700 dark:text-neutral-300">
+                                    Foto del comprobante (opcional):
+                                </label>
 
-                            <label
-                                class="group h-11 flex items-center justify-between w-full rounded-lg border border-dashed
-                                border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900
-                                px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
+                                <label
+                                    class="group flex items-center justify-between w-full rounded-lg border border-dashed
+                                    border-gray-300/70 dark:border-neutral-700/70
+                                    bg-white dark:bg-neutral-900 px-4 py-2 cursor-pointer
+                                    hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
 
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div
-                                        class="w-7 h-7 rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800
-                                        flex items-center justify-center shrink-0">
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                            <polyline points="17 8 12 3 7 8" />
-                                            <line x1="12" y1="3" x2="12" y2="15" />
-                                        </svg>
-                                    </div>
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div
+                                            class="w-8 h-8 rounded-lg border border-gray-200/70 dark:border-neutral-700/70
+                                            bg-gray-50 dark:bg-neutral-800 flex items-center justify-center shrink-0">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                class="w-4 h-4 text-gray-600 dark:text-neutral-200"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                                <polyline points="17 8 12 3 7 8" />
+                                                <line x1="12" y1="3" x2="12" y2="15" />
+                                            </svg>
+                                        </div>
 
-                                    <div class="min-w-0">
-                                        <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">Adjuntar
-                                            archivo</div>
-                                        <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
-                                            @if ($comprobante_imagen)
-                                                {{ $comprobante_imagen->getClientOriginalName() }}
-                                            @else
-                                                JPG, JPEG o PNG (máx. 5MB)
-                                            @endif
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">
+                                                Adjuntar
+                                                archivo</div>
+                                            <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
+                                                @if ($comprobante_imagen)
+                                                    {{ $comprobante_imagen->getClientOriginalName() }}
+                                                @else
+                                                    JPG, PNG o PDF (máx. 5MB)
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
+
+                                    <input type="file" wire:model.live="comprobante_imagen"
+                                        accept=".jpg,.jpeg,.png,.pdf" class="hidden" />
+                                </label>
+
+                                <div wire:loading wire:target="comprobante_imagen" wire:loading.class.remove="hidden"
+                                    class="text-xs text-blue-600 mt-1">
+                                    Subiendo archivo...
                                 </div>
+                                @error('comprobante_imagen')
+                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                                @enderror
 
-                                <input type="file" wire:model.live="comprobante_imagen" accept=".jpg,.jpeg,.png"
-                                    class="hidden" />
-                            </label>
-
-                            @error('comprobante_imagen')
-                                <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
+                                @if ($comprobante_imagen)
+                                    <div class="mt-2 text-right">
+                                        <button type="button" wire:click="quitarComprobante"
+                                            class="text-xs text-red-500 hover:text-red-700 underline cursor-pointer">
+                                            Quitar archivo
+                                        </button>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
 
                         {{-- IMPACTO --}}
                         <div class="col-span-2 md:col-span-3">

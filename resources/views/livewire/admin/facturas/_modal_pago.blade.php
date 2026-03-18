@@ -66,7 +66,7 @@
 
             {{-- Nro. Operación --}}
             <div>
-                <label class="block text-sm mb-1">Nro. Operación: <span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Nro. Operación (Opcional):</label>
                 <input wire:model="nro_operacion"
                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300/60 dark:border-neutral-700/60 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40">
                 @error('nro_operacion')
@@ -277,7 +277,7 @@
             <button type="button" wire:click="savePago" wire:loading.attr="disabled"
                 wire:target="savePago,pago_foto_comprobante"
                 x-bind:disabled="!$wire.tipo || !$wire.metodo_pago || !$wire.monto_formatted || !$wire.fecha_pago || ($wire
-                    .metodo_pago !== 'efectivo' && (!$wire.banco_id || !$wire.nro_operacion))"
+                    .metodo_pago !== 'efectivo' && (!$wire.banco_id))"
                 class="w-full sm:w-auto px-4 py-2 rounded-lg cursor-pointer
                        bg-black text-white hover:opacity-90
                        disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2">

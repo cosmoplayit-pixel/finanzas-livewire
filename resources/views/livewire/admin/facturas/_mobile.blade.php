@@ -89,7 +89,7 @@
                  @if ($f->foto_comprobante)
                      @php
                          $extFactMob = strtolower(pathinfo($f->foto_comprobante, PATHINFO_EXTENSION));
-                         $isImageFactMob = in_array($extFactMob, ['jpg', 'jpeg', 'png']);
+                         $isImageFactMob = in_array($extFactMob, ['jpg', 'jpeg', 'png', 'webp', 'bmp']);
                      @endphp
                      <div class="mt-1 flex items-center gap-1 text-xs">
                          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-500"
@@ -101,7 +101,7 @@
                          @if ($isImageFactMob)
                              <button type="button"
                                  class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline cursor-pointer"
-                                 @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $f->foto_comprobante) }}' })">
+                                 @click.stop="$wire.openFotoComprobante('{{ asset('storage/' . $f->foto_comprobante) }}')">
                                  Ver Respaldo
                              </button>
                          @else
@@ -327,7 +327,7 @@
                              @if ($pg->foto_comprobante)
                                  @php
                                      $extPagoMob = strtolower(pathinfo($pg->foto_comprobante, PATHINFO_EXTENSION));
-                                     $isImagePagoMob = in_array($extPagoMob, ['jpg', 'jpeg', 'png']);
+                                     $isImagePagoMob = in_array($extPagoMob, ['jpg', 'jpeg', 'png', 'webp', 'bmp']);
                                  @endphp
                                  <div class="grid grid-cols-[110px,1fr] gap-2 mt-1">
                                      <div class="text-xs text-gray-500 dark:text-neutral-400">Respaldo</div>
@@ -335,7 +335,7 @@
                                          @if ($isImagePagoMob)
                                              <button type="button"
                                                  class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer"
-                                                 @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $pg->foto_comprobante) }}' })">
+                                                 @click.stop="$wire.openFotoComprobante('{{ asset('storage/' . $pg->foto_comprobante) }}')">
                                                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
                                                      stroke="currentColor">
                                                      <path stroke-linecap="round" stroke-linejoin="round"

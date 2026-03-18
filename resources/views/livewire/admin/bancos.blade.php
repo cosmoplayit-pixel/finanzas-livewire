@@ -15,7 +15,8 @@
                 Bancos
             </h1>
             <p class="text-sm text-gray-500 mt-1 dark:text-neutral-400">
-                Registro y configuración operativa de bancos asociados a empresas.
+                Registro y Configuración de bancos por empresa. Los nombres de banco con palabras como “Efectivo” se
+                visualizará por separado en el dashboard.
             </p>
         </div>
 

@@ -10,7 +10,7 @@
             Inversión a la Empresa
         </h1>
         <p class="text-sm text-gray-500 mt-1 dark:text-neutral-400">
-            Gestión de inversiones (creación, movimientos de capital y pago de utilidades) con historial por registro.
+            Gestión de inversiones (creación, movimientos de capital y pago de intereses) con historial por registro.
         </p>
     </div>
 

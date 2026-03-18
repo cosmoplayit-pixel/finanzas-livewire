@@ -157,7 +157,7 @@
                     row.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }, 300)" @endif>
-        <div class="overflow-x-auto overflow-y-auto max-h-[75vh]">
+        <div class="overflow-x-auto overflow-y-auto max-h-[63vh]">
             <table class="w-full text-[13px] min-w-[1200px] align-middle">
 
                 <thead

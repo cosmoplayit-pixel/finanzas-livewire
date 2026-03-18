@@ -83,7 +83,7 @@
                 {{-- NRO TRANSACCIÓN --}}
                 <div>
                     <label class="block text-sm mb-1">
-                        Nro. Transacción: <span class="text-red-500">*</span>
+                        Nro. Transacción (Opcional):
                     </label>
                     <input wire:model.live="nro_transaccion"
                         class="w-full rounded-lg border px-3 py-2
@@ -262,11 +262,12 @@
             </button>
 
             <button type="button" wire:click="savePresupuesto" wire:loading.attr="disabled"
-                wire:target="savePresupuesto" @disabled(!$this->puedeGuardar)
+                wire:target="savePresupuesto,foto_comprobante" @disabled(!$this->puedeGuardar)
                 class="w-full sm:w-auto px-4 py-2 rounded-lg cursor-pointer
                        bg-black text-white hover:opacity-90
-                       disabled:opacity-50 disabled:cursor-not-allowed">
-                <span wire:loading.remove wire:target="savePresupuesto">Guardar</span>
+                       disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2">
+                <span wire:loading.remove wire:target="savePresupuesto,foto_comprobante">Guardar</span>
+                <span wire:loading wire:target="foto_comprobante">Procesando…</span>
                 <span wire:loading wire:target="savePresupuesto">Guardando…</span>
             </button>
 

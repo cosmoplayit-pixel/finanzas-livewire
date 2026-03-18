@@ -128,7 +128,7 @@
 
 
                 <div class="col-span-2 lg:col-span-1">
-                    <label class="block text-sm mb-1">Retención <span class="text-red-500">*</span></label>
+                    <label class="block text-sm mb-1">Monto <span class="text-red-500">*</span></label>
                     <input type="text" inputmode="decimal" wire:model.blur="retencion_formatted" placeholder="0,00"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100

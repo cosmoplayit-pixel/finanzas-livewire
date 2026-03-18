@@ -247,6 +247,17 @@ class Facturas extends Component
 
     public function updatedTipo(): void
     {
+        if ($this->facturaId) {
+            $factura = Factura::with('pagos')->find($this->facturaId);
+            if ($factura) {
+                if ($this->tipo === 'normal') {
+                    $this->monto = FacturaFinance::saldo($factura);
+                } else {
+                    $this->monto = FacturaFinance::retencionPendiente($factura);
+                }
+                $this->monto_formatted = $this->monto > 0 ? number_format($this->monto, 2, ',', '.') : '';
+            }
+        }
         $this->recalcImpactoPago();
     }
 
@@ -472,7 +483,7 @@ class Facturas extends Component
             $path = null;
 
             if ($this->foto_comprobante) {
-                $path = $this->foto_comprobante->store('empresas/'.$this->empresaId().'/facturas/facturas_nuevas', 'public');
+                $path = $this->foto_comprobante->store('empresas/'.$this->empresaId().'/facturas/nuevas', 'public');
             }
 
             $service->crearFactura(
@@ -588,17 +599,20 @@ class Facturas extends Component
 
         $this->openPagoModal = true;
 
-        $montoTotal = (float) $factura->monto_facturado;
-        $retTotal = (float) ($factura->retencion ?? 0);
-        $pagosNormalesSuma = $factura->pagos->where('tipo', 'normal')->sum('monto');
-        $saldoNormal = max(0, $montoTotal - $retTotal - $pagosNormalesSuma);
+        $saldoNormal = FacturaFinance::saldo($factura);
+        $retPendiente = FacturaFinance::retencionPendiente($factura);
 
-        $this->tipo = $saldoNormal <= 0 ? 'retencion' : 'normal';
+        if ($saldoNormal > 0) {
+            $this->tipo = 'normal';
+            $this->monto = $saldoNormal;
+        } else {
+            $this->tipo = 'retencion';
+            $this->monto = $retPendiente;
+        }
 
         $this->metodo_pago = 'transferencia';
         $this->banco_id = null;
-        $this->monto = 0;
-        $this->monto_formatted = '';
+        $this->monto_formatted = $this->monto > 0 ? number_format($this->monto, 2, ',', '.') : '';
         $this->fecha_pago = now()->format('Y-m-d\TH:i');
         $this->nro_operacion = null;
         $this->observacion = null;
@@ -646,17 +660,12 @@ class Facturas extends Component
             'tipo' => 'required|in:normal,retencion',
             'metodo_pago' => 'nullable|string|max:30',
             'monto' => 'required|numeric|min:0.01',
-            'banco_id' => 'nullable|exists:bancos,id',
+            'banco_id' => 'required|exists:bancos,id',
             'nro_operacion' => 'nullable|string|max:80',
             'observacion' => 'nullable|string|max:2000',
             'fecha_pago' => 'required|date',
             'pago_foto_comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ];
-
-        if ($this->metodo_pago !== 'efectivo') {
-            $rules['banco_id'] = 'required|exists:bancos,id';
-            $rules['nro_operacion'] = 'required|string|max:80';
-        }
 
         $this->validate($rules);
 
@@ -883,7 +892,7 @@ class Facturas extends Component
         }
 
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-        $isImage = in_array($ext, ['jpg', 'jpeg', 'png'], true);
+        $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'bmp'], true);
 
         return [
             'url' => asset('storage/'.$path),

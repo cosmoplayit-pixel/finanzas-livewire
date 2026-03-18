@@ -8,9 +8,6 @@
         <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
             <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b dark:border-neutral-700">
                 <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Datos principales</div>
-                <div class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
-                    Completa la información base de la inversión.
-                </div>
             </div>
 
             <div class="p-3 sm:p-4">
@@ -37,7 +34,7 @@
                     {{-- Nombre --}}
                     <div class="col-span-2 lg:col-span-1">
                         <label class="block text-sm mb-1">Nombre completo <span class="text-red-500">*</span></label>
-                        <input wire:model.live="nombre_completo" placeholder="Ej: Willam Rojas Vidal"
+                        <input wire:model.live="nombre_completo"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                    focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
@@ -113,7 +110,7 @@
                     {{-- % Utilidad (solo PRIVADO) --}}
                     @if ($showPrivadoFields)
                         <div class="col-span-1">
-                            <label class="block text-sm mb-1">% Utilidad <span class="text-red-500">*</span></label>
+                            <label class="block text-sm mb-1">% Interes <span class="text-red-500">*</span></label>
                             <input type="text" inputmode="decimal" wire:model.defer="porcentaje_utilidad_formatted"
                                 wire:blur="formatPorcentaje" placeholder="0,00"
                                 class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
@@ -173,17 +170,20 @@
 
                     {{-- Foto --}}
                     <div class="col-span-2 lg:col-span-3">
-                        <label class="block text-sm mb-1">Foto del comprobante (opcional)</label>
+                        <label class="block text-sm mb-1 text-gray-700 dark:text-neutral-300">
+                            Foto del comprobante (opcional):
+                        </label>
 
                         <label
                             class="group flex items-center justify-between w-full rounded-lg border border-dashed
-                                   border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900
-                                   px-4 py-0.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
+                                   border-gray-300/70 dark:border-neutral-700/70
+                                   bg-white dark:bg-neutral-900 px-4 py-2 cursor-pointer
+                                   hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
 
                             <div class="flex items-center gap-3 min-w-0">
                                 <div
-                                    class="w-7 h-7 rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800
-                                           flex items-center justify-center shrink-0">
+                                    class="w-8 h-8 rounded-lg border border-gray-200/70 dark:border-neutral-700/70
+                                           bg-gray-50 dark:bg-neutral-800 flex items-center justify-center shrink-0">
                                     <svg xmlns="http://www.w3.org/2000/svg"
                                         class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -195,32 +195,42 @@
                                 </div>
 
                                 <div class="min-w-0">
-                                    <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">Adjuntar
-                                        archivo</div>
+                                    <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">
+                                        Adjuntar archivo
+                                    </div>
                                     <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
-                                        @if ($comprobante)
+                                        @if ($comprobante && !is_string($comprobante))
                                             {{ $comprobante->getClientOriginalName() }}
                                         @else
-                                            JPG, JPEG o PNG (máx. 5MB)
+                                            JPG, PNG o PDF (máx. 5MB)
                                         @endif
                                     </div>
                                 </div>
                             </div>
 
-                            <input type="file" wire:model="comprobante" accept=".jpg,.jpeg,.png"
-                                class="hidden" />
+                            <input type="file" wire:model="comprobante" class="hidden"
+                                accept=".jpg,.jpeg,.png,.pdf" />
                         </label>
 
+                        <div wire:loading wire:target="comprobante" wire:loading.class.remove="hidden"
+                            class="text-xs text-blue-600 mt-1">
+                            Subiendo archivo...
+                        </div>
                         @error('comprobante')
-                            <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                         @enderror
+
+                        @if ($comprobante && !is_string($comprobante))
+                            <div class="mt-2 text-right">
+                                <button type="button" wire:click="quitarComprobante"
+                                    class="text-xs text-red-500 hover:text-red-700 underline">
+                                    Quitar archivo
+                                </button>
+                            </div>
+                        @endif
                     </div>
 
                 </div>
-
-                <p class="mt-3 text-xs text-gray-500 dark:text-neutral-400">
-                    <span class="text-red-500">*</span> Campos obligatorios.
-                </p>
             </div>
         </div>
 
@@ -228,9 +238,6 @@
         <div class="rounded-xl border bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden">
             <div class="px-3 sm:px-4 py-2.5 sm:py-3 border-b dark:border-neutral-700">
                 <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto banco</div>
-                <div class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">
-                    Previsualización del saldo del banco con el capital ingresado.
-                </div>
             </div>
 
             <div class="p-3 sm:p-4">

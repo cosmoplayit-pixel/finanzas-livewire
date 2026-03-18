@@ -9,6 +9,7 @@ use DomainException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class InversionService
 {
@@ -351,6 +352,17 @@ class InversionService
             }
 
             // Eliminar movimientos + inversión
+            // Eliminar movimientos + inversión
+            foreach ($rows as $m) {
+                if ($m->comprobante_imagen_path) {
+                    Storage::disk('public')->delete($m->comprobante_imagen_path);
+                }
+            }
+
+            if ($invLocked->comprobante) {
+                Storage::disk('public')->delete($invLocked->comprobante);
+            }
+
             InversionMovimiento::query()->where('inversion_id', $invLocked->id)->delete();
             $invLocked->delete();
         });
@@ -412,6 +424,10 @@ class InversionService
 
                 // PENDIENTE: no impactó nada, solo borrar
                 if ($estado === 'PENDIENTE' || $estado === '') {
+                    if ($mov->comprobante_imagen_path) {
+                        Storage::disk('public')->delete($mov->comprobante_imagen_path);
+                    }
+
                     $mov->delete();
                     $updateHastaFecha();
 
@@ -475,6 +491,10 @@ class InversionService
                         $invLocked->estado = 'ACTIVA';
                     }
 
+                    if ($mov->comprobante_imagen_path) {
+                        Storage::disk('public')->delete($mov->comprobante_imagen_path);
+                    }
+
                     $mov->delete();
                     $updateHastaFecha();
 
@@ -499,6 +519,10 @@ class InversionService
 
             // PAGO_UTILIDAD PENDIENTE: solo borrar
             if ($tipo === 'PAGO_UTILIDAD' && ($estado === 'PENDIENTE' || $estado === '')) {
+                if ($mov->comprobante_imagen_path) {
+                    Storage::disk('public')->delete($mov->comprobante_imagen_path);
+                }
+
                 $mov->delete();
                 $updateHastaFecha();
 
@@ -543,6 +567,10 @@ class InversionService
                 }
                 $invLocked->capital_actual = round(max(0.0, $nuevo), 2);
 
+                if ($mov->comprobante_imagen_path) {
+                    Storage::disk('public')->delete($mov->comprobante_imagen_path);
+                }
+
                 $mov->delete();
                 $updateHastaFecha();
 
@@ -569,6 +597,10 @@ class InversionService
                 );
                 if ((float) $invLocked->capital_actual > 0.01) {
                     $invLocked->estado = 'ACTIVA';
+                }
+
+                if ($mov->comprobante_imagen_path) {
+                    Storage::disk('public')->delete($mov->comprobante_imagen_path);
                 }
 
                 $mov->delete();
@@ -612,6 +644,10 @@ class InversionService
 
                 $banco->monto = (float) ($banco->monto ?? 0) + (float) $reembolsoBanco;
                 $banco->save();
+
+                if ($mov->comprobante_imagen_path) {
+                    Storage::disk('public')->delete($mov->comprobante_imagen_path);
+                }
 
                 $mov->delete();
                 $updateHastaFecha();
@@ -839,20 +875,28 @@ class InversionService
                 throw new DomainException('La inversión está cerrada.');
             }
 
-            if (empty($data['banco_id'])) {
-                throw new DomainException('Debe seleccionar un banco.');
+            $banco = null;
+            if (! empty($data['banco_id'])) {
+                /** @var Banco $banco */
+                $banco = Banco::query()->lockForUpdate()->findOrFail((int) $data['banco_id']);
             }
-
-            /** @var Banco $banco */
-            $banco = Banco::query()->lockForUpdate()->findOrFail((int) $data['banco_id']);
 
             $monInv = strtoupper((string) ($invLocked->moneda ?? 'BOB'));
-            $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
-            $tc = $monInv !== $monBank ? (float) ($data['tipo_cambio'] ?? 0) : null;
+            $monBank = $monInv;
+            $tc = null;
+            $bancoId = null;
 
-            if ($monInv !== $monBank && (! $tc || $tc <= 0)) {
-                throw new DomainException('Tipo de cambio obligatorio.');
+            if ($banco) {
+                $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
+                $bancoId = $banco->id;
+                $tc = $monInv !== $monBank ? (float) ($data['tipo_cambio'] ?? 0) : null;
+
+                if ($monInv !== $monBank && (! $tc || $tc <= 0)) {
+                    throw new DomainException('Tipo de cambio obligatorio.');
+                }
             }
+
+            $fechaPago = (! empty($data['fecha_pago'])) ? (string) $data['fecha_pago'] : null;
 
             $montoBase = (float) ($data['monto_utilidad'] ?? ($data['monto'] ?? 0));
             if ($montoBase <= 0) {
@@ -899,7 +943,7 @@ class InversionService
                 'tipo' => 'PAGO_UTILIDAD',
 
                 'fecha' => $fechaFinal,
-                'fecha_pago' => $data['fecha_pago'] ?? $fechaFinal,
+                'fecha_pago' => $fechaPago,
 
                 'descripcion' => isset($data['descripcion']) && trim((string) $data['descripcion']) !== ''
                         ? (string) $data['descripcion']
@@ -924,7 +968,7 @@ class InversionService
                 'moneda_banco' => $monBank,
                 'tipo_cambio' => $tc,
 
-                'banco_id' => $banco->id,
+                'banco_id' => $bancoId,
                 'comprobante' => $data['nro_comprobante'] ?? ($data['comprobante'] ?? null),
                 'comprobante_imagen_path' => $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
 
@@ -1140,6 +1184,10 @@ class InversionService
                     : (string) $invLocked->fecha_inicio;
                 $invLocked->save();
 
+                if ($last->comprobante_imagen_path) {
+                    Storage::disk('public')->delete($last->comprobante_imagen_path);
+                }
+
                 $last->delete();
 
                 return;
@@ -1203,6 +1251,10 @@ class InversionService
                     : (string) $invLocked->fecha_inicio;
                 $invLocked->save();
 
+                if ($last->comprobante_imagen_path) {
+                    Storage::disk('public')->delete($last->comprobante_imagen_path);
+                }
+
                 $last->delete();
 
                 return;
@@ -1217,6 +1269,10 @@ class InversionService
                         ? (string) $prev->fecha
                         : (string) $invLocked->fecha_inicio;
                     $invLocked->save();
+
+                    if ($last->comprobante_imagen_path) {
+                        Storage::disk('public')->delete($last->comprobante_imagen_path);
+                    }
 
                     $last->delete();
 
@@ -1267,6 +1323,10 @@ class InversionService
                         : (string) $invLocked->fecha_inicio;
                     $invLocked->save();
 
+                    if ($last->comprobante_imagen_path) {
+                        Storage::disk('public')->delete($last->comprobante_imagen_path);
+                    }
+
                     $last->delete();
 
                     return;
@@ -1299,23 +1359,25 @@ class InversionService
                 throw new DomainException('La inversión ya está finalizada.');
             }
 
-            if (empty($data['banco_id'])) {
-                throw new DomainException('Debe seleccionar un banco.');
+            $banco = null;
+            if (! empty($data['banco_id'])) {
+                /** @var Banco $banco */
+                $banco = Banco::query()->lockForUpdate()->findOrFail((int) $data['banco_id']);
             }
 
-            /** @var Banco $banco */
-            $banco = Banco::query()->lockForUpdate()->findOrFail((int) $data['banco_id']);
-
             $fecha = (string) ($data['fecha'] ?? '');
-            $fechaPago = (string) ($data['fecha_pago'] ?? '');
-            if ($fecha === '' || $fechaPago === '') {
-                throw new DomainException('Fecha y fecha pago son obligatorias.');
+            $fechaPago = (! empty($data['fecha_pago'])) ? (string) $data['fecha_pago'] : null;
+
+            if ($fecha === '') {
+                throw new DomainException('La fecha contable es obligatoria.');
             }
 
             $monInv = strtoupper((string) ($invLocked->moneda ?? 'BOB'));
-            $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
-
+            $monBank = $monInv;
+            $tc = null;
+            $bancoId = null;
             $totalBase = (float) ($data['monto_total'] ?? 0);
+
             if ($totalBase <= 0) {
                 throw new DomainException('El monto total es obligatorio.');
             }
@@ -1334,29 +1396,32 @@ class InversionService
                 );
             }
 
-            // Valida saldo banco (sin debitar todavía)
-            $debitoBanco = $totalBase;
-            $tc = null;
+            // Valida saldo banco (solo si viene banco_id)
+            if ($banco) {
+                $monBank = strtoupper((string) ($banco->moneda ?? $monInv));
+                $bancoId = $banco->id;
+                $debitoBanco = $totalBase;
 
-            if ($monInv !== $monBank) {
-                $tc = (float) ($data['tipo_cambio'] ?? 0);
-                if ($tc <= 0) {
-                    throw new DomainException('Tipo de cambio obligatorio.');
+                if ($monInv !== $monBank) {
+                    $tc = (float) ($data['tipo_cambio'] ?? 0);
+                    if ($tc <= 0) {
+                        throw new DomainException('Tipo de cambio obligatorio.');
+                    }
+
+                    if ($monInv === 'BOB' && $monBank === 'USD') {
+                        $debitoBanco = $totalBase / $tc;
+                    } elseif ($monInv === 'USD' && $monBank === 'BOB') {
+                        $debitoBanco = $totalBase * $tc;
+                    } else {
+                        throw new DomainException('Conversión no soportada para este par de monedas.');
+                    }
+
+                    $debitoBanco = round((float) $debitoBanco, 2);
                 }
 
-                if ($monInv === 'BOB' && $monBank === 'USD') {
-                    $debitoBanco = $totalBase / $tc;
-                } elseif ($monInv === 'USD' && $monBank === 'BOB') {
-                    $debitoBanco = $totalBase * $tc;
-                } else {
-                    throw new DomainException('Conversión no soportada para este par de monedas.');
+                if ((float) $banco->monto < (float) $debitoBanco) {
+                    throw new DomainException('Saldo insuficiente en banco.');
                 }
-
-                $debitoBanco = round((float) $debitoBanco, 2);
-            }
-
-            if ((float) $banco->monto < (float) $debitoBanco) {
-                throw new DomainException('Saldo insuficiente en banco.');
             }
 
             // nro correlativo global
@@ -1392,7 +1457,7 @@ class InversionService
                 'moneda_banco' => $monBank,
                 'tipo_cambio' => $monInv !== $monBank ? $tc : null,
 
-                'banco_id' => $banco->id,
+                'banco_id' => $bancoId,
                 'comprobante' => $data['nro_comprobante'] ?? null,
                 'comprobante_imagen_path' => $data['comprobante_imagen_path'] ?? ($data['imagen'] ?? null),
 
@@ -1557,6 +1622,10 @@ class InversionService
                     : (string) $invLocked->fecha_inicio;
                 $invLocked->save();
 
+                if ($last->comprobante_imagen_path) {
+                    Storage::disk('public')->delete($last->comprobante_imagen_path);
+                }
+
                 $last->delete();
 
                 // ✅ RECALCULAR % (PAGADO + PENDIENTE)
@@ -1623,6 +1692,10 @@ class InversionService
 
             $invLocked->capital_actual = $saldo;
             $invLocked->save();
+
+            if ($last->comprobante_imagen_path) {
+                Storage::disk('public')->delete($last->comprobante_imagen_path);
+            }
 
             $last->delete();
 

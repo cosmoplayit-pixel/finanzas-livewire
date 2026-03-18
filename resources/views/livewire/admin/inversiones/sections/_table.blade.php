@@ -160,7 +160,7 @@
                                     {{-- % Utilidad (mismo color que Interés en BANCO) --}}
                                     @if ($has('pct_utilidad_actual'))
                                         <span class="{{ $pillPrimary }}">
-                                            <span class="font-semibold">% Utilidad:</span>
+                                            <span class="font-semibold">% Interés:</span>
                                             <span class="{{ $valPrimary }}">{{ $r['pct_utilidad_actual'] }}</span>
                                         </span>
                                     @endif
@@ -168,7 +168,7 @@
                                     {{-- Utilidad pagada (mismo color que Ult. Pago en BANCO) --}}
                                     @if ($has('utilidad_pagada'))
                                         <span class="{{ $pillSuccess }}">
-                                            <span class="font-semibold">Utilidad pagada:</span>
+                                            <span class="font-semibold">Interés pagado:</span>
                                             <span class="{{ $valSuccess }}">{{ $r['utilidad_pagada'] }}</span>
                                         </span>
                                     @endif
@@ -176,7 +176,7 @@
                                     {{-- Utilidad por pagar (mismo color en ambos) --}}
                                     @if ($has('utilidad_por_pagar'))
                                         <span class="{{ $pillWarn }}">
-                                            <span class="font-semibold">Utilidad por pagar:</span>
+                                            <span class="font-semibold">Interés por pagar:</span>
                                             <span class="{{ $valWarn }}">{{ $r['utilidad_por_pagar'] }}</span>
                                         </span>
                                     @endif

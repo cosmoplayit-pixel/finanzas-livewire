@@ -295,7 +295,7 @@
                                         @if ($r['factura_file']['is_image'])
                                             <button type="button"
                                                 class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline cursor-pointer"
-                                                @click.stop="$dispatch('open-image-modal', { url: '{{ $r['factura_file']['url'] }}' })">
+                                                @click.stop="$wire.openFotoComprobante('{{ $r['factura_file']['url'] }}')">
                                                 Ver Respaldo Factura
                                             </button>
                                         @else
@@ -574,7 +574,7 @@
                                                                         <button type="button"
                                                                             class="inline-flex items-center justify-center w-7 h-7 rounded bg-emerald-50 text-emerald-600 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:hover:bg-emerald-900/40 transition cursor-pointer"
                                                                             title="Ver imagen"
-                                                                            @click.stop="$dispatch('open-image-modal', { url: '{{ $pg['file']['url'] }}' })">
+                                                                            @click.stop="$wire.openFotoComprobante('{{ $pg['file']['url'] }}')">
                                                                             <svg class="w-4 h-4" fill="none"
                                                                                 viewBox="0 0 24 24"
                                                                                 stroke="currentColor">

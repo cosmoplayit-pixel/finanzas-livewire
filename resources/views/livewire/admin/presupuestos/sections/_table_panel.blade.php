@@ -183,15 +183,12 @@
                                                     $archivo &&
                                                     strtolower(pathinfo($archivo, PATHINFO_EXTENSION)) === 'pdf';
                                             @endphp
+
                                             @if ($archivo)
-                                                <a href="{{ asset('storage/' . $archivo) }}" target="_blank"
-                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer
-                                                        {{ $esPdf
-                                                            ? 'bg-white text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:bg-neutral-900 dark:text-rose-400 dark:border-rose-700 dark:hover:bg-rose-900/20 shadow-sm'
-                                                            : 'bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm' }}"
-                                                    title="{{ $esPdf ? 'Ver PDF' : 'Ver imagen' }}">
-                                                    @if ($esPdf)
-                                                        {{-- Icono PDF --}}
+                                                @if ($esPdf)
+                                                    <a href="{{ asset('storage/' . $archivo) }}" target="_blank"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:bg-neutral-900 dark:text-rose-400 dark:border-rose-700 dark:hover:bg-rose-900/20 shadow-sm"
+                                                        title="Ver PDF">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -205,8 +202,12 @@
                                                             <line x1="9" y1="9" x2="11"
                                                                 y2="9" />
                                                         </svg>
-                                                    @else
-                                                        {{-- Icono imagen --}}
+                                                    </a>
+                                                @else
+                                                    <button type="button"
+                                                        wire:click="openFotoComprobante('{{ asset('storage/' . $archivo) }}')"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
+                                                        title="Ver imagen">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                             stroke-width="2" stroke-linecap="round"
@@ -216,10 +217,9 @@
                                                             <circle cx="8.5" cy="8.5" r="1.5" />
                                                             <polyline points="21 15 16 10 5 21" />
                                                         </svg>
-                                                    @endif
-                                                </a>
+                                                    </button>
+                                                @endif
                                             @else
-                                                {{-- Sin comprobante: bloqueado --}}
                                                 <span
                                                     class="w-8 h-8 inline-flex items-center justify-center rounded-lg border bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
                                                     title="Sin comprobante">
@@ -241,9 +241,9 @@
                                             <button type="button" {{ $hasMovimientos ? 'disabled' : '' }}
                                                 @if (!$hasMovimientos) wire:click="abrirEliminarRendicionModal({{ $p->id }})" @endif
                                                 class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all
-                                                           {{ $hasMovimientos
-                                                               ? 'bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700'
-                                                               : 'bg-white text-red-600 border-red-300 cursor-pointer hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm' }}"
+                                                               {{ $hasMovimientos
+                                                                   ? 'bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700'
+                                                                   : 'bg-white text-red-600 border-red-300 cursor-pointer hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm' }}"
                                                 title="{{ $hasMovimientos ? 'Tiene movimientos: no se puede eliminar' : 'Eliminar presupuesto' }}">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor"

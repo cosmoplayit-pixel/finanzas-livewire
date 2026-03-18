@@ -117,6 +117,12 @@ trait PresupuestoModal
         $this->recalcularPreviews();
     }
 
+    public function openFotoComprobante(string $url): void
+    {
+        $this->fotoUrl = $url;
+        $this->openFotoModal = true;
+    }
+
     public function getPuedeGuardarProperty(): bool
     {
         if (! $this->banco_id) {

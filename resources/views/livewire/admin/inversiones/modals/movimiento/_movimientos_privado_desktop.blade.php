@@ -106,7 +106,7 @@
                     row.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }, 300)" @endif>
-        <div class="overflow-x-auto overflow-y-auto max-h-[75vh]">
+        <div class="overflow-x-auto overflow-y-auto max-h-[63vh]">
             <table class="w-full text-[13px] min-w-[1200px] align-middle">
 
                 <thead
@@ -118,8 +118,8 @@
                         <th class="p-3 min-w-[260px] text-left">Descripción</th>
                         <th class="p-3 w-[140px]">Comprobante</th>
                         <th class="p-3 w-[150px]">Capital</th>
-                        <th class="p-3 w-[150px]">Utilidad</th>
-                        <th class="p-3 w-[110px]">% Utilidad</th>
+                        <th class="p-3 w-[150px]">Interés</th>
+                        <th class="p-3 w-[110px]">% Interés</th>
                         <th class="p-3 w-[120px]">Estado</th>
                         @canany(['inversiones.confirm_pay', 'inversiones.delete'])
                             <th class="p-3 w-[170px]">Acciones</th>
@@ -260,19 +260,7 @@
                                                         class="h-7 px-2 cursor-pointer rounded-lg text-xs font-semibold inline-flex items-center gap-2
                                                         bg-green-600 text-white hover:bg-green-700"
                                                         title="Confirmar pago"
-                                                        @click.prevent="
-                                                        Swal.fire({
-                                                            title: '¿Confirmar pago?',
-                                                            text: 'Esto debitará el banco y marcará la utilidad como PAGADA.',
-                                                            icon: 'warning',
-                                                            showCancelButton: true,
-                                                            confirmButtonText: 'Sí, confirmar',
-                                                            cancelButtonText: 'Cancelar',
-                                                            reverseButtons: true,
-                                                            confirmButtonColor: '#16a34a',
-                                                            cancelButtonColor: '#6b7280',
-                                                        }).then((r) => { if (r.isConfirmed) { $wire.confirmarPagoUtilidad({{ (int) $m['id'] }}); } });
-                                                    ">
+                                                        @click.prevent="$dispatch('openPagarUtilidadConfirmar', { inversionId: {{ $inversionId }}, movimientoId: {{ $m['id'] }} })">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -450,7 +438,7 @@
                         <td class="p-3 text-center">
                             <div class="flex flex-col items-center leading-tight">
                                 <span
-                                    class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Utilidad</span>
+                                    class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Interés</span>
                                 <span class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
                                     {{ $totales['pagado']['sumUtilidadFmt'] }}
                                 </span>
@@ -504,7 +492,7 @@
                         <td class="p-3 text-center">
                             <div class="flex flex-col items-center leading-tight">
                                 <span
-                                    class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Utilidad</span>
+                                    class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Interés</span>
                                 <span class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
                                     {{ $totales['vencido']['sumUtilidadFmt'] }}
                                 </span>
@@ -558,7 +546,7 @@
                         <td class="p-3 text-center">
                             <div class="flex flex-col items-center leading-tight">
                                 <span
-                                    class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Utilidad</span>
+                                    class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">Interés</span>
                                 <span class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
                                     {{ $totales['pendiente']['sumUtilidadFmt'] }}
                                 </span>

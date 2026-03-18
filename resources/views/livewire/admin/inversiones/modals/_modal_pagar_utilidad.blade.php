@@ -102,14 +102,15 @@
 
                         {{-- TIPO PAGO --}}
                         <div class="col-span-2 md:col-span-1">
-                            <label class="block text-sm mb-1">Tipo de pago <span class="text-red-500">*</span></label>
+                            <label class="block text-sm mb-1">Tipo de Pago <span class="text-red-500">*</span></label>
                             <select wire:model.live="tipo_pago"
                                 class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                        focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
-                                <option value="INGRESO_CAPITAL">Ingreso a capital</option>
-                                <option value="DEVOLUCION_CAPITAL">Devolución a capital</option>
-                                <option value="PAGO_UTILIDAD">Pago utilidad</option>
+                                <option value="PAGO_UTILIDAD">Pago de Interés</option>
+                                <option value="INGRESO_CAPITAL">Ingreso a Capital</option>
+                                <option value="DEVOLUCION_CAPITAL">Devolución a Capital</option>
+
                             </select>
                             @error('tipo_pago')
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
@@ -120,7 +121,7 @@
                         @if ($isUtilidad)
                             <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
-                                    Fecha inicio (auto) <span class="text-red-500">*</span>
+                                    Fecha Inicio (auto) <span class="text-red-500">*</span>
                                 </label>
                                 <input type="date"
                                     wire:key="utilidad-fecha-inicio-{{ $inversion?->id ?? 0 }}-{{ $tipo_pago }}"
@@ -131,7 +132,7 @@
 
                             <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
-                                    Fecha final <span class="text-red-500">*</span>
+                                    Fecha Final <span class="text-red-500">*</span>
                                 </label>
                                 <input type="date" wire:model.live="fecha"
                                     class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -142,21 +143,23 @@
                                 @enderror
                             </div>
 
-                            <div class="col-span-1 md:col-span-1">
-                                <label class="block text-sm mb-1">
-                                    Fecha pago <span class="text-red-500">*</span>
-                                </label>
-                                <input type="date" wire:model.live="fecha_pago"
-                                    class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                           focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
-                                @error('fecha_pago')
-                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
+                            @if ($modoConfirmar)
+                                <div class="col-span-1 md:col-span-1">
+                                    <label class="block text-sm mb-1">
+                                        Fecha Pago <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="date" wire:model.live="fecha_pago"
+                                        class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                               border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                               focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                                    @error('fecha_pago')
+                                        <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            @endif
 
                             <div class="col-span-1 md:col-span-1">
-                                <label class="block text-sm mb-1">Cantidad días</label>
+                                <label class="block text-sm mb-1">Cantidad Días</label>
                                 <input type="text" disabled
                                     value="{{ (int) ($utilidad_dias ?? ' Regla: 28–31 ⇒ 30') }}"
                                     class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
@@ -165,7 +168,7 @@
                         @else
                             <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
-                                    Fecha de inicio (últ. movimiento) <span class="text-red-500">*</span>
+                                    Fecha de Inicio (últ. movimiento) <span class="text-red-500">*</span>
                                 </label>
 
                                 <input wire:ignore type="date" value="{{ $fecha_inicio_ref }}" readonly disabled
@@ -179,7 +182,7 @@
 
                             <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
-                                    Fecha pago <span class="text-red-500">*</span>
+                                    Fecha Pago <span class="text-red-500">*</span>
                                 </label>
 
                                 <input type="date" wire:model.live="fecha_pago"
@@ -193,74 +196,77 @@
                             </div>
                         @endif
 
-                        {{-- BANCO --}}
-                        <div class="col-span-2 md:col-span-1">
-                            <label class="block text-sm mb-1">
-                                Debitar del banco <span class="text-red-500">*</span>
-                            </label>
-                            <select wire:model.live="banco_id"
-                                class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
-                                <option value="">Seleccione…</option>
-                                @foreach ($bancos as $b)
-                                    <option value="{{ $b['id'] }}">
-                                        {{ $b['nombre'] }} — {{ $b['numero_cuenta'] }} ({{ $b['moneda'] }})
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('banco_id')
-                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                            @enderror
-                            @if (!empty($mov_moneda))
-                                <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
-                                    Moneda banco: <span class="font-semibold">{{ $mov_moneda }}</span>
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- COMPROBANTE --}}
-                        <div class="col-span-1 md:col-span-1">
-                            <label class="block text-sm mb-1">Nro comprobante</label>
-                            <input type="text" wire:model.live="nro_comprobante" placeholder="Ej: 100"
-                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                       border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
-                            @error('nro_comprobante')
-                                <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- TIPO DE CAMBIO (si aplica) --}}
-                        @if ($hasTC)
-                            <div class="col-span-1 md:col-span-1">
+                        @if ($modoConfirmar || !$isUtilidad)
+                            {{-- BANCO --}}
+                            <div class="col-span-2 md:col-span-1">
                                 <label class="block text-sm mb-1">
-                                    Tipo de cambio <span class="text-red-500">*</span>
+                                    Debitar del Banco <span class="text-red-500">*</span>
                                 </label>
-                                <input type="text" wire:model.live="tipo_cambio_formatted" placeholder="Ej: 6,96"
+                                <select wire:model.live="banco_id"
+                                    class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                           focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                                    <option value="">Seleccione…</option>
+                                    @foreach ($bancos as $b)
+                                        <option value="{{ $b['id'] }}">
+                                            {{ $b['nombre'] }} — {{ $b['numero_cuenta'] }} ({{ $b['moneda'] }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                @error('banco_id')
+                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                                @enderror
+                                @if (!empty($mov_moneda))
+                                    <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
+                                        Moneda Banco: <span class="font-semibold">{{ $mov_moneda }}</span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- COMPROBANTE --}}
+                            <div class="col-span-1 md:col-span-1">
+                                <label class="block text-sm mb-1">Nro Comprobante</label>
+                                <input type="text" wire:model.live="nro_comprobante" placeholder="Ej: 100"
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                            focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
-                                @error('tipo_cambio')
+                                @error('nro_comprobante')
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            <div class="col-span-1 md:col-span-1">
-                                <label class="block text-sm mb-1">Monto en moneda base (preview)</label>
-                                <input type="text" disabled value="{{ $monto_base_preview ?: '—' }}"
-                                    class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
-                                <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
-                                    Base: <span class="font-semibold">{{ $inversion?->moneda ?? '—' }}</span>
+                            {{-- TIPO DE CAMBIO (si aplica) --}}
+                            @if ($hasTC)
+                                <div class="col-span-1 md:col-span-1">
+                                    <label class="block text-sm mb-1">
+                                        Tipo de cambio <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" wire:model.live="tipo_cambio_formatted"
+                                        placeholder="Ej: 6,96"
+                                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                               border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                               focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                                    @error('tipo_cambio')
+                                        <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                                    @enderror
                                 </div>
-                            </div>
+
+                                <div class="col-span-1 md:col-span-1">
+                                    <label class="block text-sm mb-1">Monto en Moneda Base (preview)</label>
+                                    <input type="text" disabled value="{{ $monto_base_preview ?: '—' }}"
+                                        class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
+                                               border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
+                                    <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
+                                        Base: <span class="font-semibold">{{ $inversion?->moneda ?? '—' }}</span>
+                                    </div>
+                                </div>
+                            @endif
                         @endif
 
                         {{-- CAMPOS POR TIPO --}}
                         @if ($isUtilidad)
                             <div class="col-span-1 md:col-span-1">
-                                <label class="block text-sm mb-1">% utilidad (calculado)</label>
+                                <label class="block text-sm mb-1">% Interés (calculado)</label>
                                 <input type="text" disabled
                                     value="{{ number_format((float) ($utilidad_pct_calc ?? 0), 2, ',', '.') }}%"
                                     class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
@@ -269,7 +275,7 @@
 
                             <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
-                                    Monto utilidad mes <span class="text-red-500">*</span>
+                                    Monto Interés Mes <span class="text-red-500">*</span>
                                 </label>
                                 <input wire:key="utilidad-mes-{{ $tipo_pago }}" type="text"
                                     wire:model.blur="utilidad_monto_mes_formatted" placeholder="Ej: 0,00"
@@ -282,7 +288,7 @@
                             </div>
 
                             <div class="col-span-1 md:col-span-1">
-                                <label class="block text-sm mb-1">A pagar (calculado)</label>
+                                <label class="block text-sm mb-1">A Pagar (calculado)</label>
                                 <input type="text" disabled value="{{ $utilidad_a_pagar_formatted ?: '0,00' }}"
                                     class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
@@ -306,49 +312,68 @@
                             </div>
                         @endif
 
-                        {{-- FOTO DEL COMPROBANTE --}}
-                        <div class="col-span-2 md:col-span-1">
-                            <label class="block text-sm mb-1">Foto del comprobante (opcional)</label>
+                        @if ($modoConfirmar || !$isUtilidad)
+                            {{-- FOTO DEL COMPROBANTE --}}
+                            <div class="col-span-2 md:col-span-1">
+                                <label class="block text-sm mb-1 text-gray-700 dark:text-neutral-300">
+                                    Foto del comprobante (opcional):
+                                </label>
 
-                            <label
-                                class="group h-11 flex items-center justify-between w-full rounded-lg border border-dashed
-                                       border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900
-                                       px-4 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
-                                <div class="flex items-center gap-3 min-w-0">
-                                    <div
-                                        class="w-7 h-7 rounded-lg border border-gray-200 dark:border-neutral-700 bg-gray-50 dark:bg-neutral-800
-                                               flex items-center justify-center shrink-0">
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                            <polyline points="17 8 12 3 7 8" />
-                                            <line x1="12" y1="3" x2="12" y2="15" />
-                                        </svg>
-                                    </div>
+                                <label
+                                    class="group flex items-center justify-between w-full rounded-lg border border-dashed
+                                    border-gray-300/70 dark:border-neutral-700/70
+                                    bg-white dark:bg-neutral-900 px-4 py-2 cursor-pointer
+                                    hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div
+                                            class="w-8 h-8 rounded-lg border border-gray-200/70 dark:border-neutral-700/70
+                                            bg-gray-50 dark:bg-neutral-800 flex items-center justify-center shrink-0">
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                class="w-4 h-4 text-gray-600 dark:text-neutral-200"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                                <polyline points="17 8 12 3 7 8" />
+                                                <line x1="12" y1="3" x2="12" y2="15" />
+                                            </svg>
+                                        </div>
 
-                                    <div class="min-w-0">
-                                        <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">Adjuntar
-                                            archivo</div>
-                                        <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
-                                            @if ($comprobante_imagen)
-                                                {{ $comprobante_imagen->getClientOriginalName() }}
-                                            @else
-                                                JPG, JPEG o PNG (máx. 5MB)
-                                            @endif
+                                        <div class="min-w-0">
+                                            <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">
+                                                Adjuntar
+                                                Archivo</div>
+                                            <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
+                                                @if ($comprobante_imagen)
+                                                    {{ $comprobante_imagen->getClientOriginalName() }}
+                                                @else
+                                                    JPG, PNG o PDF (máx. 5MB)
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
+
+                                    <input type="file" wire:model.live="comprobante_imagen"
+                                        accept=".jpg,.jpeg,.png,.pdf" class="hidden" />
+                                </label>
+
+                                <div wire:loading wire:target="comprobante_imagen" wire:loading.class.remove="hidden"
+                                    class="text-xs text-blue-600 mt-1">
+                                    Subiendo archivo...
                                 </div>
+                                @error('comprobante_imagen')
+                                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                                @enderror
 
-                                <input type="file" wire:model.live="comprobante_imagen" accept=".jpg,.jpeg,.png"
-                                    class="hidden" />
-                            </label>
-
-                            @error('comprobante_imagen')
-                                <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
+                                @if ($comprobante_imagen)
+                                    <div class="mt-2 text-right">
+                                        <button type="button" wire:click="quitarComprobante"
+                                            class="text-xs text-red-500 hover:text-red-700 underline cursor-pointer">
+                                            Quitar archivo
+                                        </button>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
 
                         {{-- IMPACTO FINANCIERO --}}
                         <div class="col-span-2 md:col-span-3">

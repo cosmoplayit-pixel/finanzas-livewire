@@ -250,14 +250,22 @@
                                             </td>
                                             <td class="p-3 text-center">
                                                 @if (!empty($m->foto_path))
-                                                    @php $esPdf = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION)) === 'pdf'; @endphp
-                                                    <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full transition
-                                                        {{ $esPdf
-                                                            ? 'text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40'
-                                                            : 'text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400' }}"
-                                                        title="{{ $esPdf ? 'Ver PDF' : 'Ver imagen' }}">
-                                                        @if ($esPdf)
+                                                    @php
+                                                        $ext = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION));
+                                                        $esPdf = $ext === 'pdf';
+                                                        $esImagen = in_array($ext, [
+                                                            'jpg',
+                                                            'jpeg',
+                                                            'png',
+                                                            'webp',
+                                                            'bmp',
+                                                        ]);
+                                                    @endphp
+                                                    @if ($esPdf)
+                                                        <a href="{{ asset('storage/' . $m->foto_path) }}"
+                                                            target="_blank"
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40"
+                                                            title="Ver PDF">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
@@ -271,7 +279,12 @@
                                                                     y2="17" />
                                                                 <polyline points="10 9 9 9 8 9" />
                                                             </svg>
-                                                        @else
+                                                        </a>
+                                                    @elseif($esImagen)
+                                                        <button type="button"
+                                                            wire:click="openFotoComprobante('{{ asset('storage/' . $m->foto_path) }}')"
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400"
+                                                            title="Ver imagen">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
@@ -281,8 +294,23 @@
                                                                 <circle cx="8.5" cy="8.5" r="1.5" />
                                                                 <path d="M21 15l-5-5L5 21" />
                                                             </svg>
-                                                        @endif
-                                                    </a>
+                                                        </button>
+                                                    @else
+                                                        <a href="{{ asset('storage/' . $m->foto_path) }}"
+                                                            target="_blank"
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-neutral-800"
+                                                            title="Ver archivo">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <path
+                                                                    d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z">
+                                                                </path>
+                                                                <polyline points="13 2 13 9 20 9"></polyline>
+                                                            </svg>
+                                                        </a>
+                                                    @endif
                                                 @else
                                                     <span class="text-xs text-gray-300 dark:text-neutral-600">—</span>
                                                 @endif
@@ -335,15 +363,15 @@
                                         <div class="flex items-center gap-1 shrink-0">
                                             {{-- VER FOTO --}}
                                             @if (!empty($m->foto_path))
-                                                @php $esPdf = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION)) === 'pdf'; @endphp
-                                                <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
-                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg
-                                                border transition
-                                                {{ $esPdf
-                                                    ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10'
-                                                    : 'border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800' }}"
-                                                    title="{{ $esPdf ? 'Ver PDF' : 'Ver imagen' }}">
-                                                    @if ($esPdf)
+                                                @php
+                                                    $ext = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION));
+                                                    $esPdf = $ext === 'pdf';
+                                                    $esImagen = in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'bmp']);
+                                                @endphp
+                                                @if ($esPdf)
+                                                    <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
+                                                        title="Ver PDF">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                             stroke-width="2" stroke-linecap="round"
@@ -357,7 +385,12 @@
                                                                 y2="17" />
                                                             <polyline points="10 9 9 9 8 9" />
                                                         </svg>
-                                                    @else
+                                                    </a>
+                                                @elseif($esImagen)
+                                                    <button type="button"
+                                                        wire:click="openFotoComprobante('{{ asset('storage/' . $m->foto_path) }}')"
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
+                                                        title="Ver imagen">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                             stroke-width="1.8" stroke-linecap="round"
@@ -367,8 +400,22 @@
                                                             <circle cx="8.5" cy="8.5" r="1.5" />
                                                             <path d="M21 15l-5-5L5 21" />
                                                         </svg>
-                                                    @endif
-                                                </a>
+                                                    </button>
+                                                @else
+                                                    <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
+                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
+                                                        title="Ver archivo">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path
+                                                                d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z">
+                                                            </path>
+                                                            <polyline points="13 2 13 9 20 9"></polyline>
+                                                        </svg>
+                                                    </a>
+                                                @endif
                                             @endif
 
                                             {{-- ELIMINAR --}}
@@ -546,14 +593,22 @@
                                             </td>
                                             <td class="p-3 text-center">
                                                 @if (!empty($m->foto_path))
-                                                    @php $esPdf = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION)) === 'pdf'; @endphp
-                                                    <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-full transition
-                                                        {{ $esPdf
-                                                            ? 'text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40'
-                                                            : 'text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400' }}"
-                                                        title="{{ $esPdf ? 'Ver PDF' : 'Ver imagen' }}">
-                                                        @if ($esPdf)
+                                                    @php
+                                                        $ext = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION));
+                                                        $esPdf = $ext === 'pdf';
+                                                        $esImagen = in_array($ext, [
+                                                            'jpg',
+                                                            'jpeg',
+                                                            'png',
+                                                            'webp',
+                                                            'bmp',
+                                                        ]);
+                                                    @endphp
+                                                    @if ($esPdf)
+                                                        <a href="{{ asset('storage/' . $m->foto_path) }}"
+                                                            target="_blank"
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40"
+                                                            title="Ver PDF">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
@@ -567,7 +622,12 @@
                                                                     y2="17" />
                                                                 <polyline points="10 9 9 9 8 9" />
                                                             </svg>
-                                                        @else
+                                                        </a>
+                                                    @elseif($esImagen)
+                                                        <button type="button"
+                                                            wire:click="openFotoComprobante('{{ asset('storage/' . $m->foto_path) }}')"
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400"
+                                                            title="Ver imagen">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
@@ -577,8 +637,23 @@
                                                                 <circle cx="8.5" cy="8.5" r="1.5" />
                                                                 <path d="M21 15l-5-5L5 21" />
                                                             </svg>
-                                                        @endif
-                                                    </a>
+                                                        </button>
+                                                    @else
+                                                        <a href="{{ asset('storage/' . $m->foto_path) }}"
+                                                            target="_blank"
+                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-neutral-800"
+                                                            title="Ver archivo">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                                viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <path
+                                                                    d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z">
+                                                                </path>
+                                                                <polyline points="13 2 13 9 20 9"></polyline>
+                                                            </svg>
+                                                        </a>
+                                                    @endif
                                                 @else
                                                     <span class="text-xs text-gray-300 dark:text-neutral-600">—</span>
                                                 @endif
@@ -639,15 +714,15 @@
                                         {{-- Acciones (foto + eliminar) --}}
                                         <div class="shrink-0 flex items-center gap-2">
                                             @if (!empty($m->foto_path))
-                                                @php $esPdf = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION)) === 'pdf'; @endphp
-                                                <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
-                                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg
-                                                    border transition
-                                                    {{ $esPdf
-                                                        ? 'border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10'
-                                                        : 'border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800' }}"
-                                                    title="{{ $esPdf ? 'Ver PDF' : 'Ver imagen' }}">
-                                                    @if ($esPdf)
+                                                @php
+                                                    $ext = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION));
+                                                    $esPdf = $ext === 'pdf';
+                                                    $esImagen = in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'bmp']);
+                                                @endphp
+                                                @if ($esPdf)
+                                                    <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
+                                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
+                                                        title="Ver PDF">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                             stroke-width="2" stroke-linecap="round"
@@ -661,7 +736,12 @@
                                                                 y2="17" />
                                                             <polyline points="10 9 9 9 8 9" />
                                                         </svg>
-                                                    @else
+                                                    </a>
+                                                @elseif($esImagen)
+                                                    <button type="button"
+                                                        wire:click="openFotoComprobante('{{ asset('storage/' . $m->foto_path) }}')"
+                                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
+                                                        title="Ver imagen">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                             stroke-width="1.8" stroke-linecap="round"
@@ -671,8 +751,22 @@
                                                             <circle cx="8.5" cy="8.5" r="1.5" />
                                                             <path d="M21 15l-5-5L5 21" />
                                                         </svg>
-                                                    @endif
-                                                </a>
+                                                    </button>
+                                                @else
+                                                    <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
+                                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
+                                                        title="Ver archivo">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <path
+                                                                d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z">
+                                                            </path>
+                                                            <polyline points="13 2 13 9 20 9"></polyline>
+                                                        </svg>
+                                                    </a>
+                                                @endif
                                             @endif
 
                                             @can('agente_presupuestos.delete_movement')

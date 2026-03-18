@@ -185,11 +185,12 @@ class PagarUtilidadModal extends Component
             ->where('empresa_id', $empresaId)
             ->where('active', true)
             ->orderBy('nombre')
-            ->get(['id', 'nombre', 'numero_cuenta', 'moneda'])
+            ->get(['id', 'nombre', 'titular', 'numero_cuenta', 'moneda'])
             ->map(
                 fn ($b) => [
                     'id' => $b->id,
                     'nombre' => $b->nombre,
+                    'titular' => $b->titular,
                     'numero_cuenta' => $b->numero_cuenta,
                     'moneda' => $b->moneda,
                 ],
@@ -277,10 +278,11 @@ class PagarUtilidadModal extends Component
             ->where('empresa_id', $empresaId)
             ->where('active', true)
             ->orderBy('nombre')
-            ->get(['id', 'nombre', 'numero_cuenta', 'moneda'])
+            ->get(['id', 'nombre', 'titular', 'numero_cuenta', 'moneda'])
             ->map(fn ($b) => [
                 'id' => $b->id,
                 'nombre' => $b->nombre,
+                'titular' => $b->titular,
                 'numero_cuenta' => $b->numero_cuenta,
                 'moneda' => $b->moneda,
             ])

@@ -180,7 +180,7 @@
                                     <option value="">Seleccione…</option>
                                     @foreach ($bancos as $b)
                                         <option value="{{ (string) $b['id'] }}">
-                                            {{ $b['nombre'] }} — {{ $b['numero_cuenta'] }} ({{ $b['moneda'] }})
+                                            {{ $b['nombre'] }} — {{ $b['titular'] }} ({{ $b['moneda'] }})
                                         </option>
                                     @endforeach
                                 </select>

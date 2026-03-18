@@ -820,11 +820,12 @@ class PagarBancoModal extends Component
             ->where('empresa_id', $empresaId)
             ->where('active', true)
             ->orderBy('nombre')
-            ->get(['id', 'nombre', 'numero_cuenta', 'moneda', 'monto'])
+            ->get(['id', 'nombre', 'titular', 'numero_cuenta', 'moneda', 'monto'])
             ->map(
                 fn ($b) => [
                     'id' => (string) $b->id,
                     'nombre' => (string) $b->nombre,
+                    'titular' => (string) $b->titular,
                     'numero_cuenta' => $b->numero_cuenta,
                     'moneda' => $b->moneda,
                     'monto' => (float) ($b->monto ?? 0),

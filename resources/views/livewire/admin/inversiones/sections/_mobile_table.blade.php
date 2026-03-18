@@ -162,13 +162,11 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 shrink-0 mr-1"
                                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                         stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="4" y1="9" x2="20" y2="9" />
-                                        <line x1="4" y1="15" x2="20" y2="15" />
-                                        <line x1="10" y1="3" x2="8" y2="21" />
-                                        <line x1="16" y1="3" x2="14" y2="21" />
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
                                     </svg>
 
-                                    <span class="truncate">{{ $inv->banco->numero_cuenta ?? '—' }}</span>
+                                    <span class="truncate">{{ $inv->banco->titular ?? '—' }}</span>
                                     <span class="mx-1 shrink-0 text-gray-300 dark:text-neutral-600">•</span>
 
                                     <span class="inline-flex items-center shrink-0">

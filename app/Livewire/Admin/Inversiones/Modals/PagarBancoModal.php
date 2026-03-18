@@ -49,17 +49,17 @@ class PagarBancoModal extends Component
     public bool $needs_tc = false; // Flag si requiere TC (moneda inv != moneda banco)
 
     // FORM: MONTOS (INPUTS)
-    public ?float $monto_total = 0.0; // Total de la cuota
+    public ?float $monto_total = null; // Total de la cuota
 
-    public ?string $monto_total_formatted = '0,00'; // Total formateado
+    public ?string $monto_total_formatted = null; // Total formateado
 
-    public ?float $monto_capital = 0.0; // Capital de la cuota
+    public ?float $monto_capital = null; // Capital de la cuota
 
-    public ?string $monto_capital_formatted = '0,00'; // Capital formateado
+    public ?string $monto_capital_formatted = null; // Capital formateado
 
-    public ?float $monto_interes = 0.0; // Interés (derivado: total - capital)
+    public ?float $monto_interes = null; // Interés (derivado: total - capital)
 
-    public ?string $monto_interes_formatted = '0,00'; // Interés formateado
+    public ?string $monto_interes_formatted = null; // Interés formateado
 
     // PREVIEW / IMPACTO FINANCIERO (UI)
     public float $preview_banco_actual = 0.0; // Saldo actual del banco seleccionado
@@ -846,14 +846,14 @@ class PagarBancoModal extends Component
         $this->tipo_cambio_formatted = null;
         $this->needs_tc = false;
 
-        $this->monto_total = 0.0;
-        $this->monto_total_formatted = '0,00';
+        $this->monto_total = null;
+        $this->monto_total_formatted = null;
 
-        $this->monto_capital = 0.0;
-        $this->monto_capital_formatted = '0,00';
+        $this->monto_capital = null;
+        $this->monto_capital_formatted = null;
 
-        $this->monto_interes = 0.0;
-        $this->monto_interes_formatted = '0,00';
+        $this->monto_interes = null;
+        $this->monto_interes_formatted = null;
 
         $this->impacto_ok = true;
         $this->impacto_texto = 'Seleccione un banco.';

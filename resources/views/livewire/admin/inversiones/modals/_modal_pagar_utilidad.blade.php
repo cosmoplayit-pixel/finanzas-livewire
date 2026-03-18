@@ -241,7 +241,7 @@
                                     <label class="block text-sm mb-1">
                                         Tipo de cambio <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" wire:model.live="tipo_cambio_formatted"
+                                    <input type="text" wire:model.blur="tipo_cambio_formatted"
                                         placeholder="Ej: 6,96"
                                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                                border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100

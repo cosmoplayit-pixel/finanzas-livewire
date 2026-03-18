@@ -70,7 +70,8 @@
                         <div
                             class="mt-0.5 text-[12px] text-gray-500 dark:text-neutral-400 inline-flex items-center gap-2">
                             <span class="truncate">
-                                Titular: {{ $inv->nombre_completo }}
+                                Titular: <span
+                                    class="font-semibold {{ $inv->tipo === 'BANCO' ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400' }}">{{ $inv->nombre_completo }}</span>
                             </span>
                         </div>
                     </div>

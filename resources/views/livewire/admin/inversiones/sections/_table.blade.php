@@ -43,7 +43,8 @@
 
                         {{-- TITULAR --}}
                         <td class="p-3">
-                            <div class="text-gray-900 dark:text-neutral-100">
+                            <div
+                                class="font-semibold {{ $inv->tipo === 'BANCO' ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400' }}">
                                 {{ $inv->nombre_completo }}
                             </div>
                             <div class="text-gray-500 dark:text-neutral-400 inline-flex items-center gap-1">

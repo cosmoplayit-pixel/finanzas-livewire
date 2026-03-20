@@ -36,7 +36,6 @@
                                         clip-rule="evenodd" />
                                 </svg>
                             </button>
-                            <span>ID</span>
                         </div>
                     </th>
 
@@ -112,10 +111,6 @@
                                         @endif
                                     @endif
                                 </button>
-
-                                <span class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                                    {{ $bg->id }}
-                                </span>
                             </div>
                         </td>
 

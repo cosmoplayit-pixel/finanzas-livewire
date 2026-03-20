@@ -43,9 +43,9 @@ class Proyectos extends Component
 
     public string $monto_formatted = '0,00';
 
-    // ✅ NUEVO: Retención (%)
-    // Se almacena como decimal (ej: 7.50 => 7.50%)
     public $retencion = 0;
+
+    public string $retencion_formatted = '0,00';
 
     public string $descripcion = '';
 
@@ -100,6 +100,14 @@ class Proyectos extends Component
         $clean = str_replace(',', '.', $clean);
         $this->monto = is_numeric($clean) ? (float) $clean : 0;
         $this->monto_formatted = number_format($this->monto, 2, ',', '.');
+    }
+
+    public function updatedRetencionFormatted(string $value): void
+    {
+        $clean = str_replace('.', '', $value);
+        $clean = str_replace(',', '.', $clean);
+        $this->retencion = is_numeric($clean) ? (float) $clean : 0;
+        $this->retencion_formatted = number_format((float) $this->retencion, 2, ',', '.');
     }
 
     public function updatingSearch(): void
@@ -171,6 +179,7 @@ class Proyectos extends Component
 
         // ✅ NUEVO
         $this->retencion = $p->retencion ?? 0;
+        $this->retencion_formatted = number_format((float) ($p->retencion ?? 0), 2, ',', '.');
 
         $this->descripcion = $p->descripcion ?? '';
         $this->fecha_inicio = $p->fecha_inicio?->format('Y-m-d');
@@ -231,6 +240,7 @@ class Proyectos extends Component
 
         // ✅ NUEVO
         $this->retencion = 0;
+        $this->retencion_formatted = '0,00';
 
         $this->descripcion = '';
         $this->fecha_inicio = null;

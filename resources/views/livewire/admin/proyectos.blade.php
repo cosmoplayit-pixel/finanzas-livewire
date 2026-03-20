@@ -935,8 +935,8 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
                             <label class="block text-sm mb-1">Retención (%)</label>
-                            <input type="number" step="0.01" min="0" max="100"
-                                wire:model.live="retencion" placeholder="0"
+                            <input type="text" inputmode="decimal" wire:model.blur="retencion_formatted"
+                                placeholder="0,00"
                                 class="w-full rounded border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700

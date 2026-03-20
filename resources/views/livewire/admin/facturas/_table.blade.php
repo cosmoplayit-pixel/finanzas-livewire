@@ -11,7 +11,7 @@
             <thead
                 class="bg-slate-50/50 text-slate-600 dark:bg-neutral-900/50 dark:text-neutral-400 border-b border-gray-100 dark:border-neutral-800">
                 <tr class="text-left text-[11px] uppercase tracking-wider font-semibold">
-                    <th class="w-[5%] text-center p-3 select-none whitespace-nowrap">
+                    <th class="w-[3%] text-center py-2 select-none whitespace-nowrap">
                         <div x-data="{ allOpen: false }" class="flex items-center justify-center gap-2">
                             <button type="button"
                                 class="w-6 h-6 inline-flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-white hover:border-gray-300 hover:text-gray-700 hover:shadow-sm dark:border-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-200 transition-all cursor-pointer"
@@ -36,11 +36,11 @@
                         </div>
                     </th>
 
-                    <th class="w-[30%] p-3 select-none whitespace-nowrap">Proyecto</th>
-                    <th class="w-[30%] p-3 select-none whitespace-nowrap">Factura</th>
+                    <th class="w-[29%] p-3 select-none whitespace-nowrap">Proyecto</th>
+                    <th class="w-[29%] p-3 select-none whitespace-nowrap">Factura</th>
                     <th class="w-[10%] p-3 select-none whitespace-nowrap text-center">Estado</th>
                     <th class="w-[10%] p-3 select-none whitespace-nowrap text-center">Saldo / Ret.</th>
-                    <th class="w-[8%] p-3 select-none whitespace-nowrap text-center">Acc.</th>
+                    <th class="w-[9%] p-3 select-none whitespace-nowrap text-center">Acc.</th>
                 </tr>
             </thead>
 
@@ -63,7 +63,7 @@
 
                         {{-- Toggle (con borde izquierdo de resaltado si es la factura objetivo) --}}
                         <td
-                            class="p-3 whitespace-nowrap align-middle
+                            class="py-2 whitespace-nowrap align-middle
                             {{ isset($factura_id) && $factura_id == $r['id'] ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}">
                             <div class="flex items-center justify-center gap-2">
                                 <button type="button" @disabled(!($r['pagos'] ?? false))

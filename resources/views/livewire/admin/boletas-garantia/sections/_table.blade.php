@@ -16,7 +16,7 @@
                 <tr class="text-left text-[11px] uppercase tracking-wider font-semibold">
 
                     {{-- ID --}}
-                    <th class="w-[5%] text-center p-2 select-none whitespace-nowrap">
+                    <th class="w-[3%] text-center py-2 select-none whitespace-nowrap">
                         <div x-data="{ allOpen: false }" class="flex items-center justify-center gap-2">
                             <button type="button"
                                 class="w-6 h-6 inline-flex items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-white hover:border-gray-300 hover:text-gray-700 hover:shadow-sm
@@ -39,7 +39,7 @@
                         </div>
                     </th>
 
-                    <th class="w-[25%] p-2 select-none whitespace-nowrap">Proyecto</th>
+                    <th class="w-[31%] p-2 select-none whitespace-nowrap">Proyecto</th>
                     <th class="w-[18%] p-2 select-none whitespace-nowrap">Banco</th>
                     <th class="w-[20%] p-2 select-none whitespace-nowrap">Boleta</th>
                     <th class="w-[7%]  p-2 select-none whitespace-nowrap text-center">Estado</th>
@@ -86,7 +86,7 @@
 
                         {{-- ID + toggle (no disparar click de fila) --}}
                         <td
-                            class="p-2 whitespace-nowrap align-middle {{ $isTargetBoleta ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}">
+                            class="py-2 whitespace-nowrap align-middle {{ $isTargetBoleta ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}">
                             <div class="flex items-center justify-center gap-2">
 
                                 <button type="button" @disabled(!$hasDevoluciones)

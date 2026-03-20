@@ -8,21 +8,21 @@
             $wire.dispatch('openMovimientosInversionWithHighlight', { inversionId: {{ (int) $highlight_inversion_id }}, movimientoId: {{ (int) $highlight_movimiento_id }} }); @endif
     }, 700)" @endif>
     <div class="overflow-x-auto">
-        <table class="w-full text-sm font-sans min-w-[1350px] lg:min-w-0">
+        <table class="w-full text-[14px] min-w-[1350px] lg:min-w-0">
 
             <thead
                 class="sticky top-0 z-10
                        bg-slate-50/50 text-slate-600
                        dark:bg-neutral-900/50 dark:text-neutral-400
                        border-b border-gray-100 dark:border-neutral-800">
-                <tr class="text-left text-[11px] uppercase tracking-wider font-semibold">
-                    <th class="p-3 w-[90px] text-center">Código</th>
-                    <th class="p-3 w-[200px]">Titular</th>
-                    <th class="p-3 w-[200px]">Banco</th>
-                    <th class="p-3 w-[520px]">Resumen</th>
-                    <th class="p-3 w-[100px] text-center">Fecha</th>
-                    <th class="p-3 w-[100px] text-center">Estado</th>
-                    <th class="p-3 w-[100px] text-center">Acc.</th>
+                <tr class="text-left text-[12px] uppercase tracking-wider font-semibold">
+                    <th class="p-2 w-[7%] text-center">Código</th>
+                    <th class="p-2 w-[15%]">Titular</th>
+                    <th class="p-2 w-[15%]">Banco</th>
+                    <th class="p-2 w-[38%]">Resumen</th>
+                    <th class="p-2 w-[9%] text-center">Fecha</th>
+                    <th class="p-2 w-[8%] text-center">Estado</th>
+                    <th class="p-2 w-[8%] text-center">Acc.</th>
                 </tr>
             </thead>
 
@@ -37,17 +37,22 @@
 
                         {{-- CODIGO --}}
                         <td
-                            class="p-3 text-center text-gray-900 dark:text-neutral-100 {{ $isTargetInv ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}">
-                            {{ $inv->codigo }}
+                            class="p-2 text-center text-[13px] {{ $isTargetInv ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}">
+                            <span
+                                class="inline-flex px-1.5 py-0.5 rounded font-bold tabular-nums
+                                {{ $inv->tipo === 'BANCO'
+                                    ? 'bg-slate-100 text-slate-700 dark:bg-neutral-800 dark:text-neutral-300'
+                                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
+                                {{ $inv->codigo }}
+                            </span>
                         </td>
 
                         {{-- TITULAR --}}
-                        <td class="p-3">
-                            <div
-                                class="font-semibold {{ $inv->tipo === 'BANCO' ? 'text-indigo-600 dark:text-indigo-400' : 'text-emerald-600 dark:text-emerald-400' }}">
+                        <td class="p-2">
+                            <div class="font-semibold text-gray-900 dark:text-neutral-100">
                                 {{ $inv->nombre_completo }}
                             </div>
-                            <div class="text-gray-500 dark:text-neutral-400 inline-flex items-center gap-1">
+                            <div class="text-[12px] text-gray-500 dark:text-neutral-400 inline-flex items-center gap-1">
                                 {{-- icon tag --}}
                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -56,14 +61,16 @@
                                         d="M20.59 13.41 11 3.83V2h-2v2.59l9.59 9.58a2 2 0 0 1 0 2.83l-2.34 2.34a2 2 0 0 1-2.83 0L3.83 13.41a2 2 0 0 1 0-2.83l2.34-2.34" />
                                     <path d="M7 7h.01" />
                                 </svg>
-                                <span>{{ $inv->tipo }}</span>
+                                <span class="font-semibold text-gray-500 dark:text-neutral-400">
+                                    {{ $inv->tipo }}
+                                </span>
                                 <span class="text-gray-300 dark:text-neutral-600">•</span>
                                 <span>{{ $inv->moneda }}</span>
                             </div>
                         </td>
 
                         {{-- BANCO --}}
-                        <td class="p-3 text-left">
+                        <td class="p-2 text-left">
                             <div class="flex items-start gap-2 text-gray-900 dark:text-neutral-100">
                                 {{-- icon bank --}}
                                 <svg xmlns="http://www.w3.org/2000/svg"
@@ -80,12 +87,13 @@
                                 </svg>
 
                                 <div class="min-w-0">
-                                    <div class="truncate">
+                                    <div class="truncate font-semibold">
                                         {{ $inv->banco->nombre }}
                                     </div>
 
                                     {{-- aqui: icono # NO debe empujar el texto --}}
-                                    <div class="mt-0.5 flex items-center text-gray-500 dark:text-neutral-400">
+                                    <div
+                                        class="mt-0.5 flex items-center text-[12px] text-gray-500 dark:text-neutral-400">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 -ml-6 mr-1"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
@@ -99,7 +107,7 @@
                             </div>
                         </td>
 
-                        <td class="p-3">
+                        <td class="p-2">
                             @php
                                 $r = $inv->resumen ?? [];
 
@@ -124,25 +132,17 @@
                                 $pillSlate =
                                     $pillBase . ' bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200';
 
-                                // ✅ MISMO COLOR PARA "Utilidad" (PRIVADO) y "Interés" (BANCO)
-                                $pillPrimary =
-                                    $pillBase .
-                                    ' bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200';
+                                // ✅ TODO AL MISMO COLOR (Slate)
+                                $pillPrimary = $pillSlate;
+                                $pillSuccess = $pillSlate;
+                                $pillWarn = $pillSlate;
 
-                                // ✅ MISMO COLOR PARA "Pagada / Últ. Pago"
-                                $pillSuccess =
-                                    $pillBase .
-                                    ' bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-200';
-
-                                // ✅ MISMO COLOR PARA "Por pagar"
-                                $pillWarn =
-                                    $pillBase . ' bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-200';
-
-                                $valStrong = 'tabular-nums font-semibold text-gray-900 dark:text-neutral-100';
-                                $valPrimary = 'tabular-nums font-semibold text-indigo-900 dark:text-indigo-100';
-                                $valSuccess = 'tabular-nums font-semibold text-emerald-900 dark:text-emerald-100';
-                                $valWarn = 'tabular-nums font-semibold text-amber-900 dark:text-amber-100';
-                                $valSlate = 'tabular-nums font-semibold text-slate-900 dark:text-slate-100';
+                                $valBase = 'tabular-nums text-slate-900 dark:text-slate-100';
+                                $valStrong = $valBase;
+                                $valPrimary = $valBase;
+                                $valSuccess = $valBase;
+                                $valWarn = $valBase;
+                                $valSlate = $valBase;
                             @endphp
 
                             @if ($inv->tipo === 'PRIVADO')
@@ -229,8 +229,8 @@
                         </td>
 
                         {{-- FECHAS --}}
-                        <td class="p-3 text-center">
-                            <div class="inline-flex flex-col items-start gap-1">
+                        <td class="p-2 text-center">
+                            <div class="inline-flex flex-col items-start gap-1 text-[13px]">
                                 <div class="inline-flex items-center gap-1.5 text-gray-800 dark:text-neutral-100">
                                     {{-- icon calendar --}}
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
@@ -263,10 +263,10 @@
                         </td>
 
                         {{-- ESTADO --}}
-                        <td class="p-3 text-center">
+                        <td class="p-2 text-center">
                             @if (($inv->resumen['estado_utilidad'] ?? null) === 'PENDIENTE')
                                 <span
-                                    class="inline-flex items-center gap-1 px-2 py-1 rounded
+                                    class="inline-flex items-center gap-1 px-2 py-1 rounded text-[13px]
                                     bg-amber-100 text-amber-700
                                     dark:bg-amber-900/30 dark:text-amber-300">
                                     {{-- icon clock --}}
@@ -281,20 +281,14 @@
                             @else
                                 @if ($inv->estado === 'ACTIVA')
                                     <span
-                                        class="inline-flex items-center gap-1 px-2 py-1 rounded
+                                        class="inline-flex items-center gap-1 px-2 py-1 rounded text-[13px]
                                         bg-emerald-100 text-emerald-700
                                         dark:bg-emerald-900/30 dark:text-emerald-300">
-                                        {{-- icon check --}}
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M20 6 9 17l-5-5" />
-                                        </svg>
-                                        ACTIVA
+                                        ACTIVO
                                     </span>
                                 @else
                                     <span
-                                        class="inline-flex items-center gap-1 px-2 py-1 rounded
+                                        class="inline-flex items-center gap-1 px-2 py-1 rounded text-[13px]
                                         bg-gray-200 text-gray-700
                                         dark:bg-neutral-700 dark:text-neutral-200">
                                         {{-- icon lock --}}
@@ -312,27 +306,19 @@
                         </td>
 
                         {{-- ACCIONES --}}
-                        <td class="p-3 text-center">
+                        <td class="p-2 text-center">
                             <div class="inline-flex items-center gap-1">
                                 @can('inversiones.view')
                                     <button type="button"
                                         wire:click="$dispatch('openMovimientosInversion', [{{ $inv->id }}])"
-                                        class="w-8 h-8 cursor-pointer inline-flex items-center justify-center
-                                               rounded-lg border border-gray-300 text-gray-700
-                                               hover:bg-gray-100
-                                               dark:border-neutral-700 dark:text-neutral-200
-                                               dark:hover:bg-neutral-700"
+                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 shadow-sm dark:bg-blue-500 dark:border-blue-500 dark:hover:bg-blue-400"
                                         title="Ver movimientos">
-                                        {{-- icon list --}}
                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                                             fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                             stroke-linejoin="round">
-                                            <line x1="8" y1="6" x2="21" y2="6" />
-                                            <line x1="8" y1="12" x2="21" y2="12" />
-                                            <line x1="8" y1="18" x2="21" y2="18" />
-                                            <line x1="3" y1="6" x2="3.01" y2="6" />
-                                            <line x1="3" y1="12" x2="3.01" y2="12" />
-                                            <line x1="3" y1="18" x2="3.01" y2="18" />
+                                            <path
+                                                d="M19 7V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" />
+                                            <path d="M21 12H17a2 2 0 0 0 0 4h4v-4Z" />
                                         </svg>
                                     </button>
                                 @endcan
@@ -369,7 +355,7 @@
                                         d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
                                     </path>
                                 </svg>
-                                <span class="text-sm font-medium">Sin resultados.</span>
+                                <span class="text-sm">Sin resultados.</span>
                             </div>
                         </td>
                     </tr>

@@ -1,5 +1,5 @@
 @section('title', 'Inversiones')
-<div class="p-0 md:p-6 space-y-4">
+<div>
     @include('livewire.admin.inversiones.sections._header')
     @include('livewire.admin.inversiones.sections._alerts')
     @include('livewire.admin.inversiones.sections._summary')

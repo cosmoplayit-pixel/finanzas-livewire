@@ -3,6 +3,13 @@
     title="Eliminar Boleta de Garantía" maxWidth="sm:max-w-xl" onClose="closeEliminarBoletaModal">
 
     <div class="space-y-3">
+        {{-- Bloque trampa para el autocompletado del navegador (mejor al inicio del contenido) --}}
+        <div style="position: absolute; left: -9999px; top: -9999px; height: 1px; width: 1px; overflow: hidden;">
+            <input type="text" name="fake_username_to_catch_autofill" tabindex="-1" autocomplete="username">
+            <input type="password" name="fake_password_to_catch_autofill" tabindex="-1"
+                autocomplete="current-password">
+        </div>
+
         <div
             class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
             <p class="font-semibold mb-1">⚠️ Esta acción es irreversible.</p>

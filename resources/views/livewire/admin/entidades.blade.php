@@ -12,10 +12,10 @@
                         d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
                     </path>
                 </svg>
-                Entidades
+                Cliente
             </h1>
             <p class="text-sm text-gray-500 mt-1 dark:text-neutral-400">
-                Administración de entidades que operan con los proyectos.
+                Administración de clientes que operan con los proyectos.
             </p>
         </div>
 
@@ -26,7 +26,7 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
-                    <span wire:loading.remove wire:target="openCreate">Nueva Entidad</span>
+                    <span wire:loading.remove wire:target="openCreate">Nueva Cliente </span>
                     <span wire:loading wire:target="openCreate">Abriendo…</span>
                 </button>
             @endcan
@@ -229,7 +229,7 @@
                                 class="block w-full px-3 py-1 rounded text-center text-xs font-medium
                        bg-gray-200 text-gray-700
                        dark:bg-neutral-800 dark:text-neutral-300">
-                                Entidad bloqueada
+                                Cliente bloqueada
                             </span>
                         @else
                             <div class="grid grid-cols-2 gap-2">
@@ -566,9 +566,9 @@
                                                disabled:opacity-50 disabled:cursor-not-allowed
                                                {{ $e->active
                                                    ? 'bg-red-600 text-white hover:bg-red-700
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                                                    : 'bg-green-600 text-white hover:bg-green-700
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
                                             <span x-show="!loading">
                                                 @if ($e->active)
                                                     {{-- eye-slash --}}
@@ -660,7 +660,7 @@
 
     {{-- MODAL ENTIDAD (create / update) --}}
     @canany(['entidades.create', 'entidades.update'])
-        <x-ui.modal wire:key="entidades-modal" model="openModal" :title="$entidadId ? 'Editar Entidad' : 'Nueva Entidad'" maxWidth="sm:max-w-xl md:max-w-2xl"
+        <x-ui.modal wire:key="entidades-modal" model="openModal" :title="$entidadId ? 'Editar Cliente' : 'Nueva Cliente'" maxWidth="sm:max-w-xl md:max-w-2xl"
             onClose="closeModal">
             {{-- BODY --}}
             <div class="space-y-4">
@@ -685,7 +685,7 @@
                 {{-- Email --}}
                 <div>
                     <label class="block text-sm mb-1">Email</label>
-                    <input wire:model="email" type="email" autocomplete="off" placeholder="contacto@entidad.com"
+                    <input wire:model="email" type="email" autocomplete="off" placeholder="contacto@cliente.com"
                         class="w-full rounded border px-3 py-2
                            bg-white dark:bg-neutral-900
                            border-gray-300 dark:border-neutral-700
@@ -717,7 +717,7 @@
                 {{-- Dirección --}}
                 <div>
                     <label class="block text-sm mb-1">Dirección</label>
-                    <textarea wire:model="direccion" rows="2" placeholder="Dirección física de la entidad"
+                    <textarea wire:model="direccion" rows="2" placeholder="Dirección física de la cliente"
                         class="w-full rounded border px-3 py-2
                            bg-white dark:bg-neutral-900
                            border-gray-300 dark:border-neutral-700

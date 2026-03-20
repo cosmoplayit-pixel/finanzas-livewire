@@ -259,11 +259,12 @@
                 Cancelar
             </button>
 
-            <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
+            <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save, foto_comprobante"
                 @disabled(!$this->puedeGuardar)
                 class="w-full sm:w-auto px-5 py-2 rounded-lg cursor-pointer bg-black text-white hover:opacity-90
                    disabled:opacity-50 disabled:cursor-not-allowed">
-                <span wire:loading.remove wire:target="save">Guardar</span>
+                <span wire:loading.remove wire:target="save, foto_comprobante">Guardar</span>
+                <span wire:loading wire:target="foto_comprobante">Procesando…</span>
                 <span wire:loading wire:target="save">Guardando…</span>
             </button>
         </div>

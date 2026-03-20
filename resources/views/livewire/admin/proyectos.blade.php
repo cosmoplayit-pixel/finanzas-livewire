@@ -15,7 +15,7 @@
                 Proyectos
             </h1>
             <p class="text-sm text-gray-500 mt-1 dark:text-neutral-400">
-                Administración de proyectos vinculados a empresas y entidades.
+                Administración de proyectos vinculados a empresas y clientes.
             </p>
         </div>
 
@@ -156,7 +156,7 @@
 
             <div class="px-4 py-4 space-y-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Entidad</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Cliente</label>
                     <select wire:model.live="entidadFilter"
                         class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px]">
                         <option value="all">Todas</option>
@@ -375,7 +375,7 @@
 
                     <th class="w-[15%] p-2 cursor-pointer select-none whitespace-nowrap"
                         wire:click="sortBy('entidad_id')">
-                        Entidad
+                        Cliente
                         @if ($sortField === 'entidad_id')
                             @if ($sortDirection === 'asc')
                                 <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
@@ -858,7 +858,7 @@
                 {{-- Entidad (OBLIGATORIO) --}}
                 <div>
                     <label class="block text-sm mb-1">
-                        Entidad <span class="text-red-500">*</span>
+                        Cliente <span class="text-red-500">*</span>
                     </label>
                     <select wire:model="entidad_id"
                         class="cursor-pointer w-full rounded border px-3 py-2

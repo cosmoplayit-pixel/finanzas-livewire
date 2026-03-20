@@ -8,6 +8,7 @@ use App\Models\BoletaGarantiaDevolucion;
 use DomainException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class BoletaGarantiaService
 {
@@ -129,7 +130,9 @@ class BoletaGarantiaService
 
     public function eliminarDevolucion(BoletaGarantia $boleta, int $devolucionId, int $userId): void
     {
-        DB::transaction(function () use ($boleta, $devolucionId) {
+        $pathToDelete = null;
+
+        DB::transaction(function () use ($boleta, $devolucionId, &$pathToDelete) {
             /** @var BoletaGarantia $bg */
             $bg = BoletaGarantia::query()->lockForUpdate()->findOrFail($boleta->id);
 
@@ -163,6 +166,7 @@ class BoletaGarantiaService
             $bancoDestino->monto = $saldoActual - $monto;
             $bancoDestino->save();
 
+            $pathToDelete = $dev->foto_comprobante;
             $dev->delete();
 
             $totalDevuelto = (float) BoletaGarantiaDevolucion::query()
@@ -172,11 +176,17 @@ class BoletaGarantiaService
             $bg->estado = $totalDevuelto >= (float) $bg->retencion ? 'devuelta' : 'abierta';
             $bg->save();
         });
+
+        if ($pathToDelete) {
+            Storage::disk('public')->delete($pathToDelete);
+        }
     }
 
     public function eliminarBoleta(BoletaGarantia $boleta, int $userId): void
     {
-        DB::transaction(function () use ($boleta) {
+        $pathToDelete = null;
+
+        DB::transaction(function () use ($boleta, &$pathToDelete) {
             /** @var BoletaGarantia $bg */
             $bg = BoletaGarantia::query()->lockForUpdate()->findOrFail($boleta->id);
 
@@ -194,7 +204,12 @@ class BoletaGarantiaService
             $bancoEgreso->monto += $bg->retencion;
             $bancoEgreso->save();
 
+            $pathToDelete = $bg->foto_comprobante;
             $bg->delete();
         });
+
+        if ($pathToDelete) {
+            Storage::disk('public')->delete($pathToDelete);
+        }
     }
 }

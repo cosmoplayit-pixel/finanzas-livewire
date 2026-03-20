@@ -39,10 +39,10 @@
                         <td
                             class="p-2 text-center text-[13px] {{ $isTargetInv ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}">
                             <span
-                                class="inline-flex px-1.5 py-0.5 rounded font-bold tabular-nums
+                                class="inline-flex px-1.5 py-0.5 rounded tabular-nums
                                 {{ $inv->tipo === 'BANCO'
-                                    ? 'bg-slate-100 text-slate-700 dark:bg-neutral-800 dark:text-neutral-300'
-                                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' }}">
+                                    ? 'bg-slate-100 text-slate-700 font-bold dark:bg-neutral-800 dark:text-neutral-300'
+                                    : 'bg-blue-100 text-blue-700 font-normal dark:bg-blue-900/30 dark:text-blue-300' }}">
                                 {{ $inv->codigo }}
                             </span>
                         </td>
@@ -61,11 +61,9 @@
                                         d="M20.59 13.41 11 3.83V2h-2v2.59l9.59 9.58a2 2 0 0 1 0 2.83l-2.34 2.34a2 2 0 0 1-2.83 0L3.83 13.41a2 2 0 0 1 0-2.83l2.34-2.34" />
                                     <path d="M7 7h.01" />
                                 </svg>
-                                <span class="font-semibold text-gray-500 dark:text-neutral-400">
-                                    {{ $inv->tipo }}
+                                <span class="font-normal text-gray-500 dark:text-neutral-400">
+                                    INVERSION {{ $inv->tipo === 'PRIVADO' ? 'PRIVADA' : 'BANCO' }}
                                 </span>
-                                <span class="text-gray-300 dark:text-neutral-600">•</span>
-                                <span>{{ $inv->moneda }}</span>
                             </div>
                         </td>
 
@@ -102,6 +100,8 @@
                                         </svg>
 
                                         <span class="truncate">{{ $inv->banco->titular ?? '—' }}</span>
+                                        <span class="mx-1 text-gray-300 dark:text-neutral-600">•</span>
+                                        <span class="font-medium">{{ $inv->moneda }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -323,21 +323,69 @@
                                     </button>
                                 @endcan
 
+                                @php
+                                    $archivo = $inv->comprobante ?? null;
+                                    $esPdf = $archivo && strtolower(pathinfo($archivo, PATHINFO_EXTENSION)) === 'pdf';
+                                @endphp
+
+                                @if ($archivo)
+                                    @if ($esPdf)
+                                        <a href="{{ asset('storage/' . $archivo) }}" target="_blank"
+                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:bg-neutral-900 dark:text-rose-400 dark:border-rose-700 dark:hover:bg-rose-900/20 shadow-sm"
+                                            title="Ver PDF">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                <polyline points="14 2 14 8 20 8" />
+                                                <line x1="9" y1="13" x2="15" y2="13" />
+                                                <line x1="9" y1="17" x2="15" y2="17" />
+                                                <line x1="9" y1="9" x2="11" y2="9" />
+                                            </svg>
+                                        </a>
+                                    @else
+                                        <button type="button"
+                                            wire:click="$dispatch('openFotoComprobanteInversion',[{{ $inv->id }}])"
+                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
+                                            title="Ver imagen">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="3" width="18" height="18" rx="2"
+                                                    ry="2" />
+                                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                                <polyline points="21 15 16 10 5 21" />
+                                            </svg>
+                                        </button>
+                                    @endif
+                                @else
+                                    <span
+                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
+                                        title="Sin comprobante">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"
+                                                ry="2" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                            <polyline points="21 15 16 10 5 21" />
+                                        </svg>
+                                    </span>
+                                @endif
+
+                                {{-- ELIMINAR TODO --}}
                                 <button type="button"
-                                    wire:click="$dispatch('openFotoComprobanteInversion',[{{ $inv->id }}])"
-                                    @disabled(!$inv->comprobante)
-                                    class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                    {{ $inv->comprobante
-                                        ? 'border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700'
-                                        : 'border-gray-200 text-gray-300 cursor-not-allowed dark:border-neutral-700 dark:text-neutral-600' }}"
-                                    title="Ver imagen">
+                                    @click="$dispatch('openEliminarInversionModal', [{{ $inv->id }}])"
+                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
+                                    title="Eliminar inversión completa">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round">
-                                        <rect x="3" y="3" width="18" height="18" rx="2"
-                                            ry="2" />
-                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                        <path d="M21 15l-5-5L5 21" />
+                                        <path d="M3 6h18" />
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                        <line x1="10" y1="11" x2="10" y2="17" />
+                                        <line x1="14" y1="11" x2="14" y2="17" />
                                     </svg>
                                 </button>
                             </div>

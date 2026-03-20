@@ -132,6 +132,15 @@ class MovimientoModal extends Component
         $this->openMovimientosModal = true;
     }
 
+    #[On('openEliminarInversionModal')]
+    public function openEliminarInversionModal(int $inversionId): void
+    {
+        $this->resetErrorBag();
+        $this->resetValidation();
+        $this->loadData($inversionId);
+        $this->abrirEliminarTodoModal();
+    }
+
     #[On('openMovimientosInversionWithHighlight')]
     public function openMovimientosWithHighlight(int $inversionId, int $movimientoId): void
     {

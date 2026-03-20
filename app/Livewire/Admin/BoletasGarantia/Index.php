@@ -337,7 +337,7 @@ class Index extends Component
         if (trim($this->search) !== '') {
             $s = trim($this->search);
             $boletasQuery->where(function ($q) use ($s) {
-                $q->where('nro_boleta', 'like', "%{$s}%")->orWhere('tipo', 'like', "%{$s}%");
+                $q->where('nro_boleta', 'like', "%{$s}%");
             });
         }
 

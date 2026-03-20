@@ -255,7 +255,7 @@
                 <div class="mt-3 grid grid-cols-1 gap-2 text-sm">
                     <div class="flex justify-between gap-3">
                         <span class="text-gray-500 dark:text-neutral-400">ID</span>
-                        <span class="font-medium">{{ $p->id }}</span>
+                        <span class="font-medium">{{ $proyectos->firstItem() + $loop->index }}</span>
                     </div>
 
                     <div class="flex justify-between gap-3">
@@ -563,7 +563,7 @@
                                         d="M20 12H4"></path>
                                 </svg>
                             </button>
-                            <span class="ml-1">{{ $p->id }}</span>
+                            <span class="ml-1">{{ $proyectos->firstItem() + $loop->index }}</span>
                         </td>
 
                         <td class="p-2 min-w-0">

@@ -31,7 +31,7 @@
         <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
             <input type="checkbox" wire:key="chk-estado-abierta" @checked(in_array('abierta', $f_estado ?? [], true))
                 wire:click="toggleFilter('estado','abierta')" class="rounded border-gray-300 dark:border-neutral-700" />
-            Abiertas
+            Activos
         </label>
 
         <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">

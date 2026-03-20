@@ -183,10 +183,41 @@
     {{-- MOBILE: CARDS (md:hidden) --}}
     <div class="space-y-3 md:hidden">
         @forelse ($proyectos as $p)
-            <div class="border rounded-lg p-4 bg-white dark:bg-neutral-900 dark:border-neutral-800">
+            <div x-data="{ showFullProject: false }"
+                class="border rounded-lg p-4 bg-white dark:bg-neutral-900 dark:border-neutral-800">
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                        <div class="font-semibold truncate">{{ $p->nombre }}</div>
+                        <div class="min-w-0 flex-1">
+                            @php
+                                $nombreMob = $p->nombre ?? '—';
+                                $isLongMob = mb_strlen($nombreMob) > 45;
+                            @endphp
+                            @if ($isLongMob)
+                                <div x-show="!showFullProject" class="min-w-0 flex items-center gap-2">
+                                    <span class="min-w-0 flex-1 truncate whitespace-nowrap"
+                                        title="{{ $nombreMob }}">
+                                        {{ $nombreMob }}
+                                    </span>
+                                    <button type="button"
+                                        class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                        @click.stop="showFullProject = true">
+                                        Ver más
+                                    </button>
+                                </div>
+                                <div x-show="showFullProject" x-cloak class="min-w-0 leading-snug">
+                                    <span class="break-words">
+                                        {{ $nombreMob }}
+                                    </span>
+                                    <button type="button"
+                                        class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                        @click.stop="showFullProject = false">
+                                        Ver menos
+                                    </button>
+                                </div>
+                            @else
+                                <div class="">{{ $nombreMob }}</div>
+                            @endif
+                        </div>
                         <div class="text-xs text-gray-500 dark:text-neutral-400 truncate mt-1">
                             {{ $p->entidad?->nombre ?? '—' }}
                         </div>
@@ -322,7 +353,7 @@
                 class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200
                    border-b border-gray-200 dark:border-neutral-200">
                 <tr class="text-left text-xs uppercase tracking-wider">
-                    <th class="w-[70px] text-center p-2 cursor-pointer select-none whitespace-nowrap"
+                    <th class="w-[4%] text-center p-2 cursor-pointer select-none whitespace-nowrap"
                         wire:click="sortBy('id')">
                         ID
                         @if ($sortField === 'id')
@@ -342,7 +373,8 @@
                         @endif
                     </th>
 
-                    <th class="p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('entidad_id')">
+                    <th class="w-[15%] p-2 cursor-pointer select-none whitespace-nowrap"
+                        wire:click="sortBy('entidad_id')">
                         Entidad
                         @if ($sortField === 'entidad_id')
                             @if ($sortDirection === 'asc')
@@ -361,7 +393,8 @@
                         @endif
                     </th>
 
-                    <th class="p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('nombre')">
+                    <th class="w-[20%] p-2 cursor-pointer select-none whitespace-nowrap"
+                        wire:click="sortBy('nombre')">
                         Nombre
                         @if ($sortField === 'nombre')
                             @if ($sortDirection === 'asc')
@@ -380,7 +413,7 @@
                         @endif
                     </th>
 
-                    <th class="w-[165px] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
+                    <th class="w-[12%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
                         wire:click="sortBy('codigo')">
                         CUCE – PAC – Otro
                         @if ($sortField === 'codigo')
@@ -400,8 +433,7 @@
                         @endif
                     </th>
 
-                    <th class="w-[130px] p-2 cursor-pointer select-none whitespace-nowrap"
-                        wire:click="sortBy('monto')">
+                    <th class="w-[10%] p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('monto')">
                         Monto
                         @if ($sortField === 'monto')
                             @if ($sortDirection === 'asc')
@@ -420,7 +452,7 @@
                         @endif
                     </th>
 
-                    <th class="w-[100px] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
+                    <th class="w-[8%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
                         wire:click="sortBy('retencion')">
                         Retención
                         @if ($sortField === 'retencion')
@@ -440,7 +472,7 @@
                         @endif
                     </th>
 
-                    <th class="w-[110px] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
+                    <th class="w-[8%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
                         wire:click="sortBy('fecha_inicio')">
                         Inicio
                         @if ($sortField === 'fecha_inicio')
@@ -460,7 +492,7 @@
                         @endif
                     </th>
 
-                    <th class="w-[110px] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
+                    <th class="w-[8%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
                         wire:click="sortBy('fecha_fin')">
                         Fin
                         @if ($sortField === 'fecha_fin')
@@ -480,7 +512,7 @@
                         @endif
                     </th>
 
-                    <th class="text-center w-[85px] p-2 cursor-pointer select-none whitespace-nowrap"
+                    <th class="text-center w-[7%] p-2 cursor-pointer select-none whitespace-nowrap"
                         wire:click="sortBy('active')">
                         Estado
                         @if ($sortField === 'active')
@@ -501,7 +533,7 @@
                     </th>
 
                     @canany(['proyectos.update', 'proyectos.toggle'])
-                        <th class="w-[120px] p-2 whitespace-nowrap text-center">
+                        <th class="w-[8%] p-2 whitespace-nowrap text-center">
                             Acciones
                         </th>
                     @endcanany
@@ -509,7 +541,7 @@
             </thead>
 
             @foreach ($proyectos as $p)
-                <tbody wire:key="{{ $p->id }}" x-data="{ open: false }"
+                <tbody wire:key="{{ $p->id }}" x-data="{ open: false, showFullProject: false }"
                     class="divide-y divide-gray-200 dark:divide-neutral-200">
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-neutral-900/40 transition-colors">
 
@@ -541,9 +573,41 @@
                         </td>
 
                         <td class="p-2 min-w-0">
-                            <span class="block truncate max-w-full" title="{{ $p->nombre }}">
-                                {{ $p->nombre }}
-                            </span>
+                            @php
+                                $nombreProyecto = $p->nombre ?? '—';
+                                $isLong = mb_strlen($nombreProyecto) > 45;
+                            @endphp
+
+                            @if ($isLong)
+                                <div x-show="!showFullProject" class="min-w-0 flex items-center gap-2">
+                                    <span class="min-w-0 flex-1 truncate whitespace-nowrap"
+                                        title="{{ $nombreProyecto }}">
+                                        {{ $nombreProyecto }}
+                                    </span>
+
+                                    <button type="button"
+                                        class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                        @click.stop="showFullProject = true">
+                                        Ver más
+                                    </button>
+                                </div>
+
+                                <div x-show="showFullProject" x-cloak class="min-w-0 leading-snug">
+                                    <span class="break-words">
+                                        {{ $nombreProyecto }}
+                                    </span>
+
+                                    <button type="button"
+                                        class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                        @click.stop="showFullProject = false">
+                                        Ver menos
+                                    </button>
+                                </div>
+                            @else
+                                <div class="min-w-0">
+                                    <span>{{ $nombreProyecto }}</span>
+                                </div>
+                            @endif
                         </td>
 
                         <td class="p-2 whitespace-nowrap hidden 2xl:table-cell">

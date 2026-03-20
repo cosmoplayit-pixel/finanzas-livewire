@@ -40,10 +40,7 @@
                     <th class="w-[30%] p-3 select-none whitespace-nowrap">Factura</th>
                     <th class="w-[10%] p-3 select-none whitespace-nowrap text-center">Estado</th>
                     <th class="w-[10%] p-3 select-none whitespace-nowrap text-center">Saldo / Ret.</th>
-
-                    @can('facturas.pay')
-                        <th class="w-[8%] p-3 select-none whitespace-nowrap text-center">Acc.</th>
-                    @endcan
+                    <th class="w-[8%] p-3 select-none whitespace-nowrap text-center">Acc.</th>
                 </tr>
             </thead>
 
@@ -109,26 +106,38 @@
                                     </svg>
 
                                     <div class="min-w-0 flex-1">
-                                        <div x-show="!showFullProject" class="min-w-0 flex items-center gap-2">
-                                            <span class="min-w-0 flex-1 truncate whitespace-nowrap"
-                                                title="{{ $r['proyecto_nombre'] }}">
-                                                {{ $r['proyecto_nombre'] }}
-                                            </span>
-                                            <button type="button"
-                                                class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                                                @click.stop="showFullProject = true">
-                                                Ver más
-                                            </button>
-                                        </div>
+                                        @php
+                                            $proyNombre = $r['proyecto_nombre'] ?? '—';
+                                            $isLongProy = mb_strlen($proyNombre) > 45;
+                                        @endphp
 
-                                        <div x-show="showFullProject" x-cloak class="min-w-0 leading-snug">
-                                            <span class="break-words font-semibold">{{ $r['proyecto_nombre'] }}</span>
-                                            <button type="button"
-                                                class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                                                @click.stop="showFullProject = false">
-                                                Ver menos
-                                            </button>
-                                        </div>
+                                        @if ($isLongProy)
+                                            <div x-show="!showFullProject" class="min-w-0 flex items-center gap-2">
+                                                <span class="min-w-0 flex-1 truncate whitespace-nowrap font-semibold"
+                                                    title="{{ $proyNombre }}">
+                                                    {{ $proyNombre }}
+                                                </span>
+                                                <button type="button"
+                                                    class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                                    @click.stop="showFullProject = true">
+                                                    Ver más
+                                                </button>
+                                            </div>
+
+                                            <div x-show="showFullProject" x-cloak class="min-w-0 leading-snug">
+                                                <span class="break-words font-semibold">{{ $proyNombre }}</span>
+                                                <button type="button"
+                                                    class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                                    @click.stop="showFullProject = false">
+                                                    Ver menos
+                                                </button>
+                                            </div>
+                                        @else
+                                            <div class="truncate text-sm font-semibold text-gray-900 dark:text-neutral-100"
+                                                title="{{ $proyNombre }}">
+                                                {{ $proyNombre }}
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -239,9 +248,9 @@
 
                                 {{-- Detalle --}}
                                 @if (($r['detalle'] ?? '—') !== '—')
-                                    <div class="flex items-center gap-1 text-xs text-gray-500 dark:text-neutral-400">
+                                    <div class="flex items-start gap-1 text-xs text-gray-500 dark:text-neutral-400">
                                         <svg xmlns="http://www.w3.org/2000/svg"
-                                            class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400"
+                                            class="w-3.5 h-3.5 mt-0.5 text-gray-400 dark:text-neutral-400"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <path d="M4 4h16v16H4z" />
@@ -253,58 +262,43 @@
                                         <span class="shrink-0">Detalle:</span>
 
                                         <div class="min-w-0 flex-1">
-                                            <div x-show="!showFullDetalle" class="min-w-0 flex items-center gap-2">
-                                                <span class="min-w-0 flex-1 truncate whitespace-nowrap"
-                                                    title="{{ $r['detalle'] }}">
-                                                    {{ $r['detalle'] }}
-                                                </span>
+                                            @php
+                                                $detText = $r['detalle'] ?? '—';
+                                                $isLongDet = mb_strlen($detText) > 60;
+                                            @endphp
 
-                                                <button type="button"
-                                                    class="shrink-0 text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                                                    @click.stop="showFullDetalle = true">
-                                                    Ver más
-                                                </button>
-                                            </div>
+                                            @if ($isLongDet)
+                                                <div x-show="!showFullDetalle"
+                                                    class="min-w-0 flex items-center gap-2">
+                                                    <span class="min-w-0 flex-1 truncate whitespace-nowrap"
+                                                        title="{{ $detText }}">
+                                                        {{ $detText }}
+                                                    </span>
 
-                                            <div x-show="showFullDetalle" x-cloak class="min-w-0 leading-snug">
-                                                <span
-                                                    class="break-words font-medium text-gray-700 dark:text-neutral-200">
-                                                    {{ $r['detalle'] }}
-                                                </span>
+                                                    <button type="button"
+                                                        class="shrink-0 text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                                        @click.stop="showFullDetalle = true">
+                                                        Ver más
+                                                    </button>
+                                                </div>
 
-                                                <button type="button"
-                                                    class="inline-flex align-baseline ml-2 text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                                                    @click.stop="showFullDetalle = false">
-                                                    Ver menos
-                                                </button>
-                                            </div>
+                                                <div x-show="showFullDetalle" x-cloak class="min-w-0 leading-snug">
+                                                    <span class="break-words text-gray-700 dark:text-neutral-200">
+                                                        {{ $detText }}
+                                                    </span>
+
+                                                    <button type="button"
+                                                        class="inline-flex align-baseline ml-2 text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                                        @click.stop="showFullDetalle = false">
+                                                        Ver menos
+                                                    </button>
+                                                </div>
+                                            @else
+                                                <div class="truncate" title="{{ $detText }}">
+                                                    {{ $detText }}
+                                                </div>
+                                            @endif
                                         </div>
-                                    </div>
-                                @endif
-
-                                {{-- Respaldo factura --}}
-                                @if ($r['factura_file'])
-                                    <div class="mt-1 flex items-center gap-1 text-xs">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-emerald-500"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <path
-                                                d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
-                                        </svg>
-
-                                        @if ($r['factura_file']['is_image'])
-                                            <button type="button"
-                                                class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline cursor-pointer"
-                                                @click.stop="$wire.openFotoComprobante('{{ $r['factura_file']['url'] }}')">
-                                                Ver Respaldo Factura
-                                            </button>
-                                        @else
-                                            <a href="{{ $r['factura_file']['url'] }}" target="_blank"
-                                                rel="noopener noreferrer"
-                                                class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline">
-                                                Abrir PDF Factura
-                                            </a>
-                                        @endif
                                     </div>
                                 @endif
 
@@ -337,20 +331,20 @@
                         </td>
 
                         {{-- Acciones --}}
-                        @can('facturas.pay')
-                            <td class="p-2 whitespace-nowrap align-middle" @click.stop>
-                                <div class="flex items-center justify-center gap-2">
+                        <td class="p-2 whitespace-nowrap align-middle" @click.stop>
+                            <div class="flex items-center justify-center gap-2">
+                                @can('facturas.pay')
                                     {{-- Botón pagar --}}
                                     <button type="button"
                                         @if (!$r['cerrado_acc']) wire:click="openPago({{ $r['id'] }})" @endif
                                         wire:loading.attr="disabled" wire:target="openPago({{ $r['id'] }})"
                                         wire:loading.class="cursor-not-allowed opacity-50"
-                                        wire:loading.class.remove="cursor-pointer hover:bg-blue-700 hover:border-blue-700"
+                                        wire:loading.class.remove="cursor-pointer hover:bg-emerald-700 hover:border-emerald-700"
                                         @disabled($r['cerrado_acc'])
                                         class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition
                                         {{ $r['cerrado_acc']
                                             ? 'bg-gray-100 text-gray-500 border-gray-300 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700'
-                                            : 'bg-blue-600 cursor-pointer text-white border-blue-600 hover:bg-blue-700 hover:border-blue-700 dark:bg-blue-500 dark:border-blue-500 dark:hover:bg-blue-400 dark:hover:border-blue-400' }}"
+                                            : 'bg-emerald-600 cursor-pointer text-white border-emerald-600 hover:bg-emerald-700 hover:border-emerald-700' }}"
                                         title="{{ $r['cerrado_acc'] ? 'Factura completa' : 'Registrar pago' }}">
 
                                         <span wire:loading.remove wire:target="openPago({{ $r['id'] }})"
@@ -362,12 +356,11 @@
                                                     <path d="M20 6 9 17l-5-5" />
                                                 </svg>
                                             @else
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5"
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path
-                                                        d="M19 7V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" />
-                                                    <path d="M21 12H17a2 2 0 0 0 0 4h4v-4Z" />
+                                                    <path d="M9 14 4 9l5-5" />
+                                                    <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
                                                 </svg>
                                             @endif
                                         </span>
@@ -383,33 +376,78 @@
                                             </span>
                                         @endif
                                     </button>
+                                @endcan
 
-                                    {{-- Botón eliminar factura (solo si no tiene pagos) --}}
-                                    @can('facturas.delete')
+                                {{-- Respaldo Factura --}}
+                                @if ($r['factura_file'])
+                                    @if ($r['factura_file']['is_image'])
                                         <button type="button"
-                                            @if ($r['sin_pagos']) wire:click="abrirEliminarFacturaModal({{ $r['id'] }})" @endif
-                                            wire:loading.attr="disabled"
-                                            wire:target="abrirEliminarFacturaModal({{ $r['id'] }})"
-                                            @disabled(!$r['sin_pagos'])
-                                            class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition
-                                            {{ !$r['sin_pagos']
-                                                ? 'bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700'
-                                                : 'bg-white text-red-600 border-red-300 cursor-pointer hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20' }}"
-                                            title="{{ !$r['sin_pagos'] ? 'Tiene pagos: no se puede eliminar' : 'Eliminar factura' }}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                                stroke-linejoin="round">
-                                                <path d="M3 6h18" />
-                                                <path d="M8 6V4h8v2" />
-                                                <path d="M6 6l1 16h10l1-16" />
-                                                <path d="M10 11v6" />
-                                                <path d="M14 11v6" />
+                                            @click.stop="$wire.openFotoComprobante('{{ $r['factura_file']['url'] }}')"
+                                            class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
+                                            title="Ver factura (Imagen)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="3" width="18" height="18" rx="2"
+                                                    ry="2" />
+                                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                                <polyline points="21 15 16 10 5 21" />
                                             </svg>
                                         </button>
-                                    @endcan
-                                </div>
-                            </td>
-                        @endcan
+                                    @else
+                                        <a href="{{ $r['factura_file']['url'] }}" target="_blank"
+                                            class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:bg-neutral-900 dark:text-rose-400 dark:border-rose-700 dark:hover:bg-rose-900/20 shadow-sm"
+                                            title="Ver factura (PDF)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                <polyline points="14 2 14 8 20 8" />
+                                                <line x1="9" y1="13" x2="15" y2="13" />
+                                                <line x1="9" y1="17" x2="15" y2="17" />
+                                                <line x1="9" y1="9" x2="11" y2="9" />
+                                            </svg>
+                                        </a>
+                                    @endif
+                                @else
+                                    <div class="w-9 h-9 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-400 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-600 shadow-sm"
+                                        title="Sin respaldo">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"
+                                                ry="2" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                            <polyline points="21 15 16 10 5 21" />
+                                        </svg>
+                                    </div>
+                                @endif
+
+                                {{-- Botón eliminar factura (solo si no tiene pagos) --}}
+                                @can('facturas.delete')
+                                    <button type="button"
+                                        @if ($r['sin_pagos']) wire:click="abrirEliminarFacturaModal({{ $r['id'] }})" @endif
+                                        wire:loading.attr="disabled"
+                                        wire:target="abrirEliminarFacturaModal({{ $r['id'] }})"
+                                        @disabled(!$r['sin_pagos'])
+                                        class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition
+                                        {{ !$r['sin_pagos']
+                                            ? 'bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700'
+                                            : 'bg-white text-red-600 border-red-300 cursor-pointer hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20' }}"
+                                        title="{{ !$r['sin_pagos'] ? 'Tiene pagos: no se puede eliminar' : 'Eliminar factura' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M3 6h18" />
+                                            <path d="M8 6V4h8v2" />
+                                            <path d="M6 6l1 16h10l1-16" />
+                                            <path d="M10 11v6" />
+                                            <path d="M14 11v6" />
+                                        </svg>
+                                    </button>
+                                @endcan
+                            </div>
+                        </td>
                     </tr>
 
                     {{-- Detalle pagos --}}
@@ -420,7 +458,7 @@
 
                                 <td class="px-4 py-3
                                     {{ isset($factura_id) && $factura_id == $r['id'] ? 'border-l-4 border-indigo-400' : '' }}"
-                                    colspan="{{ 5 + (auth()->user()->can('facturas.pay') ? 1 : 0) }}">
+                                    colspan="6">
                                     <div class="space-y-3 text-sm">
                                         <div
                                             class="border border-gray-100 rounded-lg bg-white shadow-sm dark:bg-neutral-900 dark:border-neutral-800 overflow-hidden">

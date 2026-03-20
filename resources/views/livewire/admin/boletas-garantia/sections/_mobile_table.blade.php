@@ -43,14 +43,14 @@
                             </span>
                         @else
                             <span
-                                class="px-2 py-0.5 rounded-full text-[11px] bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200">
-                                Abierta
+                                class="px-2 py-0.5 rounded-full text-[11px] bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200">
+                                ACTIVO
                             </span>
                         @endif
                     </div>
 
                     <div
-                        class="mt-1 text-sm font-semibold text-gray-900 dark:text-neutral-100 {{ $isOpen ? 'whitespace-normal' : 'truncate' }}">
+                        class="mt-1 text-sm text-gray-900 dark:text-neutral-100 {{ $isOpen ? 'whitespace-normal' : 'truncate' }}">
                         {{ $bg->proyecto?->nombre ?? '—' }}
                     </div>
 
@@ -90,6 +90,11 @@
                                 </div>
                                 <div class="text-xs text-gray-500 truncate mt-0.5">{{ $bg->entidad?->nombre ?? '—' }}
                                 </div>
+                                @if ($bg->proyecto?->codigo)
+                                    <div class="text-[10px] text-gray-400 truncate italic">
+                                        Cód: {{ $bg->proyecto->codigo }}
+                                    </div>
+                                @endif
                                 <div class="text-xs text-gray-500 truncate">{{ $bg->agenteServicio?->nombre ?? '—' }}
                                 </div>
                             </div>
@@ -105,6 +110,8 @@
                             <div class="flex-1 min-w-0">
                                 <div class="text-xs font-medium text-gray-800 dark:text-gray-200 truncate mt-0.5">
                                     {{ $bg->bancoEgreso?->nombre ?? '—' }}</div>
+                                <div class="text-[11px] text-gray-500 truncate italic mt-0.5">
+                                    Titular: {{ $bg->bancoEgreso?->titular ?? '—' }}</div>
                                 <div class="text-[11px] text-gray-500 truncate">
                                     {{ $bg->bancoEgreso?->numero_cuenta ?? '—' }}
                                     ({{ $bg->bancoEgreso?->moneda ?? '—' }})</div>
@@ -133,41 +140,51 @@
                             </div>
                         </div>
 
-                        {{-- Comprobante (Si existe) --}}
-                        @if ($bg->foto_comprobante)
-                            <div class="flex items-start gap-2.5">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-gray-400 mt-0.5 shrink-0"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <path
-                                        d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                        {{-- Observación --}}
+                        @if ($bg->observacion)
+                            @php
+                                $obs = $bg->observacion;
+                                $isLongObs = mb_strlen($obs) > 80;
+                            @endphp
+                            <div class="col-span-full border-t border-gray-100 dark:border-neutral-800 pt-3 flex items-start gap-2.5"
+                                x-data="{ showFullObs: false }">
+                                <svg class="w-4 h-4 text-gray-400 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                                 </svg>
                                 <div class="flex-1 min-w-0">
-                                    <div class="text-xs font-semibold text-gray-700 dark:text-neutral-300">Respaldo
+                                    <div class="text-xs font-semibold text-gray-700 dark:text-neutral-300">Observaciones
                                     </div>
-                                    @php
-                                        $ext = strtolower(pathinfo($bg->foto_comprobante, PATHINFO_EXTENSION));
-                                        $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif']);
-                                    @endphp
-                                    <div class="mt-0.5">
-                                        @if ($isImage)
-                                            <button type="button"
-                                                class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                                                @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $bg->foto_comprobante) }}' })">
-                                                Ver comprobante adjunto
+                                    @if ($isLongObs)
+                                        <div x-show="!showFullObs" class="mt-1">
+                                            <div class="text-xs text-gray-500 line-clamp-2 leading-relaxed">
+                                                {{ $obs }}
+                                            </div>
+                                            <button type="button" @click.stop="showFullObs = true"
+                                                class="mt-1 text-xs font-medium text-blue-600 hover:underline cursor-pointer">
+                                                Ver más
                                             </button>
-                                        @else
-                                            <a href="{{ asset('storage/' . $bg->foto_comprobante) }}" target="_blank"
-                                                rel="noopener noreferrer"
-                                                class="text-xs font-medium text-blue-600 hover:underline dark:text-blue-400"
-                                                @click.stop>
-                                                Ver comprobante (PDF)
-                                            </a>
-                                        @endif
-                                    </div>
+                                        </div>
+                                        <div x-show="showFullObs" x-cloak class="mt-1">
+                                            <div class="text-xs text-gray-500 whitespace-pre-line leading-relaxed">
+                                                {{ $obs }}
+                                            </div>
+                                            <button type="button" @click.stop="showFullObs = false"
+                                                class="mt-1 text-xs font-medium text-blue-600 hover:underline cursor-pointer">
+                                                Ver menos
+                                            </button>
+                                        </div>
+                                    @else
+                                        <div class="text-xs text-gray-500 mt-1 whitespace-pre-line leading-relaxed">
+                                            {{ $obs }}
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         @endif
+
+
 
                         {{-- Total Egreso --}}
                         <div class="flex items-start gap-2.5">
@@ -219,63 +236,101 @@
                                                 {{ $dv->banco?->nombre ?? '—' }} <span
                                                     class="text-gray-400 font-normal">({{ $dv->banco?->moneda ?? '' }})</span>
                                             </div>
+                                            <div class="text-[10px] text-gray-500 italic truncate">
+                                                Titular: {{ $dv->banco?->titular ?? '—' }}
+                                            </div>
                                             <div
                                                 class="text-gray-500 text-[10px] truncate mt-0.5 flex flex-col items-start gap-1">
                                                 <span>{{ $dv->fecha_devolucion?->format('d/m/Y H:i') }} • Op:
                                                     {{ $dv->nro_transaccion ?? 'S/N' }}</span>
 
-                                                @if ($dv->foto_comprobante)
-                                                    @php
-                                                        $ext = strtolower(
-                                                            pathinfo($dv->foto_comprobante, PATHINFO_EXTENSION),
-                                                        );
-                                                        $isImage = in_array($ext, ['jpg', 'jpeg', 'png']);
-                                                    @endphp
-                                                    @if ($isImage)
-                                                        <button type="button"
-                                                            class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium hover:underline cursor-pointer"
-                                                            @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $dv->foto_comprobante) }}' })">
-                                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24"
-                                                                stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                            </svg> Ver respaldo
-                                                        </button>
-                                                    @else
-                                                        <a href="{{ asset('storage/' . $dv->foto_comprobante) }}"
-                                                            target="_blank" rel="noopener noreferrer"
-                                                            class="inline-flex items-center gap-1 text-[10px] text-red-600 dark:text-red-400 font-medium hover:underline">
-                                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24"
-                                                                stroke="currentColor">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2"
-                                                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                                            </svg> Ver PDF
-                                                        </a>
-                                                    @endif
-                                                @endif
+
                                             </div>
                                         </div>
                                         <div
                                             class="flex items-center gap-2 shrink-0 border-l border-gray-100 dark:border-neutral-700 pl-2">
-                                            <div class="font-bold tabular-nums text-gray-900 dark:text-white">
-                                                {{ $bg->moneda === 'USD' ? '$' : 'Bs' }}
-                                                {{ number_format((float) $dv->monto, 2, ',', '.') }}
+                                            <div class="flex items-center gap-1.5">
+                                                {{-- VER COMPROBANTE DEVOLUCION (MOBILE LIST) --}}
+                                                @php
+                                                    $dvPath = $dv->foto_comprobante ?? null;
+                                                    $dvExt = $dvPath
+                                                        ? strtolower(pathinfo($dvPath, PATHINFO_EXTENSION))
+                                                        : '';
+                                                    $dvIsPdf = $dvExt === 'pdf';
+                                                @endphp
+
+                                                @if ($dvPath)
+                                                    @if ($dvIsPdf)
+                                                        <a href="{{ asset('storage/' . $dvPath) }}" target="_blank"
+                                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:bg-neutral-900 dark:text-rose-400 dark:border-rose-700 dark:hover:bg-rose-900/20 shadow-sm"
+                                                            title="Ver PDF">
+                                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                                class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                                                fill="none" stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <path
+                                                                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                                <polyline points="14 2 14 8 20 8" />
+                                                                <line x1="9" y1="13" x2="15"
+                                                                    y2="13" />
+                                                                <line x1="9" y1="17" x2="15"
+                                                                    y2="17" />
+                                                                <line x1="9" y1="9" x2="11"
+                                                                    y2="9" />
+                                                            </svg>
+                                                        </a>
+                                                    @else
+                                                        <button type="button"
+                                                            @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $dvPath) }}' })"
+                                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
+                                                            title="Ver imagen">
+                                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                                class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                                                fill="none" stroke="currentColor" stroke-width="2"
+                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                <rect x="3" y="3" width="18" height="18"
+                                                                    rx="2" ry="2" />
+                                                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                                                <polyline points="21 15 16 10 5 21" />
+                                                            </svg>
+                                                        </button>
+                                                    @endif
+                                                @else
+                                                    <span
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
+                                                        title="Sin comprobante">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5"
+                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round">
+                                                            <rect x="3" y="3" width="18" height="18"
+                                                                rx="2" ry="2" />
+                                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                                            <polyline points="21 15 16 10 5 21" />
+                                                        </svg>
+                                                    </span>
+                                                @endif
+
+                                                <div class="font-bold tabular-nums text-gray-900 dark:text-white px-1">
+                                                    {{ $bg->moneda === 'USD' ? '$' : 'Bs' }}
+                                                    {{ number_format((float) $dv->monto, 2, ',', '.') }}
+                                                </div>
+
+                                                @can('boletas_garantia.delete')
+                                                    <button type="button" @click.stop
+                                                        wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }}, 'Se eliminará la devolución de {{ $bg->moneda === 'USD' ? '$' : 'Bs' }} {{ number_format((float) $dv->monto, 2, ',', '.') }} asociada a la Boleta Nro. {{ $bg->nro_boleta ?? '' }}. Esta acción no se puede deshacer.')"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border border-red-300 text-red-700
+                                                            hover:bg-red-200 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-500 transition cursor-pointer"
+                                                        title="Eliminar">
+                                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                                                            stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                        </svg>
+                                                    </button>
+                                                @endcan
                                             </div>
-                                            @can('boletas_garantia.delete')
-                                                <button type="button" @click.stop
-                                                    wire:click="confirmDeleteDevolucion({{ $bg->id }}, {{ $dv->id }}, 'Se eliminará la devolución de {{ $bg->moneda === 'USD' ? '$' : 'Bs' }} {{ number_format((float) $dv->monto, 2, ',', '.') }} asociada a la Boleta Nro. {{ $bg->nro_boleta ?? '' }}. Esta acción no se puede deshacer.')"
-                                                    class="text-red-400 hover:text-red-600 dark:text-red-500 dark:hover:text-red-400 transition ml-1 cursor-pointer"
-                                                    title="Eliminar">
-                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24"
-                                                        stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button>
-                                            @endcan
                                         </div>
                                     </div>
                                 @endforeach
@@ -302,6 +357,57 @@
                                     Registrar Devolución
                                 </button>
                             @endcan
+
+                            {{-- VER COMPROBANTE BOLETA --}}
+                            @php
+                                $fPath = $bg->foto_comprobante ?? null;
+                                $fExt = $fPath ? strtolower(pathinfo($fPath, PATHINFO_EXTENSION)) : '';
+                                $fIsPdf = $fExt === 'pdf';
+                            @endphp
+
+                            @if ($fPath)
+                                @if ($fIsPdf)
+                                    <a href="{{ asset('storage/' . $fPath) }}" target="_blank"
+                                        class="px-3.5 py-2.5 rounded-lg border text-sm font-semibold transition flex justify-center items-center bg-white text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:bg-neutral-900 dark:text-rose-400 dark:border-rose-700 dark:hover:bg-rose-900/20 shadow-sm"
+                                        title="Ver PDF">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                            <polyline points="14 2 14 8 20 8" />
+                                            <line x1="9" y1="13" x2="15" y2="13" />
+                                            <line x1="9" y1="17" x2="15" y2="17" />
+                                            <line x1="9" y1="9" x2="11" y2="9" />
+                                        </svg>
+                                    </a>
+                                @else
+                                    <button type="button" @click.stop
+                                        @click="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $fPath) }}' })"
+                                        class="px-3.5 py-2.5 rounded-lg border text-sm font-semibold transition flex justify-center items-center bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
+                                        title="Ver imagen">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"
+                                                ry="2" />
+                                            <circle cx="8.5" cy="8.5" r="1.5" />
+                                            <polyline points="21 15 16 10 5 21" />
+                                        </svg>
+                                    </button>
+                                @endif
+                            @else
+                                <span
+                                    class="px-3.5 py-2.5 rounded-lg border text-sm font-semibold transition flex justify-center items-center bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
+                                    title="Sin comprobante">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                        <polyline points="21 15 16 10 5 21" />
+                                    </svg>
+                                </span>
+                            @endif
 
                             @can('boletas_garantia.delete')
                                 <button type="button" @click.stop wire:click="abrirEliminarBoletaModal({{ $bg->id }})"

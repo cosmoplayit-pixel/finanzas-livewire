@@ -354,7 +354,6 @@ class CreateModal extends Component
         $bancos = Banco::query()
             ->where('empresa_id', $empresaId)
             ->where('active', true)
-            ->where('moneda', 'BOB')
             ->orderBy('nombre')
             ->get();
 

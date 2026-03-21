@@ -172,13 +172,36 @@
     {{-- MOBILE: CARDS (md:hidden) --}}
     <div class="space-y-3 md:hidden">
         @forelse ($entidades as $e)
-            <div wire:key="entidad-card-{{ $e->id }}"
+            <div wire:key="entidad-card-{{ $e->id }}" x-data="{ showFullNombre: false }"
                 class="border rounded-lg p-4 bg-white dark:bg-neutral-900 dark:border-neutral-800">
 
                 {{-- Header --}}
                 <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                        <div class="font-semibold truncate">{{ $e->nombre }}</div>
+                        @php
+                            $nombreMob = $e->nombre ?? '—';
+                            $isLongMob = mb_strlen($nombreMob) > 35;
+                        @endphp
+                        @if ($isLongMob)
+                            <div x-show="!showFullNombre" class="min-w-0 flex items-center gap-2">
+                                <span class="font-semibold truncate min-w-0 flex-1" title="{{ $nombreMob }}">{{ $nombreMob }}</span>
+                                <button type="button"
+                                    class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                    @click.stop="showFullNombre = true">
+                                    Ver más
+                                </button>
+                            </div>
+                            <div x-show="showFullNombre" x-cloak class="min-w-0 leading-snug">
+                                <div class="font-semibold break-words">{{ $nombreMob }}</div>
+                                <button type="button"
+                                    class="inline-flex align-baseline text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                    @click.stop="showFullNombre = false">
+                                    Ver menos
+                                </button>
+                            </div>
+                        @else
+                            <div class="font-semibold truncate">{{ $nombreMob }}</div>
+                        @endif
                     </div>
 
                     <div class="shrink-0">
@@ -445,7 +468,7 @@
             </thead>
 
             @forelse ($entidades as $e)
-                <tbody x-data="{ open: false }" class="divide-y divide-gray-200 dark:divide-neutral-200">
+                <tbody x-data="{ open: false, showFullNombre: false }" class="divide-y divide-gray-200 dark:divide-neutral-200">
 
                     {{-- FILA PRINCIPAL --}}
                     <tr wire:key="entidad-row-{{ $e->id }}"
@@ -473,9 +496,38 @@
 
                         {{-- Nombre --}}
                         <td class="p-2 min-w-0">
-                            <span class="block truncate max-w-full" title="{{ $e->nombre }}">
-                                {{ $e->nombre }}
-                            </span>
+                            @php
+                                $nombreEntidad = $e->nombre ?? '—';
+                                $isLong = mb_strlen($nombreEntidad) > 35;
+                            @endphp
+
+                            @if ($isLong)
+                                <div x-show="!showFullNombre" class="min-w-0 flex items-center gap-2">
+                                    <span class="block truncate max-w-full" title="{{ $nombreEntidad }}">
+                                        {{ $nombreEntidad }}
+                                    </span>
+                                    <button type="button"
+                                        class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                        @click.stop="showFullNombre = true">
+                                        Ver más
+                                    </button>
+                                </div>
+
+                                <div x-show="showFullNombre" x-cloak class="min-w-0 leading-snug">
+                                    <span class="break-words">
+                                        {{ $nombreEntidad }}
+                                    </span>
+                                    <button type="button"
+                                        class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                        @click.stop="showFullNombre = false">
+                                        Ver menos
+                                    </button>
+                                </div>
+                            @else
+                                <span class="block truncate max-w-full" title="{{ $nombreEntidad }}">
+                                    {{ $nombreEntidad }}
+                                </span>
+                            @endif
                         </td>
 
                         {{-- Email --}}

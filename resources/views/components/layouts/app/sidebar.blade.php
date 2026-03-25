@@ -101,7 +101,7 @@
             @endcan
 
             {{-- GESTIÓN DE CATÁLOGOS --}}
-            @canany(['entidades.view', 'proyectos.view', 'bancos.view', 'agentes_servicio.view'])
+            @canany(['entidades.view', 'proyectos.view', 'bancos.view', 'agentes_servicio.view', 'herramientas.view'])
                 <flux:sidebar.group heading="{{ __('Gestión de Catálogos') }}" class="grid"> </flux:sidebar.group>
             @endcanany
 
@@ -131,6 +131,14 @@
                     :current="request()->routeIs('agentes_servicio')" :badge="$navCounts['agentes_servicio'] ?? null"
                     wire:navigate>
                     {{ __('Ag. de Servicio') }}
+                </flux:sidebar.item>
+            @endcan
+
+            @can('herramientas.view')
+                <flux:sidebar.item icon="wrench-screwdriver" :href="route('herramientas')"
+                    :current="request()->routeIs('herramientas')" :badge="$navCounts['herramientas'] ?? null"
+                    wire:navigate>
+                    {{ __('Herramientas') }}
                 </flux:sidebar.item>
             @endcan
 
@@ -188,6 +196,8 @@
                 @endcan
 
             </flux:sidebar.group>
+
+
 
 
         </flux:sidebar.nav>
@@ -725,6 +735,54 @@
                     top: y,
                     behavior: 'auto'
                 }));
+            });
+
+            // HERRAMIENTAS
+            window.addEventListener('swal:toggle-active-herramienta', (e) => {
+                const {
+                    id,
+                    active,
+                    name
+                } = e.detail;
+                Swal.fire({
+                    title: active ? '¿Desactivar herramienta?' : '¿Activar herramienta?',
+                    text: '¿Seguro que desea ' + (active ? 'desactivar' : 'activar') +
+                        ' la herramienta "' + name + '"?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: active ? '#dc2626' : '#16a34a',
+                    cancelButtonColor: '#6b7280',
+                    reverseButtons: true,
+                }).then((result) => {
+                    if (result.isConfirmed) Livewire.dispatch('doToggleActiveHerramienta', {
+                        id
+                    });
+                });
+            });
+
+            window.addEventListener('swal:delete-herramienta', (e) => {
+                const {
+                    id,
+                    name
+                } = e.detail;
+                Swal.fire({
+                    title: '¿Eliminar herramienta?',
+                    text: '¿Seguro que desea eliminar "' + name +
+                        '" permanentemente? Esta acción no se puede deshacer.',
+                    icon: 'error',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    reverseButtons: true,
+                }).then((result) => {
+                    if (result.isConfirmed) Livewire.dispatch('doDeleteHerramienta', {
+                        id
+                    });
+                });
             });
 
         });

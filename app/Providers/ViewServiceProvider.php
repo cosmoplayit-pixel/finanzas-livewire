@@ -6,6 +6,7 @@ use App\Models\Banco;
 use App\Models\Empresa;
 use App\Models\Entidad;
 use App\Models\Factura;
+use App\Models\Herramienta;
 use App\Models\Proyecto;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -119,6 +120,15 @@ class ViewServiceProvider extends ServiceProvider
             if ($user->can('agentes_servicio.view')) {
                 $navCounts['agentes_servicio'] = DB::table('agentes_servicio')
                     ->where('active', true)
+                    ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                        $q->where('empresa_id', $empresaId);
+                    })
+                    ->count();
+            }
+
+            // HERRAMIENTAS
+            if ($user->can('herramientas.view')) {
+                $navCounts['herramientas'] = Herramienta::where('active', true)
                     ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
                         $q->where('empresa_id', $empresaId);
                     })

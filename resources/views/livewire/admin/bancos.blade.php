@@ -716,7 +716,7 @@
                     <label class="block text-sm mb-1">
                         Nombre del Banco <span class="text-red-500">*</span>
                     </label>
-                    <input wire:model="nombre" autocomplete="off" placeholder="Ej: Banco Unión"
+                    <input wire:model="nombre" autocomplete="off" placeholder="Ej. Banco Union o Efectivo Willam"
                         class="w-full rounded border px-3 py-2
                            bg-white dark:bg-neutral-900
                            border-gray-300 dark:border-neutral-700

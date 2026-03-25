@@ -261,17 +261,34 @@
                         @endif
 
                         <div class="mt-1 text-center">
-                            @if (($p->tipo ?? 'Propuesta') === 'Adjudicación')
-                                <span
-                                    class="px-2 py-1 rounded text-[10px] uppercase font-bold bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
-                                    Adjudicación
-                                </span>
-                            @else
-                                <span
-                                    class="px-2 py-1 rounded text-[10px] uppercase font-bold bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-200">
-                                    Propuesta
-                                </span>
-                            @endif
+                            @switch($p->tipo ?? 'Propuesta')
+                                @case('Adjudicado')
+                                    <span
+                                        class="px-2 py-1 rounded text-[10px] uppercase font-bold bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
+                                        Adjudicado
+                                    </span>
+                                @break
+
+                                @case('Ejecucion')
+                                    <span
+                                        class="px-2 py-1 rounded text-[10px] uppercase font-bold bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200">
+                                        Ejecución
+                                    </span>
+                                @break
+
+                                @case('Finalizado')
+                                    <span
+                                        class="px-2 py-1 rounded text-[10px] uppercase font-bold bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200">
+                                        Finalizado
+                                    </span>
+                                @break
+
+                                @default
+                                    <span
+                                        class="px-2 py-1 rounded text-[10px] uppercase font-bold bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-200">
+                                        Propuesta
+                                    </span>
+                            @endswitch
                         </div>
                     </div>
                 </div>
@@ -362,394 +379,411 @@
                 @endcanany
 
             </div>
-        @empty
-            <div class="border rounded p-4 text-sm text-gray-600 dark:text-neutral-300 dark:border-neutral-800">
-                Sin resultados.
-            </div>
-        @endforelse
-    </div>
+            @empty
+                <div class="border rounded p-4 text-sm text-gray-600 dark:text-neutral-300 dark:border-neutral-800">
+                    Sin resultados.
+                </div>
+            @endforelse
+        </div>
 
-    {{-- TABLET + DESKTOP: TABLA --}}
-    <div
-        class="hidden md:block border border-gray-200 rounded-xl bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden shadow-sm mt-4">
-        <table class="w-full table-fixed text-[13px] text-left">
-            <thead
-                class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200
+        {{-- TABLET + DESKTOP: TABLA --}}
+        <div
+            class="hidden md:block border border-gray-200 rounded-xl bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden shadow-sm mt-4">
+            <table class="w-full table-fixed text-[13px] text-left">
+                <thead
+                    class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200
                    border-b border-gray-200 dark:border-neutral-200">
-                <tr class="text-left text-xs uppercase tracking-wider">
-                    <th class="w-[4%] text-center p-2 cursor-pointer select-none whitespace-nowrap"
-                        wire:click="sortBy('id')">
-                        ID
-                        @if ($sortField === 'id')
-                            @if ($sortDirection === 'asc')
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 15l7-7 7 7"></path>
-                                </svg>
-                            @else
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7"></path>
-                                </svg>
+                    <tr class="text-left text-xs uppercase tracking-wider">
+                        <th class="w-[4%] text-center p-2 cursor-pointer select-none whitespace-nowrap"
+                            wire:click="sortBy('id')">
+                            ID
+                            @if ($sortField === 'id')
+                                @if ($sortDirection === 'asc')
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 15l7-7 7 7"></path>
+                                    </svg>
+                                @else
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                @endif
                             @endif
-                        @endif
-                    </th>
-
-                    <th class="w-[15%] p-2 cursor-pointer select-none whitespace-nowrap"
-                        wire:click="sortBy('entidad_id')">
-                        Cliente
-                        @if ($sortField === 'entidad_id')
-                            @if ($sortDirection === 'asc')
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 15l7-7 7 7"></path>
-                                </svg>
-                            @else
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            @endif
-                        @endif
-                    </th>
-
-                    <th class="w-[20%] p-2 cursor-pointer select-none whitespace-nowrap"
-                        wire:click="sortBy('nombre')">
-                        Nombre
-                        @if ($sortField === 'nombre')
-                            @if ($sortDirection === 'asc')
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 15l7-7 7 7"></path>
-                                </svg>
-                            @else
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            @endif
-                        @endif
-                    </th>
-
-                    <th class="w-[12%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
-                        wire:click="sortBy('codigo')">
-                        CUCE – PAC – Otro
-                        @if ($sortField === 'codigo')
-                            @if ($sortDirection === 'asc')
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 15l7-7 7 7"></path>
-                                </svg>
-                            @else
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            @endif
-                        @endif
-                    </th>
-
-                    <th class="w-[10%] p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('monto')">
-                        Monto
-                        @if ($sortField === 'monto')
-                            @if ($sortDirection === 'asc')
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 15l7-7 7 7"></path>
-                                </svg>
-                            @else
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            @endif
-                        @endif
-                    </th>
-
-                    <th class="w-[8%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
-                        wire:click="sortBy('retencion')">
-                        Retención
-                        @if ($sortField === 'retencion')
-                            @if ($sortDirection === 'asc')
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 15l7-7 7 7"></path>
-                                </svg>
-                            @else
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            @endif
-                        @endif
-                    </th>
-
-                    <th class="w-[8%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
-                        wire:click="sortBy('fecha_inicio')">
-                        Inicio
-                        @if ($sortField === 'fecha_inicio')
-                            @if ($sortDirection === 'asc')
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 15l7-7 7 7"></path>
-                                </svg>
-                            @else
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            @endif
-                        @endif
-                    </th>
-
-                    <th class="w-[8%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
-                        wire:click="sortBy('fecha_fin')">
-                        Fin
-                        @if ($sortField === 'fecha_fin')
-                            @if ($sortDirection === 'asc')
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 15l7-7 7 7"></path>
-                                </svg>
-                            @else
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            @endif
-                        @endif
-                    </th>
-
-                    <th class="text-center w-[7%] p-2 cursor-pointer select-none whitespace-nowrap"
-                        wire:click="sortBy('active')">
-                        Estado
-                        @if ($sortField === 'active')
-                            @if ($sortDirection === 'asc')
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M5 15l7-7 7 7"></path>
-                                </svg>
-                            @else
-                                <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
-                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            @endif
-                        @endif
-                    </th>
-
-                    @canany(['proyectos.update', 'proyectos.toggle'])
-                        <th class="w-[8%] p-2 whitespace-nowrap text-center">
-                            Acciones
                         </th>
-                    @endcanany
-                </tr>
-            </thead>
 
-            @foreach ($proyectos as $p)
-                <tbody wire:key="{{ $p->id }}" x-data="{ open: false, showFullProject: false, showFullEntidad: false }"
-                    class="divide-y divide-gray-200 dark:divide-neutral-200">
-                    <tr class="hover:bg-slate-50/50 dark:hover:bg-neutral-900/40 transition-colors">
+                        <th class="w-[15%] p-2 cursor-pointer select-none whitespace-nowrap"
+                            wire:click="sortBy('entidad_id')">
+                            Cliente
+                            @if ($sortField === 'entidad_id')
+                                @if ($sortDirection === 'asc')
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 15l7-7 7 7"></path>
+                                    </svg>
+                                @else
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                @endif
+                            @endif
+                        </th>
 
-                        <td class="p-1 whitespace-nowrap text-center" x-data="{ showToggle: !window.matchMedia('(min-width: 1536px)').matches }"
-                            x-init="const mq = window.matchMedia('(min-width: 1536px)');
-                            const handler = e => showToggle = !e.matches;
-                            mq.addEventListener('change', handler);">
-                            <button type="button" x-show="showToggle" x-cloak
-                                class="w-6 h-6 inline-flex items-center justify-center rounded-md border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 hover:text-gray-900 dark:border-neutral-700 dark:text-neutral-400 dark:bg-neutral-900 dark:hover:text-white transition-colors cursor-pointer shadow-sm"
-                                @click.stop="open = !open" :aria-expanded="open">
-                                <svg x-show="!open" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                        d="M12 4v16m8-8H4"></path>
-                                </svg>
-                                <svg x-show="open" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                                        d="M20 12H4"></path>
-                                </svg>
-                            </button>
-                            <span class="ml-1">{{ $proyectos->firstItem() + $loop->index }}</span>
-                        </td>
+                        <th class="w-[20%] p-2 cursor-pointer select-none whitespace-nowrap"
+                            wire:click="sortBy('nombre')">
+                            Nombre
+                            @if ($sortField === 'nombre')
+                                @if ($sortDirection === 'asc')
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 15l7-7 7 7"></path>
+                                    </svg>
+                                @else
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                @endif
+                            @endif
+                        </th>
 
-                        <td class="p-2 min-w-0">
-                            @php
-                                $nombreEn = $p->entidad?->nombre ?? '—';
-                                $isLongEn = mb_strlen($nombreEn) > 25; // Cliente column is narrower
-                            @endphp
+                        <th class="w-[12%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
+                            wire:click="sortBy('codigo')">
+                            CUCE – PAC – Otro
+                            @if ($sortField === 'codigo')
+                                @if ($sortDirection === 'asc')
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 15l7-7 7 7"></path>
+                                    </svg>
+                                @else
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                @endif
+                            @endif
+                        </th>
 
-                            @if ($isLongEn)
-                                <div x-show="!showFullEntidad" class="min-w-0 flex items-center gap-2">
+                        <th class="w-[10%] p-2 cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('monto')">
+                            Monto
+                            @if ($sortField === 'monto')
+                                @if ($sortDirection === 'asc')
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 15l7-7 7 7"></path>
+                                    </svg>
+                                @else
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                @endif
+                            @endif
+                        </th>
+
+                        <th class="w-[8%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
+                            wire:click="sortBy('retencion')">
+                            Retención
+                            @if ($sortField === 'retencion')
+                                @if ($sortDirection === 'asc')
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 15l7-7 7 7"></path>
+                                    </svg>
+                                @else
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                @endif
+                            @endif
+                        </th>
+
+                        <th class="w-[8%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
+                            wire:click="sortBy('fecha_inicio')">
+                            Inicio
+                            @if ($sortField === 'fecha_inicio')
+                                @if ($sortDirection === 'asc')
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 15l7-7 7 7"></path>
+                                    </svg>
+                                @else
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                @endif
+                            @endif
+                        </th>
+
+                        <th class="w-[8%] p-2 cursor-pointer select-none whitespace-nowrap hidden 2xl:table-cell"
+                            wire:click="sortBy('fecha_fin')">
+                            Fin
+                            @if ($sortField === 'fecha_fin')
+                                @if ($sortDirection === 'asc')
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 15l7-7 7 7"></path>
+                                    </svg>
+                                @else
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                @endif
+                            @endif
+                        </th>
+
+                        <th class="text-center w-[7%] p-2 cursor-pointer select-none whitespace-nowrap"
+                            wire:click="sortBy('active')">
+                            Estado
+                            @if ($sortField === 'active')
+                                @if ($sortDirection === 'asc')
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 15l7-7 7 7"></path>
+                                    </svg>
+                                @else
+                                    <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                @endif
+                            @endif
+                        </th>
+
+                        @canany(['proyectos.update', 'proyectos.toggle'])
+                            <th class="w-[8%] p-2 whitespace-nowrap text-center">
+                                Acciones
+                            </th>
+                        @endcanany
+                    </tr>
+                </thead>
+
+                @foreach ($proyectos as $p)
+                    <tbody wire:key="{{ $p->id }}" x-data="{ open: false, showFullProject: false, showFullEntidad: false }"
+                        class="divide-y divide-gray-200 dark:divide-neutral-200">
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-neutral-900/40 transition-colors">
+
+                            <td class="p-1 whitespace-nowrap text-center" x-data="{ showToggle: !window.matchMedia('(min-width: 1536px)').matches }"
+                                x-init="const mq = window.matchMedia('(min-width: 1536px)');
+                                const handler = e => showToggle = !e.matches;
+                                mq.addEventListener('change', handler);">
+                                <button type="button" x-show="showToggle" x-cloak
+                                    class="w-6 h-6 inline-flex items-center justify-center rounded-md border border-gray-200 text-gray-500 bg-white hover:bg-gray-50 hover:text-gray-900 dark:border-neutral-700 dark:text-neutral-400 dark:bg-neutral-900 dark:hover:text-white transition-colors cursor-pointer shadow-sm"
+                                    @click.stop="open = !open" :aria-expanded="open">
+                                    <svg x-show="!open" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    <svg x-show="open" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                            d="M20 12H4"></path>
+                                    </svg>
+                                </button>
+                                <span class="ml-1">{{ $proyectos->firstItem() + $loop->index }}</span>
+                            </td>
+
+                            <td class="p-2 min-w-0">
+                                @php
+                                    $nombreEn = $p->entidad?->nombre ?? '—';
+                                    $isLongEn = mb_strlen($nombreEn) > 25; // Cliente column is narrower
+                                @endphp
+
+                                @if ($isLongEn)
+                                    <div x-show="!showFullEntidad" class="min-w-0 flex items-center gap-2">
+                                        <span class="block truncate max-w-full" title="{{ $nombreEn }}">
+                                            {{ $nombreEn }}
+                                        </span>
+                                        <button type="button"
+                                            class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                            @click.stop="showFullEntidad = true">
+                                            Ver más
+                                        </button>
+                                    </div>
+
+                                    <div x-show="showFullEntidad" x-cloak class="min-w-0 leading-snug">
+                                        <span class="break-words">
+                                            {{ $nombreEn }}
+                                        </span>
+                                        <button type="button"
+                                            class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                            @click.stop="showFullEntidad = false">
+                                            Ver menos
+                                        </button>
+                                    </div>
+                                @else
                                     <span class="block truncate max-w-full" title="{{ $nombreEn }}">
                                         {{ $nombreEn }}
                                     </span>
-                                    <button type="button"
-                                        class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                                        @click.stop="showFullEntidad = true">
-                                        Ver más
-                                    </button>
-                                </div>
+                                @endif
+                            </td>
 
-                                <div x-show="showFullEntidad" x-cloak class="min-w-0 leading-snug">
-                                    <span class="break-words">
-                                        {{ $nombreEn }}
-                                    </span>
-                                    <button type="button"
-                                        class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                                        @click.stop="showFullEntidad = false">
-                                        Ver menos
-                                    </button>
-                                </div>
-                            @else
-                                <span class="block truncate max-w-full" title="{{ $nombreEn }}">
-                                    {{ $nombreEn }}
+                            <td class="p-2 min-w-0">
+                                @php
+                                    $nombreProyecto = $p->nombre ?? '—';
+                                    $isLong = mb_strlen($nombreProyecto) > 45;
+                                @endphp
+
+                                @if ($isLong)
+                                    <div x-show="!showFullProject" class="min-w-0 flex items-center gap-2">
+                                        <span class="min-w-0 flex-1 truncate whitespace-nowrap"
+                                            title="{{ $nombreProyecto }}">
+                                            {{ $nombreProyecto }}
+                                        </span>
+
+                                        <button type="button"
+                                            class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                            @click.stop="showFullProject = true">
+                                            Ver más
+                                        </button>
+                                    </div>
+
+                                    <div x-show="showFullProject" x-cloak class="min-w-0 leading-snug">
+                                        <span class="break-words">
+                                            {{ $nombreProyecto }}
+                                        </span>
+
+                                        <button type="button"
+                                            class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                            @click.stop="showFullProject = false">
+                                            Ver menos
+                                        </button>
+                                    </div>
+                                @else
+                                    <div class="min-w-0">
+                                        <span>{{ $nombreProyecto }}</span>
+                                    </div>
+                                @endif
+                            </td>
+
+                            <td class="p-2 whitespace-nowrap hidden 2xl:table-cell">
+                                <span class="block truncate max-w-full" title="{{ $p->codigo ?? '-' }}">
+                                    {{ $p->codigo ?? '-' }}
                                 </span>
-                            @endif
-                        </td>
+                            </td>
 
-                        <td class="p-2 min-w-0">
-                            @php
-                                $nombreProyecto = $p->nombre ?? '—';
-                                $isLong = mb_strlen($nombreProyecto) > 45;
-                            @endphp
+                            <td class="p-2 whitespace-nowrap">
+                                Bs {{ number_format((float) $p->monto, 2, ',', '.') }}
+                            </td>
 
-                            @if ($isLong)
-                                <div x-show="!showFullProject" class="min-w-0 flex items-center gap-2">
-                                    <span class="min-w-0 flex-1 truncate whitespace-nowrap"
-                                        title="{{ $nombreProyecto }}">
-                                        {{ $nombreProyecto }}
-                                    </span>
+                            <td class="p-2 whitespace-nowrap hidden 2xl:table-cell">
+                                {{ number_format((float) ($p->retencion ?? 0), 2, ',', '.') }}%
+                            </td>
 
-                                    <button type="button"
-                                        class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                                        @click.stop="showFullProject = true">
-                                        Ver más
-                                    </button>
-                                </div>
+                            <td class="p-2 whitespace-nowrap hidden 2xl:table-cell">
+                                {{ $p->fecha_inicio ? $p->fecha_inicio->format('Y-m-d') : '-' }}
+                            </td>
 
-                                <div x-show="showFullProject" x-cloak class="min-w-0 leading-snug">
-                                    <span class="break-words">
-                                        {{ $nombreProyecto }}
-                                    </span>
+                            <td class="p-2 whitespace-nowrap hidden 2xl:table-cell">
+                                {{ $p->fecha_fin ? $p->fecha_fin->format('Y-m-d') : '-' }}
+                            </td>
 
-                                    <button type="button"
-                                        class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                                        @click.stop="showFullProject = false">
-                                        Ver menos
-                                    </button>
-                                </div>
-                            @else
-                                <div class="min-w-0">
-                                    <span>{{ $nombreProyecto }}</span>
-                                </div>
-                            @endif
-                        </td>
-
-                        <td class="p-2 whitespace-nowrap hidden 2xl:table-cell">
-                            <span class="block truncate max-w-full" title="{{ $p->codigo ?? '-' }}">
-                                {{ $p->codigo ?? '-' }}
-                            </span>
-                        </td>
-
-                        <td class="p-2 whitespace-nowrap">
-                            Bs {{ number_format((float) $p->monto, 2, ',', '.') }}
-                        </td>
-
-                        <td class="p-2 whitespace-nowrap hidden 2xl:table-cell">
-                            {{ number_format((float) ($p->retencion ?? 0), 2, ',', '.') }}%
-                        </td>
-
-                        <td class="p-2 whitespace-nowrap hidden 2xl:table-cell">
-                            {{ $p->fecha_inicio ? $p->fecha_inicio->format('Y-m-d') : '-' }}
-                        </td>
-
-                        <td class="p-2 whitespace-nowrap hidden 2xl:table-cell">
-                            {{ $p->fecha_fin ? $p->fecha_fin->format('Y-m-d') : '-' }}
-                        </td>
-
-                        <td class="text-center p-2 whitespace-nowrap">
-                            @if ($p->active)
-                                <span
-                                    class="px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200">
-                                    Activo
-                                </span>
-                            @else
-                                <span
-                                    class="px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200">
-                                    Inactivo
-                                </span>
-                            @endif
-
-                            <div class="mt-2">
-                                @if (($p->tipo ?? 'Propuesta') === 'Adjudicado')
+                            <td class="text-center p-2 whitespace-nowrap">
+                                @if ($p->active)
                                     <span
-                                        class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
-                                        Adjudicado
+                                        class="px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200">
+                                        Activo
                                     </span>
                                 @else
                                     <span
-                                        class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-200">
-                                        Propuesta
+                                        class="px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200">
+                                        Inactivo
                                     </span>
                                 @endif
-                            </div>
-                        </td>
 
-                        {{-- Acciones --}}
-                        @canany(['proyectos.update', 'proyectos.toggle'])
-                            <td class="p-2 whitespace-nowrap">
-                                <div class="flex items-center justify-center gap-2">
-                                    {{-- EDITAR (Livewire) --}}
-                                    @can('proyectos.update')
-                                        <button wire:click="openEdit({{ $p->id }})" wire:loading.attr="disabled"
-                                            wire:target="openEdit({{ $p->id }})" title="Editar proyecto"
-                                            aria-label="Editar proyecto"
-                                            class="cursor-pointer rounded p-1
+                                <div class="mt-2">
+                                    @switch($p->tipo ?? 'Propuesta')
+                                        @case('Adjudicado')
+                                            <span
+                                                class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200">
+                                                Adjudicado
+                                            </span>
+                                        @break
+
+                                        @case('Ejecucion')
+                                            <span
+                                                class="px-2 py-1 rounded text-xs bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200">
+                                                Ejecución
+                                            </span>
+                                        @break
+
+                                        @case('Finalizado')
+                                            <span
+                                                class="px-2 py-1 rounded text-xs bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200">
+                                                Finalizado
+                                            </span>
+                                        @break
+
+                                        @default
+                                            <span
+                                                class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-200">
+                                                Propuesta
+                                            </span>
+                                    @endswitch
+                                </div>
+                            </td>
+
+                            {{-- Acciones --}}
+                            @canany(['proyectos.update', 'proyectos.toggle'])
+                                <td class="p-2 whitespace-nowrap">
+                                    <div class="flex items-center justify-center gap-2">
+                                        {{-- EDITAR (Livewire) --}}
+                                        @can('proyectos.update')
+                                            <button wire:click="openEdit({{ $p->id }})" wire:loading.attr="disabled"
+                                                wire:target="openEdit({{ $p->id }})" title="Editar proyecto"
+                                                aria-label="Editar proyecto"
+                                                class="cursor-pointer rounded p-1
                                             hover:bg-gray-100 dark:hover:bg-neutral-800
                                             disabled:opacity-50 disabled:cursor-not-allowed">
 
-                                            {{-- Ícono normal --}}
-                                            <svg wire:loading.remove wire:target="openEdit({{ $p->id }})"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                                stroke-width="1.5" stroke="currentColor" class="size-6">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                            </svg>
+                                                {{-- Ícono normal --}}
+                                                <svg wire:loading.remove wire:target="openEdit({{ $p->id }})"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                    stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                                </svg>
 
-                                            {{-- Loader --}}
-                                            <svg wire:loading wire:target="openEdit({{ $p->id }})"
-                                                class="size-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10"
-                                                    stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor"
-                                                    d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
-                                            </svg>
-                                        </button>
-                                    @endcan
+                                                {{-- Loader --}}
+                                                <svg wire:loading wire:target="openEdit({{ $p->id }})"
+                                                    class="size-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                    viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
+                                                </svg>
+                                            </button>
+                                        @endcan
 
-                                    {{-- TOGGLE ACTIVO (SweetAlert + Alpine loading) --}}
-                                    @can('proyectos.toggle')
-                                        <button type="button" x-data="{ loading: false }"
-                                            x-on:click="
+                                        {{-- TOGGLE ACTIVO (SweetAlert + Alpine loading) --}}
+                                        @can('proyectos.toggle')
+                                            <button type="button" x-data="{ loading: false }"
+                                                x-on:click="
                                                 loading = true;
                                                 $dispatch('swal:toggle-active-proyecto', {
                                                     id: {{ $p->id }},
@@ -757,233 +791,233 @@
                                                     name: @js($p->nombre)
                                                 });
                                             "
-                                            x-on:swal:done.window="loading = false" x-bind:disabled="loading"
-                                            title="{{ $p->active ? 'Desactivar proyecto' : 'Activar proyecto' }}"
-                                            aria-label="{{ $p->active ? 'Desactivar proyecto' : 'Activar proyecto' }}"
-                                            class="cursor-pointer inline-flex items-center justify-center size-8 rounded
+                                                x-on:swal:done.window="loading = false" x-bind:disabled="loading"
+                                                title="{{ $p->active ? 'Desactivar proyecto' : 'Activar proyecto' }}"
+                                                aria-label="{{ $p->active ? 'Desactivar proyecto' : 'Activar proyecto' }}"
+                                                class="cursor-pointer inline-flex items-center justify-center size-8 rounded
                                             disabled:opacity-50 disabled:cursor-not-allowed
                                             {{ $p->active
                                                 ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                                                 : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
 
-                                            {{-- Ícono normal --}}
-                                            <span x-show="!loading">
-                                                @if ($p->active)
-                                                    {{-- eye-slash --}}
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                                        class="size-4">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M3 3l18 18M10.584 10.584A2.25 2.25 0 0012 14.25 2.25 2.25 0 0014.25 12c0-.5-.167-.96-.45-1.33M9.88 5.09 A9.715 9.715 0 0112 4.5c4.478 0 8.268 2.943 9.543 7.5 a9.66 9.66 0 01-2.486 3.95M6.18 6.18 C4.634 7.436 3.55 9.135 3 12 c1.275 4.557 5.065 7.5 9.543 7.5 1.79 0 3.487-.469 4.993-1.29" />
-                                                    </svg>
-                                                @else
-                                                    {{-- eye --}}
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                        viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                                                        class="size-4">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M2.036 12.322a1.012 1.012 0 010-.639 C3.423 7.51 7.36 4.5 12 4.5 c4.638 0 8.573 3.007 9.963 7.178 .07.207.07.431 0 .639 C20.577 16.49 16.64 19.5 12 19.5 c-4.638 0-8.573-3.007-9.963-7.178z" />
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                    </svg>
-                                                @endif
-                                            </span>
+                                                {{-- Ícono normal --}}
+                                                <span x-show="!loading">
+                                                    @if ($p->active)
+                                                        {{-- eye-slash --}}
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                            class="size-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M3 3l18 18M10.584 10.584A2.25 2.25 0 0012 14.25 2.25 2.25 0 0014.25 12c0-.5-.167-.96-.45-1.33M9.88 5.09 A9.715 9.715 0 0112 4.5c4.478 0 8.268 2.943 9.543 7.5 a9.66 9.66 0 01-2.486 3.95M6.18 6.18 C4.634 7.436 3.55 9.135 3 12 c1.275 4.557 5.065 7.5 9.543 7.5 1.79 0 3.487-.469 4.993-1.29" />
+                                                        </svg>
+                                                    @else
+                                                        {{-- eye --}}
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                            viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+                                                            class="size-4">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M2.036 12.322a1.012 1.012 0 010-.639 C3.423 7.51 7.36 4.5 12 4.5 c4.638 0 8.573 3.007 9.963 7.178 .07.207.07.431 0 .639 C20.577 16.49 16.64 19.5 12 19.5 c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                        </svg>
+                                                    @endif
+                                                </span>
 
-                                            {{-- Loader --}}
-                                            <span x-show="loading" x-cloak>
-                                                <svg class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none" viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
-                                                        stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor"
-                                                        d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
-                                                </svg>
-                                            </span>
-                                        </button>
-                                    @endcan
+                                                {{-- Loader --}}
+                                                <span x-show="loading" x-cloak>
+                                                    <svg class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg"
+                                                        fill="none" viewBox="0 0 24 24">
+                                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                            stroke="currentColor" stroke-width="4"></circle>
+                                                        <path class="opacity-75" fill="currentColor"
+                                                            d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
+                                                    </svg>
+                                                </span>
+                                            </button>
+                                        @endcan
+                                    </div>
+                                </td>
+                            @endcanany
+
+                        </tr>
+
+                        {{-- ✅ Detalle expandible SOLO cuando NO es 2xl y con 4 columnas --}}
+                        @php
+                            // En md (<2xl): ID, Entidad, Nombre, Monto, Estado = 5
+                            // + Acciones si el usuario tiene permisos
+                            $colspan =
+                                5 +
+                                (auth()->user()->can('proyectos.update') || auth()->user()->can('proyectos.toggle')
+                                    ? 1
+                                    : 0);
+                        @endphp
+
+                        <tr x-show="open" x-cloak
+                            class="2xl:hidden bg-gray-100/60 dark:bg-neutral-900/40 border-b border-gray-200 dark:border-neutral-200">
+                            <td class="pl-20 py-1.5" colspan="{{ $colspan }}">
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+
+                                    <div class="space-y-1">
+                                        <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">
+                                            CUCE – PAC – Otro
+                                        </span>
+                                        <span class="block truncate">
+                                            {{ $p->codigo ?? '-' }}
+                                        </span>
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">
+                                            Retención
+                                        </span>
+                                        <span class="block truncate">
+                                            {{ number_format((float) ($p->retencion ?? 0), 2, ',', '.') }}%
+                                        </span>
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">
+                                            Inicio
+                                        </span>
+                                        <span class="block truncate">
+                                            {{ $p->fecha_inicio ? $p->fecha_inicio->format('Y-m-d') : '-' }}
+                                        </span>
+                                    </div>
+
+                                    <div class="space-y-1">
+                                        <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">
+                                            Fin
+                                        </span>
+                                        <span class="block truncate">
+                                            {{ $p->fecha_fin ? $p->fecha_fin->format('Y-m-d') : '-' }}
+                                        </span>
+                                    </div>
                                 </div>
                             </td>
-                        @endcanany
+                        </tr>
+                    </tbody>
+                @endforeach
 
-                    </tr>
+                @if ($proyectos->count() === 0)
+                    <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
+                        <tr>
+                            <td class="p-4 text-center text-gray-500 dark:text-neutral-400" colspan="11">
+                                Sin resultados.
+                            </td>
+                        </tr>
+                    </tbody>
+                @endif
+            </table>
+        </div>
 
-                    {{-- ✅ Detalle expandible SOLO cuando NO es 2xl y con 4 columnas --}}
-                    @php
-                        // En md (<2xl): ID, Entidad, Nombre, Monto, Estado = 5
-                        // + Acciones si el usuario tiene permisos
-                        $colspan =
-                            5 +
-                            (auth()->user()->can('proyectos.update') || auth()->user()->can('proyectos.toggle')
-                                ? 1
-                                : 0);
-                    @endphp
+        {{-- PAGINACIÓN --}}
+        <div>
+            {{ $proyectos->links() }}
+        </div>
 
-                    <tr x-show="open" x-cloak
-                        class="2xl:hidden bg-gray-100/60 dark:bg-neutral-900/40 border-b border-gray-200 dark:border-neutral-200">
-                        <td class="pl-20 py-1.5" colspan="{{ $colspan }}">
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        {{-- MODAL PROYECTO (create / update) --}}
+        @canany(['proyectos.create', 'proyectos.update'])
+            <x-ui.modal wire:key="proyectos-modal" model="openModal" :title="$proyectoId ? 'Editar Proyecto' : 'Nuevo Proyecto'" maxWidth="sm:max-w-xl md:max-w-2xl"
+                onClose="closeModal">
+                {{-- BODY --}}
+                <div class="space-y-3">
 
-                                <div class="space-y-1">
-                                    <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">
-                                        CUCE – PAC – Otro
-                                    </span>
-                                    <span class="block truncate">
-                                        {{ $p->codigo ?? '-' }}
-                                    </span>
-                                </div>
-
-                                <div class="space-y-1">
-                                    <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">
-                                        Retención
-                                    </span>
-                                    <span class="block truncate">
-                                        {{ number_format((float) ($p->retencion ?? 0), 2, ',', '.') }}%
-                                    </span>
-                                </div>
-
-                                <div class="space-y-1">
-                                    <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">
-                                        Inicio
-                                    </span>
-                                    <span class="block truncate">
-                                        {{ $p->fecha_inicio ? $p->fecha_inicio->format('Y-m-d') : '-' }}
-                                    </span>
-                                </div>
-
-                                <div class="space-y-1">
-                                    <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">
-                                        Fin
-                                    </span>
-                                    <span class="block truncate">
-                                        {{ $p->fecha_fin ? $p->fecha_fin->format('Y-m-d') : '-' }}
-                                    </span>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            @endforeach
-
-            @if ($proyectos->count() === 0)
-                <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
-                    <tr>
-                        <td class="p-4 text-center text-gray-500 dark:text-neutral-400" colspan="11">
-                            Sin resultados.
-                        </td>
-                    </tr>
-                </tbody>
-            @endif
-        </table>
-    </div>
-
-    {{-- PAGINACIÓN --}}
-    <div>
-        {{ $proyectos->links() }}
-    </div>
-
-    {{-- MODAL PROYECTO (create / update) --}}
-    @canany(['proyectos.create', 'proyectos.update'])
-        <x-ui.modal wire:key="proyectos-modal" model="openModal" :title="$proyectoId ? 'Editar Proyecto' : 'Nuevo Proyecto'" maxWidth="sm:max-w-xl md:max-w-2xl"
-            onClose="closeModal">
-            {{-- BODY --}}
-            <div class="space-y-3">
-
-                {{-- Tipo (OBLIGATORIO) - siempre visible --}}
-                <div>
-                    <label class="block text-sm mb-1">
-                        Tipo <span class="text-red-500">*</span>
-                    </label>
-                    <select wire:model.live="tipo"
-                        class="cursor-pointer w-full rounded border px-3 py-2
+                    {{-- Tipo (OBLIGATORIO) - siempre visible --}}
+                    <div>
+                        <label class="block text-sm mb-1">
+                            Tipo <span class="text-red-500">*</span>
+                        </label>
+                        <select wire:model.live="tipo"
+                            class="cursor-pointer w-full rounded border px-3 py-2
                            bg-white dark:bg-neutral-900
                            border-gray-300 dark:border-neutral-700
                            text-gray-900 dark:text-neutral-100
                            focus:outline-none focus:ring-2
                            focus:ring-gray-300 dark:focus:ring-neutral-700">
-                        <option value="Propuesta">Propuesta</option>
-                        <option value="Adjudicado">Adjudicado</option>
-                    </select>
-                    @error('tipo')
-                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
+                            <option value="Propuesta">Propuesta</option>
+                            <option value="Adjudicado">Adjudicado</option>
+                            <option value="Ejecucion">Ejecución</option>
+                            <option value="Finalizado">Finalizado</option>
+                        </select>
+                        @error('tipo')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                {{-- Entidad (OBLIGATORIO) --}}
-                <div>
-                    <label class="block text-sm mb-1">
-                        Cliente <span class="text-red-500">*</span>
-                    </label>
-                    <select wire:model="entidad_id"
-                        class="cursor-pointer w-full rounded border px-3 py-2
+                    {{-- Entidad (OBLIGATORIO) --}}
+                    <div>
+                        <label class="block text-sm mb-1">
+                            Cliente <span class="text-red-500">*</span>
+                        </label>
+                        <select wire:model="entidad_id"
+                            class="cursor-pointer w-full rounded border px-3 py-2
                            bg-white dark:bg-neutral-900
                            border-gray-300 dark:border-neutral-700
                            text-gray-900 dark:text-neutral-100
                            focus:outline-none focus:ring-2
                            focus:ring-gray-300 dark:focus:ring-neutral-700">
-                        <option value="">Seleccione...</option>
-                        @foreach ($entidades as $en)
-                            <option value="{{ $en->id }}" title="{{ $en->nombre }}">
-                                {{ $en->sigla ? $en->sigla . ' - ' : '' }}
-                                {{ \Illuminate\Support\Str::limit($en->nombre, 30) }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('entidad_id')
-                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
+                            <option value="">Seleccione...</option>
+                            @foreach ($entidades as $en)
+                                <option value="{{ $en->id }}" title="{{ $en->nombre }}">
+                                    {{ $en->sigla ? $en->sigla . ' - ' : '' }}
+                                    {{ \Illuminate\Support\Str::limit($en->nombre, 30) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('entidad_id')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                {{-- Nombre (OBLIGATORIO) --}}
-                <div>
-                    <label class="block text-sm mb-1">
-                        Nombre <span class="text-red-500">*</span>
-                    </label>
-                    <input wire:model="nombre" autocomplete="off" placeholder="Ej: Construcción oficina central"
-                        class="w-full rounded border px-3 py-2
+                    {{-- Nombre (OBLIGATORIO) --}}
+                    <div>
+                        <label class="block text-sm mb-1">
+                            Nombre <span class="text-red-500">*</span>
+                        </label>
+                        <input wire:model="nombre" autocomplete="off" placeholder="Ej: Construcción oficina central"
+                            class="w-full rounded border px-3 py-2
                            bg-white dark:bg-neutral-900
                            border-gray-300 dark:border-neutral-700
                            text-gray-900 dark:text-neutral-100
                            placeholder:text-gray-400 dark:placeholder:text-neutral-500
                            focus:outline-none focus:ring-2
                            focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                    @error('nombre')
-                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
+                        @error('nombre')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                {{-- Código --}}
-                <div>
-                    <label class="block text-sm mb-1">CUCE – PAC – Otro</label>
-                    <input wire:model="codigo" autocomplete="off"
-                        class="w-full rounded border px-3 py-2
+                    {{-- Código --}}
+                    <div>
+                        <label class="block text-sm mb-1">CUCE – PAC – Otro</label>
+                        <input wire:model="codigo" autocomplete="off"
+                            class="w-full rounded border px-3 py-2
                            bg-white dark:bg-neutral-900
                            border-gray-300 dark:border-neutral-700
                            text-gray-900 dark:text-neutral-100
                            placeholder:text-gray-400 dark:placeholder:text-neutral-500
                            focus:outline-none focus:ring-2
                            focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                    @error('codigo')
-                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
+                        @error('codigo')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                {{-- Monto --}}
-                <div>
-                    <label class="block text-sm mb-1">Monto del Proyecto</label>
-                    <input type="text" inputmode="decimal" wire:model.blur="monto_formatted" placeholder="0,00"
-                        class="w-full rounded border px-3 py-2
+                    {{-- Monto --}}
+                    <div>
+                        <label class="block text-sm mb-1">Monto del Proyecto</label>
+                        <input type="text" inputmode="decimal" wire:model.blur="monto_formatted" placeholder="0,00"
+                            class="w-full rounded border px-3 py-2
                                bg-white dark:bg-neutral-900
                                border-gray-300 dark:border-neutral-700
                                text-gray-900 dark:text-neutral-100
                                focus:outline-none focus:ring-2
                                focus:ring-gray-300 dark:focus:ring-neutral-700" />
-                    @error('monto')
-                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
+                        @error('monto')
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                {{-- CAMPOS SOLO PARA ADJUDICADO --}}
-                @if ($tipo === 'Adjudicado')
                     {{-- Retención (3 columnas) --}}
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div>
@@ -991,11 +1025,11 @@
                             <input type="text" inputmode="decimal" wire:model.blur="retencion_formatted"
                                 placeholder="0,00"
                                 class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2
+                               focus:ring-gray-300 dark:focus:ring-neutral-700" />
                             @error('retencion')
                                 <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                             @enderror
@@ -1004,17 +1038,17 @@
                             <label class="block text-sm mb-1">Monto retenido</label>
                             <input readonly value="{{ number_format($monto_retenido, 2, ',', '.') }}"
                                 class="w-full rounded border px-3 py-2
-                                   bg-gray-50 dark:bg-neutral-800
-                                   border-gray-200 dark:border-neutral-700
-                                   text-gray-500 dark:text-neutral-400 cursor-default" />
+                               bg-gray-50 dark:bg-neutral-800
+                               border-gray-200 dark:border-neutral-700
+                               text-gray-500 dark:text-neutral-400 cursor-default" />
                         </div>
                         <div>
                             <label class="block text-sm mb-1">Monto neto</label>
                             <input readonly value="{{ number_format($monto_neto, 2, ',', '.') }}"
                                 class="w-full rounded border px-3 py-2
-                                   bg-gray-50 dark:bg-neutral-800
-                                   border-gray-200 dark:border-neutral-700
-                                   text-gray-500 dark:text-neutral-400 cursor-default" />
+                               bg-gray-50 dark:bg-neutral-800
+                               border-gray-200 dark:border-neutral-700
+                               text-gray-500 dark:text-neutral-400 cursor-default" />
                         </div>
                     </div>
 
@@ -1024,11 +1058,11 @@
                             <label class="block text-sm mb-1">Fecha inicio</label>
                             <input type="date" wire:model="fecha_inicio"
                                 class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2
+                               focus:ring-gray-300 dark:focus:ring-neutral-700" />
                             @error('fecha_inicio')
                                 <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                             @enderror
@@ -1037,45 +1071,44 @@
                             <label class="block text-sm mb-1">Fecha fin</label>
                             <input type="date" wire:model="fecha_fin"
                                 class="w-full rounded border px-3 py-2
-                                   bg-white dark:bg-neutral-900
-                                   border-gray-300 dark:border-neutral-700
-                                   text-gray-900 dark:text-neutral-100
-                                   focus:outline-none focus:ring-2
-                                   focus:ring-gray-300 dark:focus:ring-neutral-700" />
+                               bg-white dark:bg-neutral-900
+                               border-gray-300 dark:border-neutral-700
+                               text-gray-900 dark:text-neutral-100
+                               focus:outline-none focus:ring-2
+                               focus:ring-gray-300 dark:focus:ring-neutral-700" />
                             @error('fecha_fin')
                                 <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
-                @endif
 
-                {{-- Nota --}}
-                <p class="text-xs text-gray-500 dark:text-neutral-400 pt-1">
-                    <span class="text-red-500">*</span> Campos obligatorios.
-                </p>
-            </div>
+                    {{-- Nota --}}
+                    <p class="text-xs text-gray-500 dark:text-neutral-400 pt-1">
+                        <span class="text-red-500">*</span> Campos obligatorios.
+                    </p>
+                </div>
 
-            {{-- FOOTER --}}
-            @slot('footer')
-                <button type="button" wire:click="closeModal"
-                    class="px-4 py-2 rounded border cursor-pointer
+                {{-- FOOTER --}}
+                @slot('footer')
+                    <button type="button" wire:click="closeModal"
+                        class="px-4 py-2 rounded border cursor-pointer
                        border-gray-300 dark:border-neutral-700
                        text-gray-700 dark:text-neutral-200
                        hover:bg-gray-100 dark:hover:bg-neutral-800">
-                    Cancelar
-                </button>
+                        Cancelar
+                    </button>
 
-                <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
-                    class="px-4 py-2 rounded cursor-pointer bg-black text-white hover:opacity-90
+                    <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save"
+                        class="px-4 py-2 rounded cursor-pointer bg-black text-white hover:opacity-90
                        disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span wire:loading.remove wire:target="save">
-                        {{ $proyectoId ? 'Actualizar' : 'Guardar' }}
-                    </span>
-                    <span wire:loading wire:target="save">
-                        Guardando…
-                    </span>
-                </button>
-            @endslot
-        </x-ui.modal>
-    @endcanany
-</div>
+                        <span wire:loading.remove wire:target="save">
+                            {{ $proyectoId ? 'Actualizar' : 'Guardar' }}
+                        </span>
+                        <span wire:loading wire:target="save">
+                            Guardando…
+                        </span>
+                    </button>
+                @endslot
+            </x-ui.modal>
+        @endcanany
+    </div>

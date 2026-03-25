@@ -160,6 +160,7 @@ class CreateModal extends Component
         $this->proyectosEntidad = Proyecto::query()
             ->where('entidad_id', (int) $value)
             ->where('active', true)
+            ->where('tipo', 'Propuesta')
             ->orderBy('nombre')
             ->get(['id', 'nombre'])
             ->map(fn ($p) => ['id' => $p->id, 'nombre' => $p->nombre])
@@ -347,7 +348,7 @@ class CreateModal extends Component
             ->where('empresa_id', $empresaId)
             ->where('active', true)
             ->whereHas('proyectos', function ($q) {
-                $q->where('active', true);
+                $q->where('active', true)->where('tipo', 'Propuesta');
             })
             ->orderBy('nombre')
             ->get();

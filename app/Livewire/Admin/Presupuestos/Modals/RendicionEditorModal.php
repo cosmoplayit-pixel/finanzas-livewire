@@ -155,8 +155,7 @@ trait RendicionEditorModal
                 'integer',
                 Rule::exists('proyectos', 'id')
                     ->where('entidad_id', $this->mov_entidad_id)
-                    ->where('active', true)
-                    ->where('tipo', 'Adjudicado'),
+                    ->where('active', true),
             ];
             $base['mov_tipo_comprobante'] = [
                 'required',
@@ -259,8 +258,7 @@ trait RendicionEditorModal
             ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('active', true)
             ->whereHas('proyectos', function ($q) use ($empresaId) {
-                $q->where('active', true)
-                    ->where('tipo', 'Adjudicado');
+                $q->where('active', true);
 
                 if ($empresaId) {
                     $q->where('empresa_id', $empresaId);
@@ -317,7 +315,6 @@ trait RendicionEditorModal
             ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('entidad_id', $entidadId)
             ->where('active', true)
-            ->where('tipo', 'Adjudicado')
             ->orderBy('nombre')
             ->get(['id', 'nombre'])
             ->map(fn ($p) => ['id' => $p->id, 'nombre' => $p->nombre])

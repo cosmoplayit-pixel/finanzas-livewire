@@ -74,7 +74,7 @@ class Proyectos extends Component
                     ->ignore($this->proyectoId)
                     ->where(fn ($q) => $q->where('entidad_id', $this->entidad_id)),
             ],
-            'tipo' => ['required', 'string', 'in:Propuesta,Adjudicado'],
+            'tipo' => ['required', 'string', 'in:Propuesta,Adjudicado,Ejecucion,Finalizado'],
             'codigo' => [
                 'nullable',
                 'string',
@@ -83,7 +83,7 @@ class Proyectos extends Component
                     ->ignore($this->proyectoId)
                     ->where(fn ($q) => $q->where('entidad_id', $this->entidad_id)),
             ],
-            'monto' => $this->tipo === 'Adjudicado' ? ['required', 'numeric', 'min:0'] : ['nullable', 'numeric', 'min:0'],
+            'monto' => in_array($this->tipo, ['Adjudicado', 'Ejecucion', 'Finalizado']) ? ['required', 'numeric', 'min:0'] : ['nullable', 'numeric', 'min:0'],
 
             // ✅ NUEVO: Retención (%)
             'retencion' => ['required', 'numeric', 'min:0', 'max:100'],

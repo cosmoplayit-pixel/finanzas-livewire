@@ -1052,13 +1052,13 @@ class Facturas extends Component
         $entidades = Entidad::query()
             ->where('active', true)
             ->where('empresa_id', $empresaId)
-            ->whereHas('proyectos', fn ($q) => $q->where('active', true)->where('tipo', 'Adjudicado')->where('empresa_id', $empresaId))
+            ->whereHas('proyectos', fn ($q) => $q->where('active', true)->where('tipo', 'Ejecucion')->where('empresa_id', $empresaId))
             ->orderBy('nombre')
             ->get();
 
         $proyectos = Proyecto::query()
             ->where('active', true)
-            ->where('tipo', 'Adjudicado')
+            ->where('tipo', 'Ejecucion')
             ->where('empresa_id', $empresaId)
             ->when($this->entidad_id, fn ($q) => $q->where('entidad_id', $this->entidad_id))
             ->orderBy('nombre')

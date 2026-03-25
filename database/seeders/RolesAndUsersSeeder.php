@@ -88,6 +88,13 @@ class RolesAndUsersSeeder extends Seeder
             'agentes_servicio.update',
             'agentes_servicio.toggle',
 
+            // Herramientas
+            'herramientas.view',
+            'herramientas.create',
+            'herramientas.update',
+            'herramientas.toggle',
+            'herramientas.delete',
+
             // FACTURAS
             'facturas.view',
             'facturas.create',
@@ -188,6 +195,12 @@ class RolesAndUsersSeeder extends Seeder
             'roles.update',
             'roles.toggle',
             'roles.assign_permissions',
+
+            'herramientas.view',
+            'herramientas.create',
+            'herramientas.update',
+            'herramientas.toggle',
+            'herramientas.delete',
         ]);
 
         // Empresa_Manager
@@ -213,6 +226,12 @@ class RolesAndUsersSeeder extends Seeder
             'agentes_servicio.create',
             'agentes_servicio.update',
             'agentes_servicio.toggle',
+
+            'herramientas.view',
+            'herramientas.create',
+            'herramientas.update',
+            'herramientas.toggle',
+            'herramientas.delete',
 
             'facturas.view',
             'facturas.create',
@@ -254,6 +273,7 @@ class RolesAndUsersSeeder extends Seeder
             'bancos.view',
             'facturas.view',
             'agentes_servicio.view',
+            'herramientas.view',
             'agente_presupuestos.view',
             'boletas_garantia.view',
             'proyectos.resumen',

@@ -38,11 +38,7 @@
                         {{-- CODIGO --}}
                         <td
                             class="p-2 text-center text-[13px] {{ $isTargetInv ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}">
-                            <span
-                                class="inline-flex px-1.5 py-0.5 rounded tabular-nums
-                                {{ $inv->tipo === 'BANCO'
-                                    ? 'bg-slate-100 text-slate-700 font-bold dark:bg-neutral-800 dark:text-neutral-300'
-                                    : 'bg-blue-100 text-blue-700 font-normal dark:bg-blue-900/30 dark:text-blue-300' }}">
+                            <span class="font-semibold text-gray-600 dark:text-neutral-400 tabular-nums">
                                 {{ $inv->codigo }}
                             </span>
                         </td>
@@ -52,17 +48,35 @@
                             <div class="font-semibold text-gray-900 dark:text-neutral-100">
                                 {{ $inv->nombre_completo }}
                             </div>
-                            <div class="text-[12px] text-gray-500 dark:text-neutral-400 inline-flex items-center gap-1">
-                                {{-- icon tag --}}
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <path
-                                        d="M20.59 13.41 11 3.83V2h-2v2.59l9.59 9.58a2 2 0 0 1 0 2.83l-2.34 2.34a2 2 0 0 1-2.83 0L3.83 13.41a2 2 0 0 1 0-2.83l2.34-2.34" />
-                                    <path d="M7 7h.01" />
-                                </svg>
-                                <span class="font-normal text-gray-500 dark:text-neutral-400">
-                                    INVERSION {{ $inv->tipo === 'PRIVADO' ? 'PRIVADA' : 'BANCO' }}
+                            <div class="mt-0.5 inline-flex items-center gap-1.5">
+                                <span
+                                    class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-[4px] text-[10px] font-bold tracking-wider
+                                    {{ $inv->tipo === 'PRIVADO'
+                                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                        : 'bg-slate-100 text-slate-700 dark:bg-neutral-700 dark:text-neutral-300' }}">
+                                    @if ($inv->tipo === 'PRIVADO')
+                                        {{-- User icon --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2.5"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                            <circle cx="12" cy="7" r="4" />
+                                        </svg>
+                                    @else
+                                        {{-- Landmark icon --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2.5"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 10h18" />
+                                            <path d="M5 10V20" />
+                                            <path d="M19 10V20" />
+                                            <path d="M9 10V20" />
+                                            <path d="M15 10V20" />
+                                            <path d="M2 20h20" />
+                                            <path d="M12 2 2 7h20L12 2z" />
+                                        </svg>
+                                    @endif
+                                    INVERSIÓN {{ $inv->tipo === 'PRIVADO' ? 'PRIVADA' : 'BANCO' }}
                                 </span>
                             </div>
                         </td>
@@ -236,7 +250,8 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round">
-                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                                        <rect x="3" y="4" width="18" height="18" rx="2"
+                                            ry="2" />
                                         <line x1="16" y1="2" x2="16" y2="6" />
                                         <line x1="8" y1="2" x2="8" y2="6" />
                                         <line x1="3" y1="10" x2="21" y2="10" />

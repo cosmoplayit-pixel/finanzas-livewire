@@ -55,15 +55,29 @@
                             {{-- Tipo badge --}}
                             <span
                                 class="shrink-0 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-semibold {{ $typeBadge }}">
-                                {{-- icon tag --}}
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24"
-                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                    <path
-                                        d="M20.59 13.41 11 3.83V2h-2v2.59l9.59 9.58a2 2 0 0 1 0 2.83l-2.34 2.34a2 2 0 0 1-2.83 0L3.83 13.41a2 2 0 0 1 0-2.83l2.34-2.34" />
-                                    <path d="M7 7h.01" />
-                                </svg>
-                                {{ $inv->tipo }}
+                                @if ($inv->tipo === 'PRIVADO')
+                                    {{-- User icon --}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                @else
+                                    {{-- Landmark icon --}}
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M3 10h18" />
+                                        <path d="M5 10V20" />
+                                        <path d="M19 10V20" />
+                                        <path d="M9 10V20" />
+                                        <path d="M15 10V20" />
+                                        <path d="M2 20h20" />
+                                        <path d="M12 2 2 7h20L12 2z" />
+                                    </svg>
+                                @endif
+                                INVERSIÓN {{ $inv->tipo === 'PRIVADO' ? 'PRIVADA' : 'BANCO' }}
                             </span>
                         </div>
 

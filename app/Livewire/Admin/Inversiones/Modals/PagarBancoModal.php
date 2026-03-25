@@ -84,6 +84,8 @@ class PagarBancoModal extends Component
 
     public ?string $impacto_detalle = null; // Detalle UI (Banco: X • Base: Y)
 
+    public ?string $monto_base_preview = null; // Vista previa del MONTO TOTAL en moneda base
+
     // MODO EDICIÓN / CONFIRMACIÓN
     public ?int $movimientoId = null; // ID del BANCO_PAGO PENDIENTE cuando editas/confirmas
 
@@ -167,16 +169,32 @@ class PagarBancoModal extends Component
         $this->banco_id = $mov->banco_id ? (string) $mov->banco_id : null;
         $this->nro_comprobante = (string) ($mov->comprobante ?? '');
 
+        $invMon = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
+        $bankMon = strtoupper((string) ($this->mov_moneda ?? $invMon));
+        $tcVal = (float) ($mov->tipo_cambio ?? 0);
+
         $this->monto_total = (float) ($mov->monto_total ?? 0);
-        $this->monto_total_formatted = number_format($this->monto_total, 2, ',', '.');
-
         $this->monto_capital = (float) ($mov->monto_capital ?? 0);
-        $this->monto_capital_formatted = number_format($this->monto_capital, 2, ',', '.');
-
         $this->monto_interes = (float) ($mov->monto_interes ?? 0);
+
+        // ✅ Si el monto guardado es BASE, lo convertimos a BANCO para la UI (ej: USD 1000)
+        if ($invMon !== $bankMon && $tcVal > 0) {
+            if ($invMon === 'BOB' && $bankMon === 'USD') {
+                $this->monto_total = $this->monto_total / $tcVal;
+                $this->monto_capital = $this->monto_capital / $tcVal;
+                $this->monto_interes = $this->monto_interes / $tcVal;
+            } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
+                $this->monto_total = $this->monto_total * $tcVal;
+                $this->monto_capital = $this->monto_capital * $tcVal;
+                $this->monto_interes = $this->monto_interes * $tcVal;
+            }
+        }
+
+        $this->monto_total_formatted = number_format($this->monto_total, 2, ',', '.');
+        $this->monto_capital_formatted = number_format($this->monto_capital, 2, ',', '.');
         $this->monto_interes_formatted = number_format($this->monto_interes, 2, ',', '.');
 
-        $this->tipo_cambio = $mov->tipo_cambio !== null ? (float) $mov->tipo_cambio : null;
+        $this->tipo_cambio = $tcVal > 0 ? $tcVal : null;
         $this->tipo_cambio_formatted = $this->tipo_cambio
             ? number_format($this->tipo_cambio, 2, ',', '.')
             : null;
@@ -242,6 +260,7 @@ class PagarBancoModal extends Component
             'impacto_ok',
             'impacto_texto',
             'impacto_detalle',
+            'monto_base_preview',
 
             'movimientoId',
             'modoConfirmar',
@@ -393,9 +412,30 @@ class PagarBancoModal extends Component
                 $mov->fecha = $this->fecha;
                 $mov->fecha_pago = $this->fecha_pago;
 
-                $mov->monto_total = (float) $this->monto_total;
-                $mov->monto_capital = (float) ($this->monto_capital ?? 0);
-                $mov->monto_interes = (float) ($this->monto_interes ?? 0);
+                $invMon = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
+                $bankMon = strtoupper((string) ($this->mov_moneda ?? $invMon));
+                $tcVal = (float) ($this->tipo_cambio ?? 1);
+
+                // Calculamos el equivalente en moneda base (Inversión)
+                $totalBase = $this->monto_total;
+                $capitalBase = (float) ($this->monto_capital ?? 0);
+                $interesBase = (float) ($this->monto_interes ?? 0);
+
+                if ($invMon !== $bankMon && $tcVal > 0) {
+                    if ($invMon === 'BOB' && $bankMon === 'USD') {
+                        $totalBase = $this->monto_total * $tcVal;
+                        $capitalBase = $capitalBase * $tcVal;
+                        $interesBase = $interesBase * $tcVal;
+                    } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
+                        $totalBase = $this->monto_total / $tcVal;
+                        $capitalBase = $capitalBase / $tcVal;
+                        $interesBase = $interesBase / $tcVal;
+                    }
+                }
+
+                $mov->monto_total = round($totalBase, 2);
+                $mov->monto_capital = round($capitalBase, 2);
+                $mov->monto_interes = round($interesBase, 2);
 
                 $mov->porcentaje_utilidad = $pctInteres;
 
@@ -418,6 +458,27 @@ class PagarBancoModal extends Component
                 return;
             }
 
+            $invMon = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
+            $bankMon = strtoupper((string) ($this->mov_moneda ?? $invMon));
+            $tcVal = (float) ($this->tipo_cambio ?? 1);
+
+            // Calculamos el equivalente en moneda base (Inversión)
+            $totalBase = $this->monto_total;
+            $capitalBase = (float) ($this->monto_capital ?? 0);
+            $interesBase = (float) ($this->monto_interes ?? 0);
+
+            if ($invMon !== $bankMon && $tcVal > 0) {
+                if ($invMon === 'BOB' && $bankMon === 'USD') {
+                    $totalBase = $this->monto_total * $tcVal;
+                    $capitalBase = $capitalBase * $tcVal;
+                    $interesBase = $interesBase * $tcVal;
+                } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
+                    $totalBase = $this->monto_total / $tcVal;
+                    $capitalBase = $capitalBase / $tcVal;
+                    $interesBase = $interesBase / $tcVal;
+                }
+            }
+
             // Registrar nuevo pendiente
             $service->registrarPagoBanco($this->inversion, [
                 'fecha' => $this->fecha,
@@ -426,9 +487,9 @@ class PagarBancoModal extends Component
                 'nro_comprobante' => trim((string) $this->nro_comprobante) ?: null,
                 'imagen' => $path,
 
-                'monto_total' => (float) $this->monto_total,
-                'monto_capital' => (float) ($this->monto_capital ?? 0),
-                'monto_interes' => (float) ($this->monto_interes ?? 0),
+                'monto_total' => round($totalBase, 2),
+                'monto_capital' => round($capitalBase, 2),
+                'monto_interes' => round($interesBase, 2),
 
                 'porcentaje_utilidad' => $pctInteres,
                 'tipo_cambio' => $this->needs_tc ? (float) ($this->tipo_cambio ?? 0) : null,
@@ -666,39 +727,11 @@ class PagarBancoModal extends Component
             return;
         }
 
-        $invMon = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
-        $bankMon = strtoupper((string) ($banco->moneda ?? $invMon));
-
-        // Debito en moneda banco
-        $debitoBanco = $total;
-
-        if ($invMon !== $bankMon) {
-            $tc = (float) ($this->tipo_cambio ?? 0);
-
-            // Si requiere TC y no hay, marcamos el campo y no seguimos
-            if ($tc <= 0) {
-                $this->addError('tipo_cambio', 'Tipo de cambio requerido.');
-
-                return;
-            }
-
-            if ($invMon === 'BOB' && $bankMon === 'USD') {
-                $debitoBanco = $total / $tc;
-            } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
-                $debitoBanco = $total * $tc;
-            } else {
-                // Si tu sistema no soporta otros pares
-                $this->addError('monto_total', 'Conversión no soportada para este par de monedas.');
-
-                return;
-            }
-        }
-
-        $debitoBanco = round((float) $debitoBanco, 2);
+        // ✅ El TOTAL ingresado ya se interpreta en MONEDA BANCO.
+        $debitoBanco = round((float) $total, 2);
         $saldoBank = (float) ($banco->monto ?? 0);
 
         if ($saldoBank + 0.000001 < $debitoBanco) {
-            // ✅ aquí está lo que te faltaba: el error cae en Monto total
             $this->addError('monto_total', 'Saldo insuficiente en banco.');
         }
     }
@@ -793,11 +826,25 @@ class PagarBancoModal extends Component
 
         $capitalBase = max(0.0, $capInicial - $sumPrevCapital);
 
+        // ✅ Convertimos interés (Moneda Banco) a Moneda Inversión (Base) para el %
+        $invMon = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
+        $bankMon = strtoupper((string) ($this->mov_moneda ?? 'BOB'));
+        $tc = (float) ($this->tipo_cambio ?? 0);
+
+        $interesBase = $interes;
+        if ($invMon !== $bankMon && $tc > 0) {
+            if ($invMon === 'BOB' && $bankMon === 'USD') {
+                $interesBase = $interes * $tc;
+            } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
+                $interesBase = $interes / $tc;
+            }
+        }
+
         if ($capitalBase <= 0.000001) {
             return 0.0;
         }
 
-        return round(($interes * 100) / $capitalBase, 2);
+        return round(($interesBase * 100) / $capitalBase, 2);
     }
 
     // carga inversión BANCO y lista de bancos activos de la empresa
@@ -859,6 +906,7 @@ class PagarBancoModal extends Component
         $this->impacto_ok = true;
         $this->impacto_texto = 'Seleccione un banco.';
         $this->impacto_detalle = null;
+        $this->monto_base_preview = null;
     }
 
     // sugiere próxima fecha según día pago y último BANCO_PAGO registrado
@@ -1008,27 +1056,8 @@ class PagarBancoModal extends Component
             return;
         }
 
-        $debitoBanco = $totalBase;
-
-        if ($invMon !== $bankMon) {
-            $tc = (float) ($this->tipo_cambio ?? 0);
-            if ($tc <= 0) {
-                $this->impacto_ok = false;
-                $this->impacto_texto = 'Tipo de cambio requerido.';
-                $this->formatImpacto();
-                $this->impacto_detalle = "Banco: {$bankMon} • Base: {$invMon}";
-
-                return;
-            }
-
-            if ($invMon === 'BOB' && $bankMon === 'USD') {
-                $debitoBanco = $totalBase / $tc;
-            } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
-                $debitoBanco = $totalBase * $tc;
-            }
-        }
-
-        $debitoBanco = round((float) $debitoBanco, 2);
+        // ✅ El TOTAL ingresado ya se interpreta en MONEDA BANCO.
+        $debitoBanco = round((float) $totalBase, 2);
         $this->preview_banco_despues = $saldoBank - $debitoBanco;
 
         if ($this->preview_banco_despues < 0) {
@@ -1040,8 +1069,25 @@ class PagarBancoModal extends Component
                 : 'Se registrará PENDIENTE (al confirmar se debitará el banco).';
         }
 
+        // ✅ El CAPITAL ingresado (Moneda Banco) se convierte a BASE para bajar la deuda.
         $cap = (float) ($this->monto_capital ?? 0);
-        $this->preview_deuda_despues = max(0, $this->preview_deuda_actual - $cap);
+        $capBase = $cap;
+
+        if ($invMon !== $bankMon) {
+            $tc = (float) ($this->tipo_cambio ?? 0);
+            if ($tc > 0) {
+                if ($invMon === 'BOB' && $bankMon === 'USD') {
+                    $capBase = $cap * $tc;
+                } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
+                    $capBase = $cap / $tc;
+                }
+            } else {
+                $this->impacto_ok = false;
+                $this->impacto_texto = 'Tipo de cambio requerido.';
+            }
+        }
+
+        $this->preview_deuda_despues = max(0, $this->preview_deuda_actual - $capBase);
 
         $this->impacto_detalle = "Banco: {$bankMon} • Base: {$invMon}";
         $this->formatImpacto();
@@ -1058,6 +1104,24 @@ class PagarBancoModal extends Component
 
         $this->preview_banco_actual_fmt = $this->fmtMoney($this->preview_banco_actual, $bankMon);
         $this->preview_banco_despues_fmt = $this->fmtMoney($this->preview_banco_despues, $bankMon);
+
+        // ✅ Monto base preview (del TOTAL)
+        $totalInput = (float) ($this->monto_total ?? 0);
+        $montoBaseTotal = $totalInput;
+
+        if ($invMon !== $bankMon) {
+            $tc = (float) ($this->tipo_cambio ?? 0);
+            if ($tc > 0) {
+                if ($invMon === 'BOB' && $bankMon === 'USD') {
+                    $montoBaseTotal = $totalInput * $tc;
+                } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
+                    $montoBaseTotal = $totalInput / $tc;
+                }
+            } else {
+                $montoBaseTotal = 0;
+            }
+        }
+        $this->monto_base_preview = $montoBaseTotal > 0 ? $this->fmtMoney($montoBaseTotal, $invMon) : '—';
     }
 
     // formatea un monto según moneda (USD con $ y BOB con Bs)

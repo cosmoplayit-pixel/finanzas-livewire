@@ -7,6 +7,7 @@
             $inv = $inversion;
             $invMon = strtoupper($inv?->moneda ?? 'BOB');
             $hasTC = (bool) $needs_tc;
+            $inputCurrency = !empty($mov_moneda) ? $mov_moneda : $invMon;
         @endphp
 
         <div class="space-y-4">
@@ -206,7 +207,7 @@
 
                         {{-- TIPO CAMBIO --}}
                         @if ($hasTC)
-                            <div class="col-span-2 md:col-span-1">
+                            <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">Tipo de cambio <span
                                         class="text-red-500">*</span></label>
                                 <input type="text" wire:model.blur="tipo_cambio_formatted" placeholder="Ej: 6,96"
@@ -217,11 +218,30 @@
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
+
+                            {{-- MONTO BASE PREVIEW --}}
+                            <div class="col-span-1 md:col-span-1">
+                                <label class="block text-sm mb-1 text-gray-500 dark:text-neutral-400">
+                                    Monto Base (preview)
+                                </label>
+                                <div
+                                    class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800/50
+                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                           font-medium tabular-nums min-h-[42px] flex items-center justify-end">
+                                    {{ $monto_base_preview ?: '—' }}
+                                </div>
+                                @if (!empty($inversion?->moneda))
+                                    <div class="text-[11px] mt-1 text-gray-400 dark:text-neutral-500">
+                                        Moneda Inversión: <span class="font-semibold">{{ $inversion->moneda }}</span>
+                                    </div>
+                                @endif
+                            </div>
                         @endif
 
                         {{-- TOTAL --}}
                         <div class="col-span-1 md:col-span-1">
-                            <label class="block text-sm mb-1">Monto total <span class="text-red-500">*</span></label>
+                            <label class="block text-sm mb-1">Monto total ({{ $inputCurrency }}) <span
+                                    class="text-red-500">*</span></label>
                             <input type="text" wire:model.blur="monto_total_formatted" placeholder="0,00"
                                 class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
                                        border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
@@ -233,7 +253,7 @@
 
                         {{-- CAPITAL --}}
                         <div class="col-span-1 md:col-span-1">
-                            <label class="block text-sm mb-1">Capital (base) <span
+                            <label class="block text-sm mb-1">Capital (base) ({{ $inputCurrency }}) <span
                                     class="text-red-500">*</span></label>
                             <input type="text" wire:model.blur="monto_capital_formatted" placeholder="0,00"
                                 class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 text-right tabular-nums
@@ -246,7 +266,7 @@
 
                         {{-- INTERÉS --}}
                         <div class="col-span-1 md:col-span-1">
-                            <label class="block text-sm mb-1">Interés (auto) <span
+                            <label class="block text-sm mb-1">Interés (auto) ({{ $inputCurrency }}) <span
                                     class="text-red-500">*</span></label>
                             <input type="text" wire:model="monto_interes_formatted" readonly
                                 class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800 text-right tabular-nums

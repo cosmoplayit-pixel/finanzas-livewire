@@ -7,7 +7,10 @@
 
         @php
             $isUtilidad = $tipo_pago === 'PAGO_UTILIDAD';
+            $inv = $inversion;
+            $invMon = strtoupper($inv?->moneda ?? 'BOB');
             $hasTC = (bool) $needs_tc;
+            $inputCurrency = !empty($mov_moneda) ? $mov_moneda : $invMon;
         @endphp
 
         <div class="space-y-4">
@@ -277,7 +280,7 @@
 
                             <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
-                                    Monto Interés Mes <span class="text-red-500">*</span>
+                                    Monto Interés Mes ({{ $inputCurrency }}) <span class="text-red-500">*</span>
                                 </label>
                                 <input wire:key="utilidad-mes-{{ $tipo_pago }}" type="text"
                                     wire:model.blur="utilidad_monto_mes_formatted" placeholder="Ej: 0,00"
@@ -290,7 +293,8 @@
                             </div>
 
                             <div class="col-span-1 md:col-span-1">
-                                <label class="block text-sm mb-1">A Pagar (calculado)</label>
+                                <label class="block text-sm mb-1">A Pagar (calculado)
+                                    ({{ $inputCurrency }})</label>
                                 <input type="text" disabled value="{{ $utilidad_a_pagar_formatted ?: '0,00' }}"
                                     class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
@@ -301,7 +305,7 @@
                         @else
                             <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
-                                    Monto (capital) <span class="text-red-500">*</span>
+                                    Monto (capital) ({{ $inputCurrency }}) <span class="text-red-500">*</span>
                                 </label>
                                 <input wire:key="capital-monto-{{ $tipo_pago }}" type="text"
                                     wire:model.blur="monto_capital_formatted" placeholder="Ej: 0,00"

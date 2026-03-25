@@ -41,11 +41,11 @@ class Proyectos extends Component
 
     public $monto = 0;
 
-    public string $monto_formatted = '0,00';
+    public string $monto_formatted = '';
 
     public $retencion = 0;
 
-    public string $retencion_formatted = '0,00';
+    public string $retencion_formatted = '';
 
     public string $descripcion = '';
 
@@ -240,7 +240,7 @@ class Proyectos extends Component
 
         // ✅ NUEVO
         $this->retencion = 0;
-        $this->retencion_formatted = '0,00';
+        $this->retencion_formatted = '';
 
         $this->descripcion = '';
         $this->fecha_inicio = null;

@@ -580,7 +580,7 @@ class MovimientoModal extends Component
 
             $bancoLinea = null;
             if (! empty($m->banco)) {
-                $bancoLinea = $m->banco->nombre.' • '.(string) ($m->banco->numero_cuenta ?? '');
+                $bancoLinea = $m->banco->nombre.' • '.(string) ($m->banco->titular ?? '');
             }
 
             $tipoRaw = strtoupper((string) ($m->tipo ?? ''));
@@ -707,6 +707,31 @@ class MovimientoModal extends Component
                 $esVencido = $checkFecha && $checkFecha <= now()->startOfDay();
             }
 
+            // ✅ LÍNEA DE CONVERSIÓN (si aplica)
+            $conversionLinea = null;
+            $tcVal = (float) ($m->tipo_cambio ?? 0);
+            $movMon = strtoupper((string) ($m->moneda_banco ?? ''));
+
+            if ($tcVal > 0 && $movMon !== '' && $movMon !== $this->moneda) {
+                $totalBase = (float) ($m->monto_total ?? ($m->monto_utilidad ?? 0));
+                
+                // Si la columna total es 0, probamos con capital + interes (para banco)
+                if ($totalBase == 0 && ($m->monto_capital != 0 || $m->monto_interes != 0)) {
+                    $totalBase = (float) abs($m->monto_capital) + (float) abs($m->monto_interes);
+                }
+
+                $montoBanco = $totalBase;
+                if ($this->moneda === 'BOB' && $movMon === 'USD') {
+                    $montoBanco = $totalBase / $tcVal;
+                } elseif ($this->moneda === 'USD' && $movMon === 'BOB') {
+                    $montoBanco = $totalBase * $tcVal;
+                }
+
+                $fmtTC = number_format($tcVal, 2, ',', '.');
+                $fmtMonto = number_format($montoBanco, 2, ',', '.');
+                $conversionLinea = "TC: {$fmtTC} • {$fmtMonto} {$movMon}";
+            }
+
             $out[] = [
                 'id' => (int) $m->id,
                 'idx' => $idx++,
@@ -740,6 +765,9 @@ class MovimientoModal extends Component
 
                 // ✅ consume tu TD (línea verde)
                 'capital_actual_linea' => $capitalActualLinea,
+
+                // ✅ consume tu TC (línea azul/gris de conversión)
+                'conversion_linea' => $conversionLinea,
 
                 'utilidad' => $utilNum > 0 ? $this->fmtMoney($utilNum) : '—',
                 'total' => $this->fmtMoney((float) ($m->monto_total ?? 0)),
@@ -889,11 +917,12 @@ class MovimientoModal extends Component
     }
 
     // Utils
-    protected function fmtMoney(float $n): string
+    protected function fmtMoney(float $n, ?string $mon = null): string
     {
         $v = number_format($n, 2, ',', '.');
+        $m = $mon ?: $this->moneda;
 
-        return $this->moneda === 'USD' ? '$ '.$v : $v.' Bs';
+        return $m === 'USD' ? '$ '.$v : $v.' Bs';
     }
 
     public function render()

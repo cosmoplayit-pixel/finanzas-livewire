@@ -206,6 +206,11 @@
                                 @if (!empty($m['banco_linea']))
                                     <div class="mt-1 text-xs text-gray-500 dark:text-neutral-400">
                                         {{ $m['banco_linea'] }}
+                                        @if (!empty($m['conversion_linea']))
+                                            <span class="text-blue-600 dark:text-blue-400 font-medium ml-1">
+                                                • {{ $m['conversion_linea'] }}
+                                            </span>
+                                        @endif
                                     </div>
                                 @endif
                             </td>

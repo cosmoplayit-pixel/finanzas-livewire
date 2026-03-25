@@ -162,7 +162,12 @@ class TransaccionesService
                     ELSE 'EGRESO'
                 END as tipo_movimiento,
                 im.fecha_pago as fecha,
-                COALESCE(im.monto_total, im.monto_utilidad, 0) as monto,
+                CASE 
+                    WHEN i.moneda = b.moneda THEN COALESCE(im.monto_total, im.monto_utilidad, 0)
+                    WHEN i.moneda = 'BOB' AND b.moneda = 'USD' THEN COALESCE(im.monto_total, im.monto_utilidad, 0) / IFNULL(im.tipo_cambio, 1)
+                    WHEN i.moneda = 'USD' AND b.moneda = 'BOB' THEN COALESCE(im.monto_total, im.monto_utilidad, 0) * IFNULL(im.tipo_cambio, 1)
+                    ELSE COALESCE(im.monto_total, im.monto_utilidad, 0)
+                END as monto,
                 b.moneda as moneda,
                 im.banco_id,
                 CONCAT('Inversión ', 
@@ -170,13 +175,13 @@ class TransaccionesService
                         WHEN 'PRIVADO' THEN 'Privada' 
                         WHEN 'BANCO' THEN 'Banca' 
                         ELSE '' 
-                    END, ' - Codigo:  ', i.codigo,
+                    END, ' - Codigo: ', i.codigo,
                     CASE im.tipo 
                         WHEN 'CAPITAL_INICIAL' THEN ' - Capital Inicial'
                         WHEN 'INGRESO_CAPITAL' THEN ' - Ingreso Capital'
                         WHEN 'PAGO_UTILIDAD' THEN CONCAT(' - ', NULLIF(im.descripcion, ''))
                         WHEN 'DEVOLUCION_CAPITAL' THEN ' - Devolución Capital'
-                        WHEN 'BANCO_PAGO' THEN CONCAT(' - Pago Cuota #', LPAD(im.nro - 1, 2, '0'))
+                        WHEN 'BANCO_PAGO' THEN CONCAT(' - Pago Cuota #', LPAD(ABS(im.nro - 1), 2, '0'))
                         ELSE CONCAT(' - ', im.tipo)
                     END) as concepto,
                 CONCAT_WS(' - ', COALESCE(NULLIF(im.comprobante, ''), '0'), i.nombre_completo) as referencia,
@@ -198,7 +203,7 @@ class TransaccionesService
             ->join('inversions as i', 'im.inversion_id', '=', 'i.id')
             ->join('bancos as b', 'im.banco_id', '=', 'b.id')
             ->whereIn('im.tipo', ['CAPITAL_INICIAL', 'INGRESO_CAPITAL', 'PAGO_UTILIDAD', 'DEVOLUCION_CAPITAL', 'BANCO_PAGO'])
-            ->where('im.estado', 'PAGADO') // El usuario dice "cuando pasa a pagado"
+            ->where('im.estado', 'PAGADO')
             ->whereNotNull('im.banco_id');
 
         if ($empresaId) {

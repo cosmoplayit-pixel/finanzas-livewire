@@ -161,7 +161,7 @@
                         class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px]">
                         <option value="all">Todas</option>
                         @foreach ($entidades as $en)
-                            <option value="{{ $en->id }}">{{ \Illuminate\Support\Str::limit($en->nombre, 30) }}
+                            <option value="{{ $en->id }}">{{ $en->nombre }}
                             </option>
                         @endforeach
                     </select>
@@ -960,7 +960,7 @@
                             @foreach ($entidades as $en)
                                 <option value="{{ $en->id }}" title="{{ $en->nombre }}">
                                     {{ $en->sigla ? $en->sigla . ' - ' : '' }}
-                                    {{ \Illuminate\Support\Str::limit($en->nombre, 30) }}
+                                    {{ $en->nombre }}
                                 </option>
                             @endforeach
                         </select>
@@ -1006,7 +1006,7 @@
                     {{-- Monto --}}
                     <div>
                         <label class="block text-sm mb-1">Monto del Proyecto</label>
-                        <input type="text" inputmode="decimal" wire:model.blur="monto_formatted" placeholder="0,00"
+                        <input type="text" inputmode="decimal" wire:model.blur="monto_formatted"
                             class="w-full rounded border px-3 py-2
                                bg-white dark:bg-neutral-900
                                border-gray-300 dark:border-neutral-700
@@ -1023,7 +1023,6 @@
                         <div>
                             <label class="block text-sm mb-1">Retención (%)</label>
                             <input type="text" inputmode="decimal" wire:model.blur="retencion_formatted"
-                                placeholder="0,00"
                                 class="w-full rounded border px-3 py-2
                                bg-white dark:bg-neutral-900
                                border-gray-300 dark:border-neutral-700
@@ -1036,7 +1035,8 @@
                         </div>
                         <div>
                             <label class="block text-sm mb-1">Monto retenido</label>
-                            <input readonly value="{{ number_format($monto_retenido, 2, ',', '.') }}"
+                            <input readonly
+                                value="{{ $monto_retenido > 0 ? number_format($monto_retenido, 2, ',', '.') : '' }}"
                                 class="w-full rounded border px-3 py-2
                                bg-gray-50 dark:bg-neutral-800
                                border-gray-200 dark:border-neutral-700
@@ -1044,7 +1044,7 @@
                         </div>
                         <div>
                             <label class="block text-sm mb-1">Monto neto</label>
-                            <input readonly value="{{ number_format($monto_neto, 2, ',', '.') }}"
+                            <input readonly value="{{ $monto_neto > 0 ? number_format($monto_neto, 2, ',', '.') : '' }}"
                                 class="w-full rounded border px-3 py-2
                                bg-gray-50 dark:bg-neutral-800
                                border-gray-200 dark:border-neutral-700

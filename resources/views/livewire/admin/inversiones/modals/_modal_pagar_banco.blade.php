@@ -1,7 +1,7 @@
 <div>
     <x-ui.modal wire:key="pago-banco-{{ $open ? 'open' : 'closed' }}" model="open"
-        title="{{ $modoConfirmar ? 'Confirmar pago banco' : 'Registrar pago banco' }}"
-        maxWidth="sm:max-w-2xl md:max-w-4xl" onClose="close">
+        title="{{ $modoConfirmar ? 'Confirmar pago' : 'Registrar pago' }}" maxWidth="sm:max-w-2xl md:max-w-4xl"
+        onClose="close">
 
         @php
             $inv = $inversion;

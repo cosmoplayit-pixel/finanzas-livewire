@@ -78,6 +78,8 @@ class Index extends Component
 
     public function mount(): void
     {
+        $this->f_fecha_desde = now()->startOfYear()->toDateString();
+        $this->f_fecha_hasta = now()->endOfYear()->toDateString();
         $this->f_estado = ['abierta'];
         $this->f_devoluciones = [];
 
@@ -368,6 +370,25 @@ class Index extends Component
         $totales['saldo_total_bob'] = max(0, $totales['total_retencion_bob'] - $totales['total_devuelto_bob']);
         $totales['saldo_total_usd'] = max(0, $totales['total_retencion_usd'] - $totales['total_devuelto_usd']);
 
-        return view('livewire.admin.boletas-garantia.index', compact('boletas', 'totales'));
+        // Calcular etiqueta de rango de fecha para los cards
+        $dateLabel = '';
+        if ($this->f_fecha_desde && $this->f_fecha_hasta) {
+            $from = \Carbon\Carbon::parse($this->f_fecha_desde);
+            $to = \Carbon\Carbon::parse($this->f_fecha_hasta);
+
+            if ($from->isStartOfYear() && $to->isEndOfYear() && $from->year === $to->year) {
+                $dateLabel = (string) $from->year;
+            } else {
+                $dateLabel = $from->format('d/m/y').' - '.$to->format('d/m/y');
+            }
+        } elseif ($this->f_fecha_desde) {
+            $dateLabel = 'Desde '.\Carbon\Carbon::parse($this->f_fecha_desde)->format('d/m/y');
+        } elseif ($this->f_fecha_hasta) {
+            $dateLabel = 'Hasta '.\Carbon\Carbon::parse($this->f_fecha_hasta)->format('d/m/y');
+        } else {
+            $dateLabel = 'Histórico';
+        }
+
+        return view('livewire.admin.boletas-garantia.index', compact('boletas', 'totales', 'dateLabel'));
     }
 }

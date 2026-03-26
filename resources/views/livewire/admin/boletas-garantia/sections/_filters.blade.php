@@ -9,7 +9,7 @@
                     Filtros
                     <span
                         class="text-[11px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400">
-                        {{ count($f_tipo ?? []) + count($f_estado ?? []) + count($f_devoluciones ?? []) + (!empty($f_fecha_desde) ? 1 : 0) + (!empty($f_fecha_hasta) ? 1 : 0) }}
+                        {{ count($f_estado ?? []) + count($f_devoluciones ?? []) + (!empty($f_fecha_desde) ? 1 : 0) + (!empty($f_fecha_hasta) ? 1 : 0) }}
                     </span>
                 </div>
                 <button type="button" @click="openMobile = !openMobile"
@@ -96,7 +96,7 @@
                         Opciones
                         <span
                             class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
-                            {{ count($f_tipo ?? []) + count($f_estado ?? []) + count($f_devoluciones ?? []) + (!empty($f_fecha_desde) ? 1 : 0) + (!empty($f_fecha_hasta) ? 1 : 0) }}
+                            {{ count($f_estado ?? []) + count($f_devoluciones ?? []) + (!empty($f_fecha_desde) ? 1 : 0) + (!empty($f_fecha_hasta) ? 1 : 0) }}
                         </span>
                     </button>
                 </div>

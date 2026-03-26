@@ -27,8 +27,6 @@ class Index extends Component
 
     public string $moneda = 'all'; // all | BOB | USD
 
-    public array $f_tipo = []; // SERIEDAD | CUMPLIMIENTO
-
     public array $f_estado = []; // abierta | devuelta
 
     public array $f_devoluciones = []; // con | sin
@@ -80,7 +78,6 @@ class Index extends Component
 
     public function mount(): void
     {
-        $this->f_tipo = ['SERIEDAD', 'CUMPLIMIENTO'];
         $this->f_estado = ['abierta'];
         $this->f_devoluciones = [];
 
@@ -144,7 +141,6 @@ class Index extends Component
     public function toggleFilter(string $group, string $value): void
     {
         $map = [
-            'tipo' => 'f_tipo',
             'estado' => 'f_estado',
             'devoluciones' => 'f_devoluciones',
         ];
@@ -169,7 +165,6 @@ class Index extends Component
 
     public function clearFilters(): void
     {
-        $this->f_tipo = [];
         $this->f_estado = [];
         $this->f_devoluciones = [];
         $this->f_fecha_desde = null;

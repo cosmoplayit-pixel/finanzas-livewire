@@ -14,6 +14,20 @@
             $totalDev = (float) ($bg->devoluciones?->sum('monto') ?? 0);
             $rest = max(0, (float) $bg->retencion - $totalDev);
             $devuelta = $totalDev >= (float) $bg->retencion;
+
+            $tipoLabel = match ($bg->tipo) {
+                'SERIEDAD' => 'Seriedad de Propuesta',
+                'CUMPLIMIENTO' => 'Cumplimiento de Contrato',
+                default => $bg->tipo ?? '—',
+            };
+            $tipoColor = match ($bg->tipo) {
+                'SERIEDAD'
+                    => 'bg-blue-100/60 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20',
+                'CUMPLIMIENTO'
+                    => 'bg-amber-100/60 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
+                default
+                    => 'bg-gray-100/60 text-gray-800 border-gray-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700',
+            };
         @endphp
 
         @php
@@ -51,8 +65,14 @@
                         {{ $bg->proyecto?->nombre ?? '—' }}
                     </div>
 
-                    <div class="mt-0.5 truncate text-xs text-gray-500 dark:text-neutral-400">
-                        Nro: {{ $bg->nro_boleta ?? '—' }} • {{ $bg->tipo ?? '—' }}
+                    <div
+                        class="mt-0.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-gray-500 dark:text-neutral-400">
+                        <span>Nro: {{ $bg->nro_boleta ?? '—' }}</span>
+                        <span class="text-gray-300">|</span>
+                        <span class="px-1.5 py-0.5 rounded font-bold border leading-none {{ $tipoColor }}"
+                            style="font-size: 9.5px;">
+                            {{ $tipoLabel }}
+                        </span>
                     </div>
                 </div>
 
@@ -141,7 +161,7 @@
                         @if ($bg->observacion)
                             @php
                                 $obs = $bg->observacion;
-                                $isLongObs = mb_strlen($obs) > 80;
+                                $isLongObs = mb_strlen($obs) > 40;
                             @endphp
                             <div class="col-span-full border-t border-gray-100 dark:border-neutral-800 pt-3 flex items-start gap-2.5"
                                 x-data="{ showFullObs: false }">

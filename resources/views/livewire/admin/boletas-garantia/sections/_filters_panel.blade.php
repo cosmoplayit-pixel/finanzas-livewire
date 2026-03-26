@@ -1,28 +1,5 @@
 <div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
-    <button type="button" class="w-full flex items-center justify-between cursor-pointer" @click="secTipo = !secTipo">
-        <span class="font-semibold text-gray-800 dark:text-neutral-100">Tipo</span>
-        <span class="text-gray-400" x-text="secTipo ? '▾' : '▸'"></span>
-    </button>
-
-    <div x-show="secTipo" x-cloak class="mt-3 space-y-2">
-        <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
-            <input type="checkbox" wire:key="chk-tipo-seriedad" @checked(in_array('SERIEDAD', $f_tipo ?? [], true))
-                wire:click="toggleFilter('tipo','SERIEDAD')" class="rounded border-gray-300 dark:border-neutral-700" />
-            Garantía de Seriedad
-        </label>
-
-        <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
-            <input type="checkbox" wire:key="chk-tipo-cumplimiento" @checked(in_array('CUMPLIMIENTO', $f_tipo ?? [], true))
-                wire:click="toggleFilter('tipo','CUMPLIMIENTO')"
-                class="rounded border-gray-300 dark:border-neutral-700" />
-            Garantía de Cumplimiento
-        </label>
-    </div>
-</div>
-
-<div class="border-t border-gray-200 dark:border-neutral-700 pt-3">
-    <button type="button" class="w-full flex items-center justify-between cursor-pointer"
-        @click="secEstado = !secEstado">
+    <button type="button" class="w-full flex items-center justify-between cursor-pointer" @click="secEstado = !secEstado">
         <span class="font-semibold text-gray-800 dark:text-neutral-100">Estado</span>
         <span class="text-gray-400" x-text="secEstado ? '▾' : '▸'"></span>
     </button>

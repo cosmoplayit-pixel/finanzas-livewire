@@ -297,8 +297,22 @@
                                 </div>
 
                                 {{-- Tipo --}}
-                                <div class="flex items-center gap-1 truncate text-xs text-gray-500 dark:text-neutral-400"
-                                    title="{{ $bg->tipo ?? '-' }}">
+                                @php
+                                    $tipoLabel = match ($bg->tipo) {
+                                        'SERIEDAD' => 'Seriedad de Propuesta',
+                                        'CUMPLIMIENTO' => 'Cumplimiento de Contrato',
+                                        default => $bg->tipo ?? '—',
+                                    };
+                                    $tipoColor = match ($bg->tipo) {
+                                        'SERIEDAD'
+                                            => 'bg-blue-100/60 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20',
+                                        'CUMPLIMIENTO'
+                                            => 'bg-amber-100/60 text-amber-800 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
+                                        default
+                                            => 'bg-gray-100/60 text-gray-800 border-gray-200 dark:bg-neutral-800 dark:text-neutral-400 dark:border-neutral-700',
+                                    };
+                                @endphp
+                                <div class="flex items-center gap-1.5 mt-0.5">
                                     {{-- icon tag --}}
                                     <svg xmlns="http://www.w3.org/2000/svg"
                                         class="w-3.5 h-3.5 text-gray-400 dark:text-neutral-400" viewBox="0 0 24 24"
@@ -307,7 +321,10 @@
                                         <path d="M20.59 13.41 12 22l-8-8V2h12l4.59 4.59z" />
                                         <path d="M7 7h.01" />
                                     </svg>
-                                    <span>Tipo: {{ $bg->tipo ?? '—' }}</span>
+                                    <span
+                                        class="px-1.5 py-0.5 rounded text-[10px] font-bold border leading-none {{ $tipoColor }}">
+                                        {{ $tipoLabel }}
+                                    </span>
                                 </div>
 
 
@@ -335,7 +352,7 @@
                                 @if ($bg->observacion)
                                     @php
                                         $obs = $bg->observacion;
-                                        $isLongObs = mb_strlen($obs) > 45;
+                                        $isLongObs = mb_strlen($obs) > 30;
                                     @endphp
                                     <div
                                         class="flex items-start gap-1 text-[12.8px] text-gray-500 dark:text-neutral-400">
@@ -347,27 +364,36 @@
 
                                         @if ($isLongObs)
                                             <div class="min-w-0 flex-1">
-                                                <div x-show="!showFullObs" class="flex items-center gap-1.5 min-w-0">
-                                                    <span class="truncate leading-tight" title="{{ $obs }}">
+                                                <div x-show="!showFullObs" class="min-w-0 flex items-center gap-2">
+                                                    <span
+                                                        class="min-w-0 flex-1 truncate whitespace-nowrap leading-tight"
+                                                        title="{{ $obs }}">
                                                         Obs: {{ $obs }}
                                                     </span>
-                                                    <button type="button" @click.stop="showFullObs = true"
-                                                        class="shrink-0 text-[12.8px] font-medium text-blue-600 hover:underline cursor-pointer">
+
+                                                    <button type="button"
+                                                        class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                                        @click.stop="showFullObs = true">
                                                         Ver más
                                                     </button>
                                                 </div>
-                                                <div x-show="showFullObs" x-cloak class="leading-tight">
-                                                    <span class="break-words">Obs: {{ $obs }}</span>
-                                                    <button type="button" @click.stop="showFullObs = false"
-                                                        class="ml-1 text-[12.8px] font-medium text-blue-600 hover:underline cursor-pointer whitespace-nowrap">
+
+                                                <div x-show="showFullObs" x-cloak class="min-w-0 leading-tight">
+                                                    <span class="break-words">
+                                                        Obs: {{ $obs }}
+                                                    </span>
+
+                                                    <button type="button"
+                                                        class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                                        @click.stop="showFullObs = false">
                                                         Ver menos
                                                     </button>
                                                 </div>
                                             </div>
                                         @else
-                                            <span class="leading-tight truncate" title="{{ $obs }}">
-                                                Obs: {{ $obs }}
-                                            </span>
+                                            <div class="min-w-0">
+                                                <span class="leading-tight">Obs: {{ $obs }}</span>
+                                            </div>
                                         @endif
                                     </div>
                                 @endif

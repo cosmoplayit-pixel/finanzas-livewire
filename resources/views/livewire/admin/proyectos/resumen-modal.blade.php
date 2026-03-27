@@ -44,7 +44,10 @@
                                     class="px-3 py-2.5 text-right text-[10px] font-medium text-gray-400 dark:text-neutral-500 uppercase tracking-wider">
                                     Monto</th>
                                 <th
-                                    class="px-4 py-2.5 text-center text-[10px] font-medium text-gray-400 dark:text-neutral-500 uppercase tracking-wider">
+                                    class="px-3 py-2.5 text-center text-[10px] font-medium text-gray-400 dark:text-neutral-500 uppercase tracking-wider w-[60px]">
+                                    Imagen</th>
+                                <th
+                                    class="px-4 py-2.5 text-center text-[10px] font-medium text-gray-400 dark:text-neutral-500 uppercase tracking-wider w-[60px]">
                                     Doc</th>
                             </tr>
                         </thead>
@@ -109,27 +112,98 @@
                                         @endif
                                     </td>
 
-                                    <td class="px-4 py-3 text-center">
+                                    <td class="p-2 text-center">
+                                        @php
+                                            $foto = $mov['foto_path'] ?? null;
+                                            $ext = $foto ? strtolower(pathinfo($foto, PATHINFO_EXTENSION)) : '';
+                                            $isPdf = $ext === 'pdf';
+                                            $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'bmp']);
+                                        @endphp
+
+                                        @if ($foto)
+                                            @if ($isPdf)
+                                                <a href="{{ asset('storage/' . $foto) }}" target="_blank"
+                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:bg-neutral-900 dark:text-rose-400 dark:border-rose-700 dark:hover:bg-rose-900/20 shadow-sm"
+                                                    title="Ver PDF">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path
+                                                            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                        <polyline points="14 2 14 8 20 8" />
+                                                        <line x1="9" y1="13" x2="15"
+                                                            y2="13" />
+                                                        <line x1="9" y1="17" x2="15"
+                                                            y2="17" />
+                                                        <line x1="9" y1="9" x2="11"
+                                                            y2="9" />
+                                                    </svg>
+                                                </a>
+                                            @elseif($isImage)
+                                                <button type="button"
+                                                    @click.stop="$wire.openFotoComprobante('{{ asset('storage/' . $foto) }}')"
+                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
+                                                    title="Ver imagen">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="3" y="3" width="18" height="18" rx="2"
+                                                            ry="2" />
+                                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                                        <polyline points="21 15 16 10 5 21" />
+                                                    </svg>
+                                                </button>
+                                            @else
+                                                <a href="{{ asset('storage/' . $foto) }}" target="_blank"
+                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400 dark:bg-neutral-900 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-900/20 shadow-sm"
+                                                    title="Ver archivo">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path
+                                                            d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z">
+                                                        </path>
+                                                        <polyline points="13 2 13 9 20 9"></polyline>
+                                                    </svg>
+                                                </a>
+                                            @endif
+                                        @else
+                                            <div class="w-8 h-8 mx-auto inline-flex items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-300 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-700 shadow-sm"
+                                                title="Sin respaldo">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="3" y="3" width="18" height="18" rx="2"
+                                                        ry="2" />
+                                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                                    <polyline points="21 15 16 10 5 21" />
+                                                </svg>
+                                            </div>
+                                        @endif
+                                    </td>
+
+                                    <td class="p-2 text-center">
                                         @if ($mov['url'])
                                             <a href="{{ $mov['url'] }}" target="_blank"
-                                                class="inline-flex items-center justify-center w-7 h-7 rounded-md border border-gray-200 dark:border-neutral-700 text-gray-400 hover:text-gray-700 hover:border-gray-400 dark:hover:text-neutral-200 dark:hover:border-neutral-500 transition-colors"
+                                                class="w-8 h-8 inline-flex items-center justify-center rounded-lg border border-gray-200 dark:border-neutral-700 text-gray-400 hover:text-gray-700 hover:border-gray-400 dark:hover:text-neutral-200 dark:hover:border-neutral-500 transition-colors shadow-sm bg-white dark:bg-neutral-900"
                                                 title="Ver documento original">
                                                 <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
-                                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                        d="M10 6H6a2 2 0 0 0-2 2v10a2 2 0 0 02 2h10a2 2 0 0 02-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                                 </svg>
                                             </a>
                                         @else
-                                            <span class="text-gray-300 dark:text-neutral-700 text-xs">—</span>
+                                            <span
+                                                class="w-8 h-8 rounded-lg border border-transparent inline-flex items-center justify-center text-gray-300 dark:text-neutral-700 text-xs">—</span>
                                         @endif
                                     </td>
 
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7"
+                                    <td colspan="8"
                                         class="px-4 py-10 text-center text-sm text-gray-400 dark:text-neutral-600">
                                         No hay movimientos registrados.
                                     </td>
@@ -140,7 +214,7 @@
                         <tfoot
                             class="bg-gray-50 dark:bg-neutral-800/60 border-t border-gray-200 dark:border-neutral-700">
                             <tr>
-                                <td colspan="5"
+                                <td colspan="6"
                                     class="px-3 py-3 text-right text-[10px] font-medium text-gray-400 dark:text-neutral-500 uppercase tracking-wider">
                                     Total egresos
                                 </td>
@@ -148,7 +222,7 @@
                                     class="px-3 py-3 text-right text-[15px] font-medium text-red-700 dark:text-red-400 tabular-nums whitespace-nowrap">
                                     −{{ number_format((float) $total_compras, 2, ',', '.') }}
                                 </td>
-                                <td class="px-4"></td>
+                                <td colspan="2"></td>
                             </tr>
                         </tfoot>
                     </table>
@@ -166,4 +240,7 @@
             </div>
         @endslot
     </x-ui.modal>
+
+    {{-- Visor de fotos --}}
+    @include('livewire.admin.presupuestos.listeners._modal_foto')
 </div>

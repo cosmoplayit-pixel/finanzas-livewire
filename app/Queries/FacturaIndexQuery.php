@@ -32,7 +32,7 @@ class FacturaIndexQuery
         $fEstado = $params['f_cerrada'] ?? [];
 
         // Seguridad: si no hay empresa, no debe listar nada.
-        if (!$empresaId) {
+        if (! $empresaId) {
             // Devolvemos un query vacío (id = -1 no existirá)
             return DB::query()->fromSub(
                 DB::table('facturas')->selectRaw('-1 as id')->whereRaw('1=0'),
@@ -63,29 +63,29 @@ class FacturaIndexQuery
                     ->where('tipo', 'retencion');
             }, 'pagado_retencion')
             // Multi-empresa: estrictamente por empresa del usuario
-            ->whereHas('proyecto', fn($qq) => $qq->where('empresa_id', $empresaId))
-            // Si viene factura_id exacto (desde Transacciones), filtrar por ID (ignora texto)
-            ->when($facturaId, fn ($q) => $q->where('facturas.id', $facturaId))
+            ->whereHas('proyecto', fn ($qq) => $qq->where('empresa_id', $empresaId))
+            // Se mantiene el ID para scroll/resaltado en el frontend,
+            // pero no filtramos la consulta para que se vea la lista completa.
             // Search de texto (solo si no hay factura_id exacto)
-            ->when($search !== '' && !$facturaId, function ($q) use ($search) {
-                $s = '%' . $search . '%';
+            ->when($search !== '' && ! $facturaId, function ($q) use ($search) {
+                $s = '%'.$search.'%';
                 $q->where(function ($qq) use ($s) {
                     $qq->where('numero', 'like', $s)
-                        ->orWhereHas('proyecto', fn($q2) => $q2->where('nombre', 'like', $s))
+                        ->orWhereHas('proyecto', fn ($q2) => $q2->where('nombre', 'like', $s))
                         ->orWhereHas(
                             'proyecto.entidad',
-                            fn($q3) => $q3->where('nombre', 'like', $s),
+                            fn ($q3) => $q3->where('nombre', 'like', $s),
                         );
                 });
             })
             // Rango fecha emisión
             ->when(
                 $fFechaDesde,
-                fn($q) => $q->whereDate('facturas.fecha_emision', '>=', $fFechaDesde),
+                fn ($q) => $q->whereDate('facturas.fecha_emision', '>=', $fFechaDesde),
             )
             ->when(
                 $fFechaHasta,
-                fn($q) => $q->whereDate('facturas.fecha_emision', '<=', $fFechaHasta),
+                fn ($q) => $q->whereDate('facturas.fecha_emision', '<=', $fFechaHasta),
             );
 
         // Convertimos a subquery para poder filtrar por expresiones calculadas (saldo, retención pendiente, etc.)
@@ -98,7 +98,7 @@ class FacturaIndexQuery
             'GREATEST(0, ROUND(COALESCE(t.retencion,0) - COALESCE(t.pagado_retencion,0), 2))';
 
         // ===== Filtro: PAGO =====
-        if (is_array($fPago) && !empty($fPago)) {
+        if (is_array($fPago) && ! empty($fPago)) {
             $q->where(function ($w) use ($fPago, $netoExpr) {
                 foreach ($fPago as $estado) {
                     if ($estado === 'pendiente') {
@@ -121,7 +121,7 @@ class FacturaIndexQuery
         }
 
         // ===== Filtro: RETENCIÓN =====
-        if (is_array($fRet) && !empty($fRet)) {
+        if (is_array($fRet) && ! empty($fRet)) {
             $q->where(function ($w) use ($fRet, $retPendExpr) {
                 foreach ($fRet as $estado) {
                     if ($estado === 'sin_retencion') {
@@ -140,7 +140,7 @@ class FacturaIndexQuery
         }
 
         // ===== Filtro: ESTADO GLOBAL (abierta/cerrada) =====
-        if (is_array($fEstado) && !empty($fEstado)) {
+        if (is_array($fEstado) && ! empty($fEstado)) {
             $q->where(function ($w) use ($fEstado, $saldoExpr, $retPendExpr) {
                 foreach ($fEstado as $estado) {
                     // Cerrada: saldo normal = 0 y retención pendiente = 0

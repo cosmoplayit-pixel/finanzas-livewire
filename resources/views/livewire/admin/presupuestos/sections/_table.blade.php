@@ -1,12 +1,19 @@
   {{-- TABLA PRINCIPAL --}}
   <div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm"
-      @if (isset($highlight_presupuesto_id) && $highlight_presupuesto_id) x-data
-      x-init="setTimeout(() => {
-          const panelEl = document.getElementById('presupuesto-panel-target-{{ (int) ($highlight_presupuesto_id ?? 0) }}');
-          const agentEl = document.getElementById('presupuesto-row-target-{{ (int) ($highlight_presupuesto_id ?? 0) }}');
-          const el = panelEl || agentEl;
-          if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-      }, 700)" @endif>
+      x-data="{
+          presupuestoId: @entangle('highlight_presupuesto_id'),
+          scroll() {
+              const panelEl = document.getElementById(`presupuesto-panel-target-${this.presupuestoId}`);
+              const agentEl = document.getElementById(`presupuesto-row-target-${this.presupuestoId}`);
+              const el = panelEl || agentEl;
+              if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+          }
+      }" x-init="if (presupuestoId) {
+          setTimeout(() => scroll(), 600);
+      }
+      $watch('presupuestoId', val => { if (val) setTimeout(() => scroll(), 300) });">
 
       <table wire:key="presupuestos-table" class="w-full table-fixed text-sm">
           <thead

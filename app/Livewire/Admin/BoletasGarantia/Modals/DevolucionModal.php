@@ -299,7 +299,7 @@ class DevolucionModal extends Component
                 $path = $this->foto_comprobante->store($folder, 'public');
             }
 
-            $service->devolver(
+            $devolucion = $service->devolver(
                 $bg,
                 [
                     'banco_id' => (int) $this->banco_id,
@@ -314,7 +314,7 @@ class DevolucionModal extends Component
 
             $this->dispatch('toast', type: 'success', message: 'Devolución registrada.');
             $this->close();
-            $this->dispatch('bg:refresh');
+            $this->dispatch('bg:refresh', boletaId: $bg->id, devolucionId: $devolucion->id);
         } catch (DomainException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         }

@@ -15,6 +15,8 @@
                 $presupuestos = $panelData[$rowKey] ?? [];
             @endphp
 
+
+
             {{-- TABLA DEL PANEL --}}
             <div
                 class="border border-gray-200 rounded-lg bg-white dark:bg-neutral-900/30 dark:border-neutral-700 overflow-hidden shadow-sm">

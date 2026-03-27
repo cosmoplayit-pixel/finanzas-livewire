@@ -1,7 +1,21 @@
 {{-- ========================= --}}
 {{-- MOBILE: CARDS PRO (NO +)  --}}
 {{-- ========================= --}}
-<div class="md:hidden space-y-3">
+<div class="md:hidden space-y-3" x-data="{
+    presupuestoId: @entangle('highlight_presupuesto_id'),
+    scroll() {
+        const panelEl = document.getElementById(`presupuesto-mob-panel-target-${this.presupuestoId}`);
+        const agentEl = document.getElementById(`presupuesto-mob-card-target-${this.presupuestoId}`);
+        const el = panelEl || agentEl;
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+}" x-init="if (presupuestoId) {
+    setTimeout(() => scroll(), 600);
+}
+$watch('presupuestoId', val => { if (val) setTimeout(() => scroll(), 300) });">
+
 
     @forelse($agentesResumen as $row)
         @php
@@ -9,10 +23,19 @@
             $rowMoneda = (string) $row->moneda;
             $rowKey = $agenteId . '|' . $rowMoneda;
             $open = (bool) ($panelsOpen[$rowKey] ?? false);
+
+            // Verificar si este agente contiene el presupuesto objetivo
+            $isTargetAgente =
+                isset($highlight_presupuesto_id) &&
+                $highlight_presupuesto_id &&
+                collect($panelData[$rowKey] ?? [])->contains(
+                    fn($p) => (int) $p->id === (int) $highlight_presupuesto_id,
+                );
         @endphp
 
         <div wire:key="agente-card-{{ $rowKey }}"
-            class="rounded-2xl border border-gray-200 dark:border-neutral-700
+            @if ($isTargetAgente) id="presupuesto-mob-card-target-{{ (int) ($highlight_presupuesto_id ?? 0) }}" @endif
+            class="rounded-2xl border {{ $isTargetAgente ? 'border-indigo-400' : 'border-gray-200 dark:border-neutral-700' }}
                    bg-white dark:bg-neutral-800/70 shadow-sm overflow-hidden">
 
             {{-- HEADER (TOGGLE COMPLETO) --}}

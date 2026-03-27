@@ -18,6 +18,10 @@ class ResumenModal extends Component
 
     public $total_compras = 0;
 
+    // Visor de fotos
+    public bool $openFotoModal = false;
+    public ?string $fotoUrl = null;
+
     #[On('open-modal-detalle-proyecto')]
     public function loadProyecto($id)
     {
@@ -36,6 +40,18 @@ class ResumenModal extends Component
         $this->isOpen = false;
         $this->proyecto = null;
         $this->movimientos = [];
+    }
+
+    public function openFotoComprobante($url)
+    {
+        $this->fotoUrl = $url;
+        $this->openFotoModal = true;
+    }
+
+    public function closeFoto()
+    {
+        $this->openFotoModal = false;
+        $this->fotoUrl = null;
     }
 
     private function cargarMovimientos()
@@ -64,15 +80,19 @@ class ResumenModal extends Component
                 'agente' => $r->rendicion->agente->nombre ?? 'N/A',
                 'url' => route('agente_presupuestos', [
                     'presupuesto_id' => $r->rendicion_id,
-                    'movimiento_id' => $r->id
+                    'movimiento_id' => $r->id,
                 ]),
+                'foto_path' => $r->foto_path,
                 'badge_color' => 'bg-orange-100 text-orange-800',
             ];
         }
 
         // Ordenar movimientos por fecha desc
         usort($this->movimientos, function ($a, $b) {
-            return strtotime($b['fecha']) - strtotime($a['fecha']);
+            $dateA = $a['fecha'] instanceof \DateTimeInterface ? $a['fecha']->getTimestamp() : strtotime($a['fecha']);
+            $dateB = $b['fecha'] instanceof \DateTimeInterface ? $b['fecha']->getTimestamp() : strtotime($b['fecha']);
+
+            return $dateB - $dateA;
         });
 
         $this->total_compras = $totalEgresos;

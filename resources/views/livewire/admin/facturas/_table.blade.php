@@ -1,11 +1,20 @@
 {{-- TABLET + DESKTOP: TABLA (COMPACTA) --}}
 <div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm"
-    @if (isset($factura_id) && $factura_id) x-data
-    x-init="setTimeout(() => {
-        const targetId = {{ (int) ($pago_id ?? 0) }} > 0 ? 'pago-highlight-{{ (int) ($pago_id ?? 0) }}' : 'factura-row-target-{{ (int) ($factura_id ?? 0) }}';
-        const el = document.getElementById(targetId);
-        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-    }, 600)" @endif>
+    x-data="{
+        facturaId: @entangle('factura_id'),
+        pagoId: @entangle('pago_id'),
+        scroll() {
+            const targetId = (this.pagoId > 0) ? `pago-highlight-${this.pagoId}` : `factura-row-target-${this.facturaId}`;
+            const el = document.getElementById(targetId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }" x-init="if (facturaId || pagoId) {
+        setTimeout(() => scroll(), 600);
+    }
+    $watch('facturaId', val => { if (val) setTimeout(() => scroll(), 300) });
+    $watch('pagoId', val => { if (val) setTimeout(() => scroll(), 300) });">
     <div class="overflow-x-auto">
         <table wire:key="facturas-table" class="w-full table-fixed text-sm min-w-[1100px] lg:min-w-0">
             <thead
@@ -456,9 +465,7 @@
                             <tr wire:key="factura-pagos-row-{{ $r['id'] }}"
                                 class="border-t border-gray-300 dark:border-neutral-800 bg-gray-50/50 dark:bg-neutral-900/40 border-b border-gray-100 dark:border-neutral-800">
 
-                                <td class="px-4 py-3
-                                    {{ isset($factura_id) && $factura_id == $r['id'] ? 'border-l-4 border-indigo-400' : '' }}"
-                                    colspan="6">
+                                <td class="px-4 py-3" colspan="6">
                                     <div class="space-y-3 text-sm">
                                         <div
                                             class="border border-gray-100 rounded-lg bg-white shadow-sm dark:bg-neutral-900 dark:border-neutral-800 overflow-hidden">

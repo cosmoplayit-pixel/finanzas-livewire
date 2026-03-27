@@ -1,7 +1,13 @@
 {{-- MODAL MOVIMIENTO (COMPRA / DEVOLUCION - UNICO) --}}
 <x-ui.modal wire:key="movimiento-modal-{{ $editorRendicionId ?? 'none' }}" model="openMovimientoModal"
-    title="{{ $mov_modal_tipo === 'DEVOLUCION' ? 'Registrar Devolución' : 'Registrar Compra' }}"
     maxWidth="sm:max-w-2xl md:max-w-4xl" onClose="closeMovimientoModal">
+
+    <x-slot:title>
+        <div class="flex flex-col sm:flex-row sm:items-center gap-2 flex-wrap">
+            <span
+                class="shrink-0">{{ $mov_modal_tipo === 'DEVOLUCION' ? 'Registrar Devolución' : 'Registrar Compra' }}</span>
+        </div>
+    </x-slot:title>
 
     {{-- SELECTOR TIPO --}}
     <div class="mb-4 flex items-center gap-3">
@@ -356,7 +362,6 @@
                         </div>
                     </div>
                 </div>
-
             @endif
 
             {{-- =========================

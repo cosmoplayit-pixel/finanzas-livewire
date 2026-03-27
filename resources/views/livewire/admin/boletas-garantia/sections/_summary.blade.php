@@ -85,7 +85,7 @@
                     d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
             </svg>
         </div>
-        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3">Saldo ({{ $dateLabel }})</p>
+        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3">Saldo ({{ $historicalLabel }})</p>
 
         <div class="mt-auto flex flex-col gap-2 relative z-10">
             @if ($isBoth || $moneda === 'BOB')
@@ -122,7 +122,7 @@
             </svg>
         </div>
         <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-2">Boletas Registradas
-            ({{ $dateLabel }})</p>
+            ({{ $historicalLabel }})</p>
         <p class="mt-auto text-2xl font-bold text-indigo-600 dark:text-indigo-400 relative z-10">
             {{ number_format((int) ($totales['cantidad_total'] ?? 0), 0, ',', '.') }}
         </p>

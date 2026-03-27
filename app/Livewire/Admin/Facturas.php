@@ -46,13 +46,13 @@ class Facturas extends Component
     public string $search = '';
 
     // Navegación desde Transacciones: ID único de factura y pago a resaltar.
-    #[Url]
     public ?int $factura_id = null;
 
-    #[Url]
     public ?int $pago_id = null;
 
     public int $perPage = 5;
+
+    public bool $dateFilterModified = false;
 
     // UI: totales globales.
     public array $totales = [
@@ -135,6 +135,7 @@ class Facturas extends Component
     public string $deleteFacturaPassword = '';
 
     public ?int $deleteFacturaId = null;
+    public ?int $highlight_factura_id = null;
 
     public function togglePanel(int $facturaId): void
     {
@@ -164,8 +165,15 @@ class Facturas extends Component
 
     public function mount(): void
     {
+        $this->factura_id = (int) request('factura_id') ?: null;
+        $this->pago_id = (int) request('pago_id') ?: null;
+
+        $this->f_fecha_desde = now()->startOfYear()->toDateString();
+        $this->f_fecha_hasta = now()->endOfYear()->toDateString();
+
         // Si viene factura_id desde Transacciones, auto-expandir y mostrar todas (abiertas+cerradas).
         if ($this->factura_id) {
+            $this->dateFilterModified = true; // Si venimos de afuera, forzamos que respete filtros si los hay
             if (empty($this->f_cerrada)) {
                 $this->f_cerrada = ['abierta', 'cerrada'];
             }
@@ -331,6 +339,7 @@ class Facturas extends Component
     {
         $this->f_fecha_desde = now()->startOfYear()->toDateString();
         $this->f_fecha_hasta = now()->endOfYear()->toDateString();
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
@@ -338,6 +347,7 @@ class Facturas extends Component
     {
         $this->f_fecha_desde = now()->subYear()->startOfYear()->toDateString();
         $this->f_fecha_hasta = now()->subYear()->endOfYear()->toDateString();
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
@@ -345,17 +355,20 @@ class Facturas extends Component
     {
         $this->f_fecha_desde = null;
         $this->f_fecha_hasta = null;
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
     // Reset paginación.
     public function updatingFFechaDesde(): void
     {
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
     public function updatingFFechaHasta(): void
     {
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
@@ -411,6 +424,9 @@ class Facturas extends Component
         $this->f_pago = [];
         $this->f_retencion = [];
         $this->f_cerrada = [];
+        $this->f_fecha_desde = null;
+        $this->f_fecha_hasta = null;
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
@@ -486,7 +502,7 @@ class Facturas extends Component
                 $path = $this->foto_comprobante->store('empresas/'.$this->empresaId().'/facturas/nuevas', 'public');
             }
 
-            $service->crearFactura(
+            $nuevaFactura = $service->crearFactura(
                 [
                     'entidad_id' => $this->entidad_id,
                     'proyecto_id' => $this->proyecto_id,
@@ -499,9 +515,16 @@ class Facturas extends Component
                 auth()->user()
             );
 
-            session()->flash('success', 'Factura registrada correctamente.');
             $this->closeFactura();
+
+            // Auto-expandir la nueva factura y contraer otros
+            $this->panelsOpen = [$nuevaFactura->id => true];
+            $this->factura_id = $nuevaFactura->id;
+            $this->pago_id = null;
+            $this->highlight_factura_id = $nuevaFactura->id;
+
             $this->resetPage();
+            session()->flash('success', 'Factura registrada correctamente.');
         } catch (DomainException $e) {
             $this->addError('proyecto_id', $e->getMessage());
         }
@@ -676,7 +699,7 @@ class Facturas extends Component
                 $path = $this->pago_foto_comprobante->store('empresas/'.$this->empresaId().'/facturas/facturas_pagas', 'public');
             }
 
-            $service->registrarPago(
+            $nuevoPago = $service->registrarPago(
                 $factura,
                 [
                     'tipo' => $this->tipo,
@@ -691,9 +714,15 @@ class Facturas extends Component
                 auth()->user()
             );
 
-            session()->flash('success', 'Pago registrado correctamente.');
             $this->closePago();
-            $this->resetPage();
+
+            // Auto-expandir la factura y contraer otros
+            $this->panelsOpen = [$factura->id => true];
+            $this->factura_id = $factura->id;
+            $this->pago_id = $nuevoPago->id;
+            $this->highlight_factura_id = $factura->id;
+
+            session()->flash('success', 'Pago registrado correctamente.');
         } catch (DomainException $e) {
             $this->addError('monto', $e->getMessage());
         }
@@ -1017,6 +1046,38 @@ class Facturas extends Component
         // Totales globales.
         $this->totales = FacturaIndexQuery::totales($params);
 
+        // Lógica de historial para Saldo y Retención
+        $paramsHist = $params;
+        if (! $this->dateFilterModified) {
+            $paramsHist['f_fecha_desde'] = null;
+            $paramsHist['f_fecha_hasta'] = null;
+        }
+        $totalesHist = FacturaIndexQuery::totales($paramsHist);
+        $this->totales['saldo'] = $totalesHist['saldo'];
+        $this->totales['retencion_pendiente'] = $totalesHist['retencion_pendiente'];
+        $this->totales['cantidad_total'] = FacturaIndexQuery::paginateIds($paramsHist)->total();
+
+        // Etiquetas de fecha
+        $dateLabel = '';
+        if ($this->f_fecha_desde && $this->f_fecha_hasta) {
+            $from = \Carbon\Carbon::parse($this->f_fecha_desde);
+            $to = \Carbon\Carbon::parse($this->f_fecha_hasta);
+
+            if ($from->isStartOfYear() && $to->isEndOfYear() && $from->year === $to->year) {
+                $dateLabel = (string) $from->year;
+            } else {
+                $dateLabel = $from->format('d/m/y') . ' - ' . $to->format('d/m/y');
+            }
+        } elseif ($this->f_fecha_desde) {
+            $dateLabel = 'Desde ' . \Carbon\Carbon::parse($this->f_fecha_desde)->format('d/m/y');
+        } elseif ($this->f_fecha_hasta) {
+            $dateLabel = 'Hasta ' . \Carbon\Carbon::parse($this->f_fecha_hasta)->format('d/m/y');
+        } else {
+            $dateLabel = 'Histórico';
+        }
+
+        $historicalLabel = $this->dateFilterModified ? $dateLabel : 'Histórico';
+
         $ids = $idsPaginator->getCollection()->pluck('id')->all();
 
         // Carga completa.
@@ -1071,6 +1132,8 @@ class Facturas extends Component
             'entidades' => $entidades,
             'proyectos' => $proyectos,
             'totales' => $this->totales,
+            'dateLabel' => $dateLabel,
+            'historicalLabel' => $historicalLabel,
         ]);
     }
 }

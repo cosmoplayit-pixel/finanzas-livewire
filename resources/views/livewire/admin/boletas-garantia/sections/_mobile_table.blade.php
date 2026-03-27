@@ -1,12 +1,20 @@
 {{-- MOBILE --}}
-<div class="md:hidden space-y-3"
-    @if (isset($highlight_boleta_id) && $highlight_boleta_id) x-data
-    x-init="setTimeout(() => {
-        const devolucionEl = document.getElementById('devolucion-mob-panel-target-{{ (int) ($highlight_devolucion_id ?? 0) }}');
-        const boletaEl = document.getElementById('boleta-mob-row-target-{{ (int) ($highlight_boleta_id ?? 0) }}');
+<div class="md:hidden space-y-3" x-data="{
+    boletaId: @entangle('highlight_boleta_id'),
+    devolucionId: @entangle('highlight_devolucion_id'),
+    scroll() {
+        const devolucionEl = document.getElementById(`devolucion-mob-panel-target-${this.devolucionId}`);
+        const boletaEl = document.getElementById(`boleta-mob-row-target-${this.boletaId}`);
         const el = devolucionEl || boletaEl;
-        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-    }, 700)" @endif>
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }
+}" x-init="if (boletaId || devolucionId) {
+    setTimeout(() => scroll(), 600);
+}
+$watch('boletaId', val => { if (val) setTimeout(() => scroll(), 300) });
+$watch('devolucionId', val => { if (val) setTimeout(() => scroll(), 300) });">
 
     @forelse($boletas as $bg)
         @php
@@ -245,7 +253,8 @@
                                             isset($highlight_devolucion_id) &&
                                             (int) $highlight_devolucion_id === (int) $dv->id;
                                     @endphp
-                                    <div @if ($isDevHighlighted) id="devolucion-mob-panel-target-{{ $dv->id }}" @endif
+                                    <div wire:key="boleta-mob-{{ $bg->id }}-dev-{{ $dv->id }}"
+                                        @if ($isDevHighlighted) id="devolucion-mob-panel-target-{{ $dv->id }}" @endif
                                         class="flex items-center justify-between text-xs dark:bg-neutral-900 border p-2 rounded shadow-sm transition-colors
                                         {{ $isDevHighlighted ? 'bg-amber-50 border-amber-400 dark:border-amber-400/50' : 'bg-white border-gray-200 dark:border-neutral-700' }}">
                                         <div class="min-w-0 flex-1 pr-2">

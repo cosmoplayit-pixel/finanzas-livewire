@@ -31,6 +31,8 @@ class Index extends Component
 
     public array $f_devoluciones = []; // con | sin
 
+    public bool $dateFilterModified = false;
+
     // Paneles de la tabla
     public array $panelsOpen = [];
 
@@ -83,34 +85,16 @@ class Index extends Component
         $this->f_estado = ['abierta'];
         $this->f_devoluciones = [];
 
-        // Leer parámetros de la URL para destacar origen
-        $boletaId = (int) request()->query('boleta_id', 0);
-        $devolucionId = (int) request()->query('devolucion_id', 0);
+        // Leer parámetros de la URL para destacar origen (solo al cargar)
+        $boletaId = (int) request('boleta_id', 0);
+        $devolucionId = (int) request('devolucion_id', 0);
 
         if ($boletaId > 0) {
             $this->highlight_boleta_id = $boletaId;
+            $this->panelsOpen = [(string) $boletaId => true];
 
             if ($devolucionId > 0) {
                 $this->highlight_devolucion_id = $devolucionId;
-            }
-
-            // Buscar boleta y expandir su panel
-            $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
-            $boleta = \App\Models\BoletaGarantia::query()
-                ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
-                ->find($boletaId);
-
-            if ($boleta) {
-                // Expandir panel solo si es una devolución (hay devolucion_id)
-                if ($devolucionId > 0) {
-                    $this->panelsOpen[(string) $boletaId] = true;
-                }
-
-                // Si la boleta está devuelta, limpiar el filtro "solo abiertas"
-                $estado = strtolower((string) ($boleta->estado ?? 'abierta'));
-                if ($estado !== 'abierta' && ! in_array($estado, $this->f_estado)) {
-                    $this->f_estado = []; // Reseteamos el filtro para mostrar todas o podemos incluir su estado
-                }
             }
         }
     }
@@ -171,6 +155,7 @@ class Index extends Component
         $this->f_devoluciones = [];
         $this->f_fecha_desde = null;
         $this->f_fecha_hasta = null;
+        $this->dateFilterModified = true; // Mark as modified so it shows what's in the filters (nulls = all)
         $this->resetPage();
     }
 
@@ -192,16 +177,19 @@ class Index extends Component
     {
         $this->f_fecha_desde = null;
         $this->f_fecha_hasta = null;
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
     public function updatingFFechaDesde(): void
     {
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
     public function updatingFFechaHasta(): void
     {
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
@@ -299,8 +287,17 @@ class Index extends Component
 
     // Cuando algún modal guarda/elimina, refrescamos tabla
     #[On('bg:refresh')]
-    public function refreshList(): void
+    public function refreshList(?int $boletaId = null, ?int $devolucionId = null): void
     {
+        if ($boletaId) {
+            $this->highlight_boleta_id = $boletaId;
+            // Expandir panel de la boleta afectada y cerrar otros
+            $this->panelsOpen = [(string) $boletaId => true];
+
+            if ($devolucionId) {
+                $this->highlight_devolucion_id = $devolucionId;
+            }
+        }
         $this->resetPage();
     }
 
@@ -353,22 +350,47 @@ class Index extends Component
         // Clón para calcular totales sin paginación
         $baseQuery = clone $boletasQuery;
 
+        // Base query para Saldo y Cantidad: Ignora fecha por defecto
+        $historicalQuery = BoletaGarantia::query()->where('empresa_id', $empresaId);
+        if ($this->moneda !== 'all') {
+            $historicalQuery->where('moneda', $this->moneda);
+        }
+
+        // Si el usuario modificó la fecha, el historial debe respetar esa fecha también
+        if ($this->dateFilterModified) {
+            if (! empty($this->f_fecha_desde)) {
+                $historicalQuery->whereDate('fecha_emision', '>=', $this->f_fecha_desde);
+            }
+            if (! empty($this->f_fecha_hasta)) {
+                $historicalQuery->whereDate('fecha_emision', '<=', $this->f_fecha_hasta);
+            }
+        }
+
         $boletas = $boletasQuery->latest('id')->paginate($this->perPage);
 
-        // Calcular totales
+        // Calcular totales (Emitido y Devuelto siempre siguen al filtro actual)
         $bobIds = (clone $baseQuery)->where('moneda', 'BOB')->pluck('id');
         $usdIds = (clone $baseQuery)->where('moneda', 'USD')->pluck('id');
 
         $totales = [
-            'cantidad_total' => (clone $baseQuery)->count(),
             'total_retencion_bob' => (clone $baseQuery)->where('moneda', 'BOB')->sum('retencion') ?? 0,
             'total_retencion_usd' => (clone $baseQuery)->where('moneda', 'USD')->sum('retencion') ?? 0,
             'total_devuelto_bob' => \App\Models\BoletaGarantiaDevolucion::whereIn('boleta_garantia_id', $bobIds)->sum('monto') ?? 0,
             'total_devuelto_usd' => \App\Models\BoletaGarantiaDevolucion::whereIn('boleta_garantia_id', $usdIds)->sum('monto') ?? 0,
         ];
 
-        $totales['saldo_total_bob'] = max(0, $totales['total_retencion_bob'] - $totales['total_devuelto_bob']);
-        $totales['saldo_total_usd'] = max(0, $totales['total_retencion_usd'] - $totales['total_devuelto_usd']);
+        // Cantidad y Saldo: Usan historicalQuery (global por defecto, filtrado si se toca la fecha)
+        $bobHistIds = (clone $historicalQuery)->where('moneda', 'BOB')->pluck('id');
+        $usdHistIds = (clone $historicalQuery)->where('moneda', 'USD')->pluck('id');
+
+        $totales['cantidad_total'] = (clone $historicalQuery)->count();
+        $totalRetBobHist = (clone $historicalQuery)->where('moneda', 'BOB')->sum('retencion') ?? 0;
+        $totalRetUsdHist = (clone $historicalQuery)->where('moneda', 'USD')->sum('retencion') ?? 0;
+        $totalDevBobHist = \App\Models\BoletaGarantiaDevolucion::whereIn('boleta_garantia_id', $bobHistIds)->sum('monto') ?? 0;
+        $totalDevUsdHist = \App\Models\BoletaGarantiaDevolucion::whereIn('boleta_garantia_id', $usdHistIds)->sum('monto') ?? 0;
+
+        $totales['saldo_total_bob'] = max(0, $totalRetBobHist - $totalDevBobHist);
+        $totales['saldo_total_usd'] = max(0, $totalRetUsdHist - $totalDevUsdHist);
 
         // Calcular etiqueta de rango de fecha para los cards
         $dateLabel = '';
@@ -389,6 +411,9 @@ class Index extends Component
             $dateLabel = 'Histórico';
         }
 
-        return view('livewire.admin.boletas-garantia.index', compact('boletas', 'totales', 'dateLabel'));
+        // Etiqueta global para Saldo y Cantidad si no ha sido modificado
+        $historicalLabel = $this->dateFilterModified ? $dateLabel : 'Histórico';
+
+        return view('livewire.admin.boletas-garantia.index', compact('boletas', 'totales', 'dateLabel', 'historicalLabel'));
     }
 }

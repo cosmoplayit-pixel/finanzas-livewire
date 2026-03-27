@@ -83,18 +83,21 @@ class AgentePresupuestosResumenQuery
             DB::raw('SUM(r.rendido_total) as total_rendido'),
             DB::raw('SUM(r.saldo_por_rendir) as total_saldo'),
             DB::raw('COUNT(r.id) as total_presupuestos'),
+            DB::raw('MAX(r.created_at) as max_created'),
         ]);
 
         $q->groupBy('r.agente_servicio_id', 'a.nombre', 'a.ci', 'r.moneda');
 
-        if ($sortField === 'agente') {
+        if ($sortField === 'latest') {
+            $q->orderByDesc('max_created');
+        } elseif ($sortField === 'agente') {
             $q->orderBy('a.nombre', $dir);
         } elseif ($sortField === 'moneda') {
             $q->orderBy('r.moneda', $dir);
         } elseif (in_array($sortField, ['total_presupuesto', 'total_rendido', 'total_saldo', 'total_presupuestos'], true)) {
             $q->orderByRaw("{$sortField} {$dir}");
         } else {
-            $q->orderBy('a.nombre', 'asc');
+            $q->orderByDesc('max_created');
         }
 
         return $q->paginate($perPage);

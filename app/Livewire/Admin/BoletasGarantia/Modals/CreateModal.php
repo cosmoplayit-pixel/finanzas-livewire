@@ -329,7 +329,7 @@ class CreateModal extends Component
             session()->flash('success', 'Boleta registrada.');
 
             $this->close();
-            $this->dispatch('bg:refresh');
+            $this->dispatch('bg:refresh', boletaId: $boleta?->id);
         } catch (DomainException $e) {
             $this->dispatch('toast', type: 'error', message: $e->getMessage());
         }

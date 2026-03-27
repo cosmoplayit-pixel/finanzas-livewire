@@ -28,7 +28,10 @@
             $bloqueado = $saldo <= 0 && $retPend <= 0;
         @endphp
 
-        <div x-data="{ open: false, showFullProject: false, showFullDetalle: false }" class="border rounded-lg p-4 bg-white dark:bg-neutral-900 dark:border-neutral-800">
+        <div x-data="{ showFullProject: false, showFullDetalle: false }"
+            class="border rounded-lg p-4 bg-white dark:bg-neutral-900 dark:border-neutral-800 transition-all
+             {{ isset($factura_id) && $factura_id == $f->id ? 'ring-2 ring-indigo-500 shadow-md' : '' }}"
+            @if (isset($factura_id) && $factura_id == $f->id) id="factura-mobile-target-{{ $f->id }}" @endif>
             {{-- Header card: Proyecto + Monto --}}
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0 font-medium">
@@ -258,15 +261,15 @@
                         class="w-full px-3 py-2 rounded text-sm font-medium
                       border border-gray-300 text-gray-700 hover:bg-gray-50
                       dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 cursor-pointer"
-                        @click="open = !open">
-                        <span x-show="!open">Ver pagos</span>
-                        <span x-show="open" x-cloak>Ocultar pagos</span>
+                        @click="$wire.togglePanel({{ $f->id }})">
+                        <span x-show="!@js($panelsOpen[$f->id] ?? false)">Ver pagos</span>
+                        <span x-show="@js($panelsOpen[$f->id] ?? false)" x-cloak>Ocultar pagos</span>
                     </button>
                 </div>
             </div>
 
             {{-- Pagos (detalle) --}}
-            <div x-show="open" x-cloak class="mt-4 space-y-2">
+            <div x-show="@js($panelsOpen[$f->id] ?? false)" x-cloak class="mt-4 space-y-2">
                 <div class="text-xs text-gray-500 dark:text-neutral-400">
                     Pagos realizados: {{ $f->pagos?->count() ?? 0 }}
                 </div>

@@ -1,12 +1,21 @@
 {{-- TABLET + DESKTOP --}}
 <div class="hidden md:block border border-gray-100 rounded bg-white dark:bg-neutral-800 overflow-hidden shadow-sm"
-    @if (isset($highlight_boleta_id) && $highlight_boleta_id) x-data
-    x-init="setTimeout(() => {
-        const devolucionEl = document.getElementById('devolucion-panel-target-{{ (int) ($highlight_devolucion_id ?? 0) }}');
-        const boletaEl = document.getElementById('boleta-row-target-{{ (int) ($highlight_boleta_id ?? 0) }}');
-        const el = devolucionEl || boletaEl;
-        if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-    }, 700)" @endif>
+    x-data="{
+        boletaId: @entangle('highlight_boleta_id'),
+        devolucionId: @entangle('highlight_devolucion_id'),
+        scroll() {
+            const devolucionEl = document.getElementById(`devolucion-panel-target-${this.devolucionId}`);
+            const boletaEl = document.getElementById(`boleta-row-target-${this.boletaId}`);
+            const el = devolucionEl || boletaEl;
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }" x-init="if (boletaId || devolucionId) {
+        setTimeout(() => scroll(), 600);
+    }
+    $watch('boletaId', val => { if (val) setTimeout(() => scroll(), 300) });
+    $watch('devolucionId', val => { if (val) setTimeout(() => scroll(), 300) });">
 
     <div class="overflow-x-auto">
         <table wire:key="boletas-table" class="w-full table-fixed text-sm min-w-[1100px] lg:min-w-0">
@@ -549,8 +558,7 @@
                     @if ($hasDevoluciones && $isOpen)
                         <tr
                             class="border-t border-gray-200 dark:border-neutral-700 bg-gray-50/60 dark:bg-neutral-900/40">
-                            <td class="p-3 md:p-4 {{ $isTargetBoleta ? 'border-l-4 border-indigo-400' : 'border-l-4 border-transparent' }}"
-                                colspan="{{ $colspan }}">
+                            <td class="p-3 md:p-4 border-l-4 border-transparent" colspan="{{ $colspan }}">
 
                                 <div
                                     class="rounded-lg border bg-white dark:bg-neutral-900 dark:border-neutral-800 overflow-hidden">
@@ -578,7 +586,8 @@
                                                                 isset($highlight_devolucion_id) &&
                                                                 (int) $highlight_devolucion_id === (int) $dv->id;
                                                         @endphp
-                                                        <tr @if ($isDevHighlighted) id="devolucion-panel-target-{{ $dv->id }}" @endif
+                                                        <tr wire:key="boleta-{{ $bg->id }}-dev-{{ $dv->id }}"
+                                                            @if ($isDevHighlighted) id="devolucion-panel-target-{{ $dv->id }}" @endif
                                                             class="text-gray-700 dark:text-neutral-200 transition-colors
                                                             {{ $isDevHighlighted ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-slate-50 dark:hover:bg-neutral-900/40' }}">
 

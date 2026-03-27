@@ -190,8 +190,11 @@ trait PresupuestoModal
             );
 
             $this->closeModal();
+            $this->dateFilterModified = true;
+            $this->highlight_presupuesto_id = $rendicion->id;
 
-            // Abrir panel inline de esa fila
+            // Abrir solo el panel de esta fila (cerrando los otros)
+            $this->panelsOpen = [];
             $rk = $this->rowKey((int) $agente->id, (string) $banco->moneda);
             $this->panelsOpen[$rk] = true;
             $this->panelEstado[$rk] = $this->panelEstado[$rk] ?? 'ALL';

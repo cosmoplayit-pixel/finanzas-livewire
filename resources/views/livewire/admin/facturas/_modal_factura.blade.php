@@ -3,10 +3,10 @@
     maxWidth="sm:max-w-xl md:max-w-2xl" onClose="closeFactura">
 
     <div class="space-y-2 sm:space-y-3">
-        {{-- Entidad y Proyecto --}}
+        {{-- Cliente y Proyecto --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm mb-1">Entidad: <span class="text-red-500">*</span></label>
+                <label class="block text-sm mb-1">Cliente: <span class="text-red-500">*</span></label>
                 <select wire:model.live="entidad_id"
                     class="w-full cursor-pointer rounded-lg border px-3 py-2
                            bg-white dark:bg-neutral-900
@@ -16,7 +16,7 @@
                     <option value="">Seleccione...</option>
                     @foreach ($entidades as $e)
                         <option value="{{ $e->id }}" title="{{ $e->nombre }}">
-                            {{ \Illuminate\Support\Str::limit($e->nombre, 60) }}
+                            {{ $e->nombre }}
                         </option>
                     @endforeach
                 </select>
@@ -40,7 +40,7 @@
                     </option>
                     @foreach ($proyectos as $p)
                         <option value="{{ $p->id }}" title="{{ $p->nombre }}">
-                            {{ \Illuminate\Support\Str::limit($p->nombre, 75) }}
+                            {{ $p->nombre }}
                         </option>
                     @endforeach
                 </select>

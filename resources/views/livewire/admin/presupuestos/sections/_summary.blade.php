@@ -15,7 +15,8 @@
                 </path>
             </svg>
         </div>
-        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3">Presupuesto Total</p>
+        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3">Presupuesto Total ({{ $dateLabel }})
+        </p>
 
         <div class="mt-auto flex flex-col gap-2 relative z-10">
             @if ($isBoth || $moneda === 'BOB')
@@ -50,7 +51,7 @@
                     d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
         </div>
-        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3">Total Rendido</p>
+        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3">Total Rendido ({{ $dateLabel }})</p>
 
         <div class="mt-auto flex flex-col gap-2 relative z-10">
             @if ($isBoth || $moneda === 'BOB')
@@ -85,7 +86,8 @@
                     d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
             </svg>
         </div>
-        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3">Total Saldo (Por rendir)</p>
+        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3">Total Saldo ({{ $historicalLabel }})
+        </p>
 
         <div class="mt-auto flex flex-col gap-2 relative z-10">
             @if ($isBoth || $moneda === 'BOB')
@@ -121,7 +123,8 @@
                 </path>
             </svg>
         </div>
-        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-2">Presupuestos Activos</p>
+        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-2">Presupuestos Activos
+            ({{ $historicalLabel }})</p>
         <p class="mt-auto text-2xl font-bold text-indigo-600 dark:text-indigo-400 relative z-10">
             {{ number_format((int) ($totales['cantidad_total'] ?? 0), 0, ',', '.') }}
         </p>

@@ -18,9 +18,16 @@
             $nroTx = $p->nro_transaccion ?? '—';
         @endphp
 
+        @php
+            $isHighlighted =
+                isset($highlight_presupuesto_id) &&
+                $highlight_presupuesto_id &&
+                (int) $p->id === (int) $highlight_presupuesto_id;
+        @endphp
         <div wire:key="panel-mobile-{{ $rowKey }}-pres-{{ $p->id }}"
-            class="rounded-xl border border-gray-200 dark:border-neutral-700
-            bg-white dark:bg-neutral-900/30 px-3 py-3">
+            @if ($isHighlighted) id="presupuesto-mob-panel-target-{{ $p->id }}" @endif
+            class="rounded-xl border {{ $isHighlighted ? 'border-amber-400' : 'border-gray-200 dark:border-neutral-700' }}
+            {{ $isHighlighted ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-white dark:bg-neutral-900/30' }} px-3 py-3">
 
             <div class="flex gap-3">
 

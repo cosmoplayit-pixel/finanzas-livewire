@@ -60,7 +60,7 @@ class DeleteDevolucionListener extends Component
                 type: 'success',
                 message: 'Devolución eliminada y banco revertido.',
             );
-            $this->dispatch('bg:refresh'); // para que el Index se refresque
+            $this->dispatch('bg:refresh', boletaId: (int) $boletaId); // para que el Index se refresque y se mantenga expandido
         } catch (DomainException $e) {
             $this->dispatch('swal:error', text: $e->getMessage());
         }

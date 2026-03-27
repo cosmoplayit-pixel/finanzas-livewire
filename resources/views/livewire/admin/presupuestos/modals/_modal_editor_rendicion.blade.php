@@ -227,7 +227,14 @@
                                             </td>
                                             <td
                                                 class="p-3 text-gray-700 dark:text-neutral-200 font-medium whitespace-nowrap">
-                                                {{ $m->banco?->nombre ?? '—' }}
+                                                <div class="text-sm font-semibold">
+                                                    {{ $m->banco?->nombre ?? '—' }}
+                                                </div>
+                                                @if ($m->banco?->titular)
+                                                    <div class="text-[10px] text-gray-500 font-normal">
+                                                        Titular: {{ $m->banco->titular }}
+                                                    </div>
+                                                @endif
                                             </td>
                                             <td class="p-3 text-gray-600 dark:text-neutral-300 whitespace-nowrap">
                                                 {{ $m->nro_transaccion ?? '—' }}
@@ -244,9 +251,16 @@
                                             </td>
                                             <td
                                                 class="p-3 text-right tabular-nums text-emerald-700 dark:text-emerald-400 font-semibold whitespace-nowrap">
-                                                {{ number_format((float) $m->monto_base, 2, ',', '.') }}
-                                                <span
-                                                    class="text-[10px] opacity-70">{{ $editorMonedaBase ?? 'BOB' }}</span>
+                                                <div>
+                                                    {{ number_format((float) $m->monto_base, 2, ',', '.') }}
+                                                    <span
+                                                        class="text-[10px] opacity-70">{{ $editorMonedaBase ?? 'BOB' }}</span>
+                                                </div>
+                                                @if ($m->moneda !== ($editorMonedaBase ?? 'BOB'))
+                                                    <div class="text-[10px] text-gray-400 font-normal">
+                                                        TC: {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }}
+                                                    </div>
+                                                @endif
                                             </td>
                                             <td class="p-3 text-center">
                                                 @if (!empty($m->foto_path))
@@ -319,7 +333,7 @@
                                                 <td class="p-3 text-center">
                                                     <button type="button" x-data
                                                         x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
-                                                        class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded-full text-red-400 hover:bg-red-50 hover:text-red-600 dark:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
                                                         title="Eliminar">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -328,6 +342,10 @@
                                                             <path d="M3 6h18"></path>
                                                             <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
                                                             <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                                            <line x1="10" y1="11" x2="10"
+                                                                y2="17"></line>
+                                                            <line x1="14" y1="11" x2="14"
+                                                                y2="17"></line>
                                                         </svg>
                                                     </button>
                                                 </td>
@@ -351,6 +369,11 @@
                                             <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
                                                 #{{ $i + 1 }} · {{ $m->banco?->nombre ?? '—' }}
                                             </div>
+                                            @if ($m->banco?->titular)
+                                                <div class="text-[10px] text-gray-400 font-normal">
+                                                    Titular: {{ $m->banco->titular }}
+                                                </div>
+                                            @endif
 
                                             <div class="mt-0.5 text-xs text-gray-500 dark:text-neutral-400">
                                                 {{ $m->fecha?->format('d/m/Y H:i') ?? '-' }}
@@ -370,7 +393,7 @@
                                                 @endphp
                                                 @if ($esPdf)
                                                     <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:bg-neutral-900 dark:text-rose-400 dark:border-rose-700 dark:hover:bg-rose-900/20 shadow-sm"
                                                         title="Ver PDF">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -379,31 +402,32 @@
                                                             <path
                                                                 d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                                             <polyline points="14 2 14 8 20 8" />
-                                                            <line x1="16" y1="13" x2="8"
+                                                            <line x1="9" y1="13" x2="15"
                                                                 y2="13" />
-                                                            <line x1="16" y1="17" x2="8"
+                                                            <line x1="9" y1="17" x2="15"
                                                                 y2="17" />
-                                                            <polyline points="10 9 9 9 8 9" />
+                                                            <line x1="9" y1="9" x2="11"
+                                                                y2="9" />
                                                         </svg>
                                                     </a>
                                                 @elseif($esImagen)
                                                     <button type="button"
                                                         wire:click="openFotoComprobante('{{ asset('storage/' . $m->foto_path) }}')"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
                                                         title="Ver imagen">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="1.8" stroke-linecap="round"
+                                                            stroke-width="2" stroke-linecap="round"
                                                             stroke-linejoin="round">
                                                             <rect x="3" y="3" width="18" height="18"
                                                                 rx="2" ry="2" />
                                                             <circle cx="8.5" cy="8.5" r="1.5" />
-                                                            <path d="M21 15l-5-5L5 21" />
+                                                            <polyline points="21 15 16 10 5 21" />
                                                         </svg>
                                                     </button>
                                                 @else
                                                     <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
-                                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400 dark:bg-neutral-900 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-900/20 shadow-sm"
                                                         title="Ver archivo">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -416,15 +440,27 @@
                                                         </svg>
                                                     </a>
                                                 @endif
+                                            @else
+                                                <span
+                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
+                                                    title="Sin comprobante">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <rect x="3" y="3" width="18" height="18"
+                                                            rx="2" ry="2" />
+                                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                                        <polyline points="21 15 16 10 5 21" />
+                                                    </svg>
+                                                </span>
                                             @endif
 
                                             {{-- ELIMINAR --}}
                                             @can('agente_presupuestos.delete_movement')
                                                 <button type="button" x-data
                                                     x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
-                                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg
-                                                border border-red-200 text-red-700 hover:bg-red-50
-                                                dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
+                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
                                                     title="Eliminar">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -432,8 +468,10 @@
                                                         <path d="M3 6h18" />
                                                         <path d="M8 6V4h8v2" />
                                                         <path d="M6 6l1 16h10l1-16" />
-                                                        <path d="M10 11v6" />
-                                                        <path d="M14 11v6" />
+                                                        <line x1="10" y1="11" x2="10"
+                                                            y2="17"></line>
+                                                        <line x1="14" y1="11" x2="14"
+                                                            y2="17"></line>
                                                     </svg>
                                                 </button>
                                             @endcan
@@ -473,6 +511,11 @@
                                                 {{ number_format((float) $m->monto_base, 2, ',', '.') }}
                                                 {{ $editorMonedaBase ?? 'BOB' }}
                                             </div>
+                                            @if ($m->moneda !== ($editorMonedaBase ?? 'BOB'))
+                                                <div class="text-[10px] text-gray-400 font-normal">
+                                                    TC: {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }}
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
 
@@ -587,9 +630,16 @@
                                             </td>
                                             <td
                                                 class="p-3 text-right tabular-nums text-blue-700 dark:text-blue-400 font-semibold whitespace-nowrap">
-                                                {{ number_format((float) $m->monto_base, 2, ',', '.') }}
-                                                <span
-                                                    class="text-[10px] opacity-70">{{ $editorMonedaBase ?? 'BOB' }}</span>
+                                                <div>
+                                                    {{ number_format((float) $m->monto_base, 2, ',', '.') }}
+                                                    <span
+                                                        class="text-[10px] opacity-70">{{ $editorMonedaBase ?? 'BOB' }}</span>
+                                                </div>
+                                                @if ($m->moneda !== ($editorMonedaBase ?? 'BOB'))
+                                                    <div class="text-[10px] text-gray-400 font-normal">
+                                                        TC: {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }}
+                                                    </div>
+                                                @endif
                                             </td>
                                             <td class="p-3 text-center">
                                                 @if (!empty($m->foto_path))
@@ -662,7 +712,7 @@
                                                 <td class="p-3 text-center">
                                                     <button type="button" x-data
                                                         x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
-                                                        class="cursor-pointer inline-flex items-center justify-center w-8 h-8 rounded-full text-red-400 hover:bg-red-50 hover:text-red-600 dark:text-red-500 dark:hover:bg-red-500/10 dark:hover:text-red-400 transition opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
                                                         title="Eliminar">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -671,6 +721,10 @@
                                                             <path d="M3 6h18"></path>
                                                             <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
                                                             <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                                            <line x1="10" y1="11" x2="10"
+                                                                y2="17"></line>
+                                                            <line x1="14" y1="11" x2="14"
+                                                                y2="17"></line>
                                                         </svg>
                                                     </button>
                                                 </td>
@@ -721,7 +775,7 @@
                                                 @endphp
                                                 @if ($esPdf)
                                                     <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
-                                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:bg-neutral-900 dark:text-rose-400 dark:border-rose-700 dark:hover:bg-rose-900/20 shadow-sm"
                                                         title="Ver PDF">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -730,31 +784,32 @@
                                                             <path
                                                                 d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                                             <polyline points="14 2 14 8 20 8" />
-                                                            <line x1="16" y1="13" x2="8"
+                                                            <line x1="9" y1="13" x2="15"
                                                                 y2="13" />
-                                                            <line x1="16" y1="17" x2="8"
+                                                            <line x1="9" y1="17" x2="15"
                                                                 y2="17" />
-                                                            <polyline points="10 9 9 9 8 9" />
+                                                            <line x1="9" y1="9" x2="11"
+                                                                y2="9" />
                                                         </svg>
                                                     </a>
                                                 @elseif($esImagen)
                                                     <button type="button"
                                                         wire:click="openFotoComprobante('{{ asset('storage/' . $m->foto_path) }}')"
-                                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
                                                         title="Ver imagen">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="1.8" stroke-linecap="round"
+                                                            stroke-width="2" stroke-linecap="round"
                                                             stroke-linejoin="round">
                                                             <rect x="3" y="3" width="18" height="18"
                                                                 rx="2" ry="2" />
                                                             <circle cx="8.5" cy="8.5" r="1.5" />
-                                                            <path d="M21 15l-5-5L5 21" />
+                                                            <polyline points="21 15 16 10 5 21" />
                                                         </svg>
                                                     </button>
                                                 @else
                                                     <a href="{{ asset('storage/' . $m->foto_path) }}" target="_blank"
-                                                        class="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 transition"
+                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-gray-600 border-gray-300 hover:bg-gray-50 hover:border-gray-400 dark:bg-neutral-900 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-900/20 shadow-sm"
                                                         title="Ver archivo">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                             viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -767,23 +822,37 @@
                                                         </svg>
                                                     </a>
                                                 @endif
+                                            @else
+                                                <span
+                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
+                                                    title="Sin comprobante">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <rect x="3" y="3" width="18" height="18"
+                                                            rx="2" ry="2" />
+                                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                                        <polyline points="21 15 16 10 5 21" />
+                                                    </svg>
+                                                </span>
                                             @endif
 
                                             @can('agente_presupuestos.delete_movement')
                                                 <button type="button" x-data
                                                     x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
-                                                    class="inline-flex items-center justify-center w-9 h-9 rounded-lg
-                               border border-red-200 text-red-700 hover:bg-red-50
-                               dark:border-red-500/30 dark:text-red-300 dark:hover:bg-red-500/10 transition"
+                                                    class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
                                                     title="Eliminar">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M3 6h18" />
-                                                        <path d="M8 6V4h8v2" />
-                                                        <path d="M6 6l1 16h10l1-16" />
-                                                        <path d="M10 11v6" />
-                                                        <path d="M14 11v6" />
+                                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                                        <line x1="10" y1="11" x2="10"
+                                                            y2="17"></line>
+                                                        <line x1="14" y1="11" x2="14"
+                                                            y2="17"></line>
                                                     </svg>
                                                 </button>
                                             @endcan
@@ -820,6 +889,11 @@
                                                 {{ number_format((float) $m->monto_base, 2, ',', '.') }}
                                                 {{ $editorMonedaBase ?? 'BOB' }}
                                             </div>
+                                            @if ($m->moneda !== ($editorMonedaBase ?? 'BOB'))
+                                                <div class="text-[10px] text-gray-400 font-normal">
+                                                    TC: {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }}
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
 

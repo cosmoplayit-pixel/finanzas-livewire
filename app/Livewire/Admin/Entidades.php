@@ -223,9 +223,23 @@ class Entidades extends Component
 
     public function toggleActive(int $id): void
     {
-        $e = Entidad::findOrFail($id);
+        $e = Entidad::withCount(['proyectos' => function ($q) {
+            $q->where('active', true);
+        }])->findOrFail($id);
 
         $this->authorizeEmpresaEntidad($e);
+
+        // Si se intenta desactivar...
+        if ($e->active) {
+            if ($e->proyectos_count > 0) {
+                $this->dispatch('swal', [
+                    'icon' => 'warning',
+                    'title' => 'No se puede desactivar',
+                    'text' => "Esta entidad tiene {$e->proyectos_count} proyecto(s) activo(s). Desactiva primero los proyectos asociados antes de desactivar al cliente.",
+                ]);
+                return;
+            }
+        }
 
         $e->active = !$e->active;
         $e->save();

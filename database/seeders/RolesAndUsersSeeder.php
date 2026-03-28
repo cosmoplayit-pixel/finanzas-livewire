@@ -289,7 +289,7 @@ class RolesAndUsersSeeder extends Seeder
 
         // Admin global
         $admin = User::firstOrCreate(
-            ['email' => 'admin@demo.com'],
+            ['email' => 'admin@finanzas.com'],
             [
                 'name' => 'Administrador',
                 'password' => Hash::make('Password123!'),
@@ -304,7 +304,7 @@ class RolesAndUsersSeeder extends Seeder
 
         foreach (Empresa::orderBy('id')->get() as $emp) {
             $u = User::firstOrCreate(
-                ['email' => "manager{$emp->id}@demo.com"],
+                ['email' => "manager{$emp->id}@finanzas.com"],
                 [
                     'name' => "Manager {$emp->nombre}",
                     'password' => Hash::make('Password123!'),
@@ -320,7 +320,7 @@ class RolesAndUsersSeeder extends Seeder
         // Visualizadores por empresa
         foreach (Empresa::orderBy('id')->get() as $emp) {
             $u = User::firstOrCreate(
-                ['email' => "visualizador{$emp->id}@demo.com"],
+                ['email' => "visualizador{$emp->id}@finanzas.com"],
                 [
                     'name' => "Visualizador {$emp->nombre}",
                     'password' => Hash::make('Password123!'),

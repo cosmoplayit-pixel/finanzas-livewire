@@ -301,6 +301,7 @@ class RolesAndUsersSeeder extends Seeder
         $admin->syncRoles(['Administrador']);
 
         // Managers por empresa
+
         foreach (Empresa::orderBy('id')->get() as $emp) {
             $u = User::firstOrCreate(
                 ['email' => "manager{$emp->id}@demo.com"],

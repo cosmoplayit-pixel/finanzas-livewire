@@ -101,7 +101,7 @@
             @endcan
 
             {{-- GESTIÓN DE CATÁLOGOS --}}
-            @canany(['entidades.view', 'proyectos.view', 'bancos.view', 'agentes_servicio.view', 'herramientas.view'])
+            @canany(['entidades.view', 'proyectos.view', 'bancos.view', 'agentes_servicio.view'])
                 <flux:sidebar.group heading="{{ __('Gestión de Catálogos') }}" class="grid"> </flux:sidebar.group>
             @endcanany
 
@@ -134,13 +134,14 @@
                 </flux:sidebar.item>
             @endcan
 
+            {{--
             @can('herramientas.view')
                 <flux:sidebar.item icon="wrench-screwdriver" :href="route('herramientas')"
                     :current="request()->routeIs('herramientas')" :badge="$navCounts['herramientas'] ?? null"
                     wire:navigate>
                     {{ __('Herramientas') }}
                 </flux:sidebar.item>
-            @endcan
+            @endcan --}}
 
             {{-- GESTIÓN FINANCIERA --}}
             @canany(['facturas.view', 'agente_presupuestos.view', 'boletas_garantia.view', 'inversiones.view',
@@ -179,23 +180,25 @@
             @endcan
 
             {{-- MOVIMIENTOS --}}
-            <flux:sidebar.group expandable heading="Movimientos" class="grid">
+            @canany(['proyectos.resumen', 'transacciones.view'])
+                <flux:sidebar.group expandable heading="Movimientos" class="grid">
 
-                @can('proyectos.resumen')
-                    <flux:sidebar.item icon="chart-pie" :href="route('proyectos.resumen')"
-                        :current="request()->routeIs('proyectos.resumen')" wire:navigate>
-                        {{ __('Resumen Proyectos') }}
-                    </flux:sidebar.item>
-                @endcan
+                    @can('proyectos.resumen')
+                        <flux:sidebar.item icon="chart-pie" :href="route('proyectos.resumen')"
+                            :current="request()->routeIs('proyectos.resumen')" wire:navigate>
+                            {{ __('Resumen Proyectos') }}
+                        </flux:sidebar.item>
+                    @endcan
 
-                @can('transacciones.view')
-                    <flux:sidebar.item icon="arrows-right-left" :href="route('transacciones')"
-                        :current="request()->routeIs('transacciones')" wire:navigate>
-                        {{ __('Transacciones') }}
-                    </flux:sidebar.item>
-                @endcan
+                    @can('transacciones.view')
+                        <flux:sidebar.item icon="arrows-right-left" :href="route('transacciones')"
+                            :current="request()->routeIs('transacciones')" wire:navigate>
+                            {{ __('Transacciones') }}
+                        </flux:sidebar.item>
+                    @endcan
 
-            </flux:sidebar.group>
+                </flux:sidebar.group>
+            @endcanany
 
 
 

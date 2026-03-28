@@ -1,5 +1,5 @@
 {{-- FILTROS --}}
-<div x-data="{ openFilters: false }" class="relative mb-6">
+<div x-data="{ openFilters: false }" class="relative mb-4">
 
     <div class="rounded-xl border bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden">
         {{-- MOBILE (<= md): FILTROS COLAPSABLES --}}
@@ -42,6 +42,7 @@
                         <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">Mostrar</label>
                         <select wire:model.live="perPage"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-[13px] focus:outline-none focus:ring-2 focus:ring-gray-500/40 cursor-pointer">
+                            <option value="5">5</option>
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
@@ -63,7 +64,7 @@
         </div>
 
         {{-- DESKTOP (>= md): Layout extendido --}}
-        <div class="hidden md:block p-4">
+        <div class="hidden md:block py-3 px-4">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
                 <div class="md:col-span-6 lg:col-span-8">
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
@@ -76,6 +77,7 @@
                     <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Mostrar</label>
                     <select wire:model.live="perPage"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 cursor-pointer">
+                        <option value="5">5</option>
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>

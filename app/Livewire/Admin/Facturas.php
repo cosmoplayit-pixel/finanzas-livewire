@@ -136,6 +136,13 @@ class Facturas extends Component
 
     public ?int $deleteFacturaId = null;
     public ?int $highlight_factura_id = null;
+    public array $pendingRemoval = [];
+
+    #[On('factura:clear-pending-removal')]
+    public function clearPendingRemoval(int $facturaId): void
+    {
+        unset($this->pendingRemoval[(string) $facturaId]);
+    }
 
     public function togglePanel(int $facturaId): void
     {
@@ -492,7 +499,7 @@ class Facturas extends Component
             'fecha_emision' => 'required|date',
             'monto_facturado' => 'required|numeric|min:0.01|max:999999999.99',
             'observacion_factura' => 'nullable|string|max:2000',
-            'foto_comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'foto_comprobante' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         try {
@@ -687,7 +694,7 @@ class Facturas extends Component
             'nro_operacion' => 'nullable|string|max:80',
             'observacion' => 'nullable|string|max:2000',
             'fecha_pago' => 'required|date',
-            'pago_foto_comprobante' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'pago_foto_comprobante' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ];
 
         $this->validate($rules);
@@ -721,6 +728,18 @@ class Facturas extends Component
             $this->factura_id = $factura->id;
             $this->pago_id = $nuevoPago->id;
             $this->highlight_factura_id = $factura->id;
+
+            // ✅ Si se completó el pago (cerrada) y estamos filtrando por "abierta",
+            // lo marcamos para remoción diferida (5 seg)
+            $f = Factura::with('pagos')->find($factura->id);
+            $estados = is_array($this->f_cerrada) ? $this->f_cerrada : [];
+
+            $isCerrada = (FacturaFinance::saldo($f) <= 0 && FacturaFinance::retencionPendiente($f) <= 0);
+
+            if ($isCerrada && in_array('abierta', $estados, true) && ! in_array('cerrada', $estados, true)) {
+                $this->pendingRemoval[(string) $factura->id] = true;
+                $this->dispatch('factura:start-removal-timer', facturaId: $factura->id);
+            }
 
             session()->flash('success', 'Pago registrado correctamente.');
         } catch (DomainException $e) {
@@ -1033,6 +1052,7 @@ class Facturas extends Component
             'f_retencion' => $this->f_retencion ?? [],
             'f_cerrada' => $this->f_cerrada ?? [],
             'factura_id' => $this->factura_id,
+            'pending_ids' => array_keys($this->pendingRemoval),
         ];
 
         // IDs paginados.

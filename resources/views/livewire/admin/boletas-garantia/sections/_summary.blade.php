@@ -3,7 +3,7 @@
     $isBoth = $moneda === 'all';
     $valClassBase = $isBoth ? 'text-lg' : 'text-2xl';
 @endphp
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
     {{-- Total Emitido (Retención) --}}
     <div
         class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group dark:bg-neutral-800 dark:border-neutral-700 flex flex-col">

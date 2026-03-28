@@ -129,49 +129,75 @@
             {{-- Estado + Saldo --}}
             <div class="mt-3 flex items-start justify-between gap-3">
                 {{-- Estado (2 etiquetas) --}}
-                <div class="flex flex-wrap gap-2">
-                    {{-- Estado principal --}}
-                    @if ($cerrada)
-                        <span
-                            class="px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200">
-                            Completado
-                        </span>
-                    @else
-                        @if ($estadoPago === 'Pendiente')
+                <div class="flex flex-wrap gap-2 min-h-[44px]">
+                    @if (isset($pendingRemoval[(string) $f->id]))
+                        <div class="flex flex-col items-center gap-1 w-full" x-data="{ seconds: 5, progress: 100 }"
+                            x-init="let start = Date.now();
+                            setInterval(() => { if (seconds > 0) seconds-- }, 1000);
+                            let interval = setInterval(() => {
+                                progress = Math.max(0, 100 - ((Date.now() - start) / 5000 * 100));
+                                if (progress <= 0) {
+                                    clearInterval(interval);
+                                    $wire.dispatch('factura:clear-pending-removal', { facturaId: {{ $f->id }} });
+                                }
+                            }, 50);">
                             <span
-                                class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200">
-                                Pagos 0%
+                                class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 animate-pulse border border-amber-200 dark:border-amber-800">
+                                MOVIENDO A CERRADAS
                             </span>
-                        @elseif ($estadoPago === 'Parcial')
+                            <div class="flex items-center gap-2 mt-0.5">
+                                <div class="w-20 h-1 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                    <div class="bg-amber-500 h-full" :style="'width: ' + progress + '%'">
+                                    </div>
+                                </div>
+                                <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400"
+                                    x-text="seconds + 's'"></span>
+                            </div>
+                        </div>
+                    @else
+                        {{-- Estado principal --}}
+                        @if ($cerrada)
                             <span
-                                class="px-2 py-1 rounded text-xs font-semibold
+                                class="px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200">
+                                Completado
+                            </span>
+                        @else
+                            @if ($estadoPago === 'Pendiente')
+                                <span
+                                    class="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200">
+                                    Pagos 0%
+                                </span>
+                            @elseif ($estadoPago === 'Parcial')
+                                <span
+                                    class="px-2 py-1 rounded text-xs font-semibold
                            {{ $pct == 100
                                ? 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200'
                                : ($pct > 0
                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
                                    : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200') }}">
-                                Pagos {{ $pct }}%
-                            </span>
-                        @else
-                            <span
-                                class="px-2 py-1 rounded text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200">
-                                Pagada (Neto)
-                            </span>
+                                    Pagos {{ $pct }}%
+                                </span>
+                            @else
+                                <span
+                                    class="px-2 py-1 rounded text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200">
+                                    Pagada (Neto)
+                                </span>
+                            @endif
                         @endif
-                    @endif
 
-                    {{-- Badge retención (si aplica) --}}
-                    @if ($estadoRet)
-                        @if ($estadoRet === 'Retención pendiente')
-                            <span
-                                class="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200">
-                                {{ $estadoRet }}
-                            </span>
-                        @else
-                            <span
-                                class="px-2 py-1 rounded text-xs bg-lime-100 text-lime-800 dark:bg-lime-500/20 dark:text-lime-200">
-                                {{ $estadoRet }}
-                            </span>
+                        {{-- Badge retención (si aplica) --}}
+                        @if ($estadoRet)
+                            @if ($estadoRet === 'Retención pendiente')
+                                <span
+                                    class="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200">
+                                    {{ $estadoRet }}
+                                </span>
+                            @else
+                                <span
+                                    class="px-2 py-1 rounded text-xs bg-lime-100 text-lime-800 dark:bg-lime-500/20 dark:text-lime-200">
+                                    {{ $estadoRet }}
+                                </span>
+                            @endif
                         @endif
                     @endif
                 </div>
@@ -229,8 +255,9 @@
                     @else
                         <div
                             class="flex items-center justify-center gap-2 px-3 py-2 rounded border border-gray-200 bg-gray-50 text-gray-400 dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-500 font-medium text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
                                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                                 <line x1="3" y1="3" x2="21" y2="21" />
                             </svg>

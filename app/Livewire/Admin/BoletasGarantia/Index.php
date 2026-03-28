@@ -18,7 +18,7 @@ class Index extends Component
     // Tabla
     public string $search = '';
 
-    public int $perPage = 10;
+    public int $perPage = 5;
 
     // Filtros
     public ?string $f_fecha_desde = null;
@@ -77,6 +77,8 @@ class Index extends Component
     public ?int $highlight_boleta_id = null;
 
     public ?int $highlight_devolucion_id = null;
+
+    public array $pendingRemoval = [];
 
     public function mount(): void
     {
@@ -285,20 +287,33 @@ class Index extends Component
         }
     }
 
-    // Cuando algún modal guarda/elimina, refrescamos tabla
     #[On('bg:refresh')]
     public function refreshList(?int $boletaId = null, ?int $devolucionId = null): void
     {
         if ($boletaId) {
             $this->highlight_boleta_id = $boletaId;
-            // Expandir panel de la boleta afectada y cerrar otros
             $this->panelsOpen = [(string) $boletaId => true];
 
             if ($devolucionId) {
                 $this->highlight_devolucion_id = $devolucionId;
             }
+
+            // ✅ Si se completó el pago (devuelta) y estamos filtrando por "abierta",
+            // lo marcamos para remoción diferida (5 seg)
+            $bg = \App\Models\BoletaGarantia::find($boletaId);
+            $estados = $this->normalizeFilter($this->f_estado ?? []);
+
+            if ($bg && $bg->estado === 'devuelta' && in_array('abierta', $estados, true) && ! in_array('devuelta', $estados, true)) {
+                $this->pendingRemoval[(string) $boletaId] = now()->addSeconds(6)->timestamp;
+                $this->dispatch('bg:start-removal-timer', boletaId: $boletaId);
+            }
         }
-        $this->resetPage();
+    }
+
+    #[On('bg:clear-pending-removal')]
+    public function clearPendingRemoval(int $boletaId): void
+    {
+        unset($this->pendingRemoval[(string) $boletaId]);
     }
 
     // =========================
@@ -336,8 +351,15 @@ class Index extends Component
         }
 
         $estados = $this->normalizeFilter($this->f_estado ?? []);
+        $pendingIds = array_keys($this->pendingRemoval);
+
         if (! empty($estados)) {
-            $boletasQuery->whereIn('estado', $estados);
+            $boletasQuery->where(function ($q) use ($estados, $pendingIds) {
+                $q->whereIn('estado', $estados);
+                if (! empty($pendingIds)) {
+                    $q->orWhereIn('id', $pendingIds);
+                }
+            });
         }
 
         if (! empty($this->f_fecha_desde)) {

@@ -241,10 +241,11 @@ class DevolucionModal extends Component
         if (! $this->fecha_devolucion) {
             return false;
         }
-        if ($this->devol_monto <= 0) {
+        if ($this->devol_monto <= 0 || $this->devol_monto > $this->restante) {
             return false;
         }
-        if ($this->devol_monto > $this->restante) {
+
+        if (! $this->foto_comprobante) {
             return false;
         }
 
@@ -261,7 +262,7 @@ class DevolucionModal extends Component
             'devol_monto' => ['required', 'numeric', 'min:0.01'],
             'nro_transaccion' => ['nullable', 'string', 'max:100'],
             'observacion' => ['nullable', 'string', 'max:2000'],
-            'foto_comprobante' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'foto_comprobante' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
         if (! $this->boletaId) {

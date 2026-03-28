@@ -15,7 +15,8 @@
         setTimeout(() => scroll(), 600);
     }
     $watch('boletaId', val => { if (val) setTimeout(() => scroll(), 300) });
-    $watch('devolucionId', val => { if (val) setTimeout(() => scroll(), 300) });">
+    $watch('devolucionId', val => { if (val) setTimeout(() => scroll(), 300) });"
+    @bg:start-removal-timer.window="setTimeout(() => $wire.clearPendingRemoval($event.detail.boletaId), 5500)">
 
     <div class="overflow-x-auto">
         <table wire:key="boletas-table" class="w-full table-fixed text-sm min-w-[1100px] lg:min-w-0">
@@ -413,7 +414,29 @@
                         {{-- ESTADO (icono + badge) --}}
                         <td class="p-2 whitespace-nowrap align-middle">
                             <div class="flex items-center justify-center gap-1">
-                                @if ($devuelta)
+                                @if (isset($pendingRemoval[(string) $bg->id]))
+                                    <div class="flex flex-col items-center gap-1" x-data="{ seconds: 5, progress: 100 }"
+                                        x-init="let start = Date.now();
+                                        setInterval(() => { if (seconds > 0) seconds-- }, 1000);
+                                        let interval = setInterval(() => {
+                                            progress = Math.max(0, 100 - ((Date.now() - start) / 5000 * 100));
+                                            if (progress <= 0) clearInterval(interval);
+                                        }, 50);">
+                                        <span
+                                            class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 animate-pulse border border-amber-200 dark:border-amber-800">
+                                            MOVIENDO A DEVUELTAS
+                                        </span>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <div
+                                                class="w-20 h-1 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                                <div class="bg-amber-500 h-full" :style="'width: ' + progress + '%'">
+                                                </div>
+                                            </div>
+                                            <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400"
+                                                x-text="seconds + 's'"></span>
+                                        </div>
+                                    </div>
+                                @elseif ($devuelta)
                                     <span
                                         class="px-2 py-1 rounded text-xs bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200">
                                         DEVUELTO

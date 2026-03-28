@@ -3,7 +3,7 @@
     title="Nueva Boleta de Garantía" maxWidth="sm:max-w-xl md:max-w-4xl" onClose="close">
 
 
-    <div class="space-y-2.5 sm:space-y-3">
+    <div class="space-y-0 sm:space-y-3">
 
         {{-- FORM (SIN "CAJAS" EXTRA) --}}
         <div class="space-y-4">
@@ -32,6 +32,7 @@
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                    border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                    focus:outline-none focus:ring-2 focus:ring-gray-500/40 cursor-pointer">
+                        <option value="">Seleccione…</option>
                         <option value="SERIEDAD">Garantía de Seriedad de Propuesta</option>
                         <option value="CUMPLIMIENTO">Garantía de Cumplimiento de Contrato</option>
                     </select>
@@ -141,20 +142,10 @@
                         <div class="text-xs text-red-600 mt-1">La retención excede el saldo del banco.</div>
                     @endif
                 </div>
-
-                {{-- Observación --}}
-                <div class="col-span-2 lg:col-span-1">
-                    <label class="block text-sm mb-1">Observación</label>
-                    <input type="text" wire:model.live="observacion" placeholder="Opcional"
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40">
-                    @error('observacion')
-                        <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                    @enderror
-                </div>
-
                 {{-- Comprobante (Imagen o PDF) --}}
                 <div class="col-span-2 lg:col-span-1">
-                    <label class="block text-sm mb-1">Comprobante (Imagen/PDF)</label>
+                    <label class="block text-sm mb-1">Comprobante (Imagen/PDF) <span
+                            class="text-red-500">*</span></label>
                     <label
                         class="group h-11 flex items-center justify-between w-full rounded-lg border border-dashed
                             border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900
@@ -207,6 +198,16 @@
                         </div>
                     @endif
                 </div>
+
+                {{-- Observación --}}
+                <div class="col-span-2 lg:col-span-2">
+                    <label class="block text-sm mb-1">Observación</label>
+                    <input type="text" wire:model.live="observacion" placeholder="Opcional"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40">
+                    @error('observacion')
+                        <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
             </div>
         </div>
 
@@ -247,6 +248,24 @@
             </div>
         </div>
 
+        {{-- INFORMATIVO PROYECTOS TIPO PROPUESTA --}}
+        <div class="px-1 py-1 flex justify-start">
+            <div
+                class="w-fit flex items-center gap-2 text-blue-700 dark:text-blue-400 bg-blue-50/60 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800/40">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <div class="text-[11px] leading-tight whitespace-nowrap">
+                    <span class="font-semibold text-blue-800 dark:text-blue-300">Nota:</span> Solo se pueden emitir
+                    boletas para proyectos categorizados como <span
+                        class="font-bold underline decoration-blue-300 dark:decoration-blue-700">Propuesta</span>.
+                </div>
+            </div>
+        </div>
 
     </div>
     @slot('footer')
@@ -255,14 +274,14 @@
             <button type="button" wire:click="close"
                 class="w-full sm:w-auto px-5 py-2 rounded-lg border cursor-pointer
                    border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200
-                   hover:bg-gray-100 dark:hover:bg-neutral-800">
+                   hover:bg-gray-100 dark:hover:bg-neutral-800 text-sm font-medium">
                 Cancelar
             </button>
 
             <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save, foto_comprobante"
                 @disabled(!$this->puedeGuardar)
                 class="w-full sm:w-auto px-5 py-2 rounded-lg cursor-pointer bg-black text-white hover:opacity-90
-                   disabled:opacity-50 disabled:cursor-not-allowed">
+                   disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium">
                 <span wire:loading.remove wire:target="save, foto_comprobante">Guardar</span>
                 <span wire:loading wire:target="foto_comprobante">Procesando…</span>
                 <span wire:loading wire:target="save">Guardando…</span>

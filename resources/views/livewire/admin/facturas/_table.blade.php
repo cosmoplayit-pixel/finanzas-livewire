@@ -316,12 +316,39 @@
 
                         {{-- Estado --}}
                         <td class="p-2 align-top">
-                            <div class="flex text-center items-center justify-center gap-2 flex-wrap">
-                                @foreach ($r['estado_badges'] as $b)
-                                    <span class="px-2 py-1 rounded text-xs {{ $b['class'] }}">
-                                        {{ $b['text'] }}
-                                    </span>
-                                @endforeach
+                            <div class="flex text-center items-center justify-center gap-2 flex-wrap min-h-[44px]">
+                                @if (isset($pendingRemoval[(string) $r['id']]))
+                                    <div class="flex flex-col items-center gap-1" x-data="{ seconds: 5, progress: 100 }"
+                                        x-init="let start = Date.now();
+                                        setInterval(() => { if (seconds > 0) seconds-- }, 1000);
+                                        let interval = setInterval(() => {
+                                            progress = Math.max(0, 100 - ((Date.now() - start) / 5000 * 100));
+                                            if (progress <= 0) {
+                                                clearInterval(interval);
+                                                $wire.dispatch('factura:clear-pending-removal', { facturaId: {{ $r['id'] }} });
+                                            }
+                                        }, 50);">
+                                        <span
+                                            class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 animate-pulse border border-amber-200 dark:border-amber-800">
+                                            MOVIENDO A CERRADAS
+                                        </span>
+                                        <div class="flex items-center gap-2 mt-0.5">
+                                            <div
+                                                class="w-20 h-1 bg-gray-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                                <div class="bg-amber-500 h-full" :style="'width: ' + progress + '%'">
+                                                </div>
+                                            </div>
+                                            <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400"
+                                                x-text="seconds + 's'"></span>
+                                        </div>
+                                    </div>
+                                @else
+                                    @foreach ($r['estado_badges'] as $b)
+                                        <span class="px-2 py-1 rounded text-xs {{ $b['class'] }}">
+                                            {{ $b['text'] }}
+                                        </span>
+                                    @endforeach
+                                @endif
                             </div>
                         </td>
 
@@ -719,6 +746,6 @@
 </div>
 
 {{-- PAGINACIÓN --}}
-<div>
+<div class="mt-4">
     {{ $facturas->links() }}
 </div>

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 class BoletaGarantiaService
 {
     public const TIPO_SERIEDAD = 'SERIEDAD';
+
     public const TIPO_CUMPLIMIENTO = 'CUMPLIMIENTO';
 
     public function crear(array $data, int $userId): BoletaGarantia
@@ -70,7 +71,7 @@ class BoletaGarantiaService
             /** @var BoletaGarantia $bg */
             $bg = BoletaGarantia::query()->lockForUpdate()->findOrFail($boleta->id);
 
-            if (!$bg->active) {
+            if (! $bg->active) {
                 throw new DomainException('La boleta está inactiva.');
             }
 
@@ -136,7 +137,7 @@ class BoletaGarantiaService
             /** @var BoletaGarantia $bg */
             $bg = BoletaGarantia::query()->lockForUpdate()->findOrFail($boleta->id);
 
-            if (!$bg->active) {
+            if (! $bg->active) {
                 throw new DomainException('La boleta está inactiva.');
             }
 

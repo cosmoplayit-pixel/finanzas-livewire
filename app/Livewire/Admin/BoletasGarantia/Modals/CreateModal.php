@@ -27,7 +27,7 @@ class CreateModal extends Component
 
     public array $proyectosEntidad = [];
 
-    public string $tipo = BoletaGarantiaService::TIPO_SERIEDAD;
+    public string $tipo = '';
 
     public string $nro_boleta = '';
 
@@ -84,7 +84,7 @@ class CreateModal extends Component
         $this->proyecto_id = '';
         $this->proyectosEntidad = [];
 
-        $this->tipo = BoletaGarantiaService::TIPO_SERIEDAD;
+        $this->tipo = '';
         $this->nro_boleta = '';
 
         $this->retencion = 0;
@@ -114,7 +114,8 @@ class CreateModal extends Component
             ! $this->agente_servicio_id ||
             ! $this->entidad_id ||
             ! $this->proyecto_id ||
-            ! $this->banco_egreso_id
+            ! $this->banco_egreso_id ||
+            ! $this->tipo
         ) {
             return false;
         }
@@ -128,6 +129,10 @@ class CreateModal extends Component
             return false;
         }
         if ($this->total_excede_saldo) {
+            return false;
+        }
+
+        if (! $this->foto_comprobante) {
             return false;
         }
 
@@ -247,7 +252,7 @@ class CreateModal extends Component
             'fecha_emision' => ['required', 'date'],
             'fecha_vencimiento' => ['nullable', 'date'],
             'observacion' => ['nullable', 'string', 'max:2000'],
-            'foto_comprobante' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'foto_comprobante' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
         // seguridad empresa (agente/entidad/banco)
@@ -331,7 +336,11 @@ class CreateModal extends Component
             $this->close();
             $this->dispatch('bg:refresh', boletaId: $boleta?->id);
         } catch (DomainException $e) {
-            $this->dispatch('toast', type: 'error', message: $e->getMessage());
+            if (str_contains($e->getMessage(), 'Ya existe una boleta')) {
+                $this->addError('nro_boleta', $e->getMessage());
+            } else {
+                $this->dispatch('toast', type: 'error', message: $e->getMessage());
+            }
         }
     }
 

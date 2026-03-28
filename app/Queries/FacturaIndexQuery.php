@@ -30,6 +30,7 @@ class FacturaIndexQuery
         $fPago = $params['f_pago'] ?? [];
         $fRet = $params['f_retencion'] ?? [];
         $fEstado = $params['f_cerrada'] ?? [];
+        $pendingIds = $params['pending_ids'] ?? [];
 
         // Seguridad: si no hay empresa, no debe listar nada.
         if (! $empresaId) {
@@ -141,7 +142,7 @@ class FacturaIndexQuery
 
         // ===== Filtro: ESTADO GLOBAL (abierta/cerrada) =====
         if (is_array($fEstado) && ! empty($fEstado)) {
-            $q->where(function ($w) use ($fEstado, $saldoExpr, $retPendExpr) {
+            $q->where(function ($w) use ($fEstado, $saldoExpr, $retPendExpr, $pendingIds) {
                 foreach ($fEstado as $estado) {
                     // Cerrada: saldo normal = 0 y retención pendiente = 0
                     if ($estado === 'cerrada') {
@@ -152,6 +153,11 @@ class FacturaIndexQuery
                     if ($estado === 'abierta') {
                         $w->orWhereRaw("{$saldoExpr} > 0 OR {$retPendExpr} > 0");
                     }
+                }
+
+                // Inyectar IDs en proceso de remoción para que sigan visibles
+                if (! empty($pendingIds)) {
+                    $w->orWhereIn('t.id', $pendingIds);
                 }
             });
         }

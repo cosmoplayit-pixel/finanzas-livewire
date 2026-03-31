@@ -378,7 +378,18 @@ class Herramientas extends Component
             abort(403);
         }
 
+        if ($h->stock_prestado > 0) {
+            $this->dispatch('swal:modal', [
+                'type'    => 'error',
+                'title'   => 'Operación no permitida',
+                'text'    => 'No se puede desactivar una herramienta que tiene préstamos activos. Registre las devoluciones primero.',
+            ]);
+            return;
+        }
+
         $h->update(['active' => ! $h->active]);
+
+
         session()->flash('success', $h->active ? 'Herramienta activada.' : 'Herramienta desactivada.');
     }
 
@@ -390,9 +401,20 @@ class Herramientas extends Component
             abort(403);
         }
 
+        if ($h->stock_prestado > 0) {
+            $this->dispatch('swal:modal', [
+                'type'    => 'error',
+                'title'   => 'Operación no permitida',
+                'text'    => 'No se puede eliminar una herramienta que tiene préstamos activos pendientes en obra.',
+            ]);
+            return;
+        }
+
         if ($h->imagen && Storage::disk('public')->exists($h->imagen)) {
             Storage::disk('public')->delete($h->imagen);
         }
+
+
 
         $h->delete();
         session()->flash('success', 'Herramienta eliminada correctamente.');

@@ -200,6 +200,10 @@ class Proyectos extends Component
         $data['monto'] = number_format((float) $data['monto'], 2, '.', '');
         $data['retencion'] = number_format((float) $data['retencion'], 2, '.', '');
 
+        // Fechas vacías → null para evitar error de formato en MySQL
+        $data['fecha_inicio'] = $data['fecha_inicio'] ?: null;
+        $data['fecha_fin'] = $data['fecha_fin'] ?: null;
+
         Proyecto::updateOrCreate(['id' => $this->proyectoId], $data);
 
         session()->flash(

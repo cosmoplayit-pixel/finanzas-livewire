@@ -193,18 +193,19 @@
             @endcanany
 
 
-            {{-- GESTIÓN HERRAMIENTAS 
+            {{-- GESTIÓN HERRAMIENTAS --}}
             @canany(['herramientas.view'])
-                <flux:sidebar.group heading="{{ __('Gestión Herramientas') }}" class="grid"> </flux:sidebar.group>
-            @endcanany
+                <flux:sidebar.group heading="{{ __('Gestión Herramientas') }}" class="grid">
+                    <flux:sidebar.item icon="wrench" href="{{ route('herramientas') }}" wire:navigate>
+                        {{ __('Herramientas') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-document-list" href="{{ route('prestamos_herramientas') }}"
+                        wire:navigate>
+                        {{ __('Préstamos y Devoluciones') }}
+                    </flux:sidebar.item>
 
-            @can('herramientas.view')
-                <flux:sidebar.item icon="wrench-screwdriver" :href="route('herramientas')"
-                    :current="request()->routeIs('herramientas')" :badge="$navCounts['herramientas'] ?? null"
-                    wire:navigate>
-                    {{ __('Herramientas') }}
-                </flux:sidebar.item>
-            @endcan --}}
+                </flux:sidebar.group>
+            @endcanany
 
 
 
@@ -866,17 +867,53 @@
     </script>
 
     <script data-navigate-once>
-        document.addEventListener('livewire:init', () => {
-            Livewire.on('swal', (payload) => {
-                const data = Array.isArray(payload) ? payload[0] : payload;
-                Swal.fire({
-                    icon: data.icon ?? 'info',
-                    title: data.title ?? '',
-                    text: data.text ?? '',
-                });
+        Livewire.on('swal', (payload) => {
+            const data = Array.isArray(payload) ? payload[0] : payload;
+            Swal.fire({
+                icon: data.icon ?? 'info',
+                title: data.title ?? '',
+                text: data.text ?? '',
             });
         });
+
+        // ✅ GESTOR GLOBAL DE TOASTS
+        Livewire.on('toast', ({
+            type,
+            message
+        }) => {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.onmouseenter = Swal.stopTimer;
+                    toast.onmouseleave = Swal.resumeTimer;
+                }
+            });
+            Toast.fire({
+                icon: type,
+                title: message
+            });
+        });
+
+        // ✅ GESTOR GLOBAL DE MODALES SWAL
+        Livewire.on('swal:modal', ({
+        type,
+        title,
+        text
+        }) => {
+        Swal.fire({
+            icon: type,
+            title: title,
+            text: text,
+            confirmButtonColor: '#6366f1', // indigo
+        });
+        });
+        });
     </script>
+
 
 
     @stack('js')

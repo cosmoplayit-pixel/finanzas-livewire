@@ -9,6 +9,7 @@ use App\Livewire\Admin\Entidades;
 use App\Livewire\Admin\Facturas;
 use App\Livewire\Admin\Herramientas;
 use App\Livewire\Admin\Inversiones\Index as InversionesIndex;
+use App\Livewire\Admin\PrestamosHerramientas;
 use App\Livewire\Admin\Presupuestos\Index as PresupuestosIndex;
 use App\Livewire\Admin\Proyectos;
 use App\Livewire\Admin\Proyectos\Resumen;
@@ -62,9 +63,10 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->name('proyectos.resumen');
 
     // HERRAMIENTAS
-    Route::middleware(['permission:herramientas.view'])
-        ->get('/herramientas', Herramientas::class)
-        ->name('herramientas');
+    Route::middleware(['permission:herramientas.view'])->group(function () {
+        Route::get('/herramientas', Herramientas::class)->name('herramientas');
+        Route::get('/prestamos_herramientas', PrestamosHerramientas::class)->name('prestamos_herramientas');
+    });
 
     // FACTURAS
     Route::middleware(['permission:facturas.view'])

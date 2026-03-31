@@ -41,6 +41,17 @@ class Herramienta extends Model
         return $this->belongsTo(Empresa::class);
     }
 
+    public function prestamos()
+    {
+        return $this->hasMany(PrestamoHerramienta::class, 'herramienta_id');
+    }
+
+    public function prestamosActivos()
+    {
+        return $this->hasMany(PrestamoHerramienta::class, 'herramienta_id')->where('estado', '!=', 'finalizado');
+    }
+
+
     public function getEstadoFisicoLabelAttribute(): string
     {
         return match ($this->estado_fisico) {

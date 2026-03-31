@@ -551,256 +551,201 @@
 
     <div class="mt-4">{{ $herramientas->links() }}</div>
 
-    {{-- ==========================================
-         MODAL NUEVA HERRAMIENTA
-         ========================================== --}}
-    <x-ui.modal wire:key="herramienta-modal" model="openModal" title="Nueva Herramienta" maxWidth="md:max-w-2xl"
-        onClose="closeModal">
+    {{-- ===================== MODAL NUEVA HERRAMIENTA (Diseño Standard) ===================== --}}
+    <x-ui.modal wire:key="herramienta-modal-{{ $openModal ? 'open' : 'closed' }}" model="openModal"
+        title="Registro de Herramienta" maxWidth="sm:max-w-xl md:max-w-3xl" onClose="closeModal">
+
         <div class="space-y-4">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
 
-            {{-- Empresa (solo admin) --}}
-            @if (auth()->user()?->hasRole('Administrador'))
-                <div>
-                    <label class="block text-sm mb-1">Empresa <span class="text-red-500">*</span></label>
-                    <select wire:model="empresa_id"
-                        class="cursor-pointer w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700">
-                        <option value="">— Seleccione empresa —</option>
-                        @foreach ($empresas as $e)
-                            <option value="{{ $e->id }}">{{ $e->nombre }}</option>
-                        @endforeach
-                    </select>
-                    @error('empresa_id')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-            @endif
-
-            {{-- Código con autocomplete Alpine --}}
-            <div x-data="{
-                query: '',
-                open: false,
-                codigos: @js($codigos->map(fn($c) => ['codigo' => $c->codigo, 'nombre' => $c->nombre])->values()),
-                get suggestions() {
-                    if (!this.query.trim()) return [];
-                    const q = this.query.toUpperCase();
-                    return this.codigos.filter(c =>
-                        c.codigo.includes(q) || (c.nombre && c.nombre.toUpperCase().includes(q))
-                    ).slice(0, 10);
-                },
-                select(item) {
-                    this.query = item.codigo;
-                    this.open = false;
-                    $wire.call('buscarPorCodigo', item.codigo);
-                },
-                onInput() {
-                    this.open = this.query.trim().length > 0;
-                },
-                onBlur() {
-                    // delay para permitir click en sugerencia
-                    setTimeout(() => {
-                        this.open = false;
-                        if (this.query.trim()) {
-                            $wire.call('buscarPorCodigo', this.query.toUpperCase());
-                        }
-                    }, 180);
-                }
-            }" x-init="$watch('$wire.codigo', v => {
-                if (!v) query = '';
-                else if (query !== v) query = v;
-            })" class="relative">
-                <label class="block text-sm mb-1">Código</label>
-                <input type="text" x-model="query" @input="onInput" @blur="onBlur"
-                    @keydown.escape="open = false"
-                    @keydown.enter.prevent="suggestions.length ? select(suggestions[0]) : (open = false, $wire.call('buscarPorCodigo', query.toUpperCase()))"
-                    placeholder="Ej: TAL-001" autocomplete="off"
-                    class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700 uppercase text-sm font-mono tracking-wide">
-                {{-- Dropdown sugerencias --}}
-                <div x-show="open && suggestions.length > 0" x-cloak
-                    class="absolute z-50 left-0 right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded shadow-lg max-h-52 overflow-y-auto">
-                    <template x-for="item in suggestions" :key="item.codigo">
-                        <div @mousedown.prevent="select(item)"
-                            class="flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-neutral-800 text-sm">
-                            <span class="font-mono text-xs font-semibold text-gray-700 dark:text-neutral-300 shrink-0"
-                                x-text="item.codigo"></span>
-                            <span class="text-gray-500 dark:text-neutral-400 truncate"
-                                x-text="'— ' + item.nombre"></span>
-                        </div>
-                    </template>
-                </div>
-                @error('codigo')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
-                @if ($isExistingCode)
-                    <p class="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
-                        <svg class="size-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Código existente — datos autocompletados.
-                    </p>
-                @endif
-            </div>
-
-            {{-- Nombre --}}
-            <div>
-                <label class="block text-sm mb-1">Nombre <span class="text-red-500">*</span></label>
-                <input type="text" wire:model="nombre" placeholder="Ej: Taladro Percutor 800W" autocomplete="off"
-                    @if ($isExistingCode) readonly @endif
-                    class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700 uppercase text-sm {{ $isExistingCode ? 'bg-gray-50 dark:bg-neutral-800 cursor-not-allowed' : '' }}">
-                @error('nombre')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            {{-- Marca / Modelo / Estado / Unidad --}}
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div>
-                    <label class="block text-sm mb-1">Marca</label>
-                    <input type="text" wire:model="marca" placeholder="Ej: Bosch" autocomplete="off"
-                        @if ($isExistingCode) readonly @endif
-                        class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700 uppercase text-sm {{ $isExistingCode ? 'bg-gray-50 dark:bg-neutral-800 cursor-not-allowed' : '' }}">
-                    @error('marca')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label class="block text-sm mb-1">Modelo</label>
-                    <input type="text" wire:model="modelo" placeholder="Ej: GSB 16 RE" autocomplete="off"
-                        @if ($isExistingCode) readonly @endif
-                        class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700 uppercase text-sm {{ $isExistingCode ? 'bg-gray-50 dark:bg-neutral-800 cursor-not-allowed' : '' }}">
-                    @error('modelo')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label class="block text-sm mb-1">Estado Físico <span class="text-red-500">*</span></label>
-                    <select wire:model="estado_fisico" @if ($isExistingCode) disabled @endif
-                        class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700 text-sm cursor-pointer {{ $isExistingCode ? 'bg-gray-50 dark:bg-neutral-800 cursor-not-allowed opacity-70' : '' }}">
-                        <option value="bueno">Bueno</option>
-                        <option value="regular">Regular</option>
-                        <option value="malo">Malo</option>
-                        <option value="baja">Baja / Descarte</option>
-                    </select>
-                    @error('estado_fisico')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label class="block text-sm mb-1">Unidad</label>
-                    <input type="text" wire:model="unidad" placeholder="Ej: pza, kit" autocomplete="off"
-                        @if ($isExistingCode) readonly @endif
-                        class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700 uppercase text-sm {{ $isExistingCode ? 'bg-gray-50 dark:bg-neutral-800 cursor-not-allowed' : '' }}">
-                    @error('unidad')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-            </div>
-
-            {{-- Stock --}}
-            <div class="grid grid-cols-3 gap-3">
-                <div>
-                    <label class="block text-sm mb-1">Stock Total <span class="text-red-500">*</span></label>
-                    <input type="number" wire:model.live="stock_total" min="0" autocomplete="off"
-                        class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700 text-center font-semibold text-sm">
-                    @error('stock_total')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label class="block text-sm mb-1 opacity-60">Prestado</label>
-                    <input type="number" wire:model.live="stock_prestado" min="0" autocomplete="off"
-                        readonly
-                        class="w-full rounded border px-3 py-2 bg-gray-50 dark:bg-neutral-800 border-gray-200 dark:border-neutral-700 text-gray-500 dark:text-neutral-400 text-center font-semibold text-sm cursor-not-allowed"
-                        title="Este campo es de solo lectura y se actualiza según los préstamos realizados.">
-                    @error('stock_prestado')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label class="block text-sm mb-1 text-emerald-700 dark:text-emerald-500">Disponible</label>
-                    <div
-                        class="w-full rounded border px-3 py-2 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 font-bold text-emerald-700 dark:text-emerald-300 text-sm text-center select-none">
-                        {{ $stock_disponible }}
-                    </div>
-                </div>
-            </div>
-
-            {{-- Precio --}}
-            <div class="grid grid-cols-2 gap-3">
-                <div>
-                    <label class="block text-sm mb-1">Precio Unitario (Bs) <span class="text-red-500">*</span></label>
-                    <input type="number" step="0.01" wire:model.live="precio_unitario" min="0"
-                        autocomplete="off" @if ($isExistingCode) readonly @endif
-                        class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700 text-right font-medium text-sm {{ $isExistingCode ? 'bg-gray-50 dark:bg-neutral-800 cursor-not-allowed' : '' }}">
-                    @error('precio_unitario')
-                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                    @enderror
-                </div>
-                <div>
-                    <label class="block text-sm mb-1">Precio Total (Bs)</label>
-                    <div
-                        class="w-full rounded border px-3 py-2 bg-gray-50 dark:bg-neutral-800 border-gray-200 dark:border-neutral-700 text-right font-bold text-gray-700 dark:text-neutral-200 text-sm select-none">
-                        {{ number_format((float) $precio_total, 2, ',', '.') }}
-                    </div>
-                </div>
-            </div>
-
-            {{-- Descripción --}}
-            <div>
-                <label class="block text-sm mb-1">Descripción / Observaciones</label>
-                <textarea wire:model="descripcion" rows="2" placeholder="Detalles adicionales, accesorios, observaciones…"
-                    class="w-full rounded border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-neutral-700 uppercase text-sm resize-none"></textarea>
-                @error('descripcion')
-                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
-                @enderror
-            </div>
-
-            {{-- Fotografía --}}
-            <div>
-                <label class="block text-sm mb-1">Fotografía del ítem</label>
-                <div class="flex items-center gap-4">
-                    <div class="shrink-0">
-                        @if ($imagen)
-                            <img src="{{ $imagen->temporaryUrl() }}"
-                                class="w-16 h-16 object-cover rounded border border-gray-200 dark:border-neutral-700"
-                                alt="Preview">
-                        @else
-                            <div
-                                class="w-16 h-16 bg-gray-50 dark:bg-neutral-800 rounded border border-dashed border-gray-300 dark:border-neutral-600 flex items-center justify-center text-gray-400">
-                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                        @endif
-                    </div>
-                    <div class="flex-1">
-                        <input type="file" wire:model="imagen" accept="image/*"
-                            class="w-full text-sm text-gray-500 dark:text-neutral-400 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-100 dark:file:bg-neutral-800 file:text-gray-700 dark:file:text-neutral-200 hover:file:bg-gray-200 cursor-pointer">
-                        @error('imagen')
-                            <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                {{-- Empresa (solo admin) --}}
+                @if (auth()->user()?->hasRole('Administrador'))
+                    <div class="col-span-2 lg:col-span-1">
+                        <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Empresa <span
+                                class="text-red-500">*</span></label>
+                        <select wire:model="empresa_id"
+                            class="cursor-pointer w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
+                            <option value="">Seleccione empresa...</option>
+                            @foreach ($empresas as $e)
+                                <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('empresa_id')
+                            <p class="text-red-500 text-[10px] mt-1 italic">{{ $message }}</p>
                         @enderror
                     </div>
+                @endif
+
+                {{-- Código --}}
+                <div class="col-span-1 lg:col-span-1" x-data="{
+                    query: @entangle('codigo'),
+                    open: false,
+                    codigos: @js($codigos->map(fn($c) => ['codigo' => $c->codigo, 'nombre' => $c->nombre])->values()),
+                    get suggestions() {
+                        if (!this.query.trim()) return [];
+                        const q = this.query.toUpperCase();
+                        return this.codigos.filter(c => c.codigo.includes(q) || (c.nombre && c.nombre.toUpperCase().includes(q))).slice(0, 8);
+                    }
+                }">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Código</label>
+                    <div class="relative">
+                        <input type="text" x-model="query" @input="open = true"
+                            @blur="setTimeout(() => open = false, 200)" placeholder="Ej: TAL-001" autocomplete="off"
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 uppercase text-sm font-mono tracking-wider">
+
+                        {{-- Sugerencias --}}
+                        <div x-show="open && suggestions.length > 0" x-cloak
+                            class="absolute z-50 left-0 right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl max-h-48 overflow-y-auto overflow-x-hidden">
+                            <template x-for="item in suggestions" :key="item.codigo">
+                                <div @mousedown="$wire.call('buscarPorCodigo', item.codigo); open = false"
+                                    class="px-3 py-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-neutral-800 transition text-[11px] border-b dark:border-neutral-800 last:border-0">
+                                    <span class="font-bold text-gray-900 dark:text-white" x-text="item.codigo"></span>
+                                    <span class="text-gray-500 dark:text-neutral-500"
+                                        x-text="' — ' + item.nombre"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Estado Físico --}}
+                <div class="col-span-1 lg:col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Estado Físico
+                        <span class="text-red-500">*</span></label>
+                    <select wire:model="estado_fisico"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm cursor-pointer">
+                        <option value="bueno">✅ Bueno</option>
+                        <option value="regular">⚠️ Regular</option>
+                        <option value="malo">❌ Malo</option>
+                        <option value="baja">📉 Baja / Descarte</option>
+                    </select>
+                </div>
+
+                {{-- Nombre --}}
+                <div class="col-span-2 lg:col-span-2">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Nombre del Equipo
+                        <span class="text-red-500">*</span></label>
+                    <input type="text" wire:model="nombre" placeholder="Ej: Taladro de Banco 12 Vel."
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
+                    @error('nombre')
+                        <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Marca --}}
+                <div class="col-span-1 lg:col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Marca</label>
+                    <input type="text" wire:model="marca" placeholder="Ej: DeWalt"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
+                </div>
+
+                {{-- Modelo --}}
+                <div class="col-span-1 lg:col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Modelo /
+                        Ref.</label>
+                    <input type="text" wire:model="modelo" placeholder="DCD771..."
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
+                </div>
+
+                {{-- Unidad --}}
+                <div class="col-span-1 lg:col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Unidad
+                        Medida</label>
+                    <input type="text" wire:model="unidad" placeholder="Pza, Jgo, Mt..."
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
+                </div>
+
+                {{-- Stock Total --}}
+                <div class="col-span-1 lg:col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Stock Total <span
+                            class="text-red-500">*</span></label>
+                    <input type="number" wire:model.live="stock_total" min="0"
+                        class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-bold text-center">
+                    @error('stock_total')
+                        <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                {{-- Precio Unitario --}}
+                <div class="col-span-2 lg:col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">P. Unitario (Bs)
+                        <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" wire:model.live="precio_unitario" min="0"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 text-right font-medium">
+                </div>
+
+                {{-- Fotografía --}}
+                <div class="col-span-2 lg:col-span-2">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Fotografía o
+                        Ficha Técnica</label>
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="shrink-0 size-11 rounded-lg border border-dashed border-gray-300 dark:border-neutral-700 flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-neutral-900">
+                            @if ($imagen)
+                                <img src="{{ $imagen->temporaryUrl() }}" class="w-full h-full object-cover">
+                            @else
+                                <svg class="size-5 text-gray-300" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            @endif
+                        </div>
+                        <input type="file" wire:model="imagen" accept="image/*"
+                            class="flex-1 text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-50 dark:file:bg-indigo-900/30 file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer">
+                    </div>
+                </div>
+
+                {{-- Descripción --}}
+                <div class="col-span-2 lg:col-span-3">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Descripción /
+                        Detalles Adicionales</label>
+                    <textarea wire:model="descripcion" rows="2" placeholder="Accesorios incluidos, historial de service..."
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm resize-none"></textarea>
                 </div>
             </div>
 
-            <p class="text-xs text-gray-400"><span class="text-red-500">*</span> Campos obligatorios</p>
+            {{-- RESUMEN VALORIZACIÓN --}}
+            <div
+                class="rounded-xl border bg-gray-50/50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden divide-y divide-gray-100 dark:divide-neutral-800">
+                <div class="px-4 py-2 flex justify-between items-center bg-gray-100/50 dark:bg-black/10">
+                    <span
+                        class="text-[10px] font-black uppercase tracking-widest text-gray-500 dark:text-neutral-400">Resumen
+                        Almacén</span>
+                    <span class="text-[10px] font-bold text-gray-400">VALORES CALCULADOS</span>
+                </div>
+                <div class="p-3 grid grid-cols-2 gap-4">
+                    <div class="space-y-0.5">
+                        <div class="text-[10px] text-gray-400 uppercase font-bold">Disponible Inicial</div>
+                        <div class="text-sm font-black text-emerald-600 dark:text-emerald-400">{{ $stock_disponible }}
+                            {{ $unidad ?: 'Unid.' }}</div>
+                    </div>
+                    <div class="space-y-0.5 text-right">
+                        <div class="text-[10px] text-gray-400 uppercase font-bold">Inversión Total estimada</div>
+                        <div class="text-sm font-black text-gray-900 dark:text-neutral-100">Bs.
+                            {{ number_format((float) $precio_total, 2, ',', '.') }}</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         @slot('footer')
-            <button type="button" wire:click="closeModal"
-                class="px-4 py-2 rounded border border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition text-sm cursor-pointer shadow-sm">
-                Cancelar
-            </button>
-            <button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save, imagen"
-                class="px-5 py-2 rounded bg-black text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium cursor-pointer shadow-sm">
-                <span wire:loading.remove wire:target="save">Guardar</span>
-                <span wire:loading wire:target="save">Guardando…</span>
-            </button>
+            <div class="w-full grid grid-cols-2 gap-2 sm:flex sm:justify-end sm:gap-3">
+                <button type="button" wire:click="closeModal"
+                    class="w-full sm:w-auto px-5 py-2 rounded-lg border cursor-pointer border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 text-sm font-bold transition">
+                    Cancelar
+                </button>
+                <button type="button" wire:click="save" wire:loading.attr="disabled"
+                    class="w-full sm:w-auto px-6 py-2 rounded-lg cursor-pointer bg-black text-white hover:bg-neutral-800 transition text-sm font-black shadow-lg shadow-black/10">
+                    <span wire:loading.remove wire:target="save">Guardar Registro</span>
+                    <span wire:loading wire:target="save">Procesando...</span>
+                </button>
+            </div>
         @endslot
     </x-ui.modal>
 
     {{-- ==========================================
+
          MODAL AGREGAR STOCK
          ========================================== --}}
     <x-ui.modal wire:key="add-stock-modal" model="openAddStockModal" title="Agregar Stock" maxWidth="sm:max-w-sm"
@@ -833,17 +778,20 @@
         </div>
 
         @slot('footer')
-            <button type="button" wire:click="closeAddStockModal"
-                class="px-4 py-2 rounded border border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition text-sm cursor-pointer shadow-sm">
-                Cancelar
-            </button>
-            <button type="button" wire:click="saveAddStock" wire:loading.attr="disabled" wire:target="saveAddStock"
-                class="px-5 py-2 rounded bg-black text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium cursor-pointer shadow-sm">
-                <span wire:loading.remove wire:target="saveAddStock">Agregar cantidad</span>
-                <span wire:loading wire:target="saveAddStock">Guardando…</span>
-            </button>
+            <div class="w-full grid grid-cols-2 gap-2">
+                <button type="button" wire:click="closeAddStockModal"
+                    class="px-5 py-2 rounded-lg border cursor-pointer border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 text-sm font-bold transition">
+                    Cancelar
+                </button>
+                <button type="button" wire:click="saveAddStock" wire:loading.attr="disabled"
+                    class="px-5 py-2 rounded-lg cursor-pointer bg-black text-white hover:bg-neutral-800 transition text-sm font-black shadow-lg shadow-black/10">
+                    <span wire:loading.remove wire:target="saveAddStock">Agregar</span>
+                    <span wire:loading wire:target="saveAddStock">...</span>
+                </button>
+            </div>
         @endslot
     </x-ui.modal>
+
 
     {{-- MODAL ZOOM IMAGEN --}}
     <div x-data="{ imgUrl: null, open: false }" @open-image-modal.window="imgUrl = $event.detail; open = true">

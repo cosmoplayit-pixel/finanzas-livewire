@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -l c:xampphtdocsfinanzas-livewireresourcesviewslivewireadminherramientas.blade.php)",
+      "Bash(php artisan:*)"
+    ]
+  }
+}

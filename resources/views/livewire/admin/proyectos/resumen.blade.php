@@ -32,7 +32,7 @@
                     </path>
                 </svg>
             </div>
-            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Adjudicado</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Adjudicado ({{ $dateLabel }})</p>
             <p class="text-xl font-bold text-gray-900 dark:text-white">
                 Bs {{ number_format((float) ($totales['adjudicado'] ?? 0), 2, ',', '.') }}
             </p>
@@ -48,7 +48,7 @@
                     </path>
                 </svg>
             </div>
-            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Facturado</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Facturado ({{ $dateLabel }})</p>
             <p class="text-xl font-bold text-emerald-600 dark:text-emerald-400">
                 Bs {{ number_format((float) ($totales['facturado'] ?? 0), 2, ',', '.') }}
             </p>
@@ -64,7 +64,7 @@
                     </path>
                 </svg>
             </div>
-            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Pagado</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Pagado ({{ $dateLabel }})</p>
             <p class="text-xl font-bold text-blue-600 dark:text-blue-400">
                 Bs {{ number_format((float) ($totales['pagado'] ?? 0), 2, ',', '.') }}
             </p>
@@ -79,7 +79,7 @@
                         d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
                 </svg>
             </div>
-            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Deuda</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Deuda ({{ $historicalLabel }})</p>
             <p class="text-xl font-bold text-rose-600 dark:text-rose-400">
                 Bs {{ number_format((float) ($totales['deuda'] ?? 0), 2, ',', '.') }}
             </p>
@@ -94,7 +94,7 @@
                         d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                 </svg>
             </div>
-            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Compras</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Total Compras ({{ $dateLabel }})</p>
             <p class="text-xl font-bold text-orange-600 dark:text-orange-400">
                 Bs {{ number_format((float) ($totales['compras'] ?? 0), 2, ',', '.') }}
             </p>
@@ -109,7 +109,7 @@
                         d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                 </svg>
             </div>
-            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Utilidad Aprox.</p>
+            <p class="text-xs font-medium text-gray-500 dark:text-neutral-400 mb-1">Utilidad Aprox. ({{ $dateLabel }})</p>
             <p class="text-xl font-bold text-indigo-600 dark:text-indigo-400">
                 Bs {{ number_format((float) ($totales['utilidad'] ?? 0), 2, ',', '.') }}
             </p>

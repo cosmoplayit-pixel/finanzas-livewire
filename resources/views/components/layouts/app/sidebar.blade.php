@@ -134,14 +134,6 @@
                 </flux:sidebar.item>
             @endcan
 
-            {{--
-            @can('herramientas.view')
-                <flux:sidebar.item icon="wrench-screwdriver" :href="route('herramientas')"
-                    :current="request()->routeIs('herramientas')" :badge="$navCounts['herramientas'] ?? null"
-                    wire:navigate>
-                    {{ __('Herramientas') }}
-                </flux:sidebar.item>
-            @endcan --}}
 
             {{-- GESTIÓN FINANCIERA --}}
             @canany(['facturas.view', 'agente_presupuestos.view', 'boletas_garantia.view', 'inversiones.view',
@@ -199,6 +191,20 @@
 
                 </flux:sidebar.group>
             @endcanany
+
+
+            {{-- GESTIÓN HERRAMIENTAS 
+            @canany(['herramientas.view'])
+                <flux:sidebar.group heading="{{ __('Gestión Herramientas') }}" class="grid"> </flux:sidebar.group>
+            @endcanany
+
+            @can('herramientas.view')
+                <flux:sidebar.item icon="wrench-screwdriver" :href="route('herramientas')"
+                    :current="request()->routeIs('herramientas')" :badge="$navCounts['herramientas'] ?? null"
+                    wire:navigate>
+                    {{ __('Herramientas') }}
+                </flux:sidebar.item>
+            @endcan --}}
 
 
 

@@ -14,6 +14,7 @@
 
 <div x-data="{
     open: @if ($model) @entangle($model).live @else false @endif,
+    hint: false,
 
     /* ── Drag state ── */
     dragging: false,
@@ -26,7 +27,22 @@
         if (@js($busy)) return;
         this.open = false;
         this.dragged = false;
+        this.hint = false;
         @if ($closeJs) {!! $closeJs !!}; @endif
+    },
+
+    handleBackdrop(event) {
+        if (!@js($closeOnBackdrop) || @js($busy)) return;
+
+        // Al primer clic (detail == 1), mostramos el icono
+        if (event.detail === 1) {
+            this.hint = true;
+            setTimeout(() => { this.hint = false }, 1000);
+        }
+        // Al segundo clic rápido (detail == 2), cerramos
+        else if (event.detail >= 2) {
+            this.close();
+        }
     },
 
     setBodyLock(v) {
@@ -80,14 +96,47 @@
         window.addEventListener('mousemove', onMove);
         window.addEventListener('mouseup', onUp);
     },
-}" x-init="$watch('open', (v) => { setBodyLock(v); if (!v) { dragged = false; } })" x-show="open" x-cloak class="fixed inset-0 z-50"
-    @keydown.escape.window="close()">
+}" x-init="$watch('open', (v) => {
+    setBodyLock(v);
+    if (!v) {
+        dragged = false;
+        hint = false;
+    }
+})" x-show="open" x-cloak
+    class="fixed inset-0 z-50 transition-all duration-300" @keydown.escape.window="close()">
     {{-- Backdrop --}}
     <div class="fixed inset-0 bg-black/50 dark:bg-black/70" x-show="open" x-transition.opacity></div>
 
     {{-- Wrapper --}}
-    <div class="fixed inset-0 flex items-stretch sm:items-center justify-center p-0 sm:p-4" x-ref="wrapper"
-        @mousedown="{{ $closeOnBackdrop ? 'close()' : '' }}">
+    <div class="fixed inset-0 flex items-stretch sm:items-center justify-center p-0 sm:p-4 select-none" x-ref="wrapper"
+        @mousedown.self="handleBackdrop($event)">
+
+        {{-- Icono Hint (DoubleClick) - Toast Style (Translucent) --}}
+        <div x-show="hint" x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 -translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-4"
+            class="absolute top-8 left-0 right-0 pointer-events-none flex items-center justify-center z-50">
+            <div
+                class="bg-white/80 dark:bg-black/60 backdrop-blur-xl px-6 py-3 rounded-full border border-gray-200/50 dark:border-white/10 shadow-[0_10px_40px_-5px_rgba(0,0,0,0.3)] flex items-center gap-3">
+
+                <div
+                    class="flex-shrink-0 size-8 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="size-5 text-amber-600 dark:text-amber-400"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    </svg>
+                </div>
+                <div class="flex flex-col">
+                    <p class="text-sm font-bold text-gray-900 dark:text-neutral-100 leading-tight">Confirmación de
+                        cierre</p>
+                    <p class="text-xs text-gray-500 dark:text-neutral-400">Haz doble clic para cerrar este modal.</p>
+                </div>
+            </div>
+        </div>
+
+
         {{-- Panel --}}
         <div @mousedown.stop @click.stop x-show="open" x-ref="panel"
             x-transition:enter="transition ease-out duration-150"

@@ -43,6 +43,12 @@ class Resumen extends Component
     // Totales de la vista general
     public $totales = [];
 
+    public array $cachedTotales = [];
+
+    public string $cachedHash = '';
+
+    public bool $dateFilterModified = false;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'f_fecha_desde' => ['except' => ''],
@@ -57,6 +63,9 @@ class Resumen extends Component
 
     public function mount()
     {
+        $this->f_fecha_desde = now()->startOfYear()->toDateString();
+        $this->f_fecha_hasta = now()->endOfYear()->toDateString();
+
         $this->entidadesOpciones = collect(Entidad::where('empresa_id', Auth::user()->empresa_id)
             ->where('active', true)
             ->select('id', 'nombre')
@@ -73,11 +82,13 @@ class Resumen extends Component
 
     public function updatedFFechaDesde()
     {
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
     public function updatedFFechaHasta()
     {
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
@@ -125,6 +136,7 @@ class Resumen extends Component
     {
         $this->f_fecha_desde = now()->startOfMonth()->toDateString();
         $this->f_fecha_hasta = now()->endOfMonth()->toDateString();
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
@@ -132,6 +144,7 @@ class Resumen extends Component
     {
         $this->f_fecha_desde = now()->startOfYear()->toDateString();
         $this->f_fecha_hasta = now()->endOfYear()->toDateString();
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
@@ -139,6 +152,7 @@ class Resumen extends Component
     {
         $this->f_fecha_desde = '';
         $this->f_fecha_hasta = '';
+        $this->dateFilterModified = true;
         $this->resetPage();
     }
 
@@ -186,7 +200,52 @@ class Resumen extends Component
         $filters = $this->getFiltersArray();
 
         $paginator = ProyectoResumenQuery::paginate($filters);
-        $this->totales = ProyectoResumenQuery::totales($filters);
+
+        // Optimizar: solo recalcular totales si cambian los filtros
+        $filterHash = md5(serialize([
+            $this->search, $this->f_fecha_desde, $this->f_fecha_hasta,
+            $this->f_entidad, $this->f_deuda, $this->f_compras, $this->f_facturas,
+            $this->dateFilterModified,
+        ]));
+
+        if ($this->cachedHash !== $filterHash) {
+            $this->totales = ProyectoResumenQuery::totales($filters);
+
+            // Lógica histórica para Deuda: sin rango de fechas cuando el usuario no lo ha modificado
+            $paramsHist = $filters;
+            if (! $this->dateFilterModified) {
+                $paramsHist['f_fecha_desde'] = '';
+                $paramsHist['f_fecha_hasta'] = '';
+            }
+            $totalesHist = ProyectoResumenQuery::totales($paramsHist);
+            $this->totales['deuda'] = $totalesHist['deuda'];
+
+            $this->cachedTotales = $this->totales;
+            $this->cachedHash = $filterHash;
+        } else {
+            $this->totales = $this->cachedTotales;
+        }
+
+        // Etiquetas de fecha
+        $dateLabel = '';
+        if ($this->f_fecha_desde && $this->f_fecha_hasta) {
+            $from = \Carbon\Carbon::parse($this->f_fecha_desde);
+            $to = \Carbon\Carbon::parse($this->f_fecha_hasta);
+
+            if ($from->isStartOfYear() && $to->isEndOfYear() && $from->year === $to->year) {
+                $dateLabel = (string) $from->year;
+            } else {
+                $dateLabel = $from->format('d/m/y').' - '.$to->format('d/m/y');
+            }
+        } elseif ($this->f_fecha_desde) {
+            $dateLabel = 'Desde '.\Carbon\Carbon::parse($this->f_fecha_desde)->format('d/m/y');
+        } elseif ($this->f_fecha_hasta) {
+            $dateLabel = 'Hasta '.\Carbon\Carbon::parse($this->f_fecha_hasta)->format('d/m/y');
+        } else {
+            $dateLabel = 'Histórico';
+        }
+
+        $historicalLabel = $this->dateFilterModified ? $dateLabel : 'Histórico';
 
         // Lookup entities names efficiently if we needed it, but query returns entidad_id
         $entidadesIds = collect($paginator->items())->pluck('entidad_id')->unique();
@@ -198,6 +257,8 @@ class Resumen extends Component
 
         return view('livewire.admin.proyectos.resumen', [
             'proyectos' => $paginator,
+            'dateLabel' => $dateLabel,
+            'historicalLabel' => $historicalLabel,
         ]);
     }
 }

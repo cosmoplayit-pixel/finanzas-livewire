@@ -44,6 +44,8 @@ class Transacciones extends Component
 
     public function mount()
     {
+        $this->periodo = 'this_year';
+        $this->aplicarPeriodo();
         $this->loadFiltrosData();
     }
 
@@ -213,9 +215,29 @@ class Transacciones extends Component
             ->orderByDesc('t.created_at')
             ->paginate($this->perPage);
 
+        // Etiqueta de fecha para los summary cards
+        $dateLabel = '';
+        if ($this->date_from && $this->date_to) {
+            $from = \Carbon\Carbon::parse($this->date_from);
+            $to = \Carbon\Carbon::parse($this->date_to);
+
+            if ($from->isStartOfYear() && $to->isEndOfYear() && $from->year === $to->year) {
+                $dateLabel = (string) $from->year;
+            } else {
+                $dateLabel = $from->format('d/m/y').' - '.$to->format('d/m/y');
+            }
+        } elseif ($this->date_from) {
+            $dateLabel = 'Desde '.\Carbon\Carbon::parse($this->date_from)->format('d/m/y');
+        } elseif ($this->date_to) {
+            $dateLabel = 'Hasta '.\Carbon\Carbon::parse($this->date_to)->format('d/m/y');
+        } else {
+            $dateLabel = 'Histórico';
+        }
+
         return view('livewire.admin.transacciones', [
             'transacciones' => $transacciones,
             'totales' => $totales,
+            'dateLabel' => $dateLabel,
         ]);
     }
 }

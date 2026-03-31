@@ -42,7 +42,7 @@
                         d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                 </svg>
             </div>
-            <p class="text-sm font-medium text-gray-500 mb-3">Total Ingresos</p>
+            <p class="text-sm font-medium text-gray-500 mb-3">Total Ingresos ({{ $dateLabel }})</p>
             <div class="mt-auto flex flex-col gap-2 relative z-10">
                 @if ($isBoth || $moneda === 'BOB')
                     <div class="flex items-center justify-between {{ $isBoth ? 'pb-2 border-b border-gray-100' : '' }}">
@@ -74,7 +74,7 @@
                         d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
                 </svg>
             </div>
-            <p class="text-sm font-medium text-gray-500 mb-3">Total Egresos</p>
+            <p class="text-sm font-medium text-gray-500 mb-3">Total Egresos ({{ $dateLabel }})</p>
             <div class="mt-auto flex flex-col gap-2 relative z-10">
                 @if ($isBoth || $moneda === 'BOB')
                     <div class="flex items-center justify-between {{ $isBoth ? 'pb-2 border-b border-gray-100' : '' }}">
@@ -107,7 +107,7 @@
                     </path>
                 </svg>
             </div>
-            <p class="text-sm font-medium text-gray-500 mb-3">Flujo Neto</p>
+            <p class="text-sm font-medium text-gray-500 mb-3">Flujo Neto ({{ $dateLabel }})</p>
             @php
                 $neto_bob = ($totales->ingresos_bob ?? 0) - ($totales->egresos_bob ?? 0);
                 $neto_usd = ($totales->ingresos_usd ?? 0) - ($totales->egresos_usd ?? 0);
@@ -147,7 +147,7 @@
                     </path>
                 </svg>
             </div>
-            <p class="text-sm font-medium text-gray-500 mb-2">Transacciones</p>
+            <p class="text-sm font-medium text-gray-500 mb-2">Transacciones ({{ $dateLabel }})</p>
             <p class="mt-auto text-2xl font-bold text-gray-900 relative z-10">
                 {{ number_format((int) ($totales->total_transacciones ?? 0), 0, ',', '.') }}
             </p>

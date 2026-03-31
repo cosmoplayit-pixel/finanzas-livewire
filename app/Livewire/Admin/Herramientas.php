@@ -20,8 +20,8 @@ class Herramientas extends Component
     // =========================
     public string $search = '';
     public int $perPage = 10;
-    public string $status = 'active';          // all | active | inactive
-    public string $estadoFisicoFilter = 'all'; // all | bueno | regular | malo | baja
+    public string $status = 'active';
+    public string $estadoFisicoFilter = 'all';
     public string $empresaFilter = 'all';
 
     // =========================
@@ -31,17 +31,25 @@ class Herramientas extends Component
     public string $sortDirection = 'desc';
 
     // =========================
-    // Modal
+    // Modal Crear
     // =========================
     public bool $openModal = false;
-    public ?int $herramientaId = null;
 
     // =========================
-    // Form
+    // Modal Agregar Stock
+    // =========================
+    public bool $openAddStockModal = false;
+    public ?int $addStockId = null;
+    public string $addStockNombre = '';
+    public string $addStockCodigo = '';
+    public int $addStockActual = 0;
+    public int $addStockCantidad = 1;
+
+    // =========================
+    // Form Crear
     // =========================
     public $empresa_id = '';
     public string $codigo = '';
-    public bool $isExisting = false;
     public string $nombre = '';
     public string $marca = '';
     public string $modelo = '';
@@ -53,54 +61,33 @@ class Herramientas extends Component
     public int $stock_prestado = 0;
     public string $precio_unitario = '0';
     public string $precio_total = '0';
-    public $imagen = null;   // Livewire file upload temporal
-    public ?string $imagenActual = null; // Path guardado en DB
+    public $imagen = null;
+    public bool $isExistingCode = false; // true cuando el código ya existe (campos bloqueados)
 
-    public function updatedStockTotal(): void { $this->calculateTotal(); }
-    public function updatedPrecioUnitario(): void { $this->calculateTotal(); }
-
-    public function updatedCodigo(): void
+    public function updatedStockTotal(): void
     {
-        if (empty($this->codigo)) {
-            $this->isExisting = false;
-            return;
-        }
+        $this->calculateStock();
+        $this->calculateTotal();
+    }
 
-        // Si ya estamos editando (herramientaId !== null), no bloquear si el código es el mismo
-        if ($this->herramientaId) {
-            $current = Herramienta::find($this->herramientaId);
-            if ($current && $current->codigo === $this->codigo) {
-                $this->isExisting = false;
-                return;
-            }
-        }
+    public function updatedStockPrestado(): void
+    {
+        $this->calculateStock();
+    }
 
-        $existente = Herramienta::where('codigo', $this->codigo)
-            ->where('empresa_id', auth()->user()->empresa_id)
-            ->first();
+    public function updatedPrecioUnitario(): void
+    {
+        $this->calculateTotal();
+    }
 
-        if ($existente) {
-            $this->isExisting     = true;
-            $this->nombre         = (string) $existente->nombre;
-            $this->marca          = (string) ($existente->marca ?? '');
-            $this->modelo         = (string) ($existente->modelo ?? '');
-            $this->descripcion    = (string) ($existente->descripcion ?? '');
-            $this->estado_fisico  = (string) $existente->estado_fisico;
-            $this->unidad         = (string) ($existente->unidad ?? '');
-            $this->precio_unitario= (string) $existente->precio_unitario;
-            $this->imagenActual   = $existente->imagen;
-            $this->calculateTotal();
-
-            // Notifica al frontend para que Select2 se entere si el valor cambió vía script
-            $this->dispatch('codigo-found');
-        } else {
-            $this->isExisting = false;
-        }
+    private function calculateStock(): void
+    {
+        $this->stock_disponible = max(0, (int) $this->stock_total - (int) $this->stock_prestado);
     }
 
     private function calculateTotal(): void
     {
-        $this->precio_total = (string) ( (int) $this->stock_total * (float) $this->precio_unitario );
+        $this->precio_total = (string) ((int) $this->stock_total * (float) $this->precio_unitario);
     }
 
     protected $listeners = [
@@ -127,10 +114,8 @@ class Herramientas extends Component
             'estado_fisico'   => ['required', Rule::in(['bueno', 'regular', 'malo', 'baja'])],
             'unidad'          => ['nullable', 'string', 'max:50'],
             'stock_total'     => ['required', 'integer', 'min:0'],
-            'stock_disponible'=> ['required', 'integer', 'min:0'],
             'stock_prestado'  => ['required', 'integer', 'min:0'],
             'precio_unitario' => ['required', 'numeric', 'min:0'],
-            'precio_total'    => ['required', 'numeric', 'min:0'],
             'imagen'          => ['nullable', 'image', 'max:2048'],
         ];
     }
@@ -138,17 +123,17 @@ class Herramientas extends Component
     protected function messages(): array
     {
         return [
-            'codigo.regex' => 'El código solo permite letras, números y los caracteres - . / sin espacios.',
+            'codigo.regex' => 'Solo letras, números y - . / sin espacios.',
         ];
     }
 
     // =========================
     // Reset paginación
     // =========================
-    public function updatedSearch(): void          { $this->resetPage(); }
-    public function updatedEmpresaFilter(): void   { $this->resetPage(); }
-    public function updatedStatus(): void          { $this->resetPage(); }
-    public function updatedPerPage(): void         { $this->resetPage(); }
+    public function updatedSearch(): void             { $this->resetPage(); }
+    public function updatedEmpresaFilter(): void      { $this->resetPage(); }
+    public function updatedStatus(): void             { $this->resetPage(); }
+    public function updatedPerPage(): void            { $this->resetPage(); }
     public function updatedEstadoFisicoFilter(): void { $this->resetPage(); }
 
     // =========================
@@ -160,7 +145,7 @@ class Herramientas extends Component
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
             return;
         }
-        $this->sortField = $field;
+        $this->sortField     = $field;
         $this->sortDirection = 'asc';
     }
 
@@ -198,22 +183,28 @@ class Herramientas extends Component
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
+        // Códigos existentes para el Select2 (por empresa)
+        $codigosQuery = Herramienta::select('codigo', 'nombre', 'marca', 'modelo', 'estado_fisico', 'unidad', 'precio_unitario')
+            ->whereNotNull('codigo')
+            ->where('codigo', '!=', '');
+
+        if (! $this->isAdmin()) {
+            $codigosQuery->where('empresa_id', $this->userEmpresaId());
+        }
+
+        $codigos = $codigosQuery->orderBy('codigo')->get();
+
         return view('livewire.admin.herramientas', [
             'herramientas' => $herramientas,
             'empresas'     => $this->isAdmin()
                 ? Empresa::orderBy('nombre')->get()
                 : Empresa::where('id', $this->userEmpresaId())->get(),
-            'codigosExistentes' => Herramienta::where('empresa_id', auth()->user()->empresa_id)
-                ->where('active', true)
-                ->distinct()
-                ->pluck('codigo')
-                ->filter()
-                ->values(),
+            'codigos'      => $codigos,
         ]);
     }
 
     // =========================
-    // Acciones CRUD
+    // Crear herramienta
     // =========================
     public function openCreate(): void
     {
@@ -226,39 +217,51 @@ class Herramientas extends Component
         }
 
         $this->openModal = true;
-        $this->dispatch('reinit-select2');
     }
 
-    public function openEdit(int $id): void
+    /**
+     * Llamado desde JS cuando el usuario selecciona un código en el Select2.
+     * Si el código ya existe, autocompleta los campos y los marca como bloqueados.
+     * Si el código es nuevo (texto libre), limpia y deja editar.
+     */
+    public function buscarPorCodigo(string $codigo): void
     {
-        $this->resetErrorBag();
-        $this->resetValidation();
+        $codigo = strtoupper(trim($codigo));
 
-        $h = Herramienta::with('empresa')->findOrFail($id);
-
-        if (! $this->isAdmin() && (int) $h->empresa_id !== (int) $this->userEmpresaId()) {
-            abort(403);
+        if ($codigo === '') {
+            $this->isExistingCode = false;
+            return;
         }
 
-        $this->herramientaId   = $h->id;
-        $this->empresa_id      = (string) $h->empresa_id;
-        $this->codigo          = (string) ($h->codigo ?? '');
-        $this->nombre          = (string) $h->nombre;
-        $this->marca           = (string) ($h->marca ?? '');
-        $this->modelo          = (string) ($h->modelo ?? '');
-        $this->descripcion     = (string) ($h->descripcion ?? '');
-        $this->estado_fisico   = (string) $h->estado_fisico;
-        $this->unidad          = (string) ($h->unidad ?? '');
-        $this->stock_total     = (int) $h->stock_total;
-        $this->stock_disponible= (int) $h->stock_disponible;
-        $this->stock_prestado  = (int) $h->stock_prestado;
-        $this->precio_unitario = (string) $h->precio_unitario;
-        $this->precio_total    = (string) $h->precio_total;
-        $this->imagenActual    = $h->imagen;
-        $this->imagen          = null;
+        $empresaId = $this->isAdmin() ? ($this->empresa_id ?: null) : $this->userEmpresaId();
 
-        $this->openModal = true;
-        $this->dispatch('reinit-select2');
+        $h = Herramienta::where('codigo', $codigo)
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
+            ->first();
+
+        if ($h) {
+            // Autorellenar y bloquear
+            $this->codigo          = $h->codigo;
+            $this->nombre          = $h->nombre;
+            $this->marca           = $h->marca ?? '';
+            $this->modelo          = $h->modelo ?? '';
+            $this->estado_fisico   = $h->estado_fisico;
+            $this->unidad          = $h->unidad ?? '';
+            $this->precio_unitario = (string) $h->precio_unitario;
+            $this->isExistingCode  = true;
+        } else {
+            // Código nuevo: solo setear el código, limpiar el resto
+            $this->codigo         = $codigo;
+            $this->nombre         = '';
+            $this->marca          = '';
+            $this->modelo         = '';
+            $this->estado_fisico  = 'bueno';
+            $this->unidad         = '';
+            $this->precio_unitario = '0';
+            $this->isExistingCode = false;
+        }
+
+        $this->resetErrorBag();
     }
 
     public function save(): void
@@ -269,50 +272,104 @@ class Herramientas extends Component
             $data['empresa_id'] = $this->userEmpresaId();
         }
 
-        // Manejo de imagen
-        $imagenPath = $this->imagenActual;
+        $imagenPath  = null;
         if ($this->imagen) {
-            // Eliminar imagen anterior si existe
-            if ($imagenPath && Storage::disk('public')->exists($imagenPath)) {
-                Storage::disk('public')->delete($imagenPath);
-            }
             $imagenPath = $this->imagen->store('herramientas', 'public');
         }
 
-        $payload = [
+        $stockTotal    = (int) $data['stock_total'];
+        $stockPrestado = (int) ($data['stock_prestado'] ?? 0);
+
+        Herramienta::create([
             'empresa_id'       => $data['empresa_id'] ?? $this->userEmpresaId(),
-            'codigo'           => trim(strtoupper($data['codigo'] ?? '')),
-            'nombre'           => trim(strtoupper($data['nombre'])),
-            'marca'            => trim(strtoupper($data['marca'] ?? '')),
-            'modelo'           => trim(strtoupper($data['modelo'] ?? '')),
-            'descripcion'      => trim(strtoupper($data['descripcion'] ?? '')),
+            'codigo'           => strtoupper(trim($data['codigo'] ?? '')),
+            'nombre'           => strtoupper(trim($data['nombre'])),
+            'marca'            => strtoupper(trim($data['marca'] ?? '')),
+            'modelo'           => strtoupper(trim($data['modelo'] ?? '')),
+            'descripcion'      => strtoupper(trim($data['descripcion'] ?? '')),
             'estado_fisico'    => $data['estado_fisico'],
-            'unidad'           => trim(strtoupper($data['unidad'] ?? '')),
-            'stock_total'      => (int) $data['stock_total'],
-            'stock_disponible' => (int) $data['stock_disponible'],
-            'stock_prestado'   => (int) $data['stock_prestado'],
+            'unidad'           => strtoupper(trim($data['unidad'] ?? '')),
+            'stock_total'      => $stockTotal,
+            'stock_prestado'   => $stockPrestado,
+            'stock_disponible' => max(0, $stockTotal - $stockPrestado),
             'precio_unitario'  => (float) $data['precio_unitario'],
-            'precio_total'     => (float) $data['precio_total'],
+            'precio_total'     => $stockTotal * (float) $data['precio_unitario'],
             'imagen'           => $imagenPath,
-        ];
+            'active'           => true,
+        ]);
 
-        if ($this->herramientaId) {
-            $h = Herramienta::findOrFail($this->herramientaId);
-
-            if (! $this->isAdmin() && (int) $h->empresa_id !== (int) $this->userEmpresaId()) {
-                abort(403);
-            }
-
-            $h->update($payload);
-            session()->flash('success', 'Herramienta actualizada correctamente.');
-        } else {
-            Herramienta::create($payload + ['active' => true]);
-            session()->flash('success', 'Herramienta registrada correctamente.');
-        }
-
+        session()->flash('success', 'Herramienta registrada correctamente.');
         $this->closeModal();
     }
 
+    public function closeModal(): void
+    {
+        $this->resetForm();
+        $this->openModal = false;
+    }
+
+    // =========================
+    // Agregar stock
+    // =========================
+    public function openAddStock(int $id): void
+    {
+        $h = Herramienta::findOrFail($id);
+
+        if (! $this->isAdmin() && (int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+            abort(403);
+        }
+
+        $this->addStockId      = $h->id;
+        $this->addStockNombre  = $h->nombre;
+        $this->addStockCodigo  = $h->codigo ?? '';
+        $this->addStockActual  = $h->stock_disponible;
+        $this->addStockCantidad = 1;
+        $this->resetErrorBag();
+
+        $this->openAddStockModal = true;
+    }
+
+    public function saveAddStock(): void
+    {
+        $this->validateOnly('addStockCantidad', [
+            'addStockCantidad' => ['required', 'integer', 'min:1', 'max:9999'],
+        ], [
+            'addStockCantidad.required' => 'Ingrese una cantidad.',
+            'addStockCantidad.integer'  => 'La cantidad debe ser un número entero.',
+            'addStockCantidad.min'      => 'La cantidad mínima es 1.',
+            'addStockCantidad.max'      => 'La cantidad máxima es 9999.',
+        ]);
+
+        $h = Herramienta::findOrFail($this->addStockId);
+
+        if (! $this->isAdmin() && (int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+            abort(403);
+        }
+
+        $cantidad             = (int) $this->addStockCantidad;
+        $h->stock_total      += $cantidad;
+        $h->stock_disponible += $cantidad;
+        $h->precio_total      = $h->stock_total * (float) $h->precio_unitario;
+        $h->save();
+
+        session()->flash('success', "Se agregaron {$cantidad} unidad(es) a «{$h->nombre}».");
+        $this->closeAddStockModal();
+    }
+
+    public function closeAddStockModal(): void
+    {
+        $this->openAddStockModal = false;
+        $this->addStockId        = null;
+        $this->addStockNombre    = '';
+        $this->addStockCodigo    = '';
+        $this->addStockActual    = 0;
+        $this->addStockCantidad  = 1;
+        $this->resetErrorBag();
+    }
+
+    // =========================
+    // Toggle & Delete
+    // =========================
     public function toggleActive(int $id): void
     {
         $h = Herramienta::findOrFail($id);
@@ -333,7 +390,6 @@ class Herramientas extends Component
             abort(403);
         }
 
-        // Eliminar imagen si existe
         if ($h->imagen && Storage::disk('public')->exists($h->imagen)) {
             Storage::disk('public')->delete($h->imagen);
         }
@@ -342,39 +398,24 @@ class Herramientas extends Component
         session()->flash('success', 'Herramienta eliminada correctamente.');
     }
 
-    public function closeModal(): void
-    {
-        $this->resetForm();
-        $this->isExisting = false;
-        $this->openModal = false;
-    }
-
+    // =========================
+    // Helpers
+    // =========================
     private function resetForm(): void
     {
         $this->reset([
-            'herramientaId',
-            'empresa_id',
-            'codigo',
-            'nombre',
-            'marca',
-            'modelo',
-            'descripcion',
-            'estado_fisico',
-            'unidad',
-            'stock_total',
-            'stock_disponible',
-            'stock_prestado',
-            'precio_unitario',
-            'precio_total',
-            'imagen',
-            'imagenActual',
+            'empresa_id', 'codigo', 'nombre', 'marca', 'modelo',
+            'descripcion', 'estado_fisico', 'unidad',
+            'stock_total', 'stock_disponible', 'stock_prestado',
+            'precio_unitario', 'precio_total', 'imagen',
         ]);
-        $this->estado_fisico = 'bueno';
-        $this->stock_total = 0;
+        $this->estado_fisico    = 'bueno';
+        $this->stock_total      = 0;
         $this->stock_disponible = 0;
-        $this->stock_prestado = 0;
-        $this->precio_unitario = '0';
-        $this->precio_total = '0';
+        $this->stock_prestado   = 0;
+        $this->precio_unitario  = '0';
+        $this->precio_total     = '0';
+        $this->isExistingCode   = false;
     }
 
     private function isAdmin(): bool

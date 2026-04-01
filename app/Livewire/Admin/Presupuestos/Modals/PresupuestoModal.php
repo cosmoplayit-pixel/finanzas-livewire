@@ -84,8 +84,12 @@ trait PresupuestoModal
             return;
         }
 
-        $clean = str_replace('.', '', $value);
-        $clean = str_replace(',', '.', $clean);
+        if (preg_match('/^-?\d+(\.\d+)?$/', $value)) {
+            $clean = $value;
+        } else {
+            $clean = str_replace('.', '', $value);
+            $clean = str_replace(',', '.', $clean);
+        }
 
         if (! is_numeric($clean)) {
             $this->monto = 0;

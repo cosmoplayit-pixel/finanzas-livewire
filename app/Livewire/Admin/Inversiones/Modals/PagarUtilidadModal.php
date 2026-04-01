@@ -1299,6 +1299,11 @@ class PagarUtilidadModal extends Component
             return 0.0;
         }
 
+        // Si ya es un formato numérico crudo (1234.56 o 1234), lo retornamos directamente
+        if (preg_match('/^-?\d+(\.\d+)?$/', $v)) {
+            return (float) $v;
+        }
+
         $v = str_replace([' ', "\u{00A0}"], '', $v);
         $v = str_replace('.', '', $v);
         $v = str_replace(',', '.', $v);

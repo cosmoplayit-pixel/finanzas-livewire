@@ -96,16 +96,24 @@ class Proyectos extends Component
 
     public function updatedMontoFormatted(string $value): void
     {
-        $clean = str_replace('.', '', $value);
-        $clean = str_replace(',', '.', $clean);
+        if (preg_match('/^-?\d+(\.\d+)?$/', $value)) {
+            $clean = $value;
+        } else {
+            $clean = str_replace('.', '', $value);
+            $clean = str_replace(',', '.', $clean);
+        }
         $this->monto = is_numeric($clean) ? (float) $clean : 0;
         $this->monto_formatted = number_format($this->monto, 2, ',', '.');
     }
 
     public function updatedRetencionFormatted(string $value): void
     {
-        $clean = str_replace('.', '', $value);
-        $clean = str_replace(',', '.', $clean);
+        if (preg_match('/^-?\d+(\.\d+)?$/', $value)) {
+            $clean = $value;
+        } else {
+            $clean = str_replace('.', '', $value);
+            $clean = str_replace(',', '.', $clean);
+        }
         $this->retencion = is_numeric($clean) ? (float) $clean : 0;
         $this->retencion_formatted = number_format((float) $this->retencion, 2, ',', '.');
     }

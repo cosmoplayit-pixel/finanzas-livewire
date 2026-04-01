@@ -201,7 +201,8 @@
 
                     {{-- FOTO --}}
                     <div>
-                        <x-ui.scanner model="mov_foto" label="Foto (opcional)" :file="$mov_foto" />
+                        <x-ui.scanner model="mov_foto" label="Comprobante" :file="$mov_foto" />
+
                     </div>
                 </div>
 
@@ -416,7 +417,7 @@
 
                     {{-- FOTO --}}
                     <div>
-                        <x-ui.scanner model="mov_foto" label="Foto (opcional)" :file="$mov_foto" />
+                        <x-ui.scanner model="mov_foto" label="Comprobante" :file="$mov_foto" />
                     </div>
 
                 </div>

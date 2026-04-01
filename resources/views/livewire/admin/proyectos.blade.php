@@ -375,6 +375,20 @@
                                 </span>
                             </button>
                         @endcan
+
+                        {{-- ELIMINAR (mobile cards) --}}
+                        @can('proyectos.toggle')
+                            <button type="button" wire:click="checkDeleteProyecto({{ $p->id }})"
+                                wire:loading.attr="disabled" wire:target="checkDeleteProyecto({{ $p->id }})"
+                                class="w-full px-3 py-1 rounded text-sm font-medium cursor-pointer
+                                       border border-red-300 text-red-600 hover:bg-red-50
+                                       dark:border-red-500/40 dark:text-red-400 dark:hover:bg-red-500/10
+                                       disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span wire:loading.remove
+                                    wire:target="checkDeleteProyecto({{ $p->id }})">Eliminar</span>
+                                <span wire:loading wire:target="checkDeleteProyecto({{ $p->id }})">Verificando…</span>
+                            </button>
+                        @endcan
                     </div>
                 @endcanany
 
@@ -573,7 +587,7 @@
                             @endif
                         </th>
 
-                        @canany(['proyectos.update', 'proyectos.toggle'])
+                        @canany(['proyectos.update', 'proyectos.toggle', 'proyectos.delete'])
                             <th class="w-[8%] p-2 whitespace-nowrap text-center">
                                 Acciones
                             </th>
@@ -833,6 +847,32 @@
                                                             d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
                                                     </svg>
                                                 </span>
+                                            </button>
+                                        @endcan
+
+                                        {{-- ELIMINAR (SweetAlert con validación backend) --}}
+                                        @can('proyectos.toggle')
+                                            <button type="button" x-data="{ loading: false }"
+                                                wire:click="checkDeleteProyecto({{ $p->id }})"
+                                                wire:loading.attr="disabled"
+                                                wire:target="checkDeleteProyecto({{ $p->id }})"
+                                                x-on:swal:done.window="loading = false" x-bind:disabled="loading"
+                                                title="Eliminar proyecto" aria-label="Eliminar proyecto"
+                                                class="cursor-pointer inline-flex items-center justify-center size-8 rounded text-red-600 hover:bg-red-100 dark:hover:bg-red-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition">
+                                                <svg wire:loading.remove wire:target="checkDeleteProyecto({{ $p->id }})"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                    stroke-width="1.5" stroke="currentColor" class="size-5">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                                                </svg>
+                                                <svg wire:loading wire:target="checkDeleteProyecto({{ $p->id }})"
+                                                    class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                    viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
+                                                </svg>
                                             </button>
                                         @endcan
                                     </div>

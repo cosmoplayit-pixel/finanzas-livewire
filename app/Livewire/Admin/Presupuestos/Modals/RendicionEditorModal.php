@@ -145,7 +145,7 @@ trait RendicionEditorModal
             'mov_monto' => ['required', 'numeric', 'min:0.01'],
             'mov_tipo_cambio' => ['nullable', 'numeric', 'min:0.000001'],
             'mov_observacion' => ['nullable', 'string', 'max:100'],
-            'mov_foto' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'mov_foto' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ];
 
         $tipo = strtoupper(trim((string) ($this->mov_modal_tipo ?? 'COMPRA')));
@@ -178,11 +178,11 @@ trait RendicionEditorModal
     public function getPuedeGuardarMovimientoProperty(): bool
     {
         if ($this->mov_modal_tipo === 'COMPRA') {
-            if (! $this->mov_fecha || ! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_entidad_id || ! $this->mov_proyecto_id) {
+            if (! $this->mov_fecha || ! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_entidad_id || ! $this->mov_proyecto_id || ! $this->mov_foto) {
                 return false;
             }
         } elseif ($this->mov_modal_tipo === 'DEVOLUCION') {
-            if (! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_banco_id || ! $this->mov_nro_transaccion) {
+            if (! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_banco_id || ! $this->mov_nro_transaccion || ! $this->mov_foto) {
                 return false;
             }
         }

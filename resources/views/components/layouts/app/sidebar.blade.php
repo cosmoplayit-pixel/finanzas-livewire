@@ -193,7 +193,7 @@
             @endcanany
 
 
-            {{-- GESTIÓN HERRAMIENTAS --}}
+            {{-- GESTIÓN HERRAMIENTAS 
             @canany(['herramientas.view'])
                 <flux:sidebar.group heading="{{ __('Gestión Herramientas') }}" class="grid">
                     <flux:sidebar.item icon="wrench" href="{{ route('herramientas') }}" wire:navigate>
@@ -205,7 +205,7 @@
                     </flux:sidebar.item>
 
                 </flux:sidebar.group>
-            @endcanany
+            @endcanany --}}
 
 
 
@@ -698,11 +698,12 @@
 
             // PROYECTOS
             window.addEventListener('swal:toggle-active-proyecto', (event) => {
+                const data = Array.isArray(event.detail) ? event.detail[0] : event.detail;
                 const {
                     id,
                     active,
                     name
-                } = event.detail || {};
+                } = data || {};
                 Swal.fire({
                     title: active ? '¿Desactivar proyecto?' : '¿Activar proyecto?',
                     text: `¿Seguro que desea ${active ? 'desactivar' : 'activar'} el proyecto "${name}"?`,
@@ -719,6 +720,56 @@
                     });
                 }).finally(() => {
                     window.dispatchEvent(new CustomEvent('swal:done'));
+                });
+            });
+
+            // PROYECTOS — Confirmar eliminación (sin dependencias)
+            window.addEventListener('swal:confirm-delete-proyecto', (event) => {
+                // En Livewire 3, si despachamos un array asociativo desde PHP,
+                // llega envuelto en un array: event.detail = [{id:..., name:...}]
+                const data = Array.isArray(event.detail) ? event.detail[0] : event.detail;
+                const {
+                    id,
+                    name
+                } = data || {};
+
+                Swal.fire({
+                    title: '¿Eliminar proyecto?',
+                    html: `¿Seguro que desea eliminar el proyecto <strong>"${name}"</strong>?<br><span style="font-size:0.85em;color:#6b7280">Esta acción no se puede deshacer.</span>`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    reverseButtons: true,
+                    timer: 8000,
+                    timerProgressBar: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Livewire.dispatch('doDeleteProyecto', {
+                            id
+                        });
+                    }
+                }).finally(() => {
+                    window.dispatchEvent(new CustomEvent('swal:done'));
+                });
+            });
+
+            // PROYECTOS — Bloqueo de eliminación (con dependencias)
+            window.addEventListener('swal:proyecto-no-deletable', (event) => {
+                const data = Array.isArray(event.detail) ? event.detail[0] : event.detail;
+                const {
+                    name,
+                    detalle
+                } = data || {};
+
+                Swal.fire({
+                    title: 'No se puede eliminar',
+                    html: `El proyecto <strong>"${name}"</strong> tiene registros asociados:<br><br><em>${detalle}</em><br><br>Desvincule todos los registros antes de intentar eliminar.`,
+                    icon: 'error',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#dc2626',
                 });
             });
 

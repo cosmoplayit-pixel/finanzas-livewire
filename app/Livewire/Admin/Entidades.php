@@ -14,7 +14,9 @@ class Entidades extends Component
     use WithPagination;
 
     public string $search = '';
+
     public int $perPage = 10;
+
     public string $status = 'all'; // all | active | inactive
 
     // Filtro de listado (solo Admin)
@@ -22,6 +24,7 @@ class Entidades extends Component
 
     // Modal
     public bool $openModal = false;
+
     public ?int $entidadId = null;
 
     /**
@@ -33,17 +36,24 @@ class Entidades extends Component
 
     // Form
     public string $nombre = '';
+
     public string $sigla = '';
+
     public string $email = '';
+
     public string $telefono = '';
+
     public string $direccion = '';
+
     public string $observaciones = '';
 
     public string $sortField = 'id';
+
     public string $sortDirection = 'desc';
 
     protected $listeners = [
         'toggleEntidad' => 'toggleActive',
+        'deleteEntidad' => 'deleteEntidad',
     ];
 
     public function mount(): void
@@ -61,7 +71,7 @@ class Entidades extends Component
         return [
             // ✅ Admin debe seleccionar empresa (en create y edit)
             'empresa_id_form' => [
-                Rule::requiredIf(fn() => $isAdmin),
+                Rule::requiredIf(fn () => $isAdmin),
                 Rule::exists('empresas', 'id'),
             ],
 
@@ -70,7 +80,7 @@ class Entidades extends Component
                 'string',
                 'max:255',
                 Rule::unique('entidades', 'nombre')
-                    ->where(fn($q) => $q->where('empresa_id', $empresaIdForUnique))
+                    ->where(fn ($q) => $q->where('empresa_id', $empresaIdForUnique))
                     ->ignore($this->entidadId),
             ],
             'sigla' => [
@@ -78,7 +88,7 @@ class Entidades extends Component
                 'string',
                 'max:50',
                 Rule::unique('entidades', 'sigla')
-                    ->where(fn($q) => $q->where('empresa_id', $empresaIdForUnique))
+                    ->where(fn ($q) => $q->where('empresa_id', $empresaIdForUnique))
                     ->ignore($this->entidadId),
             ],
             'email' => ['nullable', 'email', 'max:255'],
@@ -207,6 +217,7 @@ class Entidades extends Component
 
             session()->flash('success', 'Entidad actualizada correctamente.');
             $this->closeModal();
+
             return;
         }
 
@@ -237,14 +248,34 @@ class Entidades extends Component
                     'title' => 'No se puede desactivar',
                     'text' => "Esta entidad tiene {$e->proyectos_count} proyecto(s) activo(s). Desactiva primero los proyectos asociados antes de desactivar al cliente.",
                 ]);
+
                 return;
             }
         }
 
-        $e->active = !$e->active;
+        $e->active = ! $e->active;
         $e->save();
 
         session()->flash('success', $e->active ? 'Entidad activada.' : 'Entidad desactivada.');
+    }
+
+    public function deleteEntidad(int $id): void
+    {
+        $e = Entidad::withCount('proyectos')->findOrFail($id);
+        $this->authorizeEmpresaEntidad($e);
+
+        if ($e->proyectos_count > 0) {
+            $this->dispatch('swal', [
+                'icon' => 'warning',
+                'title' => 'No se puede eliminar',
+                'text' => "No se puede eliminar esta entidad porque tiene {$e->proyectos_count} proyecto(s) asociado(s).",
+            ]);
+
+            return;
+        }
+
+        $e->delete();
+        session()->flash('success', "Entidad \"{$e->nombre}\" eliminada correctamente.");
     }
 
     public function closeModal(): void
@@ -271,7 +302,7 @@ class Entidades extends Component
     public function sortBy(string $field): void
     {
         $allowedSorts = ['id', 'nombre', 'sigla', 'email', 'active'];
-        if (!in_array($field, $allowedSorts, true)) {
+        if (! in_array($field, $allowedSorts, true)) {
             $field = 'id';
         }
 
@@ -290,7 +321,7 @@ class Entidades extends Component
         $q = Entidad::query();
 
         // Multi-empresa: scoping listado
-        if (!auth()->user()->hasRole('Administrador')) {
+        if (! auth()->user()->hasRole('Administrador')) {
             $q->where('empresa_id', auth()->user()->empresa_id);
         } else {
             if ($this->empresaFilter !== 'all' && $this->empresaFilter !== '') {
@@ -342,7 +373,7 @@ class Entidades extends Component
     {
         $user = auth()->user();
 
-        if (!$user->hasRole('Administrador')) {
+        if (! $user->hasRole('Administrador')) {
             return (int) $user->empresa_id;
         }
 

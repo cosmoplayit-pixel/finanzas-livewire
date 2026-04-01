@@ -196,20 +196,20 @@
                     @forelse($paginatedNros as $nroModel)
                         @php
                             $nro = $nroModel->nro_prestamo;
-                            $items = $prestamosAgrupados[$nro] ?? collect();
-                            if ($items->isEmpty()) {
+                            $prestamoItems = $prestamosAgrupados[$nro] ?? collect();
+                            if ($prestamoItems->isEmpty()) {
                                 continue;
                             }
 
-                            $first = $items->first();
-                            $isVencido = $items->contains(
+                            $first = $prestamoItems->first();
+                            $isVencido = $prestamoItems->contains(
                                 fn($i) => $i->estado !== 'finalizado' &&
                                     $i->fecha_vencimiento &&
                                     $i->fecha_vencimiento->isPast(),
                             );
 
-                            $totalPrestadas = $items->sum('cantidad_prestada');
-                            $totalPendientes = $items->sum('cantidad_pendiente');
+                            $totalPrestadas = $prestamoItems->sum('cantidad_prestada');
+                            $totalPendientes = $prestamoItems->sum('cantidad_pendiente');
                             $estadoGlobal = $totalPendientes == 0 ? 'finalizado' : ($isVencido ? 'vencido' : 'activo');
                         @endphp
                         <tr
@@ -227,7 +227,8 @@
                                 <div class="flex flex-col">
                                     <span
                                         class="font-black text-indigo-600 dark:text-indigo-400 leading-tight uppercase">{{ $nro }}</span>
-                                    <span class="text-[10px] text-gray-500 mt-1 uppercase">{{ $items->count() }}
+                                    <span
+                                        class="text-[10px] text-gray-500 mt-1 uppercase">{{ $prestamoItems->count() }}
                                         Equipo(s)</span>
                                 </div>
                             </td>
@@ -510,7 +511,7 @@
                     query: '',
                     open: false,
                     selectedName: '',
-                    herramientas: @js($herramientas->map(fn($h) => ['id' => $h->id, 'nombre' => $h->nombre, 'codigo' => $h->codigo, 'disponible' => $h->stock_disponible, 'imagen' => $h->imagen])->values()),
+                    herramientas: @js(isset($herramientas) ? $herramientas->map(fn($h) => ['id' => $h->id, 'nombre' => $h->nombre, 'codigo' => $h->codigo, 'disponible' => $h->stock_disponible, 'imagen' => $h->imagen])->values() : []),
                     get suggestions() {
                         if (!this.query.trim()) return this.herramientas.filter(h => h.disponible > 0).slice(0, 8);
                         const q = this.query.toUpperCase();
@@ -627,7 +628,8 @@
 
                 {{-- TABLA DE ÍTEMS --}}
                 @if (count($items) > 0)
-                    <div class="mt-4 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden">
+                    <div wire:key="items-table-container"
+                        class="mt-4 rounded-xl border border-gray-200 dark:border-neutral-700 overflow-hidden">
                         <div
                             class="px-4 py-2 bg-gray-50 dark:bg-neutral-800/50 border-b border-gray-200 dark:border-neutral-700 flex justify-between items-center">
                             <span
@@ -641,6 +643,13 @@
                             <thead
                                 class="bg-gray-50/50 dark:bg-neutral-900/50 text-gray-500 dark:text-neutral-400 text-[11px] uppercase">
                                 <tr>
+                                    <th class="px-4 py-2 w-14 font-bold text-center">
+                                        <svg class="size-4 mx-auto text-gray-400" fill="none" viewBox="0 0 24 24"
+                                            stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </th>
                                     <th class="px-4 py-2 font-bold text-left">Herramienta</th>
                                     <th class="px-4 py-2 font-bold text-center">Disp.</th>
                                     <th class="px-4 py-2 font-bold text-center">Cant.</th>
@@ -650,9 +659,28 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
                                 @foreach ($items as $idx => $it)
-                                    <tr class="hover:bg-gray-50/50 dark:hover:bg-neutral-800/20">
+                                    <tr wire:key="herramienta-item-{{ $idx }}-{{ $it['herramienta_id'] ?? 'nuevo' }}"
+                                        class="hover:bg-gray-50/50 dark:hover:bg-neutral-800/20">
+                                        <td class="px-4 py-2.5">
+                                            @if (isset($it['imagen']) && $it['imagen'])
+                                                <img src="{{ Storage::url($it['imagen']) }}"
+                                                    alt="{{ $it['nombre'] }}"
+                                                    class="size-10 rounded-lg object-cover ring-1 ring-gray-200 dark:ring-neutral-700 bg-white">
+                                            @else
+                                                <div
+                                                    class="size-10 rounded-lg bg-gray-100 dark:bg-neutral-800 flex items-center justify-center ring-1 ring-gray-200 dark:ring-neutral-700">
+                                                    <svg class="size-6 text-gray-400 dark:text-neutral-500"
+                                                        fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="1.5"
+                                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+                                                    </svg>
+                                                </div>
+                                            @endif
+                                        </td>
                                         <td class="px-4 py-2.5">
                                             <div class="font-semibold text-gray-900 dark:text-neutral-100 text-[13px]">
+
                                                 {{ $it['nombre'] }}</div>
                                             <div class="font-mono text-[10px] text-indigo-500 uppercase">
                                                 {{ $it['codigo'] }}</div>
@@ -719,8 +747,9 @@
                     Cancelar
                 </button>
                 <button type="button" wire:click="savePrestamo" wire:loading.attr="disabled"
-                    class="w-full sm:w-auto px-6 py-2 rounded-lg cursor-pointer bg-black text-white hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-black transition shadow-lg shadow-black/10">
-                    <span wire:loading.remove wire:target="savePrestamo">Confirmar Salida ({{ count($items) }})</span>
+                    class="px-8 py-2 rounded-lg cursor-pointer bg-black text-white hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-black transition shadow-lg shadow-neutral-900/10 tracking-wide flex items-center justify-center gap-2">
+                    <span wire:loading.remove wire:target="savePrestamo">Confirmar Salida
+                        ({{ count($items) ?? 0 }})</span>
                     <span wire:loading wire:target="savePrestamo">Procesando...</span>
                 </button>
             </div>

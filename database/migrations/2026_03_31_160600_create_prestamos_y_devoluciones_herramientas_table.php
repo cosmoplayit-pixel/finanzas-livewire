@@ -11,7 +11,9 @@ return new class extends Migration
         Schema::create('prestamos_herramientas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('empresa_id')->constrained('empresas')->cascadeOnDelete();
+            $table->string('nro_prestamo', 50)->nullable();
             $table->foreignId('herramienta_id')->constrained('herramientas')->cascadeOnDelete();
+
 
             // Receptor: puede ser un agente o un nombre manual
             $table->foreignId('agente_id')->nullable()->constrained('agentes_servicio')->nullOnDelete();

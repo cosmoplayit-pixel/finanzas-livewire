@@ -184,7 +184,8 @@
                         @endphp
                         @if ($isLongMob)
                             <div x-show="!showFullNombre" class="min-w-0 flex items-center gap-2">
-                                <span class="font-semibold truncate min-w-0 flex-1" title="{{ $nombreMob }}">{{ $nombreMob }}</span>
+                                <span class="font-semibold truncate min-w-0 flex-1"
+                                    title="{{ $nombreMob }}">{{ $nombreMob }}</span>
                                 <button type="button"
                                     class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
                                     @click.stop="showFullNombre = true">
@@ -304,6 +305,31 @@
                                         <span x-show="loading" x-cloak>
                                             Procesando…
                                         </span>
+                                    </button>
+                                @endcan
+
+                                {{-- ELIMINAR --}}
+                                @can('entidades.toggle')
+                                    <button type="button" x-data="{ loading: false }"
+                                        x-on:click="loading = true; $dispatch('swal:delete-entidad', { id: {{ $e->id }}, name: @js($e->nombre) });"
+                                        x-on:swal:done.window="loading = false" x-bind:disabled="loading"
+                                        class="col-span-2 w-full inline-flex items-center justify-center gap-2 px-3 py-1 rounded border border-red-300 text-red-600
+                                            text-sm font-medium cursor-pointer hover:bg-red-50
+                                            dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/20
+                                            disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <span x-show="!loading">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <path d="M3 6h18" />
+                                                <path d="M8 6V4h8v2" />
+                                                <path d="M6 6l1 16h10l1-16" />
+                                                <path d="M10 11v6" />
+                                                <path d="M14 11v6" />
+                                            </svg>
+                                            Eliminar
+                                        </span>
+                                        <span x-show="loading" x-cloak>Procesando…</span>
                                     </button>
                                 @endcan
 
@@ -601,6 +627,41 @@
                                         </button>
                                     @endcan
 
+                                    {{-- Eliminar --}}
+                                    @can('entidades.toggle')
+                                        <button type="button" x-data="{ loading: false }"
+                                            x-on:click="loading = true; $dispatch('swal:delete-entidad', { id: {{ $e->id }}, name: @js($e->nombre) });"
+                                            x-on:swal:done.window="loading = false" x-bind:disabled="loading"
+                                            title="Eliminar entidad" aria-label="Eliminar entidad"
+                                            class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition
+                                                bg-white text-red-600 border-red-300 cursor-pointer hover:bg-red-50 hover:border-red-400
+                                                dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20
+                                                disabled:opacity-50 disabled:cursor-not-allowed">
+                                            <span x-show="!loading">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                                    fill="none" stroke="currentColor" stroke-width="2"
+                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M3 6h18" />
+                                                    <path d="M8 6V4h8v2" />
+                                                    <path d="M6 6l1 16h10l1-16" />
+                                                    <path d="M10 11v6" />
+                                                    <path d="M14 11v6" />
+                                                </svg>
+                                            </span>
+                                            <span x-show="loading" x-cloak>
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                                    fill="none" stroke="currentColor" stroke-width="2"
+                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M3 6h18" />
+                                                    <path d="M8 6V4h8v2" />
+                                                    <path d="M6 6l1 16h10l1-16" />
+                                                    <path d="M10 11v6" />
+                                                    <path d="M14 11v6" />
+                                                </svg>
+                                            </span>
+                                        </button>
+                                    @endcan
+
                                     {{-- Activar / Desactivar --}}
                                     @can('entidades.toggle')
                                         <button type="button" x-data="{ loading: false }"
@@ -619,9 +680,9 @@
                                                disabled:opacity-50 disabled:cursor-not-allowed
                                                {{ $e->active
                                                    ? 'bg-red-600 text-white hover:bg-red-700
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  dark:bg-red-500/20 dark:text-red-200 dark:hover:bg-red-500/30'
                                                    : 'bg-green-600 text-white hover:bg-green-700
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  dark:bg-green-500/20 dark:text-green-200 dark:hover:bg-green-500/30' }}">
                                             <span x-show="!loading">
                                                 @if ($e->active)
                                                     {{-- eye-slash --}}

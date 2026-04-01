@@ -95,6 +95,8 @@ class PrestamosHerramientas extends Component
     // ── Agregar ítem a la lista del préstamo ─────────────────────────────
     public function addItem(): void
     {
+        $this->sanitizeItems();
+
         $this->validate([
             'item_herramienta_id' => 'required|exists:herramientas,id',
             'item_cantidad'       => 'required|integer|min:1',
@@ -130,6 +132,7 @@ class PrestamosHerramientas extends Component
                 'herramienta_id' => (int) $this->item_herramienta_id,
                 'nombre'         => $herramienta->nombre,
                 'codigo'         => $herramienta->codigo,
+                'imagen'         => $herramienta->imagen,
                 'disponible'     => $herramienta->stock_disponible,
                 'cantidad'       => (int) $this->item_cantidad,
             ];
@@ -156,6 +159,8 @@ class PrestamosHerramientas extends Component
     // ── Confirmar préstamo ───────────────────────────────────────────────
     public function savePrestamo(): void
     {
+        $this->sanitizeItems();
+
         $this->validate([
             'entidad_id'     => 'required|exists:entidades,id',
             'proyecto_id'    => 'required|exists:proyectos,id',
@@ -222,9 +227,11 @@ class PrestamosHerramientas extends Component
         $this->resetValidation();
         $this->reset([
             'entidad_id', 'proyecto_id',
-            'foto_salida', 'items', 'item_herramienta_id', 'item_cantidad',
+            'item_herramienta_id', 'item_cantidad',
             'fecha_vencimiento',
         ]);
+        $this->items = [];
+        $this->foto_salida = null;
         $this->fecha_prestamo = date('Y-m-d');
         $this->openModalPrestamo = true;
     }
@@ -295,9 +302,29 @@ class PrestamosHerramientas extends Component
         $this->resetPage();
     }
 
+    // ── Eliminar items fantasma ──────────────────────────────────────────
+    private function sanitizeItems(): void
+    {
+        $this->items = collect($this->items)
+            ->filter(function ($it) {
+                // Si es un objeto (modelo o stdClass) lo pasamos a array
+                if (is_object($it)) {
+                    $it = (array) $it;
+                }
+                return is_array($it) && !empty($it['herramienta_id']);
+            })
+            ->map(function ($it) {
+                return (array) $it;
+            })
+            ->values()
+            ->toArray();
+    }
+
     // ── Render ───────────────────────────────────────────────────────────
     public function render()
     {
+        $this->sanitizeItems();
+
         $query = PrestamoHerramienta::with(['herramienta', 'entidad', 'proyecto', 'empresa']);
 
         if (! $this->isAdmin()) {

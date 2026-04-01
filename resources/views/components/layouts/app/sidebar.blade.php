@@ -621,6 +621,25 @@
                 });
             });
 
+            // ENTIDADES: ELIMINAR
+            window.addEventListener('swal:delete-entidad', (event) => {
+                const { id, name } = event.detail || {};
+                Swal.fire({
+                    title: '¿Eliminar entidad?',
+                    text: `¿Seguro que desea eliminar "${name}" permanentemente? Esta acción no se puede deshacer.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#6b7280',
+                    reverseButtons: true,
+                }).then((result) => {
+                    if (result.isConfirmed) Livewire.dispatch('deleteEntidad', { id });
+                    window.dispatchEvent(new CustomEvent('swal:done'));
+                });
+            });
+
             // ENTIDADES (eventos window)
             window.addEventListener('swal:toggle-active-entidad', (event) => {
                 const {
@@ -867,50 +886,48 @@
     </script>
 
     <script data-navigate-once>
-        Livewire.on('swal', (payload) => {
-            const data = Array.isArray(payload) ? payload[0] : payload;
-            Swal.fire({
-                icon: data.icon ?? 'info',
-                title: data.title ?? '',
-                text: data.text ?? '',
+        document.addEventListener('livewire:init', () => {
+            Livewire.on('swal', (payload) => {
+                const data = Array.isArray(payload) ? payload[0] : payload;
+                Swal.fire({
+                    icon: data.icon ?? 'info',
+                    title: data.title ?? '',
+                    text: data.text ?? '',
+                });
             });
-        });
 
-        // ✅ GESTOR GLOBAL DE TOASTS
-        Livewire.on('toast', ({
-            type,
-            message
-        }) => {
-            const Toast = Swal.mixin({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.onmouseenter = Swal.stopTimer;
-                    toast.onmouseleave = Swal.resumeTimer;
-                }
+            // ✅ GESTOR GLOBAL DE TOASTS
+            Livewire.on('toast', ({
+                type,
+                message
+            }) => {
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.onmouseenter = Swal.stopTimer;
+                        toast.onmouseleave = Swal.resumeTimer;
+                    }
+                });
+                Toast.fire({
+                    icon: type,
+                    title: message
+                });
             });
-            Toast.fire({
-                icon: type,
-                title: message
-            });
-        });
 
-        // ✅ GESTOR GLOBAL DE MODALES SWAL
-        Livewire.on('swal:modal', ({
-        type,
-        title,
-        text
-        }) => {
-        Swal.fire({
-            icon: type,
-            title: title,
-            text: text,
-            confirmButtonColor: '#6366f1', // indigo
-        });
-        });
+            // ✅ GESTOR GLOBAL DE MODALES SWAL
+            Livewire.on('swal:modal', (payload) => {
+                const data = Array.isArray(payload) ? payload[0] : payload;
+                Swal.fire({
+                    icon: data.type ?? 'info',
+                    title: data.title ?? '',
+                    text: data.text ?? '',
+                    confirmButtonColor: '#6366f1',
+                });
+            });
         });
     </script>
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Traits\WithFinancialFormatting;
 use App\Models\BoletaGarantia;
 use App\Models\Entidad;
 use App\Models\Factura;
@@ -11,11 +12,10 @@ use App\Models\RendicionMovimiento;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Livewire\Traits\WithFinancialFormatting;
 
 class Proyectos extends Component
 {
-    use WithPagination, WithFinancialFormatting;
+    use WithFinancialFormatting, WithPagination;
 
     public string $search = '';
 
@@ -60,7 +60,7 @@ class Proyectos extends Component
 
     protected $listeners = [
         'doToggleActiveProyecto' => 'toggleActive',
-        'doDeleteProyecto'       => 'deleteProyecto',
+        'doDeleteProyecto' => 'deleteProyecto',
     ];
 
     public function mount(): void
@@ -231,33 +231,45 @@ class Proyectos extends Component
     {
         $p = Proyecto::findOrFail($id);
 
-        $facturas    = Factura::where('proyecto_id', $id)->count();
-        $boletas     = BoletaGarantia::where('proyecto_id', $id)->count();
-        $compras     = RendicionMovimiento::where('proyecto_id', $id)->count();
-        $prestamos   = PrestamoHerramienta::where('proyecto_id', $id)->count();
+        $facturas = Factura::where('proyecto_id', $id)->count();
+        $boletas = BoletaGarantia::where('proyecto_id', $id)->count();
+        $compras = RendicionMovimiento::where('proyecto_id', $id)->count();
+        // $prestamos = PrestamoHerramienta::where('proyecto_id', $id)->count();
+        $prestamos = 0; // Temp: no en producción aún
 
         $total = $facturas + $boletas + $compras + $prestamos;
 
         if ($total > 0) {
             // Construir mensaje detallado
             $partes = [];
-            if ($facturas)  $partes[] = "{$facturas} " . ($facturas === 1 ? 'factura' : 'facturas');
-            if ($boletas)   $partes[] = "{$boletas} " . ($boletas === 1 ? 'boleta de garantía' : 'boletas de garantía');
-            if ($compras)   $partes[] = "{$compras} " . ($compras === 1 ? 'compra/movimiento' : 'compras/movimientos');
-            if ($prestamos) $partes[] = "{$prestamos} " . ($prestamos === 1 ? 'préstamo de herramienta' : 'préstamos de herramientas');
+            if ($facturas) {
+                $partes[] = "{$facturas} ".($facturas === 1 ? 'factura' : 'facturas');
+            }
+            if ($boletas) {
+                $partes[] = "{$boletas} ".($boletas === 1 ? 'boleta de garantía' : 'boletas de garantía');
+            }
+            if ($compras) {
+                $partes[] = "{$compras} ".($compras === 1 ? 'compra/movimiento' : 'compras/movimientos');
+            }
+            /*
+            if ($prestamos) {
+                $partes[] = "{$prestamos} ".($prestamos === 1 ? 'préstamo de herramienta' : 'préstamos de herramientas');
+            }
+            */
 
             $detalle = implode(', ', $partes);
 
             $this->dispatch('swal:proyecto-no-deletable', [
-                'name'    => $p->nombre,
+                'name' => $p->nombre,
                 'detalle' => $detalle,
             ]);
+
             return;
         }
 
         // Sin dependencias → pedir confirmación
         $this->dispatch('swal:confirm-delete-proyecto', [
-            'id'   => $id,
+            'id' => $id,
             'name' => $p->nombre,
         ]);
     }
@@ -272,11 +284,12 @@ class Proyectos extends Component
         // Doble-check de seguridad en backend
         $total = Factura::where('proyecto_id', $id)->count()
                + BoletaGarantia::where('proyecto_id', $id)->count()
-               + RendicionMovimiento::where('proyecto_id', $id)->count()
-               + PrestamoHerramienta::where('proyecto_id', $id)->count();
+               + RendicionMovimiento::where('proyecto_id', $id)->count();
+        // + PrestamoHerramienta::where('proyecto_id', $id)->count();
 
         if ($total > 0) {
             $this->dispatch('toast', type: 'error', message: 'No se puede eliminar: el proyecto tiene registros asociados.');
+
             return;
         }
 

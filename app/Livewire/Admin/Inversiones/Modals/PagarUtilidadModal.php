@@ -13,10 +13,11 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Livewire\Traits\WithFinancialFormatting;
 
 class PagarUtilidadModal extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithFinancialFormatting;
 
     // MODAL / FLAGS UI
     public bool $open = false; // Controla si el modal está abierto
@@ -1294,21 +1295,7 @@ class PagarUtilidadModal extends Component
     // toFloatDecimal: convierte "1.234,56" a 1234.56
     protected function toFloatDecimal(string $value): float
     {
-        $v = trim($value);
-        if ($v === '') {
-            return 0.0;
-        }
-
-        // Si ya es un formato numérico crudo (1234.56 o 1234), lo retornamos directamente
-        if (preg_match('/^-?\d+(\.\d+)?$/', $v)) {
-            return (float) $v;
-        }
-
-        $v = str_replace([' ', "\u{00A0}"], '', $v);
-        $v = str_replace('.', '', $v);
-        $v = str_replace(',', '.', $v);
-
-        return is_numeric($v) ? (float) $v : 0.0;
+        return $this->parseFormattedFloat($value);
     }
 
     // render: retorna vista del modal

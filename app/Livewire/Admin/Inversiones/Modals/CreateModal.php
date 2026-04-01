@@ -12,10 +12,11 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Livewire\Traits\WithFinancialFormatting;
 
 class CreateModal extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithFinancialFormatting;
 
     public bool $open = false;
 
@@ -520,38 +521,12 @@ class CreateModal extends Component
 
     private function parseNumber(?string $value): float
     {
-        $v = trim((string) $value);
-        if ($v === '') {
-            return 0.0;
-        }
-
-        $v = str_replace(' ', '', $v);
-
-        $lastComma = strrpos($v, ',');
-        $lastDot = strrpos($v, '.');
-
-        if ($lastComma !== false && $lastDot !== false) {
-            if ($lastComma > $lastDot) {
-                $v = str_replace('.', '', $v);
-                $v = str_replace(',', '.', $v);
-            } else {
-                $v = str_replace(',', '', $v);
-            }
-        } elseif ($lastComma !== false) {
-            $v = str_replace('.', '', $v);
-            $v = str_replace(',', '.', $v);
-        } else {
-            $v = str_replace(',', '', $v);
-        }
-
-        $res = (float) $v;
-
-        return $res;
+        return $this->parseFormattedFloat($value);
     }
 
     private function fmtNumber(float $value, int $decimals): string
     {
-        return number_format($value, $decimals, ',', '.');
+        return $this->formatFloatValue($value, $decimals);
     }
 
     public function render()

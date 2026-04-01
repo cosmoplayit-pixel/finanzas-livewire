@@ -7,10 +7,11 @@ use App\Models\Proyecto;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
+use App\Livewire\Traits\WithFinancialFormatting;
 
 class Proyectos extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFinancialFormatting;
 
     public string $search = '';
 
@@ -96,26 +97,14 @@ class Proyectos extends Component
 
     public function updatedMontoFormatted(string $value): void
     {
-        if (preg_match('/^-?\d+(\.\d+)?$/', $value)) {
-            $clean = $value;
-        } else {
-            $clean = str_replace('.', '', $value);
-            $clean = str_replace(',', '.', $clean);
-        }
-        $this->monto = is_numeric($clean) ? (float) $clean : 0;
-        $this->monto_formatted = number_format($this->monto, 2, ',', '.');
+        $this->monto = $this->parseFormattedFloat($value);
+        $this->monto_formatted = $this->formatFloatValue($this->monto);
     }
 
     public function updatedRetencionFormatted(string $value): void
     {
-        if (preg_match('/^-?\d+(\.\d+)?$/', $value)) {
-            $clean = $value;
-        } else {
-            $clean = str_replace('.', '', $value);
-            $clean = str_replace(',', '.', $clean);
-        }
-        $this->retencion = is_numeric($clean) ? (float) $clean : 0;
-        $this->retencion_formatted = number_format((float) $this->retencion, 2, ',', '.');
+        $this->retencion = $this->parseFormattedFloat($value);
+        $this->retencion_formatted = $this->formatFloatValue((float) $this->retencion);
     }
 
     public function updatingSearch(): void

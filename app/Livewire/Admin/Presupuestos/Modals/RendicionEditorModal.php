@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Presupuestos\Modals;
 
+use App\Livewire\Traits\WithFinancialFormatting;
 use App\Models\Banco;
 use App\Models\Entidad;
 use App\Models\Proyecto;
@@ -15,6 +16,8 @@ use Livewire\Attributes\On;
 
 trait RendicionEditorModal
 {
+    use WithFinancialFormatting;
+
     // ✅ NUEVO/CLAVE: estado del editor (abierto|cerrado)
     public string $editorEstado = 'abierto';
 
@@ -684,32 +687,14 @@ trait RendicionEditorModal
     // =========================================================
     protected function normalizeDecimal(?string $value): ?string
     {
-        if ($value === null) {
-            return null;
-        }
+        $v = $this->parseNullableFormattedFloat($value);
 
-        $v = trim($value);
-        if ($v === '') {
-            return null;
-        }
-
-        // Si ya es un formato numérico crudo (1234.56 o 1234), lo retornamos directamente
-        if (preg_match('/^-?\d+(\.\d+)?$/', $v)) {
-            return $v;
-        }
-
-        $v = str_replace([' ', "\u{00A0}"], '', $v);
-        $v = str_replace('.', '', $v);
-        $v = str_replace(',', '.', $v);
-
-        return $v;
+        return $v === null ? null : (string) $v;
     }
 
     protected function toFloatDecimal(?string $value): float
     {
-        $v = $this->normalizeDecimal($value);
-
-        return $v !== null && is_numeric($v) ? (float) $v : 0.0;
+        return $this->parseFormattedFloat((string) $value);
     }
 
     protected function resetMovimientoForm(): void

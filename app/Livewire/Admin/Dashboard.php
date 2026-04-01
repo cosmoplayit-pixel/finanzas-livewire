@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Livewire\Traits\WithFinancialFormatting;
 use App\Models\AgenteServicio;
 use App\Models\Banco;
 use App\Models\BoletaGarantia;
@@ -17,6 +18,8 @@ use Livewire\Component;
 
 class Dashboard extends Component
 {
+    use WithFinancialFormatting;
+
     public bool $isAdmin = false;
 
     public ?int $empresaId = null;
@@ -185,10 +188,11 @@ class Dashboard extends Component
     public function mount(): void
     {
         $user = Auth::user();
-        
+
         // Si es administrador, redirigir a usuarios en vez del panel
         if ($user?->hasRole('Administrador')) {
             $this->redirectRoute('usuarios');
+
             return;
         }
 
@@ -237,23 +241,10 @@ class Dashboard extends Component
 
     // ─── Watchers Config ─────────────────────────────────────────────────
 
-    // Helper robusto para limpiar números con formato boliviano (. mil, , decimal)
+    // Utilizamos el nuevo parser global
     protected function cleanNumeric($value): float
     {
-        if (is_numeric($value)) return (float) $value;
-        
-        // 1. Quitar espacios
-        $value = trim($value);
-        if ($value === '') return 0;
-
-        // 2. Si hay múltiples puntos (ej: 1.000.000,00), asumimos que el punto es separador de miles
-        // Si solo hay un separador, necesitamos saber cuál es.
-        
-        // Caso común: 1.234,56 -> Primero quitamos los puntos, luego el coma se vuelve punto
-        $clean = str_replace('.', '', $value); // Quitamos todos los puntos
-        $clean = str_replace(',', '.', $clean); // La coma decimal se vuelve punto decimal de PHP
-        
-        return is_numeric($clean) ? (float) $clean : 0;
+        return $this->parseFormattedFloat($value);
     }
 
     public function updatedImpuestosNacionalesBobFormatted(string $value): void
@@ -279,7 +270,9 @@ class Dashboard extends Component
     public function updatedTipoCambioFormatted(string $value): void
     {
         $this->tipoCambio = $this->cleanNumeric($value);
-        if ($this->tipoCambio <= 0) $this->tipoCambio = 1.00;
+        if ($this->tipoCambio <= 0) {
+            $this->tipoCambio = 1.00;
+        }
 
         // Re-formatear para mostrar coma decimal
         $this->tipoCambioFormatted = number_format($this->tipoCambio, 2, ',', '.');

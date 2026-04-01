@@ -6,9 +6,12 @@ use App\Models\AgenteServicio;
 use App\Models\Banco;
 use App\Services\RendicionService;
 use DomainException;
+use App\Livewire\Traits\WithFinancialFormatting;
 
 trait PresupuestoModal
 {
+    use WithFinancialFormatting;
+
     // MODAL CREAR PRESUPUESTO
     public bool $openModal = false;
 
@@ -74,32 +77,13 @@ trait PresupuestoModal
 
     public function updatedMontoFormatted($value): void
     {
-        $value = trim((string) $value);
-
-        if ($value === '') {
-            $this->monto = 0;
+        $this->monto = $this->parseFormattedFloat((string) $value);
+        if ($this->monto <= 0) {
             $this->monto_formatted = '';
-            $this->recalcularPreviews();
-
-            return;
-        }
-
-        if (preg_match('/^-?\d+(\.\d+)?$/', $value)) {
-            $clean = $value;
         } else {
-            $clean = str_replace('.', '', $value);
-            $clean = str_replace(',', '.', $clean);
+            $this->monto_formatted = $this->formatFloatValue($this->monto);
+            $this->monto = round($this->monto, 2);
         }
-
-        if (! is_numeric($clean)) {
-            $this->monto = 0;
-            $this->recalcularPreviews();
-
-            return;
-        }
-
-        $this->monto = round((float) $clean, 2);
-        $this->monto_formatted = number_format($this->monto, 2, ',', '.');
         $this->recalcularPreviews();
     }
 

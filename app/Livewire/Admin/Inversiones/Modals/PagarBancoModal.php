@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Inversiones\Modals;
 
+use App\Livewire\Traits\WithFinancialFormatting;
 use App\Models\Banco;
 use App\Models\Inversion;
 use App\Models\InversionMovimiento;
@@ -16,7 +17,7 @@ use Livewire\WithFileUploads;
 
 class PagarBancoModal extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads, WithFinancialFormatting;
 
     // MODAL / CONTEXTO
 
@@ -1148,21 +1149,7 @@ class PagarBancoModal extends Component
     // convierte string con separadores (1.234,56) a float (1234.56)
     protected function toFloatDecimal(string $value): float
     {
-        $v = trim($value);
-        if ($v === '') {
-            return 0.0;
-        }
-
-        // Si ya es un formato numérico crudo (1234.56 o 1234), lo retornamos directamente
-        if (preg_match('/^-?\d+(\.\d+)?$/', $v)) {
-            return (float) $v;
-        }
-
-        $v = str_replace([' ', "\u{00A0}"], '', $v);
-        $v = str_replace('.', '', $v);
-        $v = str_replace(',', '.', $v);
-
-        return is_numeric($v) ? (float) $v : 0.0;
+        return $this->parseFormattedFloat($value);
     }
 
     // retorna la vista del modal

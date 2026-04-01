@@ -621,9 +621,38 @@
                 });
             });
 
+            // AGENTES DE SERVICIO
+            window.addEventListener('swal:toggle-active-agente', (event) => {
+                const {
+                    id,
+                    active,
+                    name
+                } = event.detail || {};
+                Swal.fire({
+                    title: active ? '¿Desactivar agente?' : '¿Activar agente?',
+                    text: `¿Seguro que deseas ${active ? 'desactivar' : 'activar'} el agente "${name}"?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: active ? '#dc2626' : '#16a34a',
+                    cancelButtonColor: '#6b7280',
+                    confirmButtonText: active ? 'Sí, desactivar' : 'Sí, activar',
+                    cancelButtonText: 'Cancelar',
+                    reverseButtons: true,
+                }).then((result) => {
+                    if (result.isConfirmed) Livewire.dispatch('doToggleActiveAgente', {
+                        id
+                    });
+                }).finally(() => {
+                    window.dispatchEvent(new CustomEvent('swal:done'));
+                });
+            });
+
             // ENTIDADES: ELIMINAR
             window.addEventListener('swal:delete-entidad', (event) => {
-                const { id, name } = event.detail || {};
+                const {
+                    id,
+                    name
+                } = event.detail || {};
                 Swal.fire({
                     title: '¿Eliminar entidad?',
                     text: `¿Seguro que desea eliminar "${name}" permanentemente? Esta acción no se puede deshacer.`,
@@ -635,7 +664,9 @@
                     cancelButtonColor: '#6b7280',
                     reverseButtons: true,
                 }).then((result) => {
-                    if (result.isConfirmed) Livewire.dispatch('deleteEntidad', { id });
+                    if (result.isConfirmed) Livewire.dispatch('deleteEntidad', {
+                        id
+                    });
                     window.dispatchEvent(new CustomEvent('swal:done'));
                 });
             });
@@ -905,7 +936,7 @@
                     toast: true,
                     position: 'top-end',
                     showConfirmButton: false,
-                    timer: 3000,
+                    timer: 1500,
                     timerProgressBar: true,
                     didOpen: (toast) => {
                         toast.onmouseenter = Swal.stopTimer;

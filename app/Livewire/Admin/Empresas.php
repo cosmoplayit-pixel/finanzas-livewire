@@ -151,7 +151,7 @@ class Empresas extends Component
             $emp = Empresa::findOrFail($this->empresaId);
             $emp->update($data);
 
-            session()->flash('success', 'Empresa actualizada correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Empresa actualizada');
             $this->closeModal();
             return;
         }
@@ -182,10 +182,7 @@ class Empresas extends Component
                     'active' => 1,
                 ]);
 
-                session()->flash(
-                    'success',
-                    'La empresa estaba inactiva y fue reactivada correctamente.',
-                );
+                $this->dispatch('toast', type: 'success', message: 'Empresa reactivada');
                 $this->closeModal();
                 return;
             }
@@ -202,7 +199,7 @@ class Empresas extends Component
             'active' => 1,
         ]);
 
-        session()->flash('success', 'Empresa creada correctamente.');
+        $this->dispatch('toast', type: 'success', message: 'Empresa creada');
         $this->closeModal();
     }
 
@@ -216,7 +213,7 @@ class Empresas extends Component
         $emp->active = !$emp->active;
         $emp->save();
 
-        session()->flash('success', $emp->active ? 'Empresa activada.' : 'Empresa desactivada.');
+        $this->dispatch('toast', type: 'success', message: $emp->active ? 'Empresa activada' : 'Empresa desactivada');
     }
 
     #[On('doToggleActiveEmpresa')]

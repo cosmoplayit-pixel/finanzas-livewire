@@ -222,7 +222,7 @@ class Index extends Component
         $filterHash = md5(serialize([
             $this->empresaFilter, $this->search, $this->moneda,
             $this->soloPendientes, $this->f_fecha_desde, $this->f_fecha_hasta,
-            $this->dateFilterModified
+            $this->dateFilterModified,
         ]));
 
         if ($this->cachedHash !== $filterHash) {
@@ -230,7 +230,7 @@ class Index extends Component
 
             // Lógica de historial para Saldo y Cantidad
             $paramsHist = $filters;
-            if (!$this->dateFilterModified) {
+            if (! $this->dateFilterModified) {
                 $paramsHist['f_fecha_desde'] = '';
                 $paramsHist['f_fecha_hasta'] = '';
             }

@@ -502,7 +502,7 @@ class CreateModal extends Component
                 'sistema' => 'FRANCESA',
             ]);
 
-            session()->flash('success', 'Inversión creada correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Inversión creada');
 
             $this->open = false;
             $this->resetForm();
@@ -511,7 +511,7 @@ class CreateModal extends Component
             if ($path) {
                 Storage::disk('public')->delete($path);
             }
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         }
     }
 

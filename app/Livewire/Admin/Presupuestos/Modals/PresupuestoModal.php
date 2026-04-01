@@ -2,11 +2,11 @@
 
 namespace App\Livewire\Admin\Presupuestos\Modals;
 
+use App\Livewire\Traits\WithFinancialFormatting;
 use App\Models\AgenteServicio;
 use App\Models\Banco;
 use App\Services\RendicionService;
 use DomainException;
-use App\Livewire\Traits\WithFinancialFormatting;
 
 trait PresupuestoModal
 {
@@ -188,7 +188,7 @@ trait PresupuestoModal
             $this->panelEstado[$rk] = $this->panelEstado[$rk] ?? 'ALL';
             $this->loadPanel((int) $agente->id, (string) $banco->moneda);
 
-            session()->flash('success', 'Presupuesto registrado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Presupuesto registrado');
         } catch (DomainException $e) {
             $this->addError('monto', $e->getMessage());
         }

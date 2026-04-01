@@ -203,12 +203,7 @@ class Proyectos extends Component
 
         Proyecto::updateOrCreate(['id' => $this->proyectoId], $data);
 
-        session()->flash(
-            'success',
-            $this->proyectoId
-                ? 'Proyecto actualizado correctamente.'
-                : 'Proyecto creado correctamente.',
-        );
+        $this->dispatch('toast', type: 'success', message: $this->proyectoId ? 'Proyecto actualizado' : 'Proyecto creado');
 
         $this->closeModal();
     }
@@ -219,7 +214,7 @@ class Proyectos extends Component
         $p->active = ! $p->active;
         $p->save();
 
-        session()->flash('success', $p->active ? 'Proyecto activado.' : 'Proyecto desactivado.');
+        $this->dispatch('toast', type: 'success', message: $p->active ? 'Proyecto activado' : 'Proyecto desactivado');
     }
 
     public function closeModal(): void

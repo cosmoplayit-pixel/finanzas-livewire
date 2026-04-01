@@ -217,7 +217,7 @@ class Roles extends Component
             ]);
 
             $this->flushSpatieCache();
-            session()->flash('success', 'Rol actualizado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Rol actualizado');
         } else {
             Role::create([
                 'name' => $data['name'],
@@ -228,7 +228,7 @@ class Roles extends Component
             ]);
 
             $this->flushSpatieCache();
-            session()->flash('success', 'Rol creado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Rol creado');
         }
 
         $this->closeModal();
@@ -244,7 +244,7 @@ class Roles extends Component
         $role = Role::query()->findOrFail($id);
 
         if ($role->is_system) {
-            session()->flash('error', 'No se puede desactivar un rol del sistema.');
+            $this->dispatch('toast', type: 'error', message: 'No se puede desactivar rol de sistema');
             return;
         }
 
@@ -256,10 +256,7 @@ class Roles extends Component
                 ->count();
 
             if ($role->active && $activeAdminRoles <= 1) {
-                session()->flash(
-                    'error',
-                    'No puedes desactivar el último rol Administrador activo.',
-                );
+                $this->dispatch('toast', type: 'error', message: 'No puedes desactivar el último administrador');
                 return;
             }
         }
@@ -268,7 +265,7 @@ class Roles extends Component
         $role->save();
 
         $this->flushSpatieCache();
-        session()->flash('success', $role->active ? 'Rol activado.' : 'Rol desactivado.');
+        $this->dispatch('toast', type: 'success', message: $role->active ? 'Rol activado' : 'Rol desactivado');
     }
 
     // =========================
@@ -327,7 +324,7 @@ class Roles extends Component
 
         $this->flushSpatieCache();
 
-        session()->flash('success', 'Permisos actualizados correctamente.');
+        $this->dispatch('toast', type: 'success', message: 'Permisos actualizados');
         $this->closePermissions();
     }
 

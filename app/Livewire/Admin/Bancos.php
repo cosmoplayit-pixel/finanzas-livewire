@@ -248,13 +248,13 @@ class Bancos extends Component
             }
 
             $b->update($data);
-            session()->flash('success', 'Banco actualizado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Banco actualizado');
         } else {
             // Guardar el monto inicial al crear el banco
             $data['monto_inicial'] = $data['monto'] ?? 0;
             
             Banco::create($data);
-            session()->flash('success', 'Banco creado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Banco creado');
         }
 
         $this->closeModal();
@@ -265,7 +265,7 @@ class Bancos extends Component
         $b = Banco::findOrFail($id);
 
         $b->update(['active' => !$b->active]);
-        session()->flash('success', $b->active ? 'Banco activado.' : 'Banco desactivado.');
+        $this->dispatch('toast', type: 'success', message: $b->active ? 'Banco activado' : 'Banco desactivado');
     }
 
     public function closeModal(): void

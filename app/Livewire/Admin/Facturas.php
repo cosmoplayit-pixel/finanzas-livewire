@@ -135,7 +135,9 @@ class Facturas extends Component
     public string $deleteFacturaPassword = '';
 
     public ?int $deleteFacturaId = null;
+
     public ?int $highlight_factura_id = null;
+
     public array $pendingRemoval = [];
 
     #[On('factura:clear-pending-removal')]
@@ -531,7 +533,7 @@ class Facturas extends Component
             $this->highlight_factura_id = $nuevaFactura->id;
 
             $this->resetPage();
-            session()->flash('success', 'Factura registrada correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Factura registrada correctamente.');
         } catch (DomainException $e) {
             $this->addError('proyecto_id', $e->getMessage());
         }
@@ -741,7 +743,7 @@ class Facturas extends Component
                 $this->dispatch('factura:start-removal-timer', facturaId: $factura->id);
             }
 
-            session()->flash('success', 'Pago registrado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Pago registrado correctamente.');
         } catch (DomainException $e) {
             $this->addError('monto', $e->getMessage());
         }
@@ -803,7 +805,7 @@ class Facturas extends Component
             $this->authorize('delete', $factura);
             $service->eliminarFactura($factura, $user);
 
-            session()->flash('success', 'Factura eliminada correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Factura eliminada');
             $this->closeEliminarFacturaModal();
             $this->resetPage();
         } catch (DomainException $e) {
@@ -841,7 +843,7 @@ class Facturas extends Component
 
         try {
             $service->eliminarPago($pago, auth()->user());
-            session()->flash('success', 'Pago eliminado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Pago eliminado, se revertira al banco');
             $this->resetPage();
         } catch (DomainException $e) {
             $msg = $e->getMessage();
@@ -1086,12 +1088,12 @@ class Facturas extends Component
             if ($from->isStartOfYear() && $to->isEndOfYear() && $from->year === $to->year) {
                 $dateLabel = (string) $from->year;
             } else {
-                $dateLabel = $from->format('d/m/y') . ' - ' . $to->format('d/m/y');
+                $dateLabel = $from->format('d/m/y').' - '.$to->format('d/m/y');
             }
         } elseif ($this->f_fecha_desde) {
-            $dateLabel = 'Desde ' . \Carbon\Carbon::parse($this->f_fecha_desde)->format('d/m/y');
+            $dateLabel = 'Desde '.\Carbon\Carbon::parse($this->f_fecha_desde)->format('d/m/y');
         } elseif ($this->f_fecha_hasta) {
-            $dateLabel = 'Hasta ' . \Carbon\Carbon::parse($this->f_fecha_hasta)->format('d/m/y');
+            $dateLabel = 'Hasta '.\Carbon\Carbon::parse($this->f_fecha_hasta)->format('d/m/y');
         } else {
             $dateLabel = 'Histórico';
         }

@@ -593,7 +593,7 @@ trait RendicionEditorModal
                 foto: $this->mov_foto,
             );
 
-            session()->flash('success', 'Movimiento registrado.');
+            $this->dispatch('toast', type: 'success', message: 'Movimiento registrado');
 
             $this->closeMovimientoModal();
             $this->openRendicionEditor((int) $r->id);
@@ -619,7 +619,7 @@ trait RendicionEditorModal
             $service->eliminarMovimiento($r, $movId, auth()->user());
 
             $this->openRendicionEditor((int) $r->id);
-            session()->flash('success', 'Movimiento eliminado.');
+            $this->dispatch('toast', type: 'success', message: 'Movimiento eliminado');
         } catch (DomainException $e) {
             $bancoNombre = $mov?->banco?->nombre ?? null;
             $moneda = $mov?->moneda ?? '';
@@ -771,7 +771,7 @@ trait RendicionEditorModal
 
         try {
             $service->cerrarRendicion($r, auth()->user());
-            session()->flash('success', 'Rendición cerrada.');
+            $this->dispatch('toast', type: 'success', message: 'Rendición cerrada');
 
             $this->openRendicionEditor((int) $r->id);
 
@@ -779,7 +779,7 @@ trait RendicionEditorModal
                 $this->reloadOpenPanels();
             }
         } catch (DomainException $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         }
 
         $this->closeEditor();

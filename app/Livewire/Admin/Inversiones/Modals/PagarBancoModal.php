@@ -452,7 +452,7 @@ class PagarBancoModal extends Component
 
                 $mov->save();
 
-                session()->flash('success', 'Cambios guardados en el pago PENDIENTE.');
+                $this->dispatch('toast', type: 'success', message: 'Cambios guardados en el pago PENDIENTE.');
                 $this->dispatch('inversionUpdated');
                 $this->recalcImpacto();
 
@@ -551,7 +551,7 @@ class PagarBancoModal extends Component
         try {
             $service->confirmarPagoBanco((int) $this->movimientoId);
 
-            session()->flash('success', 'Pago confirmado y banco debitado.');
+            $this->dispatch('toast', type: 'success', message: 'Pago confirmado y banco debitado.');
             $this->dispatch('inversionUpdated');
             $this->close();
         } catch (DomainException $e) {

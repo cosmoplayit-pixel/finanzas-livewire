@@ -298,7 +298,7 @@ class Herramientas extends Component
             'active'           => true,
         ]);
 
-        session()->flash('success', 'Herramienta registrada correctamente.');
+        $this->dispatch('toast', type: 'success', message: 'Herramienta registrada');
         $this->closeModal();
     }
 
@@ -352,7 +352,7 @@ class Herramientas extends Component
         $h->precio_total      = $h->stock_total * (float) $h->precio_unitario;
         $h->save();
 
-        session()->flash('success', "Se agregaron {$cantidad} unidad(es) a «{$h->nombre}».");
+        $this->dispatch('toast', type: 'success', message: "Se agregaron {$cantidad} unidades");
         $this->closeAddStockModal();
     }
 
@@ -390,7 +390,7 @@ class Herramientas extends Component
         $h->update(['active' => ! $h->active]);
 
 
-        session()->flash('success', $h->active ? 'Herramienta activada.' : 'Herramienta desactivada.');
+        $this->dispatch('toast', type: 'success', message: $h->active ? 'Herramienta activada' : 'Herramienta desactivada');
     }
 
     public function delete(int $id): void
@@ -417,7 +417,7 @@ class Herramientas extends Component
 
 
         $h->delete();
-        session()->flash('success', 'Herramienta eliminada correctamente.');
+        $this->dispatch('toast', type: 'success', message: 'Herramienta eliminada');
     }
 
     // =========================

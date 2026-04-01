@@ -60,7 +60,7 @@ trait RendicionEliminarModal
 
             $service->eliminarPresupuesto($r, $user);
 
-            session()->flash('success', 'Presupuesto eliminado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Presupuesto eliminado');
             $this->closeEliminarRendicionModal();
 
             // Refresca la tabla

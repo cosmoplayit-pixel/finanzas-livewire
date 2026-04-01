@@ -21,7 +21,7 @@ class DeleteMovimientoListener extends Component
         $id = is_array($payload) ? $payload['id'] ?? null : $payload;
 
         if (!$id) {
-            session()->flash('error', 'No se recibió el ID del movimiento.');
+            $this->dispatch('toast', type: 'error', message: 'No se recibió ID');
             return;
         }
 
@@ -61,10 +61,10 @@ class DeleteMovimientoListener extends Component
                 $mov->delete();
             });
 
-            session()->flash('success', 'Movimiento eliminado y revertido correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Movimiento eliminado');
             $this->dispatch('inversionUpdated');
         } catch (\Throwable $e) {
-            session()->flash('error', $e->getMessage());
+            $this->dispatch('toast', type: 'error', message: $e->getMessage());
         }
     }
 

@@ -331,7 +331,7 @@ class CreateModal extends Component
                 $boleta->save();
             }
 
-            session()->flash('success', 'Boleta registrada.');
+            $this->dispatch('toast', type: 'success', message: 'Boleta registrada.');
 
             $this->close();
             $this->dispatch('bg:refresh', boletaId: $boleta?->id);

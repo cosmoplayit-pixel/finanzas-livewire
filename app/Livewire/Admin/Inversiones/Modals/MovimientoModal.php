@@ -272,11 +272,7 @@ class MovimientoModal extends Component
             $service->eliminarMovimientoFila($this->inversion, $movId);
             $this->loadData((int) $this->inversion->id);
             $this->dispatch('inversionUpdated');
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => 'Eliminado',
-                'text' => 'Se eliminó el registro correctamente.',
-            ]);
+            $this->dispatch('toast', type: 'success', message: 'Eliminado');
         } catch (DomainException $e) {
             $this->dispatch('swal', [
                 'icon' => 'error',
@@ -329,11 +325,7 @@ class MovimientoModal extends Component
             // Si aún no existe, dime y te lo paso completo.
             $service->eliminarInversionCompleta($this->inversion, $this->deleteAllPassword);
 
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => 'Eliminado',
-                'text' => 'Se eliminó la inversión completa.',
-            ]);
+            $this->dispatch('toast', type: 'success', message: 'Inversión eliminada');
 
             $this->dispatch('inversionUpdated');
             $this->closeEliminarTodoModal();
@@ -402,11 +394,7 @@ class MovimientoModal extends Component
             $this->loadData((int) $this->inversion->id);
             $this->dispatch('inversionUpdated');
 
-            $this->dispatch('swal', [
-                'icon' => 'success',
-                'title' => 'Eliminado',
-                'text' => 'Se eliminó el registro correctamente.',
-            ]);
+            $this->dispatch('toast', type: 'success', message: 'Eliminado');
 
             $this->closeEliminarFilaModal();
         } catch (DomainException $e) {

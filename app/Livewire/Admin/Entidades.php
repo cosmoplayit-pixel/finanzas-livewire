@@ -215,7 +215,7 @@ class Entidades extends Component
 
             $e->update($data);
 
-            session()->flash('success', 'Entidad actualizada correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Entidad actualizada');
             $this->closeModal();
 
             return;
@@ -228,7 +228,7 @@ class Entidades extends Component
 
         Entidad::create($data);
 
-        session()->flash('success', 'Entidad creada correctamente.');
+        $this->dispatch('toast', type: 'success', message: 'Entidad creada');
         $this->closeModal();
     }
 
@@ -256,7 +256,7 @@ class Entidades extends Component
         $e->active = ! $e->active;
         $e->save();
 
-        session()->flash('success', $e->active ? 'Entidad activada.' : 'Entidad desactivada.');
+        $this->dispatch('toast', type: 'success', message: $e->active ? 'Entidad activada' : 'Entidad desactivada');
     }
 
     public function deleteEntidad(int $id): void
@@ -275,7 +275,7 @@ class Entidades extends Component
         }
 
         $e->delete();
-        session()->flash('success', "Entidad \"{$e->nombre}\" eliminada correctamente.");
+        $this->dispatch('toast', type: 'success', message: 'Entidad eliminada');
     }
 
     public function closeModal(): void

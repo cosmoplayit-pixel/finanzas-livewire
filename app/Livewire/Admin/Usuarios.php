@@ -133,7 +133,7 @@ class Usuarios extends Component
 
         // Root Admin: no se puede editar por terceros
         if ($this->isRootUser($u) && ! $this->currentUserIsRoot()) {
-            session()->flash('error', 'No puedes editar al Administrador principal del sistema.');
+            $this->dispatch('toast', type: 'error', message: 'No puedes editar al Administrador principal del sistema.');
 
             return;
         }
@@ -169,10 +169,7 @@ class Usuarios extends Component
 
             // Root Admin: bloquear modificación por terceros
             if ($this->isRootUser($u) && ! $this->currentUserIsRoot()) {
-                session()->flash(
-                    'error',
-                    'No puedes modificar al Administrador principal del sistema.',
-                );
+                $this->dispatch('toast', type: 'error', message: 'No puedes modificar al Administrador principal del sistema.');
 
                 return;
             }
@@ -188,10 +185,7 @@ class Usuarios extends Component
                     ->count();
 
                 if ($activeAdmins <= 1) {
-                    session()->flash(
-                        'error',
-                        'No puedes quitar el rol al último Administrador activo.',
-                    );
+                    $this->dispatch('toast', type: 'error', message: 'No puedes quitar el rol al último Administrador activo.');
 
                     return;
                 }
@@ -221,7 +215,7 @@ class Usuarios extends Component
                 $u->syncRoles([$data['role']]);
             }
 
-            session()->flash('success', 'Usuario actualizado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Usuario actualizado correctamente.');
         }
         // ============ CREATE ============
         else {
@@ -234,7 +228,7 @@ class Usuarios extends Component
 
             $u->syncRoles([$data['role']]);
 
-            session()->flash('success', 'Usuario creado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Usuario creado correctamente.');
         }
 
         $this->openModal = false;
@@ -244,7 +238,7 @@ class Usuarios extends Component
     public function toggleActive(int $id): void
     {
         if (auth()->id() === $id) {
-            session()->flash('error', 'No puedes desactivar tu propio usuario.');
+            $this->dispatch('toast', type: 'error', message: 'No puedes desactivar tu propio usuario.');
 
             return;
         }
@@ -253,10 +247,7 @@ class Usuarios extends Component
 
         // Root Admin: no permitir desactivarlo
         if ($this->isRootUser($u)) {
-            session()->flash(
-                'error',
-                'No se puede desactivar al Administrador principal del sistema.',
-            );
+                $this->dispatch('toast', type: 'error', message: 'No se puede desactivar al Administrador principal del sistema.');
 
             return;
         }
@@ -269,7 +260,7 @@ class Usuarios extends Component
                 ->count();
 
             if ($u->active && $activeAdmins <= 1) {
-                session()->flash('error', 'No puedes desactivar al último Administrador activo.');
+                $this->dispatch('toast', type: 'error', message: 'No puedes desactivar al último Administrador activo.');
 
                 return;
             }
@@ -278,7 +269,7 @@ class Usuarios extends Component
         $u->active = ! $u->active;
         $u->save();
 
-        session()->flash('success', $u->active ? 'Usuario activado.' : 'Usuario desactivado.');
+        $this->dispatch('toast', type: 'success', message: $u->active ? 'Usuario activado.' : 'Usuario desactivado.');
     }
 
     #[On('doToggleActive')]

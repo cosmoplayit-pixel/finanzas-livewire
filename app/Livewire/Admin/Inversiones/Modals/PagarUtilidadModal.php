@@ -1024,11 +1024,7 @@ class PagarUtilidadModal extends Component
                     // 2) Confirmar (Débito real)
                     $service->confirmarPagoUtilidad($this->movimientoId);
 
-                    $this->dispatch('swal', [
-                        'icon' => 'success',
-                        'title' => 'Confirmado',
-                        'text' => 'El pago se confirmó y se debitó del banco.',
-                    ]);
+                    $this->dispatch('toast', type: 'success', message: 'Pago confirmado');
                 } else {
                     $invMon = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
                     $bankMon = strtoupper((string) ($this->mov_moneda ?? $invMon));
@@ -1063,11 +1059,7 @@ class PagarUtilidadModal extends Component
                         'tipo_cambio' => $tc,
                     ]);
 
-                    $this->dispatch('swal', [
-                        'icon' => 'success',
-                        'title' => 'Registrado',
-                        'text' => 'La utilidad se registró como PENDIENTE.',
-                    ]);
+                    $this->dispatch('toast', type: 'success', message: 'Utilidad registrada');
                 }
             } else {
                 $service->registrarMovimiento($this->inversion, [
@@ -1081,11 +1073,7 @@ class PagarUtilidadModal extends Component
                     'tipo_cambio' => $tc,
                 ]);
 
-                $this->dispatch('swal', [
-                    'icon' => 'success',
-                    'title' => 'Registrado',
-                    'text' => 'Movimiento registrado correctamente.',
-                ]);
+                $this->dispatch('toast', type: 'success', message: 'Movimiento registrado');
             }
 
             $this->dispatch('inversionUpdated');

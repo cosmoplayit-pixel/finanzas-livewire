@@ -211,7 +211,7 @@ class AgentesServicio extends Component
                 'nro_celular' => $data['nro_celular'],
             ]);
 
-            session()->flash('success', 'Agente actualizado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Agente actualizado');
         } else {
             AgenteServicio::create([
                 'empresa_id' => $data['empresa_id'],
@@ -223,7 +223,7 @@ class AgentesServicio extends Component
                 'active' => true,
             ]);
 
-            session()->flash('success', 'Agente creado correctamente.');
+            $this->dispatch('toast', type: 'success', message: 'Agente creado');
         }
 
         $this->closeModal();
@@ -238,7 +238,7 @@ class AgentesServicio extends Component
         }
 
         $a->update(['active' => !$a->active]);
-        session()->flash('success', $a->active ? 'Agente activado.' : 'Agente desactivado.');
+        $this->dispatch('toast', type: 'success', message: $a->active ? 'Agente activado' : 'Agente desactivado');
     }
 
     public function closeModal(): void

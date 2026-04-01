@@ -136,89 +136,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             {{-- Comprobante (Imagen o PDF) --}}
             <div>
-                <label class="block text-sm mb-1">Respaldo: <span class="text-red-500">*</span></label>
-                <div x-data="{ uploading: false }" x-on:livewire-upload-start="uploading = true"
-                    x-on:livewire-upload-finish="uploading = false" x-on:livewire-upload-error="uploading = false">
-                    <label
-                        class="h-10.5 group flex items-center justify-between w-full rounded-lg border border-dashed
-                       border-gray-300/70 dark:border-neutral-700/70
-                       bg-white dark:bg-neutral-900 px-4 py-2 cursor-pointer
-                       hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
-
-                        <div class="flex items-center gap-3 min-w-0">
-                            <div
-                                class="w-8 h-8 rounded-lg border border-gray-200/70 dark:border-neutral-700/70
-                               bg-gray-50 dark:bg-neutral-800 flex items-center justify-center shrink-0">
-                                @if (
-                                    $foto_comprobante &&
-                                        !is_string($foto_comprobante) &&
-                                        strtolower($foto_comprobante->getClientOriginalExtension()) === 'pdf')
-                                    {{-- Icono PDF --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-red-500"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                        <polyline points="14 2 14 8 20 8" />
-                                        <line x1="16" y1="13" x2="8" y2="13" />
-                                        <line x1="16" y1="17" x2="8" y2="17" />
-                                        <polyline points="10 9 9 9 8 9" />
-                                    </svg>
-                                @elseif ($foto_comprobante && !is_string($foto_comprobante))
-                                    {{-- Icono Imagen --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-blue-500"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                        stroke-linecap="round" stroke-linejoin="round">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                                        <circle cx="8.5" cy="8.5" r="1.5" />
-                                        <polyline points="21 15 16 10 5 21" />
-                                    </svg>
-                                @else
-                                    {{-- Icono Upload --}}
-                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                        class="w-4 h-4 text-gray-600 dark:text-neutral-200" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                        <polyline points="17 8 12 3 7 8" />
-                                        <line x1="12" y1="3" x2="12" y2="15" />
-                                    </svg>
-                                @endif
-                            </div>
-
-                            <div class="min-w-0">
-                                <div class="text-sm font-medium text-gray-800 dark:text-neutral-100">
-                                    Adjuntar archivo
-                                </div>
-                                <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
-                                    @if ($foto_comprobante && !is_string($foto_comprobante))
-                                        {{ $foto_comprobante->getClientOriginalName() }}
-                                    @else
-                                        JPG, PNG o PDF (máx. 5MB)
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-
-                        <input type="file" wire:model.live="foto_comprobante" accept=".jpg,.jpeg,.png,.pdf"
-                            class="hidden" />
-                    </label>
-
-                    <div x-show="uploading" x-cloak class="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                        Subiendo archivo...
-                    </div>
-                </div>
-                @error('foto_comprobante')
-                    <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
-                @enderror
-
-                @if ($foto_comprobante && !is_string($foto_comprobante))
-                    <div class="mt-2 text-right">
-                        <button type="button" wire:click="$set('foto_comprobante', null)"
-                            class="text-xs text-red-500 hover:text-red-700 underline cursor-pointer">
-                            Quitar archivo
-                        </button>
-                    </div>
-                @endif
+                <x-ui.scanner model="foto_comprobante" label="Respaldo" :file="$foto_comprobante" />
             </div>
 
             {{-- Detalle --}}
@@ -240,9 +158,8 @@
         <div class="px-1 py-1 flex justify-start">
             <div
                 class="w-fit flex items-center gap-2 text-blue-700 dark:text-blue-400 bg-blue-50/60 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800/40">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24"
-                    fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                    stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10" />
                     <line x1="12" y1="16" x2="12" y2="12" />
                     <line x1="12" y1="8" x2="12.01" y2="8" />

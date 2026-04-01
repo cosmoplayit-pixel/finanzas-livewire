@@ -676,24 +676,7 @@
 
                 {{-- Fotografía --}}
                 <div class="col-span-2 lg:col-span-2">
-                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Fotografía o
-                        Ficha Técnica</label>
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="shrink-0 size-11 rounded-lg border border-dashed border-gray-300 dark:border-neutral-700 flex items-center justify-center overflow-hidden bg-gray-50 dark:bg-neutral-900">
-                            @if ($imagen)
-                                <img src="{{ $imagen->temporaryUrl() }}" class="w-full h-full object-cover">
-                            @else
-                                <svg class="size-5 text-gray-300" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path
-                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            @endif
-                        </div>
-                        <input type="file" wire:model="imagen" accept="image/*"
-                            class="flex-1 text-xs text-gray-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-indigo-50 dark:file:bg-indigo-900/30 file:text-indigo-600 dark:file:text-indigo-400 cursor-pointer">
-                    </div>
+                    <x-ui.scanner model="imagen" label="Fotografía o Ficha Técnica" :file="$imagen" />
                 </div>
 
                 {{-- Descripción --}}

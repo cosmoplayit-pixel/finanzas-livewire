@@ -149,7 +149,7 @@ class Facturas extends Component
     public function togglePanel(int $facturaId): void
     {
         $isOpen = (bool) ($this->panelsOpen[$facturaId] ?? false);
-        $this->panelsOpen[$facturaId] = ! $isOpen;
+        $this->panelsOpen[$facturaId] = !$isOpen;
     }
 
     public function toggleAllPanels(bool $expand): void
@@ -205,12 +205,12 @@ class Facturas extends Component
     // Helpers formato.
     protected function money(float $n): string
     {
-        return 'Bs '.number_format($n, 2, ',', '.');
+        return 'Bs ' . number_format($n, 2, ',', '.');
     }
 
     protected function pct(float $n): string
     {
-        return number_format($n, 2, ',', '.').'%';
+        return number_format($n, 2, ',', '.') . '%';
     }
 
     protected function dt($d): string
@@ -272,7 +272,8 @@ class Facturas extends Component
                 } else {
                     $this->monto = FacturaFinance::retencionPendiente($factura);
                 }
-                $this->monto_formatted = $this->monto > 0 ? number_format($this->monto, 2, ',', '.') : '';
+                $this->monto_formatted =
+                    $this->monto > 0 ? number_format($this->monto, 2, ',', '.') : '';
             }
         }
         $this->recalcImpactoPago();
@@ -326,12 +327,12 @@ class Facturas extends Component
         }
 
         // 2) Impacto Banco
-        if (! $this->banco_id) {
+        if (!$this->banco_id) {
             return;
         }
 
         $banco = \App\Models\Banco::find($this->banco_id);
-        if (! $banco) {
+        if (!$banco) {
             return;
         }
 
@@ -395,7 +396,7 @@ class Facturas extends Component
     private function normalizeFilter(array $values): array
     {
         $values = array_map('strval', $values);
-        $values = array_values(array_filter($values, fn ($v) => $v !== ''));
+        $values = array_values(array_filter($values, fn($v) => $v !== ''));
 
         return array_values(array_unique($values));
     }
@@ -409,7 +410,7 @@ class Facturas extends Component
             'cerrada' => 'f_cerrada',
         ];
 
-        if (! isset($map[$group])) {
+        if (!isset($map[$group])) {
             return;
         }
 
@@ -465,6 +466,39 @@ class Facturas extends Component
         $this->foto_comprobante = null;
     }
 
+    // Modal: editar factura.
+    public function openEditFactura(int $id): void
+    {
+        $factura = Factura::with('proyecto')->findOrFail($id);
+
+        if ((int) ($factura->proyecto?->empresa_id ?? 0) !== (int) $this->empresaId()) {
+            abort(403);
+        }
+
+        $this->resetErrorBag();
+        $this->resetValidation();
+
+        $this->facturaEditId = $factura->id;
+        $this->entidad_id = $factura->proyecto?->entidad_id;
+        $this->proyecto_id = $factura->proyecto_id;
+        $this->numero = $factura->numero;
+        $this->fecha_emision = $factura->fecha_emision?->format('Y-m-d\TH:i');
+        $this->monto_facturado = (float) $factura->monto_facturado;
+        $this->monto_facturado_formatted = number_format(
+            (float) $factura->monto_facturado,
+            2,
+            ',',
+            '.',
+        );
+        $this->retencion_porcentaje = (float) ($factura->proyecto?->retencion ?? 0);
+        $this->retencion_monto = (float) $factura->retencion;
+        $this->monto_neto = (float) $factura->monto_facturado - (float) $factura->retencion;
+        $this->observacion_factura = $factura->observacion;
+        $this->foto_comprobante = null;
+
+        $this->openFacturaModal = true;
+    }
+
     // Modal: cerrar factura.
     public function closeFactura(): void
     {
@@ -489,10 +523,14 @@ class Facturas extends Component
         $this->resetValidation();
     }
 
-    // Guardar factura.
+    // Guardar factura (crear o editar).
     public function saveFactura(FacturaService $service): void
     {
-        $this->authorize('create', Factura::class);
+        $isEdit = $this->facturaEditId !== null;
+
+        if (! $isEdit) {
+            $this->authorize('create', Factura::class);
+        }
 
         $this->validate([
             'entidad_id' => 'required|exists:entidades,id',
@@ -501,39 +539,58 @@ class Facturas extends Component
             'fecha_emision' => 'required|date',
             'monto_facturado' => 'required|numeric|min:0.01|max:999999999.99',
             'observacion_factura' => 'nullable|string|max:2000',
-            'foto_comprobante' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'foto_comprobante' =>
+                ($isEdit ? 'nullable' : 'required') . '|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
         try {
             $path = null;
 
             if ($this->foto_comprobante) {
-                $path = $this->foto_comprobante->store('empresas/'.$this->empresaId().'/facturas/nuevas', 'public');
+                $path = $this->foto_comprobante->store(
+                    'empresas/' . $this->empresaId() . '/facturas/nuevas',
+                    'public',
+                );
             }
 
-            $nuevaFactura = $service->crearFactura(
-                [
-                    'entidad_id' => $this->entidad_id,
-                    'proyecto_id' => $this->proyecto_id,
-                    'numero' => $this->numero,
-                    'fecha_emision' => $this->fecha_emision,
-                    'monto_facturado' => $this->monto_facturado,
-                    'observacion_factura' => $this->observacion_factura,
-                    'foto_comprobante' => $path,
-                ],
-                auth()->user()
-            );
+            $payload = [
+                'entidad_id' => $this->entidad_id,
+                'proyecto_id' => $this->proyecto_id,
+                'numero' => $this->numero,
+                'fecha_emision' => $this->fecha_emision,
+                'monto_facturado' => $this->monto_facturado,
+                'observacion_factura' => $this->observacion_factura,
+                'foto_comprobante' => $path,
+            ];
 
-            $this->closeFactura();
+            if ($isEdit) {
+                $factura = Factura::findOrFail($this->facturaEditId);
+                $service->actualizarFactura($factura, $payload, auth()->user());
 
-            // Auto-expandir la nueva factura y contraer otros
-            $this->panelsOpen = [$nuevaFactura->id => true];
-            $this->factura_id = $nuevaFactura->id;
-            $this->pago_id = null;
-            $this->highlight_factura_id = $nuevaFactura->id;
+                $this->closeFactura();
+                $this->dispatch(
+                    'toast',
+                    type: 'success',
+                    message: 'Factura actualizada correctamente.',
+                );
+            } else {
+                $nuevaFactura = $service->crearFactura($payload, auth()->user());
 
-            $this->resetPage();
-            $this->dispatch('toast', type: 'success', message: 'Factura registrada correctamente.');
+                $this->closeFactura();
+
+                // Auto-expandir la nueva factura y contraer otros
+                $this->panelsOpen = [$nuevaFactura->id => true];
+                $this->factura_id = $nuevaFactura->id;
+                $this->pago_id = null;
+                $this->highlight_factura_id = $nuevaFactura->id;
+
+                $this->resetPage();
+                $this->dispatch(
+                    'toast',
+                    type: 'success',
+                    message: 'Factura registrada correctamente.',
+                );
+            }
         } catch (DomainException $e) {
             $this->addError('proyecto_id', $e->getMessage());
         }
@@ -556,7 +613,7 @@ class Facturas extends Component
         $this->resetErrorBag('entidad_id,proyecto_id');
         $this->resetValidation('entidad_id', 'proyecto_id');
 
-        if (! $value) {
+        if (!$value) {
             $this->retencion_porcentaje = 0;
             $this->recalcularRetencionUI();
 
@@ -567,7 +624,7 @@ class Facturas extends Component
             ->select(['id', 'retencion', 'empresa_id', 'entidad_id'])
             ->find($value);
 
-        if (! $proyecto) {
+        if (!$proyecto) {
             $this->retencion_porcentaje = 0;
             $this->recalcularRetencionUI();
 
@@ -584,11 +641,14 @@ class Facturas extends Component
         }
 
         $empresaId = $this->empresaId();
-        if (! $empresaId || (int) $proyecto->empresa_id !== (int) $empresaId) {
+        if (!$empresaId || (int) $proyecto->empresa_id !== (int) $empresaId) {
             $this->retencion_porcentaje = 0;
             $this->proyecto_id = '';
             $this->recalcularRetencionUI();
-            $this->addError('proyecto_id', 'No tienes permiso para usar proyectos de otra empresa.');
+            $this->addError(
+                'proyecto_id',
+                'No tienes permiso para usar proyectos de otra empresa.',
+            );
 
             return;
         }
@@ -705,7 +765,10 @@ class Facturas extends Component
             $path = null;
 
             if ($this->pago_foto_comprobante) {
-                $path = $this->pago_foto_comprobante->store('empresas/'.$this->empresaId().'/facturas/facturas_pagas', 'public');
+                $path = $this->pago_foto_comprobante->store(
+                    'empresas/' . $this->empresaId() . '/facturas/facturas_pagas',
+                    'public',
+                );
             }
 
             $nuevoPago = $service->registrarPago(
@@ -720,7 +783,7 @@ class Facturas extends Component
                     'fecha_pago' => $this->fecha_pago,
                     'foto_comprobante' => $path,
                 ],
-                auth()->user()
+                auth()->user(),
             );
 
             $this->closePago();
@@ -736,9 +799,14 @@ class Facturas extends Component
             $f = Factura::with('pagos')->find($factura->id);
             $estados = is_array($this->f_cerrada) ? $this->f_cerrada : [];
 
-            $isCerrada = (FacturaFinance::saldo($f) <= 0 && FacturaFinance::retencionPendiente($f) <= 0);
+            $isCerrada =
+                FacturaFinance::saldo($f) <= 0 && FacturaFinance::retencionPendiente($f) <= 0;
 
-            if ($isCerrada && in_array('abierta', $estados, true) && ! in_array('cerrada', $estados, true)) {
+            if (
+                $isCerrada &&
+                in_array('abierta', $estados, true) &&
+                !in_array('cerrada', $estados, true)
+            ) {
                 $this->pendingRemoval[(string) $factura->id] = true;
                 $this->dispatch('factura:start-removal-timer', facturaId: $factura->id);
             }
@@ -781,7 +849,7 @@ class Facturas extends Component
 
     public function confirmarEliminarFactura(FacturaService $service): void
     {
-        if (! $this->deleteFacturaId) {
+        if (!$this->deleteFacturaId) {
             return;
         }
 
@@ -794,7 +862,7 @@ class Facturas extends Component
         }
 
         $user = auth()->user();
-        if (! $user || ! Hash::check($this->deleteFacturaPassword, (string) $user->password)) {
+        if (!$user || !Hash::check($this->deleteFacturaPassword, (string) $user->password)) {
             $this->addError('deleteFacturaPassword', 'Contraseña incorrecta.');
 
             return;
@@ -824,7 +892,8 @@ class Facturas extends Component
         $this->authorize('delete', $pago);
 
         $facturaLabel = $pago->factura
-            ? ($pago->factura->numero ?: ('Factura #'.$pago->factura->id))
+            ? ($pago->factura->numero ?:
+            'Factura #' . $pago->factura->id)
             : 'Factura —';
 
         $montoLabel = $this->money((float) ($pago->monto ?? 0));
@@ -843,26 +912,32 @@ class Facturas extends Component
 
         try {
             $service->eliminarPago($pago, auth()->user());
-            $this->dispatch('toast', type: 'success', message: 'Pago eliminado, se revertira al banco');
+            $this->dispatch(
+                'toast',
+                type: 'success',
+                message: 'Pago eliminado, se revertira al banco',
+            );
             $this->resetPage();
         } catch (DomainException $e) {
             $msg = $e->getMessage();
 
             // Si el error es por saldo insuficiente del banco, mostramos SweetAlert específico
             if (str_contains($msg, 'saldo del banco quedaría negativo')) {
-                $bancoNombre = $pago->banco?->nombre ?? $pago->destino_banco_nombre_snapshot ?? 'Banco';
+                $bancoNombre =
+                    $pago->banco?->nombre ?? ($pago->destino_banco_nombre_snapshot ?? 'Banco');
                 $moneda = $pago->moneda ?? '';
                 $montoMov = (float) ($pago->monto ?? 0);
                 $saldoBanco = (float) ($pago->banco?->monto ?? 0);
                 $faltante = max(0, $montoMov - $saldoBanco);
 
-                $fmtMonto = number_format($montoMov, 2, ',', '.').' '.$moneda;
-                $fmtSaldo = number_format($saldoBanco, 2, ',', '.').' '.$moneda;
-                $fmtFaltante = number_format($faltante, 2, ',', '.').' '.$moneda;
+                $fmtMonto = number_format($montoMov, 2, ',', '.') . ' ' . $moneda;
+                $fmtSaldo = number_format($saldoBanco, 2, ',', '.') . ' ' . $moneda;
+                $fmtFaltante = number_format($faltante, 2, ',', '.') . ' ' . $moneda;
 
                 $html = "El banco <strong>{$bancoNombre}</strong> no tiene saldo suficiente para revertir este movimiento.";
                 $html .= '<br><br>';
-                $html .= "<table style='margin: 0 auto; width: auto; min-width: 220px; font-size:0.9em; text-align:left; border-collapse:collapse;'>";
+                $html .=
+                    "<table style='margin: 0 auto; width: auto; min-width: 220px; font-size:0.9em; text-align:left; border-collapse:collapse;'>";
                 $html .= "<tr><td style='padding:4px 16px 4px 0; color:#6b7280;'>Saldo disponible:</td><td style='padding:4px 0; font-weight:600; text-align:right;'>{$fmtSaldo}</td></tr>";
                 $html .= "<tr><td style='padding:4px 16px 4px 0; color:#6b7280;'>Monto a revertir:</td><td style='padding:4px 0; font-weight:600; text-align:right;'>{$fmtMonto}</td></tr>";
                 $html .= "<tr style='border-top:1px solid #e5e7eb;'><td style='padding:8px 16px 4px 0; color:#ef4444; font-weight:600;'>Falta:</td><td style='padding:8px 0 4px; font-weight:700; color:#ef4444; text-align:right;'>{$fmtFaltante}</td></tr>";
@@ -906,28 +981,47 @@ class Facturas extends Component
         $badges = [];
 
         if ($cerrada) {
-            $badges[] = ['text' => 'Completado', 'class' => 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200'];
+            $badges[] = [
+                'text' => 'Completado',
+                'class' => 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200',
+            ];
         } else {
             if ($estadoPago === 'Pendiente') {
-                $badges[] = ['text' => 'Pagos 0%', 'class' => 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200'];
+                $badges[] = [
+                    'text' => 'Pagos 0%',
+                    'class' =>
+                        'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200',
+                ];
             } elseif ($estadoPago === 'Parcial') {
-                $cls = ($pct == 100)
-                    ? 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200'
-                    : (($pct > 0)
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
-                        : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200');
+                $cls =
+                    $pct == 100
+                        ? 'bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-200'
+                        : ($pct > 0
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
+                            : 'bg-gray-100 text-gray-800 dark:bg-neutral-700 dark:text-neutral-200');
 
                 $badges[] = ['text' => "Pagos {$pct}%", 'class' => $cls];
             } else {
-                $badges[] = ['text' => 'Pagada (Neto)', 'class' => 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200'];
+                $badges[] = [
+                    'text' => 'Pagada (Neto)',
+                    'class' =>
+                        'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200',
+                ];
             }
         }
 
         if ($estadoRet) {
             if ($estadoRet === 'Retención pendiente') {
-                $badges[] = ['text' => $estadoRet, 'class' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200'];
+                $badges[] = [
+                    'text' => $estadoRet,
+                    'class' =>
+                        'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200',
+                ];
             } else {
-                $badges[] = ['text' => $estadoRet, 'class' => 'bg-lime-100 text-lime-800 dark:bg-lime-500/20 dark:text-lime-200'];
+                $badges[] = [
+                    'text' => $estadoRet,
+                    'class' => 'bg-lime-100 text-lime-800 dark:bg-lime-500/20 dark:text-lime-200',
+                ];
             }
         }
 
@@ -937,7 +1031,7 @@ class Facturas extends Component
     // VM: archivo (factura/pago).
     protected function buildFileVm(?string $path): ?array
     {
-        if (! $path) {
+        if (!$path) {
             return null;
         }
 
@@ -945,7 +1039,7 @@ class Facturas extends Component
         $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'webp', 'bmp'], true);
 
         return [
-            'url' => asset('storage/'.$path),
+            'url' => asset('storage/' . $path),
             'is_image' => $isImage,
         ];
     }
@@ -962,34 +1056,41 @@ class Facturas extends Component
 
         $pagoFile = $this->buildFileVm($f->foto_comprobante);
 
-        $pagosVm = ($f->pagos ?? collect())->map(function ($pg) {
-            $file = $this->buildFileVm($pg->foto_comprobante);
+        $pagosVm = ($f->pagos ?? collect())
+            ->map(function ($pg) {
+                $file = $this->buildFileVm($pg->foto_comprobante);
 
-            $cuenta = $pg->destino_numero_cuenta_snapshot ?? ($pg->banco?->numero_cuenta ?? null);
-            $moneda = $pg->destino_moneda_snapshot ?? ($pg->banco?->moneda ?? null);
+                $cuenta =
+                    $pg->destino_numero_cuenta_snapshot ?? ($pg->banco?->numero_cuenta ?? null);
+                $moneda = $pg->destino_moneda_snapshot ?? ($pg->banco?->moneda ?? null);
 
-            return [
-                'id' => (int) $pg->id,
-                'destino_nombre' => $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? 'Caja Chica'),
-                'destino_tooltip' => $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? '—'),
-                'destino_cuenta' => $cuenta ?: '—',
-                'destino_moneda' => $moneda ?: null,
-                'destino_titular' => $pg->destino_titular_snapshot ?: null,
+                return [
+                    'id' => (int) $pg->id,
+                    'destino_nombre' =>
+                        $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? 'Caja Chica'),
+                    'destino_tooltip' =>
+                        $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? '—'),
+                    'destino_cuenta' => $cuenta ?: '—',
+                    'destino_moneda' => $moneda ?: null,
+                    'destino_titular' => $pg->destino_titular_snapshot ?: null,
 
-                'fecha' => $this->dt($pg->fecha_pago),
-                'monto' => $this->money((float) ($pg->monto ?? 0)),
-                'metodo' => $pg->metodo_pago ?? '—',
-                'nro_operacion' => $pg->nro_operacion ?: '—',
-                'observacion' => $pg->observacion ?: '—',
+                    'fecha' => $this->dt($pg->fecha_pago),
+                    'monto' => $this->money((float) ($pg->monto ?? 0)),
+                    'metodo' => $pg->metodo_pago ?? '—',
+                    'nro_operacion' => $pg->nro_operacion ?: '—',
+                    'observacion' => $pg->observacion ?: '—',
 
-                'file' => $file,
+                    'file' => $file,
 
-                'tipo_text' => $pg->tipo === 'normal' ? 'Pago Normal' : 'Pago de Retención',
-                'tipo_class' => $pg->tipo === 'normal'
-                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
-                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200',
-            ];
-        })->values()->all();
+                    'tipo_text' => $pg->tipo === 'normal' ? 'Pago Normal' : 'Pago de Retención',
+                    'tipo_class' =>
+                        $pg->tipo === 'normal'
+                            ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200',
+                ];
+            })
+            ->values()
+            ->all();
 
         return [
             'id' => (int) $f->id,
@@ -999,9 +1100,9 @@ class Facturas extends Component
             'retencion_pct' => $this->pct((float) ($proy?->retencion ?? 0)),
             'contrato' => $this->money((float) ($proy?->monto ?? 0)),
 
-            'numero' => $f->numero ? ('Nro: '.$f->numero) : 'Nro: —',
+            'numero' => $f->numero ? 'Nro: ' . $f->numero : 'Nro: —',
             'numero_raw' => $f->numero ?? '—',
-            'fecha' => 'Fecha: '.$this->dt($f->fecha_emision),
+            'fecha' => 'Fecha: ' . $this->dt($f->fecha_emision),
             'monto_facturado' => $this->money((float) $f->monto_facturado),
             'retencion_monto' => $this->money((float) ($f->retencion ?? 0)),
             'detalle' => $f->observacion ?? '—',
@@ -1026,7 +1127,7 @@ class Facturas extends Component
     {
         $empresaId = $this->empresaId();
 
-        if (! $empresaId) {
+        if (!$empresaId) {
             $this->totales = [
                 'facturado' => 0.0,
                 'pagado_total' => 0.0,
@@ -1070,7 +1171,7 @@ class Facturas extends Component
 
         // Lógica de historial para Saldo y Retención
         $paramsHist = $params;
-        if (! $this->dateFilterModified) {
+        if (!$this->dateFilterModified) {
             $paramsHist['f_fecha_desde'] = null;
             $paramsHist['f_fecha_hasta'] = null;
         }
@@ -1088,12 +1189,12 @@ class Facturas extends Component
             if ($from->isStartOfYear() && $to->isEndOfYear() && $from->year === $to->year) {
                 $dateLabel = (string) $from->year;
             } else {
-                $dateLabel = $from->format('d/m/y').' - '.$to->format('d/m/y');
+                $dateLabel = $from->format('d/m/y') . ' - ' . $to->format('d/m/y');
             }
         } elseif ($this->f_fecha_desde) {
-            $dateLabel = 'Desde '.\Carbon\Carbon::parse($this->f_fecha_desde)->format('d/m/y');
+            $dateLabel = 'Desde ' . \Carbon\Carbon::parse($this->f_fecha_desde)->format('d/m/y');
         } elseif ($this->f_fecha_hasta) {
-            $dateLabel = 'Hasta '.\Carbon\Carbon::parse($this->f_fecha_hasta)->format('d/m/y');
+            $dateLabel = 'Hasta ' . \Carbon\Carbon::parse($this->f_fecha_hasta)->format('d/m/y');
         } else {
             $dateLabel = 'Histórico';
         }
@@ -1104,22 +1205,22 @@ class Facturas extends Component
 
         // Carga completa.
         $models = collect();
-        if (! empty($ids)) {
+        if (!empty($ids)) {
             $rows = Factura::query()
                 ->with([
                     'proyecto.entidad',
-                    'pagos' => fn ($q) => $q->orderBy('fecha_pago', 'asc'),
+                    'pagos' => fn($q) => $q->orderBy('fecha_pago', 'asc'),
                     'pagos.banco',
                 ])
                 ->whereIn('id', $ids)
                 ->get()
                 ->keyBy('id');
 
-            $models = collect($ids)->map(fn ($id) => $rows->get($id))->filter()->values();
+            $models = collect($ids)->map(fn($id) => $rows->get($id))->filter()->values();
         }
 
         // ViewModels.
-        $rowsVm = $models->map(fn (Factura $f) => $this->mapFacturaVm($f))->values();
+        $rowsVm = $models->map(fn(Factura $f) => $this->mapFacturaVm($f))->values();
 
         // Paginator mantiene metadata.
         $idsPaginator->setCollection($models);
@@ -1135,7 +1236,13 @@ class Facturas extends Component
         $entidades = Entidad::query()
             ->where('active', true)
             ->where('empresa_id', $empresaId)
-            ->whereHas('proyectos', fn ($q) => $q->where('active', true)->where('tipo', 'Ejecucion')->where('empresa_id', $empresaId))
+            ->whereHas(
+                'proyectos',
+                fn($q) => $q
+                    ->where('active', true)
+                    ->where('tipo', 'Ejecucion')
+                    ->where('empresa_id', $empresaId),
+            )
             ->orderBy('nombre')
             ->get();
 
@@ -1143,7 +1250,7 @@ class Facturas extends Component
             ->where('active', true)
             ->where('tipo', 'Ejecucion')
             ->where('empresa_id', $empresaId)
-            ->when($this->entidad_id, fn ($q) => $q->where('entidad_id', $this->entidad_id))
+            ->when($this->entidad_id, fn($q) => $q->where('entidad_id', $this->entidad_id))
             ->orderBy('nombre')
             ->get();
 

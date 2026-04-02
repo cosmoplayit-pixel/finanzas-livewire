@@ -110,6 +110,66 @@ class FacturaService
     }
 
     /**
+     * Actualiza una factura existente sin pagos.
+     *
+     * @throws DomainException Si la factura tiene pagos o viola reglas de negocio
+     */
+    public function actualizarFactura(Factura $factura, array $data, User $user): Factura
+    {
+        // Control multi-empresa
+        $proyecto = Proyecto::query()
+            ->select(['id', 'empresa_id', 'entidad_id', 'retencion'])
+            ->findOrFail($data['proyecto_id']);
+
+        if ((int) $proyecto->entidad_id !== (int) $data['entidad_id']) {
+            throw new DomainException('El proyecto no pertenece a la entidad seleccionada.');
+        }
+
+        if ($user->empresa_id === null || (int) $proyecto->empresa_id !== (int) $user->empresa_id) {
+            throw new DomainException('No tienes permiso para modificar facturas de otra empresa.');
+        }
+
+        // Doble-check: no debe tener pagos
+        if ($factura->pagos()->exists()) {
+            throw new DomainException('No se puede modificar una factura que ya tiene pagos registrados.');
+        }
+
+        $facturado = round((float) $data['monto_facturado'], 2);
+
+        $porcentajeRetencion = (float) ($proyecto->retencion ?? 0);
+        $retencionMonto = 0.0;
+
+        if ($porcentajeRetencion > 0) {
+            $retencionMonto = round($facturado * ($porcentajeRetencion / 100), 2);
+        }
+
+        if ($retencionMonto >= $facturado) {
+            throw new DomainException('La retención no puede ser igual o mayor al monto facturado.');
+        }
+
+        $updateData = [
+            'proyecto_id' => $data['proyecto_id'],
+            'numero'       => $data['numero'] ?? null,
+            'fecha_emision' => $data['fecha_emision'] ?? null,
+            'monto_facturado' => $facturado,
+            'retencion'    => $retencionMonto,
+            'observacion'  => $data['observacion_factura'] ?? null,
+        ];
+
+        // Solo reemplazar foto si se subió una nueva
+        if (! empty($data['foto_comprobante'])) {
+            if (! empty($factura->foto_comprobante)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($factura->foto_comprobante);
+            }
+            $updateData['foto_comprobante'] = $data['foto_comprobante'];
+        }
+
+        $factura->update($updateData);
+
+        return $factura->fresh();
+    }
+
+    /**
      * Elimina una factura si no tiene pagos registrados.
      * También elimina el archivo del comprobante del storage.
      *

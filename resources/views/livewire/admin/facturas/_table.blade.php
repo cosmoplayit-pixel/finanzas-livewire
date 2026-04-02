@@ -459,6 +459,28 @@
                                     </div>
                                 @endif
 
+                                {{-- Botón editar factura (solo si no tiene pagos) --}}
+                                @can('facturas.pay')
+                                    <button type="button"
+                                        @if ($r['sin_pagos']) wire:click="openEditFactura({{ $r['id'] }})" @endif
+                                        wire:loading.attr="disabled" wire:target="openEditFactura({{ $r['id'] }})"
+                                        wire:loading.class="cursor-not-allowed opacity-50"
+                                        wire:loading.class.remove="cursor-pointer hover:bg-amber-50 hover:border-amber-400"
+                                        @disabled(!$r['sin_pagos'])
+                                        class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition
+                                        {{ !$r['sin_pagos']
+                                            ? 'bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700'
+                                            : 'bg-white text-amber-600 border-amber-300 cursor-pointer hover:bg-amber-50 hover:border-amber-400 dark:bg-neutral-900 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-900/20' }}"
+                                        title="{{ !$r['sin_pagos'] ? 'Tiene pagos: no se puede editar' : 'Editar factura' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                            fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                            <path d="m15 5 4 4" />
+                                        </svg>
+                                    </button>
+                                @endcan
+
                                 {{-- Botón eliminar factura (solo si no tiene pagos) --}}
                                 @can('facturas.delete')
                                     <button type="button"

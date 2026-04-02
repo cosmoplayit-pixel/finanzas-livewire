@@ -28,7 +28,8 @@
             $bloqueado = $saldo <= 0 && $retPend <= 0;
         @endphp
 
-        <div x-data="{ showFullProject: false, showFullDetalle: false }"
+        @php $isOpen = $panelsOpen[$f->id] ?? false; @endphp
+        <div x-data="{ showFullProject: false, showFullDetalle: false }" wire:key="factura-card-{{ $f->id }}"
             class="border rounded-lg p-4 bg-white dark:bg-neutral-900 dark:border-neutral-800 transition-all
              {{ isset($factura_id) && $factura_id == $f->id ? 'ring-2 ring-indigo-500 shadow-md' : '' }}"
             @if (isset($factura_id) && $factura_id == $f->id) id="factura-mobile-target-{{ $f->id }}" @endif>
@@ -283,184 +284,206 @@
                     @endcan
                 </div>
 
+
+                @can('facturas.pay')
+                    @php $sinPagos = $f->pagos->isEmpty(); @endphp
+                    <div class="grid grid-cols-1">
+                        <button type="button"
+                            @if ($sinPagos) wire:click="openEditFactura({{ $f->id }})" @endif
+                            @disabled(!$sinPagos)
+                            class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded border transition font-medium text-sm
+                            {{ $sinPagos
+                                ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-300 cursor-pointer'
+                                : 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed dark:bg-neutral-800 dark:border-neutral-700 dark:text-neutral-500' }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+                                <path d="m15 5 4 4" />
+                            </svg>
+                            {{ $sinPagos ? 'Editar factura' : 'Editar (tiene pagos)' }}
+                        </button>
+                    </div>
+                @endcan
+
+
                 <div class="grid grid-cols-1">
-                    <button type="button"
+                    <button type="button" wire:click="togglePanel({{ $f->id }})"
                         class="w-full px-3 py-2 rounded text-sm font-medium
                       border border-gray-300 text-gray-700 hover:bg-gray-50
-                      dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 cursor-pointer"
-                        @click="$wire.togglePanel({{ $f->id }})">
-                        <span x-show="!@js($panelsOpen[$f->id] ?? false)">Ver pagos</span>
-                        <span x-show="@js($panelsOpen[$f->id] ?? false)" x-cloak>Ocultar pagos</span>
+                      dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800 cursor-pointer">
+                        {{ $isOpen ? 'Ocultar pagos' : 'Ver pagos' }}
                     </button>
                 </div>
             </div>
 
             {{-- Pagos (detalle) --}}
-            <div x-show="@js($panelsOpen[$f->id] ?? false)" x-cloak class="mt-4 space-y-2">
-                <div class="text-xs text-gray-500 dark:text-neutral-400">
-                    Pagos realizados: {{ $f->pagos?->count() ?? 0 }}
-                </div>
+            @if ($isOpen)
+                <div class="mt-4 space-y-2">
+                    <div class="text-xs text-gray-500 dark:text-neutral-400">
+                        Pagos realizados: {{ $f->pagos?->count() ?? 0 }}
+                    </div>
 
-                @forelse(($f->pagos ?? collect()) as $pg)
-                    @php
-                        $bancoNombre = $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? '—');
-                        $cuenta = $pg->destino_numero_cuenta_snapshot ?? ($pg->banco?->numero_cuenta ?? null);
-                        $moneda = $pg->destino_moneda_snapshot ?? ($pg->banco?->moneda ?? null);
-                        $titular = $pg->destino_titular_snapshot ?? null;
+                    @forelse(($f->pagos ?? collect()) as $pg)
+                        @php
+                            $bancoNombre = $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? '—');
+                            $cuenta = $pg->destino_numero_cuenta_snapshot ?? ($pg->banco?->numero_cuenta ?? null);
+                            $moneda = $pg->destino_moneda_snapshot ?? ($pg->banco?->moneda ?? null);
+                            $titular = $pg->destino_titular_snapshot ?? null;
 
-                        $tipoLabel = $pg->tipo === 'normal' ? 'Pago Normal' : 'Pago de Retención';
-                        $tipoBadge =
-                            $pg->tipo === 'normal'
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
-                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200';
-                    @endphp
+                            $tipoLabel = $pg->tipo === 'normal' ? 'Pago Normal' : 'Pago de Retención';
+                            $tipoBadge =
+                                $pg->tipo === 'normal'
+                                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-200'
+                                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-200';
+                        @endphp
 
-                    <div class="border rounded-lg p-3 bg-white dark:bg-neutral-900 dark:border-neutral-800">
-                        {{-- Header: Fecha izquierda | Tipo derecha --}}
-                        <div class="flex items-center justify-between gap-3">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <span class="text-[11px] font-mono text-gray-500 dark:text-neutral-400">
-                                    #{{ $loop->iteration }}
-                                </span>
-                                <div class="text-sm font-semibold truncate">
-                                    {{ $pg->fecha_pago ? $pg->fecha_pago->format('Y-m-d H:i') : '—' }}
+                        <div class="border rounded-lg p-3 bg-white dark:bg-neutral-900 dark:border-neutral-800">
+                            {{-- Header: Fecha izquierda | Tipo derecha --}}
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="text-[11px] font-mono text-gray-500 dark:text-neutral-400">
+                                        #{{ $loop->iteration }}
+                                    </span>
+                                    <div class="text-sm font-semibold truncate">
+                                        {{ $pg->fecha_pago ? $pg->fecha_pago->format('Y-m-d H:i') : '—' }}
+                                    </div>
                                 </div>
-                            </div>
 
-                            {{-- Tipo --}}
-                            @if ($pg->tipo === 'normal')
-                                <span
-                                    class="shrink-0 px-2 py-1 rounded text-xs bg-blue-100 text-blue-800
+                                {{-- Tipo --}}
+                                @if ($pg->tipo === 'normal')
+                                    <span
+                                        class="shrink-0 px-2 py-1 rounded text-xs bg-blue-100 text-blue-800
                   dark:bg-blue-500/20 dark:text-blue-200">
-                                    Pago Normal
-                                </span>
-                            @else
-                                <span
-                                    class="shrink-0 px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800
+                                        Pago Normal
+                                    </span>
+                                @else
+                                    <span
+                                        class="shrink-0 px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800
                   dark:bg-yellow-500/20 dark:text-yellow-200">
-                                    Pago de Retención
-                                </span>
-                            @endif
-                        </div>
-
-                        {{-- Detalle: filas label / value --}}
-                        <div class="mt-3 grid grid-cols-1 gap-2">
-                            {{-- Monto --}}
-                            <div class="grid grid-cols-[110px,1fr] gap-2">
-                                <div class="text-xs text-gray-500 dark:text-neutral-400">Monto</div>
-                                <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                                    Bs {{ number_format((float) $pg->monto, 2, ',', '.') }}
-                                </div>
+                                        Pago de Retención
+                                    </span>
+                                @endif
                             </div>
 
-                            {{-- Método --}}
-                            <div class="grid grid-cols-[110px,1fr] gap-2">
-                                <div class="text-xs text-gray-500 dark:text-neutral-400">Método</div>
-                                <div class="text-xs text-gray-800 dark:text-neutral-200">
-                                    {{ $pg->metodo_pago ?? '—' }}
-                                </div>
-                            </div>
-
-                            {{-- Banco --}}
-                            <div class="grid grid-cols-[110px,1fr] gap-2">
-                                <div class="text-xs text-gray-500 dark:text-neutral-400">Banco</div>
-                                <div class="text-xs text-gray-800 dark:text-neutral-200 truncate"
-                                    title="{{ $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? '—') }}">
-                                    {{ $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? '—') }}
-                                </div>
-                            </div>
-
-                            {{-- Cuenta / Moneda --}}
-                            <div class="grid grid-cols-[110px,1fr] gap-2">
-                                <div class="text-xs text-gray-500 dark:text-neutral-400">Cuenta</div>
-                                <div class="text-xs text-gray-800 dark:text-neutral-200">
-                                    {{ $pg->destino_numero_cuenta_snapshot ?? ($pg->banco?->numero_cuenta ?? '—') }}
-                                    @php
-                                        $moneda = $pg->destino_moneda_snapshot ?? ($pg->banco?->moneda ?? null);
-                                    @endphp
-                                    @if ($moneda)
-                                        <span class="text-gray-500 dark:text-neutral-400">|
-                                            {{ $moneda }}</span>
-                                    @endif
-                                </div>
-                            </div>
-
-                            {{-- Operación --}}
-                            <div class="grid grid-cols-[110px,1fr] gap-2">
-                                <div class="text-xs text-gray-500 dark:text-neutral-400">Operación</div>
-                                <div class="text-xs text-gray-800 dark:text-neutral-200">
-                                    {{ $pg->nro_operacion ?? '—' }}
-                                </div>
-                            </div>
-
-                            {{-- Titular --}}
-                            @if ($pg->destino_titular_snapshot)
+                            {{-- Detalle: filas label / value --}}
+                            <div class="mt-3 grid grid-cols-1 gap-2">
+                                {{-- Monto --}}
                                 <div class="grid grid-cols-[110px,1fr] gap-2">
-                                    <div class="text-xs text-gray-500 dark:text-neutral-400">Titular</div>
+                                    <div class="text-xs text-gray-500 dark:text-neutral-400">Monto</div>
+                                    <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
+                                        Bs {{ number_format((float) $pg->monto, 2, ',', '.') }}
+                                    </div>
+                                </div>
+
+                                {{-- Método --}}
+                                <div class="grid grid-cols-[110px,1fr] gap-2">
+                                    <div class="text-xs text-gray-500 dark:text-neutral-400">Método</div>
+                                    <div class="text-xs text-gray-800 dark:text-neutral-200">
+                                        {{ $pg->metodo_pago ?? '—' }}
+                                    </div>
+                                </div>
+
+                                {{-- Banco --}}
+                                <div class="grid grid-cols-[110px,1fr] gap-2">
+                                    <div class="text-xs text-gray-500 dark:text-neutral-400">Banco</div>
                                     <div class="text-xs text-gray-800 dark:text-neutral-200 truncate"
-                                        title="{{ $pg->destino_titular_snapshot }}">
-                                        {{ $pg->destino_titular_snapshot }}
+                                        title="{{ $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? '—') }}">
+                                        {{ $pg->destino_banco_nombre_snapshot ?? ($pg->banco?->nombre ?? '—') }}
                                     </div>
                                 </div>
-                            @endif
 
-                            {{-- Observación --}}
-                            @if ($pg->observacion)
+                                {{-- Cuenta / Moneda --}}
                                 <div class="grid grid-cols-[110px,1fr] gap-2">
-                                    <div class="text-xs text-gray-500 dark:text-neutral-400">Obs.</div>
-                                    <div class="text-xs text-gray-800 dark:text-neutral-200 line-clamp-2"
-                                        title="{{ $pg->observacion }}">
-                                        {{ $pg->observacion }}
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- Respaldo Pago --}}
-                            @if ($pg->foto_comprobante)
-                                @php
-                                    $extPagoMob = strtolower(pathinfo($pg->foto_comprobante, PATHINFO_EXTENSION));
-                                    $isImagePagoMob = in_array($extPagoMob, ['jpg', 'jpeg', 'png', 'webp', 'bmp']);
-                                @endphp
-                                <div class="grid grid-cols-[110px,1fr] gap-2 mt-1">
-                                    <div class="text-xs text-gray-500 dark:text-neutral-400">Respaldo</div>
-                                    <div class="text-xs">
-                                        @if ($isImagePagoMob)
-                                            <button type="button"
-                                                class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer"
-                                                @click.stop="$wire.openFotoComprobante('{{ asset('storage/' . $pg->foto_comprobante) }}')">
-                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                </svg>
-                                                Ver Imagen
-                                            </button>
-                                        @else
-                                            <a href="{{ asset('storage/' . $pg->foto_comprobante) }}" target="_blank"
-                                                rel="noopener noreferrer"
-                                                class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer">
-                                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                Abrir PDF
-                                            </a>
+                                    <div class="text-xs text-gray-500 dark:text-neutral-400">Cuenta</div>
+                                    <div class="text-xs text-gray-800 dark:text-neutral-200">
+                                        {{ $pg->destino_numero_cuenta_snapshot ?? ($pg->banco?->numero_cuenta ?? '—') }}
+                                        @php
+                                            $moneda = $pg->destino_moneda_snapshot ?? ($pg->banco?->moneda ?? null);
+                                        @endphp
+                                        @if ($moneda)
+                                            <span class="text-gray-500 dark:text-neutral-400">|
+                                                {{ $moneda }}</span>
                                         @endif
                                     </div>
                                 </div>
-                            @endif
+
+                                {{-- Operación --}}
+                                <div class="grid grid-cols-[110px,1fr] gap-2">
+                                    <div class="text-xs text-gray-500 dark:text-neutral-400">Operación</div>
+                                    <div class="text-xs text-gray-800 dark:text-neutral-200">
+                                        {{ $pg->nro_operacion ?? '—' }}
+                                    </div>
+                                </div>
+
+                                {{-- Titular --}}
+                                @if ($pg->destino_titular_snapshot)
+                                    <div class="grid grid-cols-[110px,1fr] gap-2">
+                                        <div class="text-xs text-gray-500 dark:text-neutral-400">Titular</div>
+                                        <div class="text-xs text-gray-800 dark:text-neutral-200 truncate"
+                                            title="{{ $pg->destino_titular_snapshot }}">
+                                            {{ $pg->destino_titular_snapshot }}
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- Observación --}}
+                                @if ($pg->observacion)
+                                    <div class="grid grid-cols-[110px,1fr] gap-2">
+                                        <div class="text-xs text-gray-500 dark:text-neutral-400">Obs.</div>
+                                        <div class="text-xs text-gray-800 dark:text-neutral-200 line-clamp-2"
+                                            title="{{ $pg->observacion }}">
+                                            {{ $pg->observacion }}
+                                        </div>
+                                    </div>
+                                @endif
+
+                                {{-- Respaldo Pago --}}
+                                @if ($pg->foto_comprobante)
+                                    @php
+                                        $extPagoMob = strtolower(pathinfo($pg->foto_comprobante, PATHINFO_EXTENSION));
+                                        $isImagePagoMob = in_array($extPagoMob, ['jpg', 'jpeg', 'png', 'webp', 'bmp']);
+                                    @endphp
+                                    <div class="grid grid-cols-[110px,1fr] gap-2 mt-1">
+                                        <div class="text-xs text-gray-500 dark:text-neutral-400">Respaldo</div>
+                                        <div class="text-xs">
+                                            @if ($isImagePagoMob)
+                                                <button type="button"
+                                                    class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer"
+                                                    @click.stop="$wire.openFotoComprobante('{{ asset('storage/' . $pg->foto_comprobante) }}')">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    Ver Imagen
+                                                </button>
+                                            @else
+                                                <a href="{{ asset('storage/' . $pg->foto_comprobante) }}"
+                                                    target="_blank" rel="noopener noreferrer"
+                                                    class="text-emerald-600 dark:text-emerald-400 font-medium hover:underline inline-flex items-center gap-1 cursor-pointer">
+                                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    Abrir PDF
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
                         </div>
-                    </div>
-                @empty
-                    <div
-                        class="border rounded p-3 text-sm text-gray-600 dark:text-neutral-300 dark:border-neutral-800">
-                        No hay pagos registrados.
-                    </div>
-                @endforelse
-            </div>
+                    @empty
+                        <div
+                            class="border rounded p-3 text-sm text-gray-600 dark:text-neutral-300 dark:border-neutral-800">
+                            No hay pagos registrados.
+                        </div>
+                    @endforelse
+                </div>
+            @endif
         </div>
     @empty
         <div class="border rounded p-4 text-sm text-gray-600 dark:text-neutral-300 dark:border-neutral-800">

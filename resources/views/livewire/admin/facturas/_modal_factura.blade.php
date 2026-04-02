@@ -1,5 +1,6 @@
-{{-- MODAL: NUEVA FACTURA (create) --}}
-<x-ui.modal wire:key="facturas-create-modal" model="openFacturaModal" title="Nueva Factura"
+{{-- MODAL: FACTURA (create / edit) --}}
+<x-ui.modal wire:key="facturas-create-modal" model="openFacturaModal"
+    :title="$facturaEditId ? 'Editar Factura' : 'Nueva Factura'"
     maxWidth="sm:max-w-xl md:max-w-2xl" onClose="closeFactura">
 
     <div class="space-y-2 sm:space-y-3">
@@ -136,7 +137,9 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             {{-- Comprobante (Imagen o PDF) --}}
             <div>
-                <x-ui.scanner model="foto_comprobante" label="Respaldo" :file="$foto_comprobante" />
+                <x-ui.scanner model="foto_comprobante"
+                    :label="$facturaEditId ? 'Respaldo (opcional: reemplaza el actual)' : 'Respaldo'"
+                    :file="$foto_comprobante" />
             </div>
 
             {{-- Detalle --}}
@@ -193,8 +196,8 @@
             <button type="button" wire:click="saveFactura" wire:loading.attr="disabled"
                 wire:target="saveFactura,foto_comprobante"
                 x-bind:disabled="uploading || !$wire.entidad_id || !$wire.proyecto_id || !$wire.numero || !$wire
-                    .monto_facturado_formatted || !$wire
-                    .fecha_emision || !$wire.foto_comprobante"
+                    .monto_facturado_formatted || !$wire.fecha_emision
+                    || (!$wire.facturaEditId && !$wire.foto_comprobante)"
                 class="w-full sm:w-auto px-4 py-2 rounded-lg cursor-pointer
                        bg-black text-white hover:opacity-90
                        disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2">

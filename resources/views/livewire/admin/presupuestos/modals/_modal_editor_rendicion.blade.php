@@ -190,10 +190,7 @@
                                         <th class="p-3">Observación</th>
                                         <th class="p-3 text-right">Monto</th>
                                         <th class="p-3 text-right">Base</th>
-                                        <th class="p-3 text-center w-[60px]">Foto</th>
-                                        @can('agente_presupuestos.delete_movement')
-                                            <th class="p-3 text-center w-[60px]">Acc.</th>
-                                        @endcan
+                                        <th class="p-3 text-center w-[110px]">Acc.</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100 dark:divide-neutral-800/80">
@@ -263,42 +260,91 @@
                                                 @endif
                                             </td>
                                             <td class="p-3 text-center">
-                                                @if (!empty($m->foto_path))
-                                                    @php
-                                                        $ext = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION));
-                                                        $esPdf = $ext === 'pdf';
-                                                        $esImagen = in_array($ext, [
-                                                            'jpg',
-                                                            'jpeg',
-                                                            'png',
-                                                            'webp',
-                                                            'bmp',
-                                                        ]);
-                                                    @endphp
-                                                    @if ($esPdf)
-                                                        <a href="{{ asset('storage/' . $m->foto_path) }}"
-                                                            target="_blank"
-                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40"
-                                                            title="Ver PDF">
+                                                <div class="flex items-center justify-center gap-1">
+                                                    {{-- EDITAR --}}
+                                                    @can('agente_presupuestos.delete_movement')
+                                                        <button type="button"
+                                                            wire:click="openEditMovimiento({{ $m->id }})"
+                                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-amber-600 border-amber-300 hover:bg-amber-50 hover:border-amber-400 dark:bg-neutral-900 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-900/20 shadow-sm"
+                                                            title="Editar">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
                                                                 stroke-linecap="round" stroke-linejoin="round">
                                                                 <path
-                                                                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                                <polyline points="14 2 14 8 20 8" />
-                                                                <line x1="16" y1="13" x2="8"
-                                                                    y2="13" />
-                                                                <line x1="16" y1="17" x2="8"
-                                                                    y2="17" />
-                                                                <polyline points="10 9 9 9 8 9" />
+                                                                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                                <path
+                                                                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                                             </svg>
-                                                        </a>
-                                                    @elseif($esImagen)
-                                                        <button type="button"
-                                                            wire:click="openFotoComprobante('{{ asset('storage/' . $m->foto_path) }}')"
-                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400"
-                                                            title="Ver imagen">
+                                                        </button>
+                                                    @endcan
+
+                                                    {{-- FOTO --}}
+                                                    @if (!empty($m->foto_path))
+                                                        @php
+                                                            $ext = strtolower(
+                                                                pathinfo($m->foto_path, PATHINFO_EXTENSION),
+                                                            );
+                                                            $esPdf = $ext === 'pdf';
+                                                            $esImagen = in_array($ext, [
+                                                                'jpg',
+                                                                'jpeg',
+                                                                'png',
+                                                                'webp',
+                                                                'bmp',
+                                                            ]);
+                                                        @endphp
+                                                        @if ($esPdf)
+                                                            <a href="{{ asset('storage/' . $m->foto_path) }}"
+                                                                target="_blank"
+                                                                class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-500 border-red-200 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
+                                                                title="Ver PDF">
+                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                                                                    stroke="currentColor" stroke-width="2"
+                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path
+                                                                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                                    <polyline points="14 2 14 8 20 8" />
+                                                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                                                    <polyline points="10 9 9 9 8 9" />
+                                                                </svg>
+                                                            </a>
+                                                        @elseif ($esImagen)
+                                                            <button type="button"
+                                                                wire:click="openFotoComprobante('{{ asset('storage/' . $m->foto_path) }}')"
+                                                                class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-500 border-indigo-200 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
+                                                                title="Ver imagen">
+                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                                                                    stroke="currentColor" stroke-width="2"
+                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    <rect x="3" y="3" width="18" height="18"
+                                                                        rx="2" ry="2" />
+                                                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                                                    <path d="M21 15l-5-5L5 21" />
+                                                                </svg>
+                                                            </button>
+                                                        @else
+                                                            <a href="{{ asset('storage/' . $m->foto_path) }}"
+                                                                target="_blank"
+                                                                class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:border-gray-400 dark:bg-neutral-900 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-900/20 shadow-sm"
+                                                                title="Ver archivo">
+                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                                                                    stroke="currentColor" stroke-width="2"
+                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path
+                                                                        d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                                                                    <polyline points="13 2 13 9 20 9" />
+                                                                </svg>
+                                                            </a>
+                                                        @endif
+                                                    @else
+                                                        <span
+                                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border bg-gray-50 text-gray-300 border-gray-200 dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
+                                                            title="Sin comprobante">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
@@ -308,48 +354,30 @@
                                                                 <circle cx="8.5" cy="8.5" r="1.5" />
                                                                 <path d="M21 15l-5-5L5 21" />
                                                             </svg>
-                                                        </button>
-                                                    @else
-                                                        <a href="{{ asset('storage/' . $m->foto_path) }}"
-                                                            target="_blank"
-                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-neutral-800"
-                                                            title="Ver archivo">
+                                                        </span>
+                                                    @endif
+
+                                                    {{-- ELIMINAR --}}
+                                                    @can('agente_presupuestos.delete_movement')
+                                                        <button type="button" x-data
+                                                            x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
+                                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
+                                                            title="Eliminar">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
                                                                 stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M3 6h18" />
                                                                 <path
-                                                                    d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z">
-                                                                </path>
-                                                                <polyline points="13 2 13 9 20 9"></polyline>
+                                                                    d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                                                <line x1="10" y1="11" x2="10" y2="17" />
+                                                                <line x1="14" y1="11" x2="14" y2="17" />
                                                             </svg>
-                                                        </a>
-                                                    @endif
-                                                @else
-                                                    <span class="text-xs text-gray-300 dark:text-neutral-600">—</span>
-                                                @endif
+                                                        </button>
+                                                    @endcan
+                                                </div>
                                             </td>
-                                            @can('agente_presupuestos.delete_movement')
-                                                <td class="p-3 text-center">
-                                                    <button type="button" x-data
-                                                        x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
-                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
-                                                        title="Eliminar">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="2" stroke-linecap="round"
-                                                            stroke-linejoin="round">
-                                                            <path d="M3 6h18"></path>
-                                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                                                            <line x1="10" y1="11" x2="10"
-                                                                y2="17"></line>
-                                                            <line x1="14" y1="11" x2="14"
-                                                                y2="17"></line>
-                                                        </svg>
-                                                    </button>
-                                                </td>
-                                            @endcan
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -384,6 +412,24 @@
 
                                         {{-- ACCIONES --}}
                                         <div class="flex items-center gap-1 shrink-0">
+                                            {{-- EDITAR --}}
+                                            @can('agente_presupuestos.delete_movement')
+                                                <button type="button"
+                                                    wire:click="openEditMovimiento({{ $m->id }})"
+                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-amber-600 border-amber-300 hover:bg-amber-50 hover:border-amber-400 dark:bg-neutral-900 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-900/20 shadow-sm"
+                                                    title="Editar">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <path
+                                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                        <path
+                                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                    </svg>
+                                                </button>
+                                            @endcan
+
                                             {{-- VER FOTO --}}
                                             @if (!empty($m->foto_path))
                                                 @php
@@ -568,10 +614,7 @@
                                         <th class="p-3">Observación</th>
                                         <th class="p-3 text-right">Monto</th>
                                         <th class="p-3 text-right">Base</th>
-                                        <th class="p-3 text-center w-[60px]">Foto</th>
-                                        @can('agente_presupuestos.delete_movement')
-                                            <th class="p-3 text-center w-[60px]">Acc.</th>
-                                        @endcan
+                                        <th class="p-3 text-center w-[110px]">Acc.</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100 dark:divide-neutral-800/80">
@@ -642,42 +685,91 @@
                                                 @endif
                                             </td>
                                             <td class="p-3 text-center">
-                                                @if (!empty($m->foto_path))
-                                                    @php
-                                                        $ext = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION));
-                                                        $esPdf = $ext === 'pdf';
-                                                        $esImagen = in_array($ext, [
-                                                            'jpg',
-                                                            'jpeg',
-                                                            'png',
-                                                            'webp',
-                                                            'bmp',
-                                                        ]);
-                                                    @endphp
-                                                    @if ($esPdf)
-                                                        <a href="{{ asset('storage/' . $m->foto_path) }}"
-                                                            target="_blank"
-                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/40"
-                                                            title="Ver PDF">
+                                                <div class="flex items-center justify-center gap-1">
+                                                    {{-- EDITAR --}}
+                                                    @can('agente_presupuestos.delete_movement')
+                                                        <button type="button"
+                                                            wire:click="openEditMovimiento({{ $m->id }})"
+                                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-amber-600 border-amber-300 hover:bg-amber-50 hover:border-amber-400 dark:bg-neutral-900 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-900/20 shadow-sm"
+                                                            title="Editar">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
                                                                 stroke-linecap="round" stroke-linejoin="round">
                                                                 <path
-                                                                    d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                                <polyline points="14 2 14 8 20 8" />
-                                                                <line x1="16" y1="13" x2="8"
-                                                                    y2="13" />
-                                                                <line x1="16" y1="17" x2="8"
-                                                                    y2="17" />
-                                                                <polyline points="10 9 9 9 8 9" />
+                                                                    d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                                <path
+                                                                    d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                                             </svg>
-                                                        </a>
-                                                    @elseif($esImagen)
-                                                        <button type="button"
-                                                            wire:click="openFotoComprobante('{{ asset('storage/' . $m->foto_path) }}')"
-                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-indigo-500 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 dark:hover:text-indigo-400"
-                                                            title="Ver imagen">
+                                                        </button>
+                                                    @endcan
+
+                                                    {{-- FOTO --}}
+                                                    @if (!empty($m->foto_path))
+                                                        @php
+                                                            $ext = strtolower(
+                                                                pathinfo($m->foto_path, PATHINFO_EXTENSION),
+                                                            );
+                                                            $esPdf = $ext === 'pdf';
+                                                            $esImagen = in_array($ext, [
+                                                                'jpg',
+                                                                'jpeg',
+                                                                'png',
+                                                                'webp',
+                                                                'bmp',
+                                                            ]);
+                                                        @endphp
+                                                        @if ($esPdf)
+                                                            <a href="{{ asset('storage/' . $m->foto_path) }}"
+                                                                target="_blank"
+                                                                class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-500 border-red-200 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
+                                                                title="Ver PDF">
+                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                                                                    stroke="currentColor" stroke-width="2"
+                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path
+                                                                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                                    <polyline points="14 2 14 8 20 8" />
+                                                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                                                    <polyline points="10 9 9 9 8 9" />
+                                                                </svg>
+                                                            </a>
+                                                        @elseif ($esImagen)
+                                                            <button type="button"
+                                                                wire:click="openFotoComprobante('{{ asset('storage/' . $m->foto_path) }}')"
+                                                                class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-500 border-indigo-200 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
+                                                                title="Ver imagen">
+                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                                                                    stroke="currentColor" stroke-width="2"
+                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    <rect x="3" y="3" width="18" height="18"
+                                                                        rx="2" ry="2" />
+                                                                    <circle cx="8.5" cy="8.5" r="1.5" />
+                                                                    <path d="M21 15l-5-5L5 21" />
+                                                                </svg>
+                                                            </button>
+                                                        @else
+                                                            <a href="{{ asset('storage/' . $m->foto_path) }}"
+                                                                target="_blank"
+                                                                class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:border-gray-400 dark:bg-neutral-900 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-900/20 shadow-sm"
+                                                                title="Ver archivo">
+                                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                                                                    stroke="currentColor" stroke-width="2"
+                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    <path
+                                                                        d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                                                                    <polyline points="13 2 13 9 20 9" />
+                                                                </svg>
+                                                            </a>
+                                                        @endif
+                                                    @else
+                                                        <span
+                                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border bg-gray-50 text-gray-300 border-gray-200 dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
+                                                            title="Sin comprobante">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
@@ -687,48 +779,30 @@
                                                                 <circle cx="8.5" cy="8.5" r="1.5" />
                                                                 <path d="M21 15l-5-5L5 21" />
                                                             </svg>
-                                                        </button>
-                                                    @else
-                                                        <a href="{{ asset('storage/' . $m->foto_path) }}"
-                                                            target="_blank"
-                                                            class="inline-flex items-center justify-center w-8 h-8 rounded-full transition text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-neutral-800"
-                                                            title="Ver archivo">
+                                                        </span>
+                                                    @endif
+
+                                                    {{-- ELIMINAR --}}
+                                                    @can('agente_presupuestos.delete_movement')
+                                                        <button type="button" x-data
+                                                            x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
+                                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
+                                                            title="Eliminar">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                                 viewBox="0 0 24 24" fill="none"
                                                                 stroke="currentColor" stroke-width="2"
                                                                 stroke-linecap="round" stroke-linejoin="round">
+                                                                <path d="M3 6h18" />
                                                                 <path
-                                                                    d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z">
-                                                                </path>
-                                                                <polyline points="13 2 13 9 20 9"></polyline>
+                                                                    d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                                                <line x1="10" y1="11" x2="10" y2="17" />
+                                                                <line x1="14" y1="11" x2="14" y2="17" />
                                                             </svg>
-                                                        </a>
-                                                    @endif
-                                                @else
-                                                    <span class="text-xs text-gray-300 dark:text-neutral-600">—</span>
-                                                @endif
+                                                        </button>
+                                                    @endcan
+                                                </div>
                                             </td>
-                                            @can('agente_presupuestos.delete_movement')
-                                                <td class="p-3 text-center">
-                                                    <button type="button" x-data
-                                                        x-on:click="$dispatch('swal:delete-movimiento', { id: {{ $m->id }}, monto: '{{ $m->monto }}' })"
-                                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
-                                                        title="Eliminar">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                            viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="2" stroke-linecap="round"
-                                                            stroke-linejoin="round">
-                                                            <path d="M3 6h18"></path>
-                                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                                                            <line x1="10" y1="11" x2="10"
-                                                                y2="17"></line>
-                                                            <line x1="14" y1="11" x2="14"
-                                                                y2="17"></line>
-                                                        </svg>
-                                                    </button>
-                                                </td>
-                                            @endcan
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -765,8 +839,26 @@
                                             </div>
                                         </div>
 
-                                        {{-- Acciones (foto + eliminar) --}}
+                                        {{-- Acciones (editar + foto + eliminar) --}}
                                         <div class="shrink-0 flex items-center gap-2">
+                                            {{-- EDITAR --}}
+                                            @can('agente_presupuestos.delete_movement')
+                                                <button type="button"
+                                                    wire:click="openEditMovimiento({{ $m->id }})"
+                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-amber-600 border-amber-300 hover:bg-amber-50 hover:border-amber-400 dark:bg-neutral-900 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-900/20 shadow-sm"
+                                                    title="Editar">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
+                                                        viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="2" stroke-linecap="round"
+                                                        stroke-linejoin="round">
+                                                        <path
+                                                            d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                                        <path
+                                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                    </svg>
+                                                </button>
+                                            @endcan
+
                                             @if (!empty($m->foto_path))
                                                 @php
                                                     $ext = strtolower(pathinfo($m->foto_path, PATHINFO_EXTENSION));

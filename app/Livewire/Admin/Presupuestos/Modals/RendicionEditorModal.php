@@ -63,6 +63,10 @@ trait RendicionEditorModal
 
     public string $mov_modal_tipo = 'COMPRA'; // COMPRA | DEVOLUCION
 
+    public ?int $mov_edit_id = null;
+
+    public float $mov_edit_original_monto_base = 0;
+
     // =========================================================
     // FORM MOVIMIENTO
     // =========================================================
@@ -145,7 +149,7 @@ trait RendicionEditorModal
             'mov_monto' => ['required', 'numeric', 'min:0.01'],
             'mov_tipo_cambio' => ['nullable', 'numeric', 'min:0.000001'],
             'mov_observacion' => ['nullable', 'string', 'max:100'],
-            'mov_foto' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'mov_foto' => [$this->mov_edit_id ? 'nullable' : 'required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ];
 
         $tipo = strtoupper(trim((string) ($this->mov_modal_tipo ?? 'COMPRA')));
@@ -177,12 +181,20 @@ trait RendicionEditorModal
 
     public function getPuedeGuardarMovimientoProperty(): bool
     {
+        $isEdit = $this->mov_edit_id !== null;
+
         if ($this->mov_modal_tipo === 'COMPRA') {
-            if (! $this->mov_fecha || ! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_entidad_id || ! $this->mov_proyecto_id || ! $this->mov_foto) {
+            if (! $this->mov_fecha || ! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_entidad_id || ! $this->mov_proyecto_id) {
+                return false;
+            }
+            if (! $isEdit && ! $this->mov_foto) {
                 return false;
             }
         } elseif ($this->mov_modal_tipo === 'DEVOLUCION') {
-            if (! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_banco_id || ! $this->mov_nro_transaccion || ! $this->mov_foto) {
+            if (! $this->mov_moneda || ! $this->mov_monto || ! $this->mov_banco_id || ! $this->mov_nro_transaccion) {
+                return false;
+            }
+            if (! $isEdit && ! $this->mov_foto) {
                 return false;
             }
         }
@@ -384,6 +396,60 @@ trait RendicionEditorModal
         $this->openMovimientoModal = true;
     }
 
+    public function openEditMovimiento(int $movId): void
+    {
+        if ($this->editorEstado === 'cerrado') {
+            return;
+        }
+
+        if (! $this->editorRendicionId) {
+            return;
+        }
+
+        $empresaId = $this->isAdmin() ? null : $this->userEmpresaId();
+
+        $m = RendicionMovimiento::query()
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
+            ->where('rendicion_id', $this->editorRendicionId)
+            ->with(['entidad', 'proyecto', 'banco'])
+            ->findOrFail($movId);
+
+        $this->resetMovimientoForm();
+        $this->loadEditorCatalogos();
+
+        $this->mov_edit_id = $m->id;
+        $this->mov_edit_original_monto_base = (float) $m->monto_base;
+        $this->mov_modal_tipo = $m->tipo;
+
+        $this->mov_fecha = $m->fecha?->format('Y-m-d\TH:i');
+        $this->mov_moneda = $m->moneda;
+        $this->mov_monto = (string) $m->monto;
+        $this->mov_monto_formatted = number_format((float) $m->monto, 2, ',', '.');
+        $this->mov_observacion = $m->observacion;
+
+        if ($m->tipo_cambio) {
+            $this->mov_tipo_cambio = (string) $m->tipo_cambio;
+            $this->mov_tipo_cambio_formatted = number_format((float) $m->tipo_cambio, 2, ',', '.');
+        }
+
+        if ($m->tipo === 'COMPRA') {
+            $this->mov_entidad_id = $m->entidad_id;
+            $this->loadProyectosByEntidad((int) $m->entidad_id);
+            $this->mov_proyecto_id = $m->proyecto_id;
+            $this->mov_tipo_comprobante = $m->tipo_comprobante;
+            $this->mov_nro_comprobante = $m->nro_comprobante;
+        }
+
+        if ($m->tipo === 'DEVOLUCION') {
+            $this->mov_banco_id = $m->banco_id;
+            $this->mov_nro_transaccion = $m->nro_transaccion;
+        }
+
+        $this->recalcMovimientoConversion();
+
+        $this->openMovimientoModal = true;
+    }
+
     public function setMovimientoTipo(string $tipo): void
     {
         $tipo = strtoupper(trim($tipo));
@@ -535,9 +601,13 @@ trait RendicionEditorModal
         }
 
         // Calcular impacto
-        // SALDO del presupuesto restante:
-        $this->mov_saldo_actual_preview = round((float) ($this->editorSaldo ?? 0), 2);
-        $this->mov_saldo_despues_preview = round($this->mov_saldo_actual_preview - $montoBaseFloat, 2);
+        // SALDO del presupuesto restante (si es edición, sumar el monto_base original al saldo disponible):
+        $saldoBase = round((float) ($this->editorSaldo ?? 0), 2);
+        if ($this->mov_edit_id !== null) {
+            $saldoBase = round($saldoBase + $this->mov_edit_original_monto_base, 2);
+        }
+        $this->mov_saldo_actual_preview = $saldoBase;
+        $this->mov_saldo_despues_preview = round($saldoBase - $montoBaseFloat, 2);
         $this->mov_monto_excede_saldo = $this->mov_saldo_despues_preview < 0;
 
         // BANCO (SÓLO DEVOLUCIÓN)
@@ -585,15 +655,25 @@ trait RendicionEditorModal
             ->findOrFail($this->editorRendicionId);
 
         try {
-            $service->registrarMovimiento(
-                rendicion: $r,
-                tipo: $this->mov_modal_tipo,
-                data: $data,
-                user: auth()->user(),
-                foto: $this->mov_foto,
-            );
-
-            $this->dispatch('toast', type: 'success', message: 'Movimiento registrado');
+            if ($this->mov_edit_id !== null) {
+                $service->actualizarMovimiento(
+                    rendicion: $r,
+                    movimientoId: $this->mov_edit_id,
+                    data: $data,
+                    user: auth()->user(),
+                    foto: $this->mov_foto,
+                );
+                $this->dispatch('toast', type: 'success', message: 'Movimiento actualizado');
+            } else {
+                $service->registrarMovimiento(
+                    rendicion: $r,
+                    tipo: $this->mov_modal_tipo,
+                    data: $data,
+                    user: auth()->user(),
+                    foto: $this->mov_foto,
+                );
+                $this->dispatch('toast', type: 'success', message: 'Movimiento registrado');
+            }
 
             $this->closeMovimientoModal();
             $this->openRendicionEditor((int) $r->id);
@@ -699,6 +779,9 @@ trait RendicionEditorModal
 
     protected function resetMovimientoForm(): void
     {
+        $this->mov_edit_id = null;
+        $this->mov_edit_original_monto_base = 0;
+
         $this->mov_fecha = null;
         $this->mov_moneda = $this->editorMonedaBase ?: 'BOB';
         $this->mov_tipo_cambio = null;

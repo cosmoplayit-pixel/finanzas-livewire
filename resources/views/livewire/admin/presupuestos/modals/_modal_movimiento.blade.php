@@ -4,15 +4,21 @@
 
     <x-slot:title>
         <div class="flex flex-col sm:flex-row sm:items-center gap-2 flex-wrap">
-            <span
-                class="shrink-0">{{ $mov_modal_tipo === 'DEVOLUCION' ? 'Registrar Devolución' : 'Registrar Compra' }}</span>
+            <span class="shrink-0">
+                @if ($mov_edit_id)
+                    {{ $mov_modal_tipo === 'DEVOLUCION' ? 'Editar Devolución' : 'Editar Compra' }}
+                @else
+                    {{ $mov_modal_tipo === 'DEVOLUCION' ? 'Registrar Devolución' : 'Registrar Compra' }}
+                @endif
+            </span>
         </div>
     </x-slot:title>
 
     {{-- SELECTOR TIPO --}}
     <div class="mb-4 flex items-center gap-3">
-        <div class="inline-flex rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden">
-            <button type="button" wire:click="setMovimientoTipo('COMPRA')"
+        <div class="inline-flex rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden {{ $mov_edit_id ? 'opacity-50 pointer-events-none' : '' }}">
+            <button type="button" @if(!$mov_edit_id) wire:click="setMovimientoTipo('COMPRA')" @endif
+                @disabled(!!$mov_edit_id)
                 class="cursor-pointer px-4 py-2 text-xs font-semibold transition
                 {{ $mov_modal_tipo === 'COMPRA'
                     ? 'bg-gray-900 hover:bg-gray-700 text-white dark:bg-white dark:text-gray-900'
@@ -20,7 +26,8 @@
                 Compra
             </button>
 
-            <button type="button" wire:click="setMovimientoTipo('DEVOLUCION')"
+            <button type="button" @if(!$mov_edit_id) wire:click="setMovimientoTipo('DEVOLUCION')" @endif
+                @disabled(!!$mov_edit_id)
                 class="cursor-pointer px-4 py-2 text-xs font-semibold transition
                 {{ $mov_modal_tipo === 'DEVOLUCION'
                     ? 'bg-gray-900 hover:bg-gray-700 text-white dark:bg-white dark:text-gray-900'
@@ -30,7 +37,11 @@
         </div>
 
         <div class="text-xs text-gray-500 dark:text-neutral-400">
-            {{ $mov_modal_tipo === 'DEVOLUCION' ? 'Devuelve saldo al banco' : 'Registra un gasto de la rendición' }}
+            @if ($mov_edit_id)
+                <span class="text-amber-600 dark:text-amber-400 font-medium">Editando movimiento</span>
+            @else
+                {{ $mov_modal_tipo === 'DEVOLUCION' ? 'Devuelve saldo al banco' : 'Registra un gasto de la rendición' }}
+            @endif
         </div>
     </div>
 
@@ -201,7 +212,9 @@
 
                     {{-- FOTO --}}
                     <div>
-                        <x-ui.scanner model="mov_foto" label="Comprobante" :file="$mov_foto" />
+                        <x-ui.scanner model="mov_foto"
+                            :label="$mov_edit_id ? 'Comprobante (opcional: reemplaza el actual)' : 'Comprobante'"
+                            :file="$mov_foto" />
 
                     </div>
                 </div>
@@ -417,7 +430,9 @@
 
                     {{-- FOTO --}}
                     <div>
-                        <x-ui.scanner model="mov_foto" label="Comprobante" :file="$mov_foto" />
+                        <x-ui.scanner model="mov_foto"
+                            :label="$mov_edit_id ? 'Comprobante (opcional: reemplaza el actual)' : 'Comprobante'"
+                            :file="$mov_foto" />
                     </div>
 
                 </div>

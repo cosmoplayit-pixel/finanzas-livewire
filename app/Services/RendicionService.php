@@ -321,6 +321,171 @@ class RendicionService
     }
 
     // =========================================================
+    // ACTUALIZAR MOVIMIENTO (COMPRA | DEVOLUCION)
+    // =========================================================
+    public function actualizarMovimiento(
+        Rendicion $rendicion,
+        int $movimientoId,
+        array $data,
+        User $user,
+        $foto = null,
+    ): RendicionMovimiento {
+        return DB::transaction(function () use ($rendicion, $movimientoId, $data, $user, $foto) {
+            /** @var Rendicion $r */
+            $r = Rendicion::query()->lockForUpdate()->findOrFail($rendicion->id);
+
+            if (!$r->active) {
+                throw new DomainException('La rendición está inactiva.');
+            }
+
+            if ($r->estado === 'cerrado') {
+                throw new DomainException('La rendición ya está cerrada. No se pueden modificar movimientos.');
+            }
+
+            /** @var RendicionMovimiento $m */
+            $m = RendicionMovimiento::query()
+                ->lockForUpdate()
+                ->where('rendicion_id', $r->id)
+                ->where('id', $movimientoId)
+                ->firstOrFail();
+
+            $tipo = $m->tipo; // tipo no cambia al editar
+
+            $baseMoneda = (string) $r->moneda;
+            $movMoneda = strtoupper(trim((string) ($data['mov_moneda'] ?? '')));
+            if (!in_array($movMoneda, ['BOB', 'USD'], true)) {
+                throw new DomainException('Moneda inválida.');
+            }
+
+            $monto = round((float) ($data['mov_monto'] ?? 0), 2);
+            if ($monto <= 0) {
+                throw new DomainException('Monto inválido.');
+            }
+
+            $montoBase = $this->convertirAMonedaBase(
+                monto: $monto,
+                monedaMovimiento: $movMoneda,
+                monedaBase: $baseMoneda,
+                tipoCambio: $data['mov_tipo_cambio'] ?? null,
+            );
+
+            if ($montoBase <= 0) {
+                throw new DomainException('Monto base inválido.');
+            }
+
+            // Calcular saldo disponible excluyendo el movimiento actual
+            $sumOthers = round(
+                (float) RendicionMovimiento::query()
+                    ->where('rendicion_id', $r->id)
+                    ->where('active', true)
+                    ->where('id', '!=', $m->id)
+                    ->sum('monto_base'),
+                2,
+            );
+
+            $presupuestoTotal = round((float) ($r->monto ?? 0), 2);
+            $saldoDisponible = round(max(0, $presupuestoTotal - $sumOthers), 2);
+
+            if ($montoBase > $saldoDisponible) {
+                throw new DomainException(
+                    "El monto excede el presupuesto disponible. Disponible: {$saldoDisponible} {$baseMoneda}.",
+                );
+            }
+
+            if ($tipo === 'COMPRA') {
+                if ((int) ($data['mov_entidad_id'] ?? 0) <= 0) {
+                    throw new DomainException('Debe seleccionar entidad.');
+                }
+                if ((int) ($data['mov_proyecto_id'] ?? 0) <= 0) {
+                    throw new DomainException('Debe seleccionar proyecto.');
+                }
+            }
+
+            $oldMonto = round((float) ($m->monto ?? 0), 2);
+            $oldMontoBase = round((float) ($m->monto_base ?? 0), 2);
+
+            // Revertir y aplicar efecto banco si es DEVOLUCION
+            if ($tipo === 'DEVOLUCION') {
+                // Revertir banco antiguo
+                if (!empty($m->banco_id)) {
+                    /** @var Banco $oldBanco */
+                    $oldBanco = Banco::query()->lockForUpdate()->findOrFail((int) $m->banco_id);
+                    $saldoAntes = round((float) ($oldBanco->monto ?? 0), 2);
+                    if ($saldoAntes < $oldMonto) {
+                        throw new DomainException(
+                            "El saldo del banco quedaría negativo al revertir. Saldo actual: {$saldoAntes} {$oldBanco->moneda}.",
+                        );
+                    }
+                    $oldBanco->monto = round($saldoAntes - $oldMonto, 2);
+                    $oldBanco->save();
+                }
+
+                // Aplicar nuevo banco
+                $newBancoId = (int) ($data['mov_banco_id'] ?? 0);
+                if ($newBancoId <= 0) {
+                    throw new DomainException('Debe seleccionar banco.');
+                }
+                /** @var Banco $newBanco */
+                $newBanco = Banco::query()->lockForUpdate()->findOrFail($newBancoId);
+                if ((int) $newBanco->empresa_id !== (int) $r->empresa_id) {
+                    throw new DomainException('El banco no pertenece a la empresa.');
+                }
+                if ((string) $newBanco->moneda !== $movMoneda) {
+                    throw new DomainException('La moneda del banco no coincide con la moneda de la devolución.');
+                }
+                $newBanco->monto = round((float) ($newBanco->monto ?? 0) + $monto, 2);
+                $newBanco->save();
+            }
+
+            // Revertir delta agente antiguo
+            /** @var AgenteServicio $ag */
+            $ag = AgenteServicio::query()->lockForUpdate()->findOrFail((int) $r->agente_servicio_id);
+            $this->aplicarDeltaAgente($ag, $baseMoneda, +$oldMontoBase);
+
+            // Aplicar nuevo delta agente
+            $ag = AgenteServicio::query()->lockForUpdate()->findOrFail((int) $r->agente_servicio_id);
+            $this->aplicarDeltaAgente($ag, $baseMoneda, -$montoBase);
+
+            // Foto
+            $path = $m->foto_path;
+            if ($foto) {
+                if (!empty($m->foto_path)) {
+                    Storage::disk('public')->delete($m->foto_path);
+                }
+                $path = $foto->store("empresas/{$r->empresa_id}/agente_presupuestos/rendiciones", 'public');
+            }
+
+            $updateData = [
+                'fecha'      => $data['mov_fecha'] ?? null,
+                'moneda'     => $movMoneda,
+                'tipo_cambio' => $movMoneda !== $baseMoneda ? ((float) ($data['mov_tipo_cambio'] ?? 0)) : null,
+                'monto'      => $monto,
+                'monto_base' => $montoBase,
+                'observacion' => $data['mov_observacion'] ?? null,
+                'foto_path'  => $path,
+            ];
+
+            if ($tipo === 'COMPRA') {
+                $updateData['entidad_id']       = (int) ($data['mov_entidad_id'] ?? 0);
+                $updateData['proyecto_id']      = (int) ($data['mov_proyecto_id'] ?? 0);
+                $updateData['tipo_comprobante'] = $data['mov_tipo_comprobante'] ?? null;
+                $updateData['nro_comprobante']  = $data['mov_nro_comprobante'] ?? null;
+            }
+
+            if ($tipo === 'DEVOLUCION') {
+                $updateData['banco_id']        = (int) ($data['mov_banco_id'] ?? 0);
+                $updateData['nro_transaccion'] = $data['mov_nro_transaccion'] ?? null;
+            }
+
+            $m->update($updateData);
+
+            $this->recalcularTotales($r);
+
+            return $m->fresh();
+        });
+    }
+
+    // =========================================================
     // ELIMINAR MOVIMIENTO
     // =========================================================
     public function eliminarMovimiento(Rendicion $rendicion, int $movimientoId, User $user): void

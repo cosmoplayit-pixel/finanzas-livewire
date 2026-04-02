@@ -278,6 +278,13 @@ class Entidades extends Component
         $this->dispatch('toast', type: 'success', message: 'Entidad eliminada');
     }
 
+    public function clearFilters(): void
+    {
+        $this->status = 'active';
+        $this->empresaFilter = 'all';
+        $this->resetPage();
+    }
+
     public function closeModal(): void
     {
         $this->openModal = false;

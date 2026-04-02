@@ -49,14 +49,18 @@
     @endif
 
     {{-- FILTROS --}}
+    @php $activeFiltersCount = ($entidadFilter !== 'all' ? 1 : 0) + ($tipoFilter !== 'all' ? 1 : 0) + ($status !== 'active' ? 1 : 0); @endphp
     <div x-data="{ openFilters: false }" class="relative mb-6">
         <div
             class="rounded-xl border border-gray-200 bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden shadow-sm">
             {{-- MOBILE (<= md): FILTROS COLAPSABLES --}}
             <div class="md:hidden" x-data="{ openMobile: false }">
                 <div class="px-4 h-11 flex items-center justify-between">
-                    <div class="text-[13px] font-semibold text-gray-700 dark:text-neutral-200">
+                    <div class="text-[13px] font-semibold text-gray-700 dark:text-neutral-200 flex items-center gap-2">
                         Filtros
+                        <span class="text-[11px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400">
+                            {{ $activeFiltersCount }}
+                        </span>
                     </div>
                     <button type="button" @click="openMobile = !openMobile"
                         class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-[13px] font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/60 transition cursor-pointer">
@@ -101,7 +105,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                                 </svg>
-                                Opciones
+                                Avanzados
                             </button>
                         </div>
                     </div>
@@ -109,7 +113,7 @@
             </div>
 
             {{-- DESKTOP (>= md): Layout extendido --}}
-            <div class="hidden md:block p-4">
+            <div class="hidden md:block py-3 px-4">
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
                     <div class="md:col-span-6 lg:col-span-8">
                         <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
@@ -137,6 +141,9 @@
                                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                             </svg>
                             Opciones
+                            <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+                                {{ $activeFiltersCount }}
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -152,6 +159,12 @@
             {{-- Header --}}
             <div class="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-neutral-700">
                 <div class="font-semibold text-gray-800 dark:text-neutral-100">Filtros Avanzados</div>
+                @if ($activeFiltersCount > 0)
+                    <button type="button" wire:click="clearFilters"
+                        class="text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium cursor-pointer transition">
+                        Limpiar filtros ({{ $activeFiltersCount }})
+                    </button>
+                @endif
             </div>
 
             <div class="px-4 py-4 space-y-4">
@@ -161,9 +174,20 @@
                         class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px]">
                         <option value="all">Todas</option>
                         @foreach ($entidades as $en)
-                            <option value="{{ $en->id }}">{{ $en->nombre }}
-                            </option>
+                            <option value="{{ $en->id }}">{{ $en->nombre }}</option>
                         @endforeach
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-neutral-300 mb-1">Tipo</label>
+                    <select wire:model.live="tipoFilter"
+                        class="w-full cursor-pointer rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px]">
+                        <option value="all">Todos</option>
+                        <option value="Propuesta">Propuesta</option>
+                        <option value="Adjudicado">Adjudicado</option>
+                        <option value="Ejecucion">Ejecución</option>
+                        <option value="Finalizado">Finalizado</option>
                     </select>
                 </div>
 
@@ -951,7 +975,7 @@
         </div>
 
         {{-- PAGINACIÓN --}}
-        <div>
+        <div class="mt-4">
             {{ $proyectos->links() }}
         </div>
 

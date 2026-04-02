@@ -25,6 +25,8 @@ class Proyectos extends Component
 
     public string $entidadFilter = 'all'; // all | {entidad_id}
 
+    public string $tipoFilter = 'all'; // all | Propuesta | Adjudicado | Ejecucion | Finalizado
+
     // Ordenamiento
     public string $sortField = 'id';
 
@@ -123,6 +125,11 @@ class Proyectos extends Component
     }
 
     public function updatingEntidadFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingTipoFilter(): void
     {
         $this->resetPage();
     }
@@ -299,6 +306,14 @@ class Proyectos extends Component
         $this->dispatch('toast', type: 'success', message: "Proyecto \"$nombre\" eliminado correctamente.");
     }
 
+    public function clearFilters(): void
+    {
+        $this->entidadFilter = 'all';
+        $this->tipoFilter = 'all';
+        $this->status = 'active';
+        $this->resetPage();
+    }
+
     public function closeModal(): void
     {
         $this->openModal = false;
@@ -364,6 +379,11 @@ class Proyectos extends Component
         // 🏷️ FILTRO POR ENTIDAD
         if ($this->entidadFilter !== 'all' && $this->entidadFilter !== '') {
             $q->where('entidad_id', (int) $this->entidadFilter);
+        }
+
+        // 🏷️ FILTRO POR TIPO
+        if ($this->tipoFilter !== 'all' && $this->tipoFilter !== '') {
+            $q->where('tipo', $this->tipoFilter);
         }
 
         // ↕️ ORDEN + PAGINACIÓN

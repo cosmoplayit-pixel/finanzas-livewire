@@ -268,6 +268,13 @@ class Bancos extends Component
         $this->dispatch('toast', type: 'success', message: $b->active ? 'Banco activado' : 'Banco desactivado');
     }
 
+    public function clearFilters(): void
+    {
+        $this->status = 'active';
+        $this->monedaFilter = 'all';
+        $this->resetPage();
+    }
+
     public function closeModal(): void
     {
         $this->resetForm();

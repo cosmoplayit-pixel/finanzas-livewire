@@ -241,6 +241,15 @@ class AgentesServicio extends Component
         $this->dispatch('toast', type: 'success', message: $a->active ? 'Agente activado' : 'Agente desactivado');
     }
 
+    public function clearFilters(): void
+    {
+        $this->status = 'active';
+        if ($this->isAdmin()) {
+            $this->empresaFilter = 'all';
+        }
+        $this->resetPage();
+    }
+
     public function closeModal(): void
     {
         $this->resetForm();

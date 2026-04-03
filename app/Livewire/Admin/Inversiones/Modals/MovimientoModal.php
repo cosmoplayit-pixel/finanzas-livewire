@@ -701,18 +701,17 @@ class MovimientoModal extends Component
             $movMon = strtoupper((string) ($m->moneda_banco ?? ''));
 
             if ($tcVal > 0 && $movMon !== '' && $movMon !== $this->moneda) {
-                $totalBase = (float) ($m->monto_total ?? ($m->monto_utilidad ?? 0));
-                
-                // Si la columna total es 0, probamos con capital + interes (para banco)
-                if ($totalBase == 0 && ($m->monto_capital != 0 || $m->monto_interes != 0)) {
-                    $totalBase = (float) abs($m->monto_capital) + (float) abs($m->monto_interes);
-                }
+                // monto_total está guardado en moneda del banco (ej: BOB), usarlo directamente
+                $montoBanco = (float) ($m->monto_total ?? 0);
 
-                $montoBanco = $totalBase;
-                if ($this->moneda === 'BOB' && $movMon === 'USD') {
-                    $montoBanco = $totalBase / $tcVal;
-                } elseif ($this->moneda === 'USD' && $movMon === 'BOB') {
-                    $montoBanco = $totalBase * $tcVal;
+                // Si monto_total es 0, calcular desde la moneda base usando TC
+                if ($montoBanco == 0) {
+                    $baseAbs = abs((float) ($m->monto_capital ?? 0)) + abs((float) ($m->monto_interes ?? 0));
+                    if ($this->moneda === 'BOB' && $movMon === 'USD') {
+                        $montoBanco = $tcVal > 0 ? $baseAbs / $tcVal : 0;
+                    } elseif ($this->moneda === 'USD' && $movMon === 'BOB') {
+                        $montoBanco = $baseAbs * $tcVal;
+                    }
                 }
 
                 $fmtTC = number_format($tcVal, 2, ',', '.');

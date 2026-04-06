@@ -1038,6 +1038,13 @@ class InversionService
                 }
 
                 $debitoBanco = round($debitoBanco, 2);
+                \Illuminate\Support\Facades\Log::info('DEB_BANCO_DEBUG', [
+                    'montoBase' => $montoBase,
+                    'tc' => $tc,
+                    'debito_calc' => $montoBase * $tc,
+                    'debito_final' => $debitoBanco,
+                    'banco_antes' => (float) $banco->monto,
+                ]);
             }
 
             if ((float) $banco->monto < (float) $debitoBanco) {

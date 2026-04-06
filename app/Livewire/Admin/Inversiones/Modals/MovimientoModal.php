@@ -460,7 +460,7 @@ class MovimientoModal extends Component
         $this->inversionTipo = (string) ($this->inversion->tipo ?? '—');
         $this->bancoNombre = (string) ($this->inversion->banco?->nombre ?? 'Sin banco');
 
-        $capitalActual = round((float) ($this->inversion->capital_actual ?? 0), 2);
+        $capitalActual = round((float) ($this->inversion->capital_actual ?? 0), 4);
         $this->capitalActualFmt = $this->fmtMoney($capitalActual);
         $this->saldoDeudaFmt = $this->capitalActualFmt;
 
@@ -560,7 +560,7 @@ class MovimientoModal extends Component
             }
 
             $runningCapital = $capIni > 0 ? $capIni : 0.0;
-            $runningCapital = round(max(0.0, $runningCapital), 2);
+            $runningCapital = round(max(0.0, $runningCapital), 4);
         }
 
         foreach ($rows as $m) {
@@ -671,7 +671,7 @@ class MovimientoModal extends Component
                     }
                 }
 
-                $after = round(max(0.0, (float) $after), 2);
+                $after = round(max(0.0, (float) $after), 4);
 
                 // Línea verde (siempre muestra el AFTER)
                 $capitalActualLinea =
@@ -702,16 +702,16 @@ class MovimientoModal extends Component
 
             if ($tcVal > 0 && $movMon !== '' && $movMon !== $this->moneda) {
                 // monto_total está guardado en moneda del banco (ej: BOB), usarlo directamente
-                $montoBanco = (float) ($m->monto_total ?? 0);
+                // Forzamos el cálculo desde los componentes (moneda BASE) para mostrar
+                // el monto real convertido a la moneda del BANCO.
+                $baseAbs = abs((float) ($m->monto_capital ?? 0)) +
+                          abs((float) ($m->monto_interes ?? 0)) +
+                          abs((float) ($m->monto_utilidad ?? 0));
 
-                // Si monto_total es 0, calcular desde la moneda base usando TC
-                if ($montoBanco == 0) {
-                    $baseAbs = abs((float) ($m->monto_capital ?? 0)) + abs((float) ($m->monto_interes ?? 0));
-                    if ($this->moneda === 'BOB' && $movMon === 'USD') {
-                        $montoBanco = $tcVal > 0 ? $baseAbs / $tcVal : 0;
-                    } elseif ($this->moneda === 'USD' && $movMon === 'BOB') {
-                        $montoBanco = $baseAbs * $tcVal;
-                    }
+                if ($this->moneda === 'BOB' && $movMon === 'USD') {
+                    $montoBanco = $tcVal > 0 ? $baseAbs / $tcVal : 0;
+                } elseif ($this->moneda === 'USD' && $movMon === 'BOB') {
+                    $montoBanco = $tcVal > 0 ? $baseAbs * $tcVal : 0;
                 }
 
                 $fmtTC = number_format($tcVal, 2, ',', '.');

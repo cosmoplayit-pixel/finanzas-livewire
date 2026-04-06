@@ -45,14 +45,14 @@ class InversionMovimiento extends Model
 
         'pagado_en' => 'datetime',
 
-        'monto_total' => 'decimal:2',
-        'monto_interes' => 'decimal:2',
+        'monto_total' => 'decimal:4',
+        'monto_interes' => 'decimal:4',
 
-        'monto_capital' => 'decimal:2',
-        'monto_utilidad' => 'decimal:2',
-        'porcentaje_utilidad' => 'decimal:2',
-        'utilidad_monto_mes' => 'decimal:2',
-        'tipo_cambio' => 'decimal:2',
+        'monto_capital' => 'decimal:4',
+        'monto_utilidad' => 'decimal:4',
+        'porcentaje_utilidad' => 'decimal:4',
+        'utilidad_monto_mes' => 'decimal:4',
+        'tipo_cambio' => 'decimal:4',
     ];
 
     public function inversion(): BelongsTo

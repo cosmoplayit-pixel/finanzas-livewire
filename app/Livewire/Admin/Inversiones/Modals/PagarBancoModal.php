@@ -434,9 +434,9 @@ class PagarBancoModal extends Component
                     }
                 }
 
-                $mov->monto_total = round($totalBase, 2);
-                $mov->monto_capital = round($capitalBase, 2);
-                $mov->monto_interes = round($interesBase, 2);
+                $mov->monto_total = round($totalBase, 4);
+                $mov->monto_capital = round($capitalBase, 4);
+                $mov->monto_interes = round($interesBase, 4);
 
                 $mov->porcentaje_utilidad = $pctInteres;
 
@@ -488,9 +488,9 @@ class PagarBancoModal extends Component
                 'nro_comprobante' => trim((string) $this->nro_comprobante) ?: null,
                 'imagen' => $path,
 
-                'monto_total' => round($totalBase, 2),
-                'monto_capital' => round($capitalBase, 2),
-                'monto_interes' => round($interesBase, 2),
+                'monto_total' => round($totalBase, 4),
+                'monto_capital' => round($capitalBase, 4),
+                'monto_interes' => round($interesBase, 4),
 
                 'porcentaje_utilidad' => $pctInteres,
                 'tipo_cambio' => $this->needs_tc ? (float) ($this->tipo_cambio ?? 0) : null,

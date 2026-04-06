@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin\Inversiones\Modals;
 
+use App\Livewire\Traits\WithFinancialFormatting;
 use App\Models\Banco;
 use App\Models\Inversion;
 use App\Models\InversionMovimiento;
@@ -13,7 +14,6 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Livewire\Traits\WithFinancialFormatting;
 
 class PagarUtilidadModal extends Component
 {
@@ -536,7 +536,7 @@ class PagarUtilidadModal extends Component
 
         if (! $touched && $tipo !== 'PAGO_UTILIDAD') {
             $this->fecha_pago = $this->fecha;
-        } else if (! $touched && $tipo === 'PAGO_UTILIDAD') {
+        } elseif (! $touched && $tipo === 'PAGO_UTILIDAD') {
             $this->fecha_pago = null;
         }
 
@@ -734,7 +734,7 @@ class PagarUtilidadModal extends Component
                     $capBase += (float) ($m->monto_capital ?? 0);
                 }
 
-                $capBase = max(0.0, round($capBase, 2));
+                $capBase = max(0.0, round($capBase, 4));
             } catch (\Throwable $e) {
                 // Si algo falla, cae a capital_actual como fallback (pero idealmente no pasa)
                 $capBase = (float) ($this->inversion?->capital_actual ?? 0);
@@ -1004,8 +1004,8 @@ class PagarUtilidadModal extends Component
                     $mov->comprobante_imagen_path = $path ?? $mov->comprobante_imagen_path;
 
                     // IMPORTANTE: monto_utilidad y utilidad_monto_mes (en el ledger) deben ser moneda BASE
-                    $mov->monto_utilidad = round($totalPagarBase, 2);
-                    $mov->utilidad_monto_mes = round($totalMesBase, 2);
+                    $mov->monto_utilidad = round($totalPagarBase, 4);
+                    $mov->utilidad_monto_mes = round($totalMesBase, 4);
 
                     $mov->fecha = $this->fecha;
                     $mov->fecha_pago = $this->fecha_pago;
@@ -1050,8 +1050,8 @@ class PagarUtilidadModal extends Component
                         'fecha_pago' => $this->fecha_pago,
                         'banco_id' => $this->banco_id ? (int) $this->banco_id : null,
                         'comprobante' => trim((string) $this->nro_comprobante) ?: null,
-                        'monto_utilidad' => round($totalPagarBase, 2), // Moneda base para el ledger
-                        'utilidad_monto_mes' => round($totalMesBase, 2), // Moneda base para el ledger
+                        'monto_utilidad' => round($totalPagarBase, 4), // Moneda base (más precisión)
+                        'utilidad_monto_mes' => round($totalMesBase, 4), // Moneda base (más precisión)
                         'imagen' => $path,
                         'dias' => $this->utilidad_dias,
                         'fecha_inicio' => $this->utilidad_fecha_inicio,
@@ -1118,13 +1118,13 @@ class PagarUtilidadModal extends Component
         $this->preview_banco_despues = 0.0;
 
         $this->impacto_ok = true;
-        
+
         if ($this->tipo_pago === 'PAGO_UTILIDAD' && ! $this->modoConfirmar) {
             $this->impacto_texto = $this->banco_id ? 'Listo para REGISTRAR PENDIENTE.' : 'Listo para REGISTRAR (sin banco aún).';
         } else {
             $this->impacto_texto = $this->banco_id ? 'Listo para registrar.' : 'Seleccione un banco.';
         }
-        
+
         $this->impacto_detalle = null;
 
         // ✅ Limpia errores "de impacto" para que no queden pegados cuando el usuario corrige

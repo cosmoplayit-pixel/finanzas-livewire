@@ -163,10 +163,10 @@ class TransaccionesService
                 END as tipo_movimiento,
                 im.fecha_pago as fecha,
                 CASE 
-                    WHEN i.moneda = b.moneda THEN COALESCE(im.monto_total, im.monto_utilidad, 0)
-                    WHEN i.moneda = 'BOB' AND b.moneda = 'USD' THEN COALESCE(im.monto_total, im.monto_utilidad, 0) / IFNULL(im.tipo_cambio, 1)
-                    WHEN i.moneda = 'USD' AND b.moneda = 'BOB' THEN COALESCE(im.monto_total, im.monto_utilidad, 0) * IFNULL(im.tipo_cambio, 1)
-                    ELSE COALESCE(im.monto_total, im.monto_utilidad, 0)
+                    WHEN i.moneda = b.moneda THEN (COALESCE(ABS(im.monto_capital),0) + COALESCE(ABS(im.monto_interes),0) + COALESCE(ABS(im.monto_utilidad),0))
+                    WHEN i.moneda = 'BOB' AND b.moneda = 'USD' THEN (COALESCE(ABS(im.monto_capital),0) + COALESCE(ABS(im.monto_interes),0) + COALESCE(ABS(im.monto_utilidad),0)) / IFNULL(im.tipo_cambio, 1)
+                    WHEN i.moneda = 'USD' AND b.moneda = 'BOB' THEN (COALESCE(ABS(im.monto_capital),0) + COALESCE(ABS(im.monto_interes),0) + COALESCE(ABS(im.monto_utilidad),0)) * IFNULL(im.tipo_cambio, 1)
+                    ELSE (COALESCE(ABS(im.monto_capital),0) + COALESCE(ABS(im.monto_interes),0) + COALESCE(ABS(im.monto_utilidad),0))
                 END as monto,
                 b.moneda as moneda,
                 im.banco_id,

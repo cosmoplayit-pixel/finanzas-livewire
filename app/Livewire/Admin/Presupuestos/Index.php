@@ -66,8 +66,8 @@ class Index extends Component
 
     public function mount(): void
     {
-        $this->f_fecha_desde = now()->startOfYear()->toDateString();
-        $this->f_fecha_hasta = now()->endOfYear()->toDateString();
+        $this->f_fecha_desde = '';
+        $this->f_fecha_hasta = '';
 
         if (! $this->isAdmin()) {
             $this->empresaFilter = (string) $this->userEmpresaId();

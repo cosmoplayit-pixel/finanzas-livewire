@@ -1762,6 +1762,9 @@ class InversionService
 
             if ($saldo > 0.000001 && $interes > 0.000001) {
                 $pct = round(($interes * 100) / $saldo, 2);
+                if ($pct > 9999.99) {
+                    $pct = 9999.99;
+                }
             }
 
             $m->porcentaje_utilidad = $pct;

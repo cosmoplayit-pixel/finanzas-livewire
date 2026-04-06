@@ -87,6 +87,10 @@ class PagarBancoModal extends Component
 
     public ?string $monto_base_preview = null; // Vista previa del MONTO TOTAL en moneda base
 
+    public ?string $monto_capital_base_preview = null; // Vista previa del CAPITAL en moneda base
+
+    public ?string $monto_interes_base_preview = null; // Vista previa del INTERES en moneda base
+
     // MODO EDICIÓN / CONFIRMACIÓN
     public ?int $movimientoId = null; // ID del BANCO_PAGO PENDIENTE cuando editas/confirmas
 
@@ -292,7 +296,7 @@ class PagarBancoModal extends Component
 
         // Si es MODAL CONFIRMAR, banco y fecha pago son obligatorios
         if ($this->modoConfirmar) {
-            if (empty($this->fecha_pago) || empty($this->banco_id)) {
+            if (empty($this->fecha_pago) || empty($this->banco_id) || empty($this->nro_comprobante)) {
                 return false;
             }
         }
@@ -662,7 +666,7 @@ class PagarBancoModal extends Component
                 'integer',
                 Rule::exists('bancos', 'id'),
             ],
-            'nro_comprobante' => ['nullable', 'string', 'max:255'],
+            'nro_comprobante' => [$this->modoConfirmar ? 'required' : 'nullable', 'string', 'max:255'],
             'comprobante_imagen' => ['nullable', 'image', 'max:5120'],
             'monto_total' => ['required', 'numeric', 'min:0.01'],
             'monto_capital' => ['required', 'numeric', 'min:0.00'],
@@ -683,6 +687,7 @@ class PagarBancoModal extends Component
         $this->resetErrorBag('monto_capital');
         $this->resetErrorBag('monto_total');
         $this->resetErrorBag('tipo_cambio');
+        $this->resetErrorBag('fecha');
 
         $capital = (float) ($this->monto_capital ?? 0);
         $total = (float) ($this->monto_total ?? 0);
@@ -701,15 +706,18 @@ class PagarBancoModal extends Component
         // 2.5) Fecha contable >= fecha inicio
         if ($this->inversion && $this->fecha) {
             try {
-                // strict length check to avoid parsing partial dates
-                if (strlen($this->fecha) === 10) {
-                    $f = \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $this->fecha)->startOfDay();
-                    $ini = \Illuminate\Support\Carbon::parse($this->inversion->fecha_inicio)->startOfDay();
-                    if ($f < $ini) {
-                        $this->addError('fecha', 'La fecha (contable) no puede ser anterior a la fecha inicio ('.$ini->format('d/m/Y').').');
-                    }
+                // Si viene en formato Y-m-d (estándar HTML5) o d/m/Y (latino), Carbon::parse lo maneja
+                $f = \Illuminate\Support\Carbon::parse($this->fecha)->startOfDay();
+                $ini = \Illuminate\Support\Carbon::instance($this->inversion->fecha_inicio)->startOfDay();
+
+                if ($f->lessThan($ini)) {
+                    $this->addError(
+                        'fecha',
+                        'La fecha (contable) no puede ser anterior a la fecha inicio ('.$ini->format('d/m/Y').').'
+                    );
                 }
             } catch (\Exception $e) {
+                // Si no se puede parsear, el validador formal de rules() se encargará
             }
         }
 
@@ -759,13 +767,15 @@ class PagarBancoModal extends Component
 
         if ($this->inversion && $this->fecha) {
             try {
-                if (strlen($this->fecha) === 10) {
-                    $f = \Illuminate\Support\Carbon::createFromFormat('Y-m-d', $this->fecha)->startOfDay();
-                    $ini = \Illuminate\Support\Carbon::parse($this->inversion->fecha_inicio)->startOfDay();
-                    if ($f < $ini) {
-                        $this->addError('fecha', 'La fecha (contable) no puede ser anterior a la fecha inicio ('.$ini->format('d/m/Y').').');
-                        throw new DomainException('La fecha contable no puede ser menor a la fecha de inicio.');
-                    }
+                $f = \Illuminate\Support\Carbon::parse($this->fecha)->startOfDay();
+                $ini = \Illuminate\Support\Carbon::instance($this->inversion->fecha_inicio)->startOfDay();
+
+                if ($f->lessThan($ini)) {
+                    $this->addError(
+                        'fecha',
+                        'La fecha (contable) no puede ser anterior a la fecha inicio ('.$ini->format('d/m/Y').').'
+                    );
+                    throw new DomainException('La fecha contable no puede ser menor a la fecha de inicio.');
                 }
             } catch (\Exception $e) {
                 if ($e instanceof DomainException) {
@@ -1106,23 +1116,44 @@ class PagarBancoModal extends Component
         $this->preview_banco_actual_fmt = $this->fmtMoney($this->preview_banco_actual, $bankMon);
         $this->preview_banco_despues_fmt = $this->fmtMoney($this->preview_banco_despues, $bankMon);
 
-        // ✅ Monto base preview (del TOTAL)
-        $totalInput = (float) ($this->monto_total ?? 0);
-        $montoBaseTotal = $totalInput;
+        $tc = (float) ($this->tipo_cambio ?? 0);
+        $canConvert = ($invMon !== $bankMon && $tc > 0);
 
-        if ($invMon !== $bankMon) {
-            $tc = (float) ($this->tipo_cambio ?? 0);
-            if ($tc > 0) {
-                if ($invMon === 'BOB' && $bankMon === 'USD') {
-                    $montoBaseTotal = $totalInput * $tc;
-                } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
-                    $montoBaseTotal = $totalInput / $tc;
-                }
-            } else {
-                $montoBaseTotal = 0;
+        // ✅ Monto total base preview
+        $totalInput = (float) ($this->monto_total ?? 0);
+        $montoBaseTotal = 0.0;
+        if ($canConvert) {
+            if ($invMon === 'BOB' && $bankMon === 'USD') {
+                $montoBaseTotal = $totalInput * $tc;
+            } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
+                $montoBaseTotal = $totalInput / $tc;
             }
         }
-        $this->monto_base_preview = $montoBaseTotal > 0 ? $this->fmtMoney($montoBaseTotal, $invMon) : '—';
+        $this->monto_base_preview = ($totalInput > 0 && $canConvert) ? $this->fmtMoney($montoBaseTotal, $invMon) : '—';
+
+        // ✅ Capital base preview
+        $capitalInput = (float) ($this->monto_capital ?? 0);
+        $capitalBase = 0.0;
+        if ($canConvert) {
+            if ($invMon === 'BOB' && $bankMon === 'USD') {
+                $capitalBase = $capitalInput * $tc;
+            } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
+                $capitalBase = $capitalInput / $tc;
+            }
+        }
+        $this->monto_capital_base_preview = ($capitalInput > 0 && $canConvert) ? $this->fmtMoney($capitalBase, $invMon) : '—';
+
+        // ✅ Interés base preview
+        $interesInput = (float) ($this->monto_interes ?? 0);
+        $interesBase = 0.0;
+        if ($canConvert) {
+            if ($invMon === 'BOB' && $bankMon === 'USD') {
+                $interesBase = $interesInput * $tc;
+            } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
+                $interesBase = $interesInput / $tc;
+            }
+        }
+        $this->monto_interes_base_preview = ($interesInput > 0 && $canConvert) ? $this->fmtMoney($interesBase, $invMon) : '—';
     }
 
     // formatea un monto según moneda (USD con $ y BOB con Bs)

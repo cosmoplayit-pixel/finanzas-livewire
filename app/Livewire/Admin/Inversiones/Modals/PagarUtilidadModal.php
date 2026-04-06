@@ -919,7 +919,7 @@ class PagarUtilidadModal extends Component
                     }
                 },
             ];
-            $rules['nro_comprobante'] = ['nullable', 'string', 'max:30'];
+            $rules['nro_comprobante'] = [$this->modoConfirmar ? 'required' : 'nullable', 'string', 'max:30'];
             $rules['utilidad_a_pagar'] = ['required', 'numeric', 'min:0.01'];
             $rules['utilidad_monto_mes'] = ['required', 'numeric', 'min:0.01'];
 

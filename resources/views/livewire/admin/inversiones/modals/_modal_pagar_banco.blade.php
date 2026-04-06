@@ -172,7 +172,8 @@
                         {{-- BANCO (Solo en Confirmar) --}}
                         @if ($modoConfirmar)
                             <div class="col-span-2 md:col-span-1">
-                                <label class="block text-sm mb-1">Debitar del banco <span
+                                <label class="block text-sm mb-1">Debitar del banco
+                                    {{ $mov_moneda ? "($mov_moneda)" : '' }} <span
                                         class="text-red-500">*</span></label>
                                 <select
                                     wire:key="banco-select-{{ $open ? 1 : 0 }}-{{ $movimientoId ?? 'new' }}-{{ (string) $banco_id }}"
@@ -194,7 +195,8 @@
                         {{-- COMPROBANTE (Solo en Confirmar) --}}
                         @if ($modoConfirmar)
                             <div class="col-span-1 md:col-span-1">
-                                <label class="block text-sm mb-1">Nro comprobante</label>
+                                <label class="block text-sm mb-1">Nro comprobante <span
+                                        class="text-red-500">*</span></label>
                                 <input type="text" wire:model.live="nro_comprobante" placeholder="Ej: 12345"
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
@@ -218,24 +220,6 @@
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
-
-                            {{-- MONTO BASE PREVIEW --}}
-                            <div class="col-span-1 md:col-span-1">
-                                <label class="block text-sm mb-1 text-gray-500 dark:text-neutral-400">
-                                    Monto Base (preview)
-                                </label>
-                                <div
-                                    class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800/50
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                           font-medium tabular-nums min-h-[42px] flex items-center justify-end">
-                                    {{ $monto_base_preview ?: '—' }}
-                                </div>
-                                @if (!empty($inversion?->moneda))
-                                    <div class="text-[11px] mt-1 text-gray-400 dark:text-neutral-500">
-                                        Moneda Inversión: <span class="font-semibold">{{ $inversion->moneda }}</span>
-                                    </div>
-                                @endif
-                            </div>
                         @endif
 
                         {{-- TOTAL --}}
@@ -249,6 +233,12 @@
                             @error('monto_total')
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
+                            @if ($needs_tc)
+                                <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400 text-right">
+                                    Base: <span class="font-semibold">{{ $monto_base_preview }}</span>
+                                </div>
+                            @endif
+
                         </div>
 
                         {{-- CAPITAL --}}
@@ -262,6 +252,11 @@
                             @error('monto_capital')
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
+                            @if ($needs_tc)
+                                <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400 text-right">
+                                    Base: <span class="font-semibold">{{ $monto_capital_base_preview }}</span>
+                                </div>
+                            @endif
                         </div>
 
                         {{-- INTERÉS --}}
@@ -275,12 +270,17 @@
                             @error('monto_interes')
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
+                            @if ($needs_tc)
+                                <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400 text-right">
+                                    Base: <span class="font-semibold">{{ $monto_interes_base_preview }}</span>
+                                </div>
+                            @endif
                         </div>
 
                         {{-- FOTO (Solo en Confirmar) --}}
                         @if ($modoConfirmar)
                             <div class="col-span-2 md:col-span-1">
-                                <x-ui.scanner model="comprobante_imagen" label="Foto del comprobante (opcional)"
+                                <x-ui.scanner model="comprobante_imagen" label="Foto Comprobante (opcional)"
                                     :file="$comprobante_imagen" />
                             </div>
                         @endif

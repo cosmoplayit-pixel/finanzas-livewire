@@ -4,6 +4,7 @@ namespace App\Livewire\Admin\Inversiones;
 
 use App\Models\Inversion;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -225,7 +226,14 @@ class Index extends Component
             $estadoPendiente = 'PENDIENTE';
         }
 
-        $hastaFecha = $inv->hasta_fecha ? $inv->hasta_fecha->format('d/m/Y') : '—';
+        // Corregimos la visualización de la fecha "Hasta" tomándola del último movimiento PAGADO real
+        $realHasta = $inv->movimientos()
+            ->whereIn('estado', ['PAGADO', 'INICIAL'])
+            ->max('fecha');
+
+        $hastaFecha = $realHasta
+            ? Carbon::parse($realHasta)->format('d/m/Y')
+            : ($inv->fecha_inicio ? $inv->fecha_inicio->format('d/m/Y') : '—');
 
         return [
             // PRIVADO

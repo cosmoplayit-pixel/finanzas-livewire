@@ -230,7 +230,8 @@
 
                             {{-- COMPROBANTE --}}
                             <div class="col-span-1 md:col-span-1">
-                                <label class="block text-sm mb-1">Nro Comprobante</label>
+                                <label class="block text-sm mb-1">Nro Comprobante <span
+                                        class="text-red-500">*</span></label>
                                 <input type="text" wire:model.live="nro_comprobante" placeholder="Ej: 100"
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
@@ -321,7 +322,7 @@
                         @if ($modoConfirmar || !$isUtilidad)
                             {{-- FOTO DEL COMPROBANTE --}}
                             <div class="col-span-2 md:col-span-1">
-                                <x-ui.scanner model="comprobante_imagen" label="Foto del comprobante (opcional)"
+                                <x-ui.scanner model="comprobante_imagen" label="Foto Comprobante (opcional)"
                                     :file="$comprobante_imagen" />
                             </div>
                         @endif

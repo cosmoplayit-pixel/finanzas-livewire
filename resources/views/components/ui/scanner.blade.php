@@ -277,7 +277,7 @@
                             const ey = ev.touches ? ev.touches[0].clientY : ev.clientY;
                             const r = this.$refs.video.parentElement.getBoundingClientRect();
                             const dx = ((this._panStart.cx - ex) / r.width) * (100 / this
-                            .zoomValue);
+                                .zoomValue);
                             const dy = ((this._panStart.cy - ey) / r.height) * (100 / this
                                 .zoomValue);
                             this.zoomPosX = Math.max(0, Math.min(100, this._panStart.x + dx));
@@ -446,7 +446,7 @@
                                     y: h.y / 100 * this.srcCanvas.height
                                 }));
                                 this.warpedCanvas = this._warpImage(this.srcCanvas,
-                                corners);
+                                    corners);
                                 if (!this.warpedCanvas) throw new Error(
                                     'Perspectiva inválida');
                                 this.warpedDataURL = this.warpedCanvas.toDataURL(
@@ -747,7 +747,7 @@
             <input type="file" wire:model.live="{{ $model }}" accept="{{ $accept }}" class="hidden" />
         </label>
         <button type="button" @click="startCamera()" title="Escanear con cámara"
-            class="shrink-0 p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors cursor-pointer border border-transparent hover:border-indigo-200">
+            class="hidden shrink-0 p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors cursor-pointer border border-transparent hover:border-indigo-200">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
                 <circle cx="12" cy="13" r="3" />

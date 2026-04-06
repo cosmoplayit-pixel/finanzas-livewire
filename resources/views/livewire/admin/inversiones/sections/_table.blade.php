@@ -162,103 +162,31 @@
                                 $valVencido = 'tabular-nums text-rose-900 dark:text-rose-100';
                             @endphp
 
-                            @if ($inv->tipo === 'PRIVADO')
-                                <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                                {{-- Capital --}}
+                                @if ($has('capital'))
+                                    <span class="{{ $pillSlate }}">
+                                        <span class="font-semibold">{{ $r['capital_label'] }}:</span>
+                                        <span class="{{ $valSlate }}">{{ $r['capital'] }}</span>
+                                    </span>
+                                @endif
 
-                                    {{-- Capital --}}
-                                    @if ($has('capital'))
-                                        <span class="{{ $pillSlate }}">
-                                            <span class="font-semibold">Capital:</span>
-                                            <span class="{{ $valSlate }}">{{ $r['capital'] }}</span>
-                                        </span>
-                                    @endif
+                                {{-- Pagado (Unido: Monto, Hasta, Ultimo Interes) --}}
+                                @if ($has('pagado_info'))
+                                    <span class="{{ $pillPagado }}">
+                                        <span class="font-semibold">Pagado:</span>
+                                        <span class="{{ $valPagado }}">{{ $r['pagado_info'] }}</span>
+                                    </span>
+                                @endif
 
-                                    {{-- % Utilidad → INICIAL (Slate) --}}
-                                    @if ($has('pct_utilidad_actual'))
-                                        <span class="{{ $pillSlate }}">
-                                            <span class="font-semibold">% Anual:</span>
-                                            <span class="{{ $valSlate }}">{{ $r['pct_utilidad_actual'] }}</span>
-                                        </span>
-                                    @endif
-
-                                    {{-- Utilidad pagada → PAGADO (Sky) --}}
-                                    @if ($has('utilidad_pagada'))
-                                        <span class="{{ $pillPagado }}">
-                                            <span class="font-semibold">Util. Pagada:</span>
-                                            <span class="{{ $valPagado }}">{{ $r['utilidad_pagada'] }}</span>
-                                        </span>
-                                    @endif
-
-                                    {{-- Hasta → PAGADO (Sky) --}}
-                                    @if ($has('hasta_fecha'))
-                                        <span class="{{ $pillPagado }}">
-                                            <span class="font-semibold">Hasta:</span>
-                                            <span class="{{ $valPagado }}">{{ $r['hasta_fecha'] }}</span>
-                                        </span>
-                                    @endif
-
-                                    {{-- Utilidad por pagar → PENDIENTE (Amber) --}}
-                                    @if ($has('utilidad_por_pagar'))
-                                        <span class="{{ $pillPendiente }}">
-                                            <span class="font-semibold">Por Pagar:</span>
-                                            <span class="{{ $valPendiente }}">{{ $r['utilidad_por_pagar'] }}</span>
-                                        </span>
-                                    @endif
-
-                                    {{-- Total Vencido → VENCIDO (Rose) --}}
-                                    @if ($has('total_vencido'))
-                                        <span class="{{ $pillVencido }}">
-                                            <span class="font-semibold">T. Vencido:</span>
-                                            <span class="{{ $valVencido }}">{{ $r['total_vencido'] }}</span>
-                                        </span>
-                                    @endif
-
-                                </div>
-                            @else
-                                <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-
-                                    {{-- Capital / deuda --}}
-                                    @if ($has('deuda_cuotas'))
-                                        <span class="{{ $pillSlate }}">
-                                            <span class="font-semibold">Capital:</span>
-                                            <span class="{{ $valSlate }}">{{ $r['deuda_cuotas'] }}</span>
-                                        </span>
-                                    @endif
-
-                                    {{-- % Interés → INICIAL (Slate) - Interes configurada --}}
-                                    @if ($has('interes'))
-                                        <span class="{{ $pillSlate }}">
-                                            <span class="font-semibold">% Anual:</span>
-                                            <span class="{{ $valSlate }}">{{ $r['interes'] }}</span>
-                                        </span>
-                                    @endif
-
-                                    {{-- Ult. Pago → PAGADO (Sky) --}}
-                                    @if ($has('total_a_pagar'))
-                                        <span class="{{ $pillPagado }}">
-                                            <span class="font-semibold">Ult. Cuota:</span>
-                                            <span class="{{ $valPagado }}">{{ $r['total_a_pagar'] }}</span>
-                                        </span>
-                                    @endif
-
-                                    {{-- Hasta → PAGADO (Sky) --}}
-                                    @if ($has('hasta_fecha'))
-                                        <span class="{{ $pillPagado }}">
-                                            <span class="font-semibold">Hasta:</span>
-                                            <span class="{{ $valPagado }}">{{ $r['hasta_fecha'] }}</span>
-                                        </span>
-                                    @endif
-
-                                    {{-- Total Vencido → VENCIDO (Rose) --}}
-                                    @if ($has('total_vencido'))
-                                        <span class="{{ $pillVencido }}">
-                                            <span class="font-semibold">T. Vencido:</span>
-                                            <span class="{{ $valVencido }}">{{ $r['total_vencido'] }}</span>
-                                        </span>
-                                    @endif
-
-                                </div>
-                            @endif
+                                {{-- Vencido (Unido: Monto, Desde Fecha) --}}
+                                @if ($has('vencido_info'))
+                                    <span class="{{ $pillVencido }}">
+                                        <span class="font-semibold">Vencido:</span>
+                                        <span class="{{ $valVencido }}">{{ $r['vencido_info'] }}</span>
+                                    </span>
+                                @endif
+                            </div>
                         </td>
 
                         {{-- FECHAS --}}
@@ -269,8 +197,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round">
-                                        <rect x="3" y="4" width="18" height="18" rx="2"
-                                            ry="2" />
+                                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                                         <line x1="16" y1="2" x2="16" y2="6" />
                                         <line x1="8" y1="2" x2="8" y2="6" />
                                         <line x1="3" y1="10" x2="21" y2="10" />

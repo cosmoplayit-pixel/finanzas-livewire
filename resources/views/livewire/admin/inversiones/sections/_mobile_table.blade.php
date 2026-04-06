@@ -220,107 +220,37 @@
                         $chipValVencido = 'tabular-nums font-semibold text-rose-900 dark:text-rose-100';
                     @endphp
 
-                    @if ($isPrivado)
-                        <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
-
-                            {{-- Capital → INICIAL --}}
+                    <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
+                        {{-- Capital --}}
+                        @if ($inv->resumen['capital'] !== '—')
                             <span class="{{ $chipInicial }}">
-                                <span class="font-semibold">Capital:</span>
+                                <span class="font-semibold">{{ $inv->resumen['capital_label'] }}:</span>
                                 <span class="{{ $chipValInicial }}">
-                                    {{ $inv->resumen['capital'] ?? '—' }}
+                                    {{ $inv->resumen['capital'] }}
                                 </span>
                             </span>
+                        @endif
 
-                            {{-- % → INICIAL --}}
-                            <span class="{{ $chipInicial }}">
-                                <span class="font-semibold">% Anual:</span>
-                                <span class="{{ $chipValInicial }}">
-                                    {{ $inv->resumen['pct_utilidad_actual'] ?? '—' }}
-                                </span>
-                            </span>
-
-                            {{-- Util. Pagada → PAGADO --}}
+                        {{-- Pagado (Unido) --}}
+                        @if ($inv->resumen['pagado_info'] !== '—')
                             <span class="{{ $chipPagado }}">
-                                <span class="font-semibold">Util. Pagada:</span>
+                                <span class="font-semibold">Pagado:</span>
                                 <span class="{{ $chipValPagado }}">
-                                    {{ $inv->resumen['utilidad_pagada'] ?? '—' }}
+                                    {{ $inv->resumen['pagado_info'] }}
                                 </span>
                             </span>
+                        @endif
 
-                            {{-- Hasta → PAGADO --}}
-                            <span class="{{ $chipPagado }}">
-                                <span class="font-semibold">Hasta:</span>
-                                <span class="font-semibold {{ $chipValPagado }}">
-                                    {{ $inv->resumen['hasta_fecha'] ?? '—' }}
+                        {{-- Vencido (Unido) --}}
+                        @if ($inv->resumen['vencido_info'] !== '—')
+                            <span class="{{ $chipVencido }}">
+                                <span class="font-semibold">Vencido:</span>
+                                <span class="{{ $chipValVencido }}">
+                                    {{ $inv->resumen['vencido_info'] }}
                                 </span>
                             </span>
-
-                            {{-- Util. por Pagar → PENDIENTE --}}
-                            <span class="{{ $chipPendiente }}">
-                                <span class="font-semibold">Por Pagar:</span>
-                                <span class="{{ $chipValPendiente }}">
-                                    {{ $inv->resumen['utilidad_por_pagar'] ?? '—' }}
-                                </span>
-                            </span>
-
-                            {{-- T. Vencido → VENCIDO --}}
-                            @if (($inv->resumen['total_vencido'] ?? '—') !== '—')
-                                <span class="{{ $chipVencido }}">
-                                    <span class="font-semibold">T. Vencido:</span>
-                                    <span class="{{ $chipValVencido }}">
-                                        {{ $inv->resumen['total_vencido'] }}
-                                    </span>
-                                </span>
-                            @endif
-
-                        </div>
-                    @else
-                        <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
-
-                            {{-- Capital → INICIAL --}}
-                            <span class="{{ $chipInicial }}">
-                                <span class="font-semibold">Capital:</span>
-                                <span class="{{ $chipValInicial }}">
-                                    {{ $inv->resumen['deuda_cuotas'] ?? '—' }}
-                                </span>
-                            </span>
-
-                            {{-- % → INICIAL (interes configurada) --}}
-                            <span class="{{ $chipInicial }}">
-                                <span class="font-semibold">% Anual:</span>
-                                <span class="{{ $chipValInicial }}">
-                                    {{ $inv->resumen['interes'] ?? '—' }}
-                                </span>
-                            </span>
-
-                            {{-- Total a pagar → PAGADO --}}
-                            <span class="{{ $chipPagado }}">
-                                <span class="font-semibold">Ult. Cuota:</span>
-                                <span class="{{ $chipValPagado }}">
-                                    {{ $inv->resumen['total_a_pagar'] ?? '—' }}
-                                </span>
-                            </span>
-
-                            {{-- Hasta → PAGADO --}}
-                            <span class="{{ $chipPagado }}">
-                                <span class="font-semibold">Hasta:</span>
-                                <span class="font-semibold {{ $chipValPagado }}">
-                                    {{ $inv->resumen['hasta_fecha'] ?? '—' }}
-                                </span>
-                            </span>
-
-                            {{-- T. Vencido → VENCIDO --}}
-                            @if (($inv->resumen['total_vencido'] ?? '—') !== '—')
-                                <span class="{{ $chipVencido }}">
-                                    <span class="font-semibold">T. Vencido:</span>
-                                    <span class="{{ $chipValVencido }}">
-                                        {{ $inv->resumen['total_vencido'] }}
-                                    </span>
-                                </span>
-                            @endif
-
-                        </div>
-                    @endif
+                        @endif
+                    </div>
                 </div>
 
                 {{-- Fechas + acciones --}}

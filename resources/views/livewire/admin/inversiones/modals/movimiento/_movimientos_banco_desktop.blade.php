@@ -227,7 +227,9 @@
                                     : (($m['estado'] ?? '') === 'PAGADO'
                                         ? 'text-sky-600 dark:text-sky-400'
                                         : (($m['estado'] ?? '') === 'PENDIENTE'
-                                            ? 'text-amber-600 dark:text-amber-300'
+                                            ? (!empty($m['es_vencido'])
+                                                ? 'text-rose-600 dark:text-rose-400'
+                                                : 'text-amber-600 dark:text-amber-300')
                                             : 'text-gray-900 dark:text-neutral-100')) }}">
                                 {{ $m['total'] }}
                             </td>

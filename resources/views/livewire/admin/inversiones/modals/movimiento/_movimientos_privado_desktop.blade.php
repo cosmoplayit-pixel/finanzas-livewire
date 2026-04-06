@@ -199,7 +199,9 @@
                                 class="p-2 text-center font-semibold tabular-nums align-middle font-medium
                                 {{ ($m['tipo'] ?? '') === 'PAGO_UTILIDAD'
                                     ? (($m['estado'] ?? '') === 'PENDIENTE'
-                                        ? 'text-amber-700 dark:text-amber-300'
+                                        ? (!empty($m['es_vencido'])
+                                            ? 'text-rose-600 dark:text-rose-400'
+                                            : 'text-amber-700 dark:text-amber-300')
                                         : 'text-sky-700 dark:text-sky-300')
                                     : 'text-gray-900 dark:text-neutral-100' }}">
                                 {{ $m['utilidad'] }}

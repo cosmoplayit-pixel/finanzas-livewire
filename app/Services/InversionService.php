@@ -1438,7 +1438,17 @@ class InversionService
             // correlativo por tipo para descripción
             $seq = (int) $invLocked->movimientos()->where('tipo', 'BANCO_PAGO')->count() + 1;
 
-            $descripcion = sprintf('Pago Cuota #%02d', $seq);
+            $fechaInicio = (string) ($invLocked->hasta_fecha ?: $invLocked->fecha_inicio);
+            try {
+                $ini = \Illuminate\Support\Carbon::parse($fechaInicio)->startOfDay();
+                $fin = \Illuminate\Support\Carbon::parse($fecha)->startOfDay();
+                $diff = $ini->diffInDays($fin);
+                $diasPagados = $diff >= 28 && $diff <= 31 ? 30 : $diff;
+            } catch (\Throwable $e) {
+                $diasPagados = 30;
+            }
+
+            $descripcion = sprintf('Pago Cuota #%02d - %d D', $seq, $diasPagados);
 
             $invLocked->movimientos()->create([
                 'nro' => $nro,

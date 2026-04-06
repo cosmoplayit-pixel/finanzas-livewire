@@ -192,86 +192,132 @@
                     </div>
                 </div>
 
-                {{-- Resumen chips (compacto) --}}
+                {{-- Detalle Financiero chips (compacto) --}}
                 <div class="space-y-1.5">
                     <div class="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-neutral-400">
-                        Resumen
+                        Detalle Financiero
                     </div>
 
                     @php
-                        $chipBase = 'bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200';
-                        $chipValue = 'text-slate-900 dark:text-slate-100';
+                        $chipPill = 'inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1';
+
+                        // ● INICIALES → Slate
+                        $chipInicial =
+                            $chipPill . ' bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200';
+                        $chipValInicial = 'tabular-nums font-semibold text-slate-900 dark:text-slate-100';
+
+                        // ● PAGADOS → Sky
+                        $chipPagado = $chipPill . ' bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-200';
+                        $chipValPagado = 'tabular-nums font-semibold text-sky-900 dark:text-sky-100';
+
+                        // ● PENDIENTES → Amber
+                        $chipPendiente =
+                            $chipPill . ' bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200';
+                        $chipValPendiente = 'tabular-nums font-semibold text-amber-900 dark:text-amber-100';
+
+                        // ● VENCIDOS → Rose
+                        $chipVencido = $chipPill . ' bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200';
+                        $chipValVencido = 'tabular-nums font-semibold text-rose-900 dark:text-rose-100';
                     @endphp
 
                     @if ($isPrivado)
                         <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
 
-                            <span class="inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1 {{ $chipBase }}">
+                            {{-- Capital → INICIAL --}}
+                            <span class="{{ $chipInicial }}">
                                 <span class="font-semibold">Capital:</span>
-                                <span class="tabular-nums font-semibold {{ $chipValue }}">
+                                <span class="{{ $chipValInicial }}">
                                     {{ $inv->resumen['capital'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span class="inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1 {{ $chipBase }}">
-                                <span class="font-semibold">%:</span>
-                                <span class="tabular-nums font-semibold {{ $chipValue }}">
+                            {{-- % → INICIAL --}}
+                            <span class="{{ $chipInicial }}">
+                                <span class="font-semibold">% Anual:</span>
+                                <span class="{{ $chipValInicial }}">
                                     {{ $inv->resumen['pct_utilidad_actual'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span class="inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1 {{ $chipBase }}">
+                            {{-- Util. Pagada → PAGADO --}}
+                            <span class="{{ $chipPagado }}">
                                 <span class="font-semibold">Util. Pagada:</span>
-                                <span class="tabular-nums font-semibold {{ $chipValue }}">
+                                <span class="{{ $chipValPagado }}">
                                     {{ $inv->resumen['utilidad_pagada'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span class="inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1 {{ $chipBase }}">
-                                <span class="font-semibold">Util. por Pagar:</span>
-                                <span class="tabular-nums font-semibold {{ $chipValue }}">
+                            {{-- Hasta → PAGADO --}}
+                            <span class="{{ $chipPagado }}">
+                                <span class="font-semibold">Hasta:</span>
+                                <span class="font-semibold {{ $chipValPagado }}">
+                                    {{ $inv->resumen['hasta_fecha'] ?? '—' }}
+                                </span>
+                            </span>
+
+                            {{-- Util. por Pagar → PENDIENTE --}}
+                            <span class="{{ $chipPendiente }}">
+                                <span class="font-semibold">Por Pagar:</span>
+                                <span class="{{ $chipValPendiente }}">
                                     {{ $inv->resumen['utilidad_por_pagar'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span class="inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1 {{ $chipBase }}">
-                                <span class="font-semibold">Hasta:</span>
-                                <span class="font-semibold {{ $chipValue }}">
-                                    {{ $inv->resumen['hasta_fecha'] ?? '—' }}
+                            {{-- T. Vencido → VENCIDO --}}
+                            @if (($inv->resumen['total_vencido'] ?? '—') !== '—')
+                                <span class="{{ $chipVencido }}">
+                                    <span class="font-semibold">T. Vencido:</span>
+                                    <span class="{{ $chipValVencido }}">
+                                        {{ $inv->resumen['total_vencido'] }}
+                                    </span>
                                 </span>
-                            </span>
+                            @endif
 
                         </div>
                     @else
                         <div class="flex flex-wrap items-center gap-1.5 text-[11px]">
 
-                            <span class="inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1 {{ $chipBase }}">
+                            {{-- Capital → INICIAL --}}
+                            <span class="{{ $chipInicial }}">
                                 <span class="font-semibold">Capital:</span>
-                                <span class="tabular-nums font-semibold {{ $chipValue }}">
+                                <span class="{{ $chipValInicial }}">
                                     {{ $inv->resumen['deuda_cuotas'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span class="inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1 {{ $chipBase }}">
-                                <span class="font-semibold">%:</span>
-                                <span class="tabular-nums font-semibold {{ $chipValue }}">
+                            {{-- % → INICIAL (interes configurada) --}}
+                            <span class="{{ $chipInicial }}">
+                                <span class="font-semibold">% Anual:</span>
+                                <span class="{{ $chipValInicial }}">
                                     {{ $inv->resumen['interes'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span class="inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1 {{ $chipBase }}">
-                                <span class="font-semibold">Total a pagar:</span>
-                                <span class="tabular-nums font-semibold {{ $chipValue }}">
+                            {{-- Total a pagar → PAGADO --}}
+                            <span class="{{ $chipPagado }}">
+                                <span class="font-semibold">Ult. Cuota:</span>
+                                <span class="{{ $chipValPagado }}">
                                     {{ $inv->resumen['total_a_pagar'] ?? '—' }}
                                 </span>
                             </span>
 
-                            <span class="inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1 {{ $chipBase }}">
+                            {{-- Hasta → PAGADO --}}
+                            <span class="{{ $chipPagado }}">
                                 <span class="font-semibold">Hasta:</span>
-                                <span class="font-semibold {{ $chipValue }}">
+                                <span class="font-semibold {{ $chipValPagado }}">
                                     {{ $inv->resumen['hasta_fecha'] ?? '—' }}
                                 </span>
                             </span>
+
+                            {{-- T. Vencido → VENCIDO --}}
+                            @if (($inv->resumen['total_vencido'] ?? '—') !== '—')
+                                <span class="{{ $chipVencido }}">
+                                    <span class="font-semibold">T. Vencido:</span>
+                                    <span class="{{ $chipValVencido }}">
+                                        {{ $inv->resumen['total_vencido'] }}
+                                    </span>
+                                </span>
+                            @endif
 
                         </div>
                     @endif

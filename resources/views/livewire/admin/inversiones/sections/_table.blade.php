@@ -19,7 +19,7 @@
                     <th class="p-2 w-[7%] text-center">Código</th>
                     <th class="p-2 w-[15%]">Titular</th>
                     <th class="p-2 w-[15%]">Banco</th>
-                    <th class="p-2 w-[38%]">Resumen</th>
+                    <th class="p-2 w-[38%]">Detalle Financiero</th>
                     <th class="p-2 w-[9%] text-center">Fecha</th>
                     <th class="p-2 w-[8%] text-center">Estado</th>
                     <th class="p-2 w-[8%] text-center">Acc.</th>
@@ -138,25 +138,28 @@
                                     return $v !== '' && $v !== '—';
                                 };
 
-                                // Estilos unificados (mismo color en ambos tipos)
+                                // Estilos por categoría
                                 $pillBase = 'inline-flex items-center gap-2 rounded-md px-2 py-1 text-[13px]';
-                                $pillGray =
-                                    $pillBase .
-                                    ' bg-gray-100 text-gray-700 dark:bg-neutral-900/40 dark:text-neutral-200';
+
+                                // ● INICIALES (Capital, % Interés) → Slate
                                 $pillSlate =
                                     $pillBase . ' bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200';
+                                $valSlate = 'tabular-nums text-slate-900 dark:text-slate-100';
 
-                                // ✅ TODO AL MISMO COLOR (Slate)
-                                $pillPrimary = $pillSlate;
-                                $pillSuccess = $pillSlate;
-                                $pillWarn = $pillSlate;
+                                // ● PAGADOS (Interés pagado / Ult. Pago, Hasta) → Sky
+                                $pillPagado =
+                                    $pillBase . ' bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-200';
+                                $valPagado = 'tabular-nums text-sky-900 dark:text-sky-100';
 
-                                $valBase = 'tabular-nums text-slate-900 dark:text-slate-100';
-                                $valStrong = $valBase;
-                                $valPrimary = $valBase;
-                                $valSuccess = $valBase;
-                                $valWarn = $valBase;
-                                $valSlate = $valBase;
+                                // ● PENDIENTES (Interés por pagar) → Amber
+                                $pillPendiente =
+                                    $pillBase . ' bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200';
+                                $valPendiente = 'tabular-nums text-amber-900 dark:text-amber-100';
+
+                                // ● VENCIDOS (T. Vencido) → Rose
+                                $pillVencido =
+                                    $pillBase . ' bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-200';
+                                $valVencido = 'tabular-nums text-rose-900 dark:text-rose-100';
                             @endphp
 
                             @if ($inv->tipo === 'PRIVADO')
@@ -170,35 +173,43 @@
                                         </span>
                                     @endif
 
-                                    {{-- % Utilidad (mismo color que Interés en BANCO) --}}
+                                    {{-- % Utilidad → INICIAL (Slate) --}}
                                     @if ($has('pct_utilidad_actual'))
-                                        <span class="{{ $pillPrimary }}">
-                                            <span class="font-semibold">% Interés:</span>
-                                            <span class="{{ $valPrimary }}">{{ $r['pct_utilidad_actual'] }}</span>
+                                        <span class="{{ $pillSlate }}">
+                                            <span class="font-semibold">% Anual:</span>
+                                            <span class="{{ $valSlate }}">{{ $r['pct_utilidad_actual'] }}</span>
                                         </span>
                                     @endif
 
-                                    {{-- Utilidad pagada (mismo color que Ult. Pago en BANCO) --}}
+                                    {{-- Utilidad pagada → PAGADO (Sky) --}}
                                     @if ($has('utilidad_pagada'))
-                                        <span class="{{ $pillSuccess }}">
-                                            <span class="font-semibold">Interés pagado:</span>
-                                            <span class="{{ $valSuccess }}">{{ $r['utilidad_pagada'] }}</span>
+                                        <span class="{{ $pillPagado }}">
+                                            <span class="font-semibold">Util. Pagada:</span>
+                                            <span class="{{ $valPagado }}">{{ $r['utilidad_pagada'] }}</span>
                                         </span>
                                     @endif
 
-                                    {{-- Utilidad por pagar (mismo color en ambos) --}}
-                                    @if ($has('utilidad_por_pagar'))
-                                        <span class="{{ $pillWarn }}">
-                                            <span class="font-semibold">Interés por pagar:</span>
-                                            <span class="{{ $valWarn }}">{{ $r['utilidad_por_pagar'] }}</span>
-                                        </span>
-                                    @endif
-
-                                    {{-- Hasta --}}
+                                    {{-- Hasta → PAGADO (Sky) --}}
                                     @if ($has('hasta_fecha'))
-                                        <span class="{{ $pillGray }}">
+                                        <span class="{{ $pillPagado }}">
                                             <span class="font-semibold">Hasta:</span>
-                                            <span class="{{ $valStrong }}">{{ $r['hasta_fecha'] }}</span>
+                                            <span class="{{ $valPagado }}">{{ $r['hasta_fecha'] }}</span>
+                                        </span>
+                                    @endif
+
+                                    {{-- Utilidad por pagar → PENDIENTE (Amber) --}}
+                                    @if ($has('utilidad_por_pagar'))
+                                        <span class="{{ $pillPendiente }}">
+                                            <span class="font-semibold">Por Pagar:</span>
+                                            <span class="{{ $valPendiente }}">{{ $r['utilidad_por_pagar'] }}</span>
+                                        </span>
+                                    @endif
+
+                                    {{-- Total Vencido → VENCIDO (Rose) --}}
+                                    @if ($has('total_vencido'))
+                                        <span class="{{ $pillVencido }}">
+                                            <span class="font-semibold">T. Vencido:</span>
+                                            <span class="{{ $valVencido }}">{{ $r['total_vencido'] }}</span>
                                         </span>
                                     @endif
 
@@ -214,27 +225,35 @@
                                         </span>
                                     @endif
 
-                                    {{-- Ult. Interés (mismo color que % Utilidad en PRIVADO) --}}
+                                    {{-- % Interés → INICIAL (Slate) - Interes configurada --}}
                                     @if ($has('interes'))
-                                        <span class="{{ $pillPrimary }}">
-                                            <span class="font-semibold">Ult. Interés:</span>
-                                            <span class="{{ $valPrimary }}">{{ $r['interes'] }}</span>
+                                        <span class="{{ $pillSlate }}">
+                                            <span class="font-semibold">% Anual:</span>
+                                            <span class="{{ $valSlate }}">{{ $r['interes'] }}</span>
                                         </span>
                                     @endif
 
-                                    {{-- Ult. Pago (mismo color que Utilidad pagada en PRIVADO) --}}
+                                    {{-- Ult. Pago → PAGADO (Sky) --}}
                                     @if ($has('total_a_pagar'))
-                                        <span class="{{ $pillSuccess }}">
-                                            <span class="font-semibold">Ult. Pago:</span>
-                                            <span class="{{ $valSuccess }}">{{ $r['total_a_pagar'] }}</span>
+                                        <span class="{{ $pillPagado }}">
+                                            <span class="font-semibold">Ult. Cuota:</span>
+                                            <span class="{{ $valPagado }}">{{ $r['total_a_pagar'] }}</span>
                                         </span>
                                     @endif
 
-                                    {{-- Hasta --}}
+                                    {{-- Hasta → PAGADO (Sky) --}}
                                     @if ($has('hasta_fecha'))
-                                        <span class="{{ $pillGray }}">
+                                        <span class="{{ $pillPagado }}">
                                             <span class="font-semibold">Hasta:</span>
-                                            <span class="{{ $valStrong }}">{{ $r['hasta_fecha'] }}</span>
+                                            <span class="{{ $valPagado }}">{{ $r['hasta_fecha'] }}</span>
+                                        </span>
+                                    @endif
+
+                                    {{-- Total Vencido → VENCIDO (Rose) --}}
+                                    @if ($has('total_vencido'))
+                                        <span class="{{ $pillVencido }}">
+                                            <span class="font-semibold">T. Vencido:</span>
+                                            <span class="{{ $valVencido }}">{{ $r['total_vencido'] }}</span>
                                         </span>
                                     @endif
 

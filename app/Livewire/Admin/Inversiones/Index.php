@@ -197,25 +197,70 @@ class Index extends Component
         $isBanco = strtoupper((string) $inv->tipo) === 'BANCO';
 
         $capitalActual = (float) ($inv->capital_actual ?? 0);
+        $hoy = now()->toDateString();
 
         // =========================
-        // PRIVADO
+        // PRIVADO: datos desde movimientos
         // =========================
-        $utilidadPorPagar = (float) ($inv->utilidad_pendiente_sum ?? 0);
-        $ultimaPagada = (float) ($inv->ultima_utilidad_pagada ?? 0);
+        $utilidadPorPagar = 0.0;
+        $ultimaPagada = 0.0;
+        $pctUltimoPago = 0.0;
+        $tienePendientePriv = false;
 
-        $pctUltimoPago = (float) ($inv->ultima_utilidad_pct ?? 0);
+        if (! $isBanco) {
+            // Suma utilidad PENDIENTE a futuro (por pagar no vencido)
+            $utilidadPorPagar = (float) $inv->movimientos()
+                ->where('tipo', 'PAGO_UTILIDAD')
+                ->where('estado', 'PENDIENTE')
+                ->whereDate('fecha', '>', $hoy)
+                ->sum('monto_utilidad');
+
+            // Última utilidad PAGADA (monto + %)
+            $lastPaidUtilidad = $inv->movimientos()
+                ->where('tipo', 'PAGO_UTILIDAD')
+                ->where('estado', 'PAGADO')
+                ->orderByDesc('fecha')
+                ->first();
+
+            if ($lastPaidUtilidad) {
+                $ultimaPagada = (float) ($lastPaidUtilidad->monto_utilidad ?? 0);
+                $pctUltimoPago = (float) ($lastPaidUtilidad->porcentaje_utilidad ?? 0);
+            }
+
+            $tienePendientePriv = $inv->movimientos()
+                ->where('tipo', 'PAGO_UTILIDAD')
+                ->where('estado', 'PENDIENTE')
+                ->exists();
+        }
+
         $pctConfigurado = (float) ($inv->porcentaje_utilidad ?? 0);
         $pctAMostrar = $pctUltimoPago > 0 ? $pctUltimoPago : $pctConfigurado;
 
-        $tienePendientePriv = ((int) ($inv->tiene_utilidad_pendiente ?? 0)) === 1;
+        // =========================
+        // BANCO: datos desde movimientos
+        // =========================
+        $ultimoTotal = 0.0;
+        $ultimoPctInteres = 0.0;
+        $tienePendienteBanco = false;
 
-        // =========================
-        // BANCO
-        // =========================
-        $ultimoTotal = $isBanco ? (float) ($inv->banco_ultimo_pago_total ?? 0) : 0.0;
-        $ultimoPctInteres = $isBanco ? (float) ($inv->banco_ultimo_pago_pct_interes ?? 0) : 0.0;
-        $tienePendienteBanco = ((int) ($inv->tiene_banco_pendiente ?? 0)) === 1;
+        if ($isBanco) {
+            // Último pago PAGADO (total + % interés)
+            $lastPaidBanco = $inv->movimientos()
+                ->where('tipo', 'BANCO_PAGO')
+                ->where('estado', 'PAGADO')
+                ->orderByDesc('fecha')
+                ->first();
+
+            if ($lastPaidBanco) {
+                $ultimoTotal = abs((float) ($lastPaidBanco->monto_total ?? 0));
+                $ultimoPctInteres = (float) ($lastPaidBanco->porcentaje_utilidad ?? 0);
+            }
+
+            $tienePendienteBanco = $inv->movimientos()
+                ->where('tipo', 'BANCO_PAGO')
+                ->where('estado', 'PENDIENTE')
+                ->exists();
+        }
 
         // Estado pendiente (sirve para ambos)
         $estadoPendiente = null;
@@ -226,14 +271,41 @@ class Index extends Component
             $estadoPendiente = 'PENDIENTE';
         }
 
-        // Corregimos la visualización de la fecha "Hasta" tomándola del último movimiento PAGADO real
-        $realHasta = $inv->movimientos()
-            ->whereIn('estado', ['PAGADO', 'INICIAL'])
-            ->max('fecha');
+        // Corregimos la visualización de la fecha "Hasta" tomándola solo de pagos reales
+        if ($isBanco) {
+            $realHasta = $inv->movimientos()
+                ->where('tipo', 'BANCO_PAGO')
+                ->where('estado', 'PAGADO')
+                ->max('fecha');
+        } else {
+            $realHasta = $inv->movimientos()
+                ->where('tipo', 'PAGO_UTILIDAD')
+                ->where('estado', 'PAGADO')
+                ->max('fecha');
+        }
 
         $hastaFecha = $realHasta
             ? Carbon::parse($realHasta)->format('d/m/Y')
-            : ($inv->fecha_inicio ? $inv->fecha_inicio->format('d/m/Y') : '—');
+            : '—';
+
+        // =========================
+        // Total Vencido (movimientos PENDIENTE con fecha <= hoy)
+        // =========================
+        $vencidoQuery = $inv->movimientos()
+            ->where('estado', 'PENDIENTE')
+            ->whereDate('fecha', '<=', $hoy);
+
+        if ($isBanco) {
+            $totalVencido = (float) (clone $vencidoQuery)
+                ->where('tipo', 'BANCO_PAGO')
+                ->sum('monto_total');
+        } else {
+            $totalVencido = (float) (clone $vencidoQuery)
+                ->where('tipo', 'PAGO_UTILIDAD')
+                ->sum('monto_utilidad');
+        }
+
+        $totalVencido = abs($totalVencido);
 
         return [
             // PRIVADO
@@ -259,9 +331,11 @@ class Index extends Component
             'deuda_cuotas' => $isBanco ? $this->fmtMoney($capitalActual, $inv->moneda) : null,
 
             'interes' => $isBanco
-                ? ($ultimoPctInteres > 0
-                    ? $this->fmtPct($ultimoPctInteres)
-                    : '—')
+                ? (function () use ($inv) {
+                    $tasaMensual = (float) ($inv->tasa_anual ?? 0);
+
+                    return $tasaMensual > 0 ? $this->fmtPct($tasaMensual) : '—';
+                })()
                 : null,
 
             'total_a_pagar' => $isBanco
@@ -272,6 +346,11 @@ class Index extends Component
 
             // Siempre
             'hasta_fecha' => $hastaFecha,
+
+            // Total Vencido (pagos vencidos a la fecha de hoy)
+            'total_vencido' => $totalVencido > 0
+                ? $this->fmtMoney($totalVencido, $inv->moneda)
+                : '—',
         ];
     }
 

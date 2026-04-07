@@ -10,7 +10,7 @@
             $inv = $inversion;
             $invMon = strtoupper($inv?->moneda ?? 'BOB');
             $hasTC = (bool) $needs_tc;
-            $inputCurrency = !empty($mov_moneda) ? $mov_moneda : $invMon;
+            $inputCurrency = $isUtilidad ? $invMon : (!empty($mov_moneda) ? $mov_moneda : $invMon);
         @endphp
 
         <div class="space-y-4">
@@ -257,15 +257,17 @@
                                     @enderror
                                 </div>
 
-                                <div class="col-span-1 md:col-span-1">
-                                    <label class="block text-sm mb-1">Monto en Moneda Base (preview)</label>
-                                    <input type="text" disabled value="{{ $monto_base_preview ?: '—' }}"
-                                        class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
-                                               border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
-                                    <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
-                                        Base: <span class="font-semibold">{{ $inversion?->moneda ?? '—' }}</span>
+                                @if (!$isUtilidad)
+                                    <div class="col-span-1 md:col-span-1">
+                                        <label class="block text-sm mb-1">Monto en Moneda Base (preview)</label>
+                                        <input type="text" disabled value="{{ $monto_base_preview ?: '—' }}"
+                                            class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
+                                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
+                                        <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
+                                            Base: <span class="font-semibold">{{ $inversion?->moneda ?? '—' }}</span>
+                                        </div>
                                     </div>
-                                </div>
+                                @endif
                             @endif
                         @endif
 
@@ -288,6 +290,11 @@
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                     border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                     focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                                @if ($hasTC && $monto_base_preview)
+                                    <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
+                                        Banco: <span class="font-semibold">{{ $monto_base_preview }} {{ $mov_moneda }}</span>
+                                    </div>
+                                @endif
                                 @error('utilidad_monto_mes')
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
@@ -303,6 +310,7 @@
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
+
                         @else
                             <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">

@@ -832,6 +832,8 @@
         <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(0,0,0,0.10)_100%)] dark:bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.55)_100%)]"></div>
     </div>
     --}}
+
+    @livewireStyles
 </body>
 
 </html>

@@ -311,14 +311,7 @@ class PagarUtilidadModal extends Component
         $invMon = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
         $bankMon = strtoupper((string) ($this->mov_moneda ?? $invMon));
 
-        // ✅ Si el monto guardado es BASE, lo convertimos a BANCO para que la UI muestre lo que el usuario espera (ej: USD 1000)
-        if ($invMon !== $bankMon && $this->tipo_cambio > 0) {
-            if ($invMon === 'BOB' && $bankMon === 'USD') {
-                $this->utilidad_monto_mes = $this->utilidad_monto_mes / $this->tipo_cambio;
-            } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
-                $this->utilidad_monto_mes = $this->utilidad_monto_mes * $this->tipo_cambio;
-            }
-        }
+        // El monto en DB está en moneda base (inv) — se muestra directamente en moneda inv
 
         $this->utilidad_monto_mes_formatted = number_format($this->utilidad_monto_mes, 2, ',', '.');
 
@@ -755,14 +748,8 @@ class PagarUtilidadModal extends Component
         $bankMon = strtoupper((string) ($this->mov_moneda ?? $invMon));
         $tc = (float) ($this->tipo_cambio ?? 0);
 
+        // Monto Mes siempre en moneda de la inversión (invMon) — no se convierte
         $montoMesBase = $montoMes;
-        if ($invMon !== $bankMon && $tc > 0) {
-            if ($invMon === 'BOB' && $bankMon === 'USD') {
-                $montoMesBase = $montoMes * $tc;
-            } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
-                $montoMesBase = $montoMes / $tc;
-            }
-        }
 
         $this->utilidad_pct_calc =
             $capBase > 0 && $montoMesBase > 0 ? round(($montoMesBase / $capBase) * 100, 2) : 0.0;
@@ -818,8 +805,19 @@ class PagarUtilidadModal extends Component
             return;
         }
 
-        $this->utilidad_debito_banco = $montoBase;
-        $this->utilidad_debito_banco_formatted = number_format($montoBase, 2, ',', '.');
+        // Convertir a moneda banco si difiere de la moneda inv
+        $tc = (float) ($this->tipo_cambio ?? 0);
+        $debitoBanco = $montoBase;
+        if ($invMon !== $bankMon && $tc > 0) {
+            if ($invMon === 'USD' && $bankMon === 'BOB') {
+                $debitoBanco = $montoBase * $tc;
+            } elseif ($invMon === 'BOB' && $bankMon === 'USD') {
+                $debitoBanco = $montoBase / $tc;
+            }
+        }
+
+        $this->utilidad_debito_banco = $debitoBanco;
+        $this->utilidad_debito_banco_formatted = number_format($debitoBanco, 2, ',', '.');
     }
 
     // recalcTcPreview: muestra preview del monto equivalente en moneda base
@@ -843,10 +841,16 @@ class PagarUtilidadModal extends Component
             return;
         }
 
-        $monto =
-            $this->tipo_pago === 'PAGO_UTILIDAD'
-                ? (float) ($this->utilidad_debito_banco > 0 ? $this->utilidad_debito_banco : 0)
-                : (float) ($this->monto_capital ?? 0);
+        // Para PAGO_UTILIDAD: debito banco ya está en moneda banco — mostrar directo
+        if ($this->tipo_pago === 'PAGO_UTILIDAD') {
+            $debito = (float) ($this->utilidad_debito_banco > 0 ? $this->utilidad_debito_banco : 0);
+            $this->monto_base_preview = $debito > 0 ? number_format($debito, 2, ',', '.') : null;
+
+            return;
+        }
+
+        // Para capital: el monto ingresado está en moneda banco, convertir a moneda inv
+        $monto = (float) ($this->monto_capital ?? 0);
 
         if ($monto <= 0) {
             $this->monto_base_preview = null;
@@ -979,23 +983,9 @@ class PagarUtilidadModal extends Component
                     : (float) $this->utilidad_a_pagar;
 
                 if ($this->modoConfirmar && $this->movimientoId) {
-                    $invMon = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
-                    $bankMon = strtoupper((string) ($this->mov_moneda ?? $invMon));
-                    $tcVal = (float) ($this->tipo_cambio ?? 1);
-
-                    // Calculamos el equivalente en moneda base (Inversión)
+                    // Monto Mes y A Pagar ya están en moneda base (inv) — guardar directo
                     $totalMesBase = $this->utilidad_monto_mes;
                     $totalPagarBase = $this->utilidad_a_pagar;
-
-                    if ($invMon !== $bankMon && $tcVal > 0) {
-                        if ($invMon === 'BOB' && $bankMon === 'USD') {
-                            $totalMesBase = $this->utilidad_monto_mes * $tcVal;
-                            $totalPagarBase = $this->utilidad_a_pagar * $tcVal;
-                        } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
-                            $totalMesBase = $this->utilidad_monto_mes / $tcVal;
-                            $totalPagarBase = $this->utilidad_a_pagar / $tcVal;
-                        }
-                    }
 
                     // 1) Actualizar datos (por si cambió algo en el modal de confirmar)
                     $mov = InversionMovimiento::query()->findOrFail($this->movimientoId);
@@ -1026,23 +1016,9 @@ class PagarUtilidadModal extends Component
 
                     $this->dispatch('toast', type: 'success', message: 'Pago confirmado');
                 } else {
-                    $invMon = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
-                    $bankMon = strtoupper((string) ($this->mov_moneda ?? $invMon));
-                    $tcVal = (float) ($this->tipo_cambio ?? 1);
-
-                    // Calculamos el equivalente en moneda base (Inversión)
+                    // Monto Mes y A Pagar ya están en moneda base (inv) — guardar directo
                     $totalPagarBase = $this->utilidad_a_pagar;
                     $totalMesBase = $this->utilidad_monto_mes;
-
-                    if ($invMon !== $bankMon && $tcVal > 0) {
-                        if ($invMon === 'BOB' && $bankMon === 'USD') {
-                            $totalPagarBase = $this->utilidad_a_pagar * $tcVal;
-                            $totalMesBase = $this->utilidad_monto_mes * $tcVal;
-                        } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
-                            $totalPagarBase = $this->utilidad_a_pagar / $tcVal;
-                            $totalMesBase = $this->utilidad_monto_mes / $tcVal;
-                        }
-                    }
 
                     // Registro normal (PENDIENTE)
                     $service->pagarUtilidad($this->inversion, [

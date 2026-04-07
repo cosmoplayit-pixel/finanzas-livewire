@@ -656,22 +656,32 @@ trait RendicionEditorModal
 
         try {
             if ($this->mov_edit_id !== null) {
-                $service->actualizarMovimiento(
+                $updatedMov = $service->actualizarMovimiento(
                     rendicion: $r,
                     movimientoId: $this->mov_edit_id,
                     data: $data,
                     user: auth()->user(),
                     foto: $this->mov_foto,
                 );
+                if ($this->mov_modal_tipo === 'DEVOLUCION') {
+                    $this->highlight_devolucion_id = $updatedMov->id;
+                } else {
+                    $this->highlight_movimiento_id = $updatedMov->id;
+                }
                 $this->dispatch('toast', type: 'success', message: 'Movimiento actualizado');
             } else {
-                $service->registrarMovimiento(
+                $newMov = $service->registrarMovimiento(
                     rendicion: $r,
                     tipo: $this->mov_modal_tipo,
                     data: $data,
                     user: auth()->user(),
                     foto: $this->mov_foto,
                 );
+                if ($this->mov_modal_tipo === 'DEVOLUCION') {
+                    $this->highlight_devolucion_id = $newMov->id;
+                } else {
+                    $this->highlight_movimiento_id = $newMov->id;
+                }
                 $this->dispatch('toast', type: 'success', message: 'Movimiento registrado');
             }
 

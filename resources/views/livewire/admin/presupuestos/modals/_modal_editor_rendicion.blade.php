@@ -113,36 +113,6 @@
                     </div>
                 </div>
             </div>
-
-            {{-- IZQUIERDA: Titulo + Boton --}}
-            <div class="flex items-center justify-between w-full lg:w-auto gap-4 shrink-0">
-
-                {{-- BOTÓN --}}
-                @can('agente_presupuestos.register_movement')
-                    <button type="button" wire:click="openMovimientoModal1" wire:loading.attr="disabled"
-                        wire:target="openMovimientoModal1" @disabled(($editorSaldo ?? 0) <= 0)
-                        title="{{ ($editorSaldo ?? 0) <= 0 ? 'Saldo agotado. No se pueden registrar más movimientos.' : '' }}"
-                        class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold transition
-                        bg-[#111827] text-white hover:bg-gray-800
-                        disabled:opacity-50 disabled:cursor-not-allowed
-                        dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 whitespace-nowrap">
-
-                        {{-- icon plus --}}
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 5v14M5 12h14" />
-                        </svg>
-
-                        <span wire:loading.remove wire:target="openMovimientoModal1">
-                            Movimiento
-                        </span>
-
-                        <span wire:loading wire:target="openMovimientoModal1">
-                            …
-                        </span>
-                    </button>
-                @endcan
-            </div>
         </div>
 
         {{-- TABLAS --}}
@@ -203,13 +173,13 @@
                                         @endphp
                                         <tr @if ($isDevHighlighted) id="devolucion-highlight-{{ $m->id }}" @endif
                                             class="transition group
-                                            {{ $isDevHighlighted ? 'bg-amber-50 dark:bg-amber-900/20' : 'hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10' }}">
+                                            {{ $isDevHighlighted ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10' }}">
                                             <td
                                                 class="p-3 text-center font-medium
-                                                {{ $isDevHighlighted ? 'border-l-4 border-amber-400' : 'border-l-4 border-transparent' }}">
+                                                {{ $isDevHighlighted ? 'border-l-4 border-emerald-400' : 'border-l-4 border-transparent' }}">
                                                 @if ($isDevHighlighted)
                                                     <span
-                                                        class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-400 text-white font-bold text-[10px] animate-pulse"
+                                                        class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-400 text-white font-bold text-[10px] animate-pulse"
                                                         title="Esta es la devolución de la transacción">{{ $i + 1 }}</span>
                                                 @else
                                                     <span
@@ -268,9 +238,9 @@
                                                             class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-amber-600 border-amber-300 hover:bg-amber-50 hover:border-amber-400 dark:bg-neutral-900 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-900/20 shadow-sm"
                                                             title="Editar">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                                viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2"
-                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                                stroke-width="2" stroke-linecap="round"
+                                                                stroke-linejoin="round">
                                                                 <path
                                                                     d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                                                 <path
@@ -300,14 +270,17 @@
                                                                 class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-500 border-red-200 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
                                                                 title="Ver PDF">
                                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                                                    stroke="currentColor" stroke-width="2"
-                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    class="w-4 h-4" viewBox="0 0 24 24"
+                                                                    fill="none" stroke="currentColor"
+                                                                    stroke-width="2" stroke-linecap="round"
+                                                                    stroke-linejoin="round">
                                                                     <path
                                                                         d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                                                     <polyline points="14 2 14 8 20 8" />
-                                                                    <line x1="16" y1="13" x2="8" y2="13" />
-                                                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                                                    <line x1="16" y1="13"
+                                                                        x2="8" y2="13" />
+                                                                    <line x1="16" y1="17"
+                                                                        x2="8" y2="17" />
                                                                     <polyline points="10 9 9 9 8 9" />
                                                                 </svg>
                                                             </a>
@@ -317,9 +290,10 @@
                                                                 class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-500 border-indigo-200 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
                                                                 title="Ver imagen">
                                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                                                    stroke="currentColor" stroke-width="2"
-                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    class="w-4 h-4" viewBox="0 0 24 24"
+                                                                    fill="none" stroke="currentColor"
+                                                                    stroke-width="2" stroke-linecap="round"
+                                                                    stroke-linejoin="round">
                                                                     <rect x="3" y="3" width="18" height="18"
                                                                         rx="2" ry="2" />
                                                                     <circle cx="8.5" cy="8.5" r="1.5" />
@@ -332,9 +306,10 @@
                                                                 class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:border-gray-400 dark:bg-neutral-900 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-900/20 shadow-sm"
                                                                 title="Ver archivo">
                                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                                                    stroke="currentColor" stroke-width="2"
-                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    class="w-4 h-4" viewBox="0 0 24 24"
+                                                                    fill="none" stroke="currentColor"
+                                                                    stroke-width="2" stroke-linecap="round"
+                                                                    stroke-linejoin="round">
                                                                     <path
                                                                         d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
                                                                     <polyline points="13 2 13 9 20 9" />
@@ -364,15 +339,16 @@
                                                             class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
                                                             title="Eliminar">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                                viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2"
-                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                                stroke-width="2" stroke-linecap="round"
+                                                                stroke-linejoin="round">
                                                                 <path d="M3 6h18" />
-                                                                <path
-                                                                    d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                                                                 <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                                <line x1="10" y1="11" x2="10" y2="17" />
-                                                                <line x1="14" y1="11" x2="14" y2="17" />
+                                                                <line x1="10" y1="11" x2="10"
+                                                                    y2="17" />
+                                                                <line x1="14" y1="11" x2="14"
+                                                                    y2="17" />
                                                             </svg>
                                                         </button>
                                                     @endcan
@@ -420,12 +396,10 @@
                                                     title="Editar">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="2" stroke-linecap="round"
-                                                        stroke-linejoin="round">
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                         <path
                                                             d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                                        <path
-                                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                                     </svg>
                                                 </button>
                                             @endcan
@@ -693,9 +667,9 @@
                                                             class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-amber-600 border-amber-300 hover:bg-amber-50 hover:border-amber-400 dark:bg-neutral-900 dark:text-amber-400 dark:border-amber-700 dark:hover:bg-amber-900/20 shadow-sm"
                                                             title="Editar">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                                viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2"
-                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                                stroke-width="2" stroke-linecap="round"
+                                                                stroke-linejoin="round">
                                                                 <path
                                                                     d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                                                                 <path
@@ -725,14 +699,17 @@
                                                                 class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-500 border-red-200 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
                                                                 title="Ver PDF">
                                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                                                    stroke="currentColor" stroke-width="2"
-                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    class="w-4 h-4" viewBox="0 0 24 24"
+                                                                    fill="none" stroke="currentColor"
+                                                                    stroke-width="2" stroke-linecap="round"
+                                                                    stroke-linejoin="round">
                                                                     <path
                                                                         d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                                                                     <polyline points="14 2 14 8 20 8" />
-                                                                    <line x1="16" y1="13" x2="8" y2="13" />
-                                                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                                                    <line x1="16" y1="13"
+                                                                        x2="8" y2="13" />
+                                                                    <line x1="16" y1="17"
+                                                                        x2="8" y2="17" />
                                                                     <polyline points="10 9 9 9 8 9" />
                                                                 </svg>
                                                             </a>
@@ -742,9 +719,10 @@
                                                                 class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-500 border-indigo-200 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
                                                                 title="Ver imagen">
                                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                                                    stroke="currentColor" stroke-width="2"
-                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    class="w-4 h-4" viewBox="0 0 24 24"
+                                                                    fill="none" stroke="currentColor"
+                                                                    stroke-width="2" stroke-linecap="round"
+                                                                    stroke-linejoin="round">
                                                                     <rect x="3" y="3" width="18" height="18"
                                                                         rx="2" ry="2" />
                                                                     <circle cx="8.5" cy="8.5" r="1.5" />
@@ -757,9 +735,10 @@
                                                                 class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-gray-500 border-gray-200 hover:bg-gray-50 hover:border-gray-400 dark:bg-neutral-900 dark:text-gray-400 dark:border-gray-700 dark:hover:bg-gray-900/20 shadow-sm"
                                                                 title="Ver archivo">
                                                                 <svg xmlns="http://www.w3.org/2000/svg"
-                                                                    class="w-4 h-4" viewBox="0 0 24 24" fill="none"
-                                                                    stroke="currentColor" stroke-width="2"
-                                                                    stroke-linecap="round" stroke-linejoin="round">
+                                                                    class="w-4 h-4" viewBox="0 0 24 24"
+                                                                    fill="none" stroke="currentColor"
+                                                                    stroke-width="2" stroke-linecap="round"
+                                                                    stroke-linejoin="round">
                                                                     <path
                                                                         d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
                                                                     <polyline points="13 2 13 9 20 9" />
@@ -789,15 +768,16 @@
                                                             class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-red-600 border-red-300 hover:bg-red-50 hover:border-red-400 dark:bg-neutral-900 dark:text-red-400 dark:border-red-700 dark:hover:bg-red-900/20 shadow-sm"
                                                             title="Eliminar">
                                                             <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                                viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2"
-                                                                stroke-linecap="round" stroke-linejoin="round">
+                                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                                stroke-width="2" stroke-linecap="round"
+                                                                stroke-linejoin="round">
                                                                 <path d="M3 6h18" />
-                                                                <path
-                                                                    d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                                                                 <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                                <line x1="10" y1="11" x2="10" y2="17" />
-                                                                <line x1="14" y1="11" x2="14" y2="17" />
+                                                                <line x1="10" y1="11" x2="10"
+                                                                    y2="17" />
+                                                                <line x1="14" y1="11" x2="14"
+                                                                    y2="17" />
                                                             </svg>
                                                         </button>
                                                     @endcan
@@ -849,12 +829,10 @@
                                                     title="Editar">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="2" stroke-linecap="round"
-                                                        stroke-linejoin="round">
+                                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                         <path
                                                             d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                                                        <path
-                                                            d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                                                     </svg>
                                                 </button>
                                             @endcan
@@ -1009,25 +987,44 @@
     </div>
 
     @slot('footer')
+        @php $saldoActual = (float) ($editorSaldo ?? 0); @endphp
         <div class="flex items-center justify-end gap-2">
             <button type="button" wire:click="closeEditor"
                 class="cursor-pointer px-4 py-2 rounded-lg border border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 transition">
                 Cerrar
             </button>
-            @can('agente_presupuestos.close_movement')
-                <button type="button" wire:click="cerrarRendicion" wire:loading.attr="disabled"
-                    wire:target="cerrarRendicion" @disabled($editorEstado === 'cerrado' || ((float) ($editorSaldo ?? 0)) > 0)
-                    class="cursor-pointer px-4 py-2 rounded-lg bg-emerald-600 text-white
-           hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <span wire:loading.remove wire:target="cerrarRendicion">
-                        Cerrar rendición
-                    </span>
 
-                    <span wire:loading wire:target="cerrarRendicion">
-                        Cerrando…
-                    </span>
-                </button>
-            @endcan
+            {{-- + Movimiento: solo cuando hay saldo --}}
+            @if ($editorEstado !== 'cerrado' && $saldoActual > 0)
+                @can('agente_presupuestos.register_movement')
+                    <button type="button" wire:click="openMovimientoModal1" wire:loading.attr="disabled"
+                        wire:target="openMovimientoModal1"
+                        class="cursor-pointer inline-flex items-center gap-2 px-4 py-2 rounded-lg  transition
+                               bg-[#111827] text-white hover:bg-gray-800
+                               disabled:opacity-50 disabled:cursor-not-allowed">
+                        {{-- ícono recibo/ticket --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M4 2v20l3-2 2 2 3-2 3 2 2-2 3 2V2l-3 2-2-2-3 2-3-2-2 2Z" />
+                            <path d="M9 8h6M9 12h6M9 16h4" />
+                        </svg>
+                        <span wire:loading.remove wire:target="openMovimientoModal1">Registrar gasto</span>
+                        <span wire:loading wire:target="openMovimientoModal1">…</span>
+                    </button>
+                @endcan
+            @endif
+
+            {{-- Cerrar rendición: solo cuando saldo = 0 --}}
+            @if ($editorEstado !== 'cerrado' && $saldoActual <= 0)
+                @can('agente_presupuestos.close_movement')
+                    <button type="button" wire:click="cerrarRendicion" wire:loading.attr="disabled"
+                        wire:target="cerrarRendicion"
+                        class="cursor-pointer px-4 py-2 rounded-lg bg-emerald-600 text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="cerrarRendicion">Cerrar rendición</span>
+                        <span wire:loading wire:target="cerrarRendicion">Cerrando…</span>
+                    </button>
+                @endcan
+            @endif
         </div>
     @endslot
 </x-ui.modal>
@@ -1115,6 +1112,12 @@
                         behavior: 'smooth',
                         block: 'center'
                     });
+
+                    // Limpiar el resaltado después de 5 segundos
+                    setTimeout(() => {
+                        @this.set('highlight_movimiento_id', null);
+                        @this.set('highlight_devolucion_id', null);
+                    }, 5000);
                 }
             }, 500);
         });

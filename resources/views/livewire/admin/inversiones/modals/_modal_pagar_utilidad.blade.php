@@ -422,8 +422,10 @@
                 </div>
             </div>
 
-            {{-- FOOTER BOTONES --}}
-            <div class="flex items-center justify-end gap-2 pt-2">
+        </div> {{-- space-y --}}
+
+        <x-slot:footer>
+            <div class="flex items-center justify-end gap-2">
                 <button type="button" wire:click="close"
                     class="px-4 py-2 cursor-pointer rounded-lg border border-gray-300 dark:border-neutral-700
                            bg-white dark:bg-neutral-900 text-gray-700 dark:text-neutral-200
@@ -435,14 +437,13 @@
                     class="px-4 py-2 cursor-pointer rounded-lg text-white
                     {{ $this->canSave ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-emerald-600/60 cursor-not-allowed' }}
                     disabled:opacity-50 disabled:cursor-not-allowed">
-
                     <span wire:loading.remove wire:target="save,comprobante_imagen">
                         {{ $modoConfirmar ? 'Confirmar pago' : 'Guardar' }}
                     </span>
                     <span wire:loading wire:target="save,comprobante_imagen">Procesando…</span>
                 </button>
             </div>
+        </x-slot:footer>
 
-        </div> {{-- space-y --}}
     </x-ui.modal>
 </div>

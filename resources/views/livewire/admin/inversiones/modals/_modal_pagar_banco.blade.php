@@ -378,7 +378,7 @@
 
         </div> {{-- space-y --}}
 
-        @slot('footer')
+        <x-slot:footer>
             <div class="flex justify-end gap-2">
                 <button type="button" wire:click="close"
                     class="px-4 py-2 rounded-lg border cursor-pointer
@@ -407,7 +407,7 @@
                     </button>
                 @endif
             </div>
-        @endslot
+        </x-slot:footer>
 
     </x-ui.modal>
 </div>

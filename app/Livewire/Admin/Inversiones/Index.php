@@ -5,14 +5,12 @@ namespace App\Livewire\Admin\Inversiones;
 use App\Models\Inversion;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
-use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination, WithFileUploads;
+    use WithPagination;
 
     protected $paginationTheme = 'tailwind';
 
@@ -31,16 +29,14 @@ class Index extends Component
 
     public ?int $highlight_movimiento_id = null;
 
-    // Agregar comprobante a inversión
-    public bool $openAgregarComprobante = false;
-
-    public ?int $agregarComprobanteInvId = null;
-
-    public $agregarComprobanteFile = null;
-
     protected $listeners = [
-        'inversionUpdated' => '$refresh',
+        'inversionUpdated' => 'handleInversionUpdated',
     ];
+
+    public function handleInversionUpdated(): void
+    {
+        $this->recalcTotales();
+    }
 
     public function mount(): void
     {
@@ -60,60 +56,88 @@ class Index extends Component
         if ($movId) {
             $this->highlight_movimiento_id = (int) $movId;
         }
+
+        $this->recalcTotales();
     }
 
-    // Resetea paginación al buscar
     public function updatingSearch(): void
     {
         $this->resetPage();
     }
 
-    // Resetea paginación al cambiar filtro tipo
-    public function updatingFTipo(): void
+    public function updatedFTipo(): void
     {
         $this->resetPage();
+        $this->recalcTotales();
     }
 
-    // Resetea paginación al cambiar filtro estado
-    public function updatingFEstado(): void
+    public function updatedFEstado(): void
     {
         $this->resetPage();
+        $this->recalcTotales();
     }
 
-    public function updatingMoneda(): void
+    public function updatedMoneda(): void
     {
         $this->resetPage();
+        $this->recalcTotales();
     }
 
-    // Abre modal crear inversión
     public function openCreate(): void
     {
         $this->dispatch('openCreateInversion');
     }
 
-    public function abrirAgregarComprobante(int $invId): void
+    private function buildTotalesQuery(): \Illuminate\Database\Eloquent\Builder
     {
-        $this->agregarComprobanteInvId = $invId;
-        $this->agregarComprobanteFile = null;
-        $this->openAgregarComprobante = true;
+        $empresaId = auth()->user()->empresa_id;
+        $q = Inversion::query()->where('empresa_id', $empresaId);
+
+        if ($this->fTipo !== '') {
+            $q->where('tipo', $this->fTipo);
+        }
+        if ($this->moneda !== 'all' && $this->moneda !== '') {
+            $q->where('moneda', $this->moneda);
+        }
+        if ($this->fEstado !== '') {
+            if ($this->fEstado === 'PENDIENTE') {
+                $q->whereRaw("EXISTS (SELECT 1 FROM inversion_movimientos im WHERE im.inversion_id = inversions.id AND ((im.tipo = 'PAGO_UTILIDAD' AND im.estado = 'PENDIENTE') OR (im.tipo = 'BANCO_PAGO' AND im.estado = 'PENDIENTE')))");
+            } else {
+                $q->where('estado', $this->fEstado);
+            }
+        }
+        return $q;
     }
 
-    public function guardarComprobanteInversion(): void
+    public function recalcTotales(): void
     {
-        $this->validate(['agregarComprobanteFile' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120']);
+        $baseQ = $this->buildTotalesQuery();
 
-        $inv = Inversion::findOrFail($this->agregarComprobanteInvId);
-        $path = $this->agregarComprobanteFile->store('comprobantes/inversiones', 'public');
-        $inv->update(['comprobante' => $path]);
+        $this->totales = [
+            'privado_bob' => (clone $baseQ)->where('tipo', 'PRIVADO')->where('moneda', 'BOB')->sum('capital_actual'),
+            'privado_usd' => (clone $baseQ)->where('tipo', 'PRIVADO')->where('moneda', 'USD')->sum('capital_actual'),
+            'banco_bob'   => (clone $baseQ)->where('tipo', 'BANCO')->where('moneda', 'BOB')->sum('capital_actual'),
+            'banco_usd'   => (clone $baseQ)->where('tipo', 'BANCO')->where('moneda', 'USD')->sum('capital_actual'),
+            'pendiente_bob' => \Illuminate\Support\Facades\DB::table('inversion_movimientos')
+                ->join('inversions', 'inversion_movimientos.inversion_id', '=', 'inversions.id')
+                ->whereIn('inversions.id', (clone $baseQ)->select('inversions.id'))
+                ->whereIn('inversion_movimientos.tipo', ['PAGO_UTILIDAD', 'BANCO_PAGO'])
+                ->where('inversion_movimientos.estado', 'PENDIENTE')
+                ->whereDate('inversion_movimientos.fecha', '<=', now()->toDateString())
+                ->where('inversions.moneda', 'BOB')
+                ->sum(\Illuminate\Support\Facades\DB::raw("CASE WHEN inversion_movimientos.tipo = 'PAGO_UTILIDAD' THEN COALESCE(inversion_movimientos.monto_utilidad, 0) ELSE COALESCE(inversion_movimientos.monto_total, 0) END")),
+            'pendiente_usd' => \Illuminate\Support\Facades\DB::table('inversion_movimientos')
+                ->join('inversions', 'inversion_movimientos.inversion_id', '=', 'inversions.id')
+                ->whereIn('inversions.id', (clone $baseQ)->select('inversions.id'))
+                ->whereIn('inversion_movimientos.tipo', ['PAGO_UTILIDAD', 'BANCO_PAGO'])
+                ->where('inversion_movimientos.estado', 'PENDIENTE')
+                ->whereDate('inversion_movimientos.fecha', '<=', now()->toDateString())
+                ->where('inversions.moneda', 'USD')
+                ->sum(\Illuminate\Support\Facades\DB::raw("CASE WHEN inversion_movimientos.tipo = 'PAGO_UTILIDAD' THEN COALESCE(inversion_movimientos.monto_utilidad, 0) ELSE COALESCE(inversion_movimientos.monto_total, 0) END")),
+        ];
 
-        $this->cerrarAgregarComprobante();
-    }
-
-    public function cerrarAgregarComprobante(): void
-    {
-        $this->openAgregarComprobante = false;
-        $this->agregarComprobanteInvId = null;
-        $this->agregarComprobanteFile = null;
+        $this->totales['total_general_bob'] = $this->totales['banco_bob'] + $this->totales['privado_bob'] + $this->totales['pendiente_bob'];
+        $this->totales['total_general_usd'] = $this->totales['banco_usd'] + $this->totales['privado_usd'] + $this->totales['pendiente_usd'];
     }
 
     // Limpia filtros
@@ -136,9 +160,7 @@ class Index extends Component
         // =========================
         if ($this->search !== '') {
             $s = trim($this->search);
-            $baseQ->where(function ($w) use ($s) {
-                $w->where('codigo', 'like', "%{$s}%")->orWhere('nombre_completo', 'like', "%{$s}%");
-            });
+            $baseQ->where('codigo', 'like', "%{$s}%");
         }
 
         if ($this->fTipo !== '') {
@@ -171,35 +193,6 @@ class Index extends Component
                 $baseQ->where('estado', $this->fEstado);
             }
         }
-
-        // Calculate totals
-        // Calculate totals
-        $this->totales = [
-            'privado_bob' => (clone $baseQ)->where('tipo', 'PRIVADO')->where('moneda', 'BOB')->sum('capital_actual'),
-            'privado_usd' => (clone $baseQ)->where('tipo', 'PRIVADO')->where('moneda', 'USD')->sum('capital_actual'),
-            'banco_bob' => (clone $baseQ)->where('tipo', 'BANCO')->where('moneda', 'BOB')->sum('capital_actual'),
-            'banco_usd' => (clone $baseQ)->where('tipo', 'BANCO')->where('moneda', 'USD')->sum('capital_actual'),
-            'pendiente_bob' => \Illuminate\Support\Facades\DB::table('inversion_movimientos')
-                ->join('inversions', 'inversion_movimientos.inversion_id', '=', 'inversions.id')
-                ->whereIn('inversions.id', (clone $baseQ)->select('inversions.id'))
-                ->whereIn('inversion_movimientos.tipo', ['PAGO_UTILIDAD', 'BANCO_PAGO'])
-                ->where('inversion_movimientos.estado', 'PENDIENTE')
-                ->whereDate('inversion_movimientos.fecha', '<=', now()->toDateString())
-                ->where('inversions.moneda', 'BOB')
-                ->sum(\Illuminate\Support\Facades\DB::raw("CASE WHEN inversion_movimientos.tipo = 'PAGO_UTILIDAD' THEN COALESCE(inversion_movimientos.monto_utilidad, 0) ELSE COALESCE(inversion_movimientos.monto_total, 0) END")),
-            'pendiente_usd' => \Illuminate\Support\Facades\DB::table('inversion_movimientos')
-                ->join('inversions', 'inversion_movimientos.inversion_id', '=', 'inversions.id')
-                ->whereIn('inversions.id', (clone $baseQ)->select('inversions.id'))
-                ->whereIn('inversion_movimientos.tipo', ['PAGO_UTILIDAD', 'BANCO_PAGO'])
-                ->where('inversion_movimientos.estado', 'PENDIENTE')
-                ->whereDate('inversion_movimientos.fecha', '<=', now()->toDateString())
-                ->where('inversions.moneda', 'USD')
-                ->sum(\Illuminate\Support\Facades\DB::raw("CASE WHEN inversion_movimientos.tipo = 'PAGO_UTILIDAD' THEN COALESCE(inversion_movimientos.monto_utilidad, 0) ELSE COALESCE(inversion_movimientos.monto_total, 0) END")),
-        ];
-
-        // Global Totals (Capital Banco + Capital Privado + Pendientes)
-        $this->totales['total_general_bob'] = $this->totales['banco_bob'] + $this->totales['privado_bob'] + $this->totales['pendiente_bob'];
-        $this->totales['total_general_usd'] = $this->totales['banco_usd'] + $this->totales['privado_usd'] + $this->totales['pendiente_usd'];
 
         $q = clone $baseQ;
         $q->with('banco')

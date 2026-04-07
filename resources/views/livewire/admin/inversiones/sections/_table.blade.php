@@ -322,7 +322,7 @@
                                 @else
                                     @can('inversiones.register_pay')
                                         <button type="button"
-                                            wire:click="abrirAgregarComprobante({{ $inv->id }})"
+                                            wire:click="$dispatch('abrirAgregarComprobanteInversion', { invId: {{ $inv->id }} })"
                                             class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer
                                                    bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100 hover:text-gray-600
                                                    dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700 dark:hover:bg-neutral-700 shadow-sm"

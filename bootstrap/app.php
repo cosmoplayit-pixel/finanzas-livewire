@@ -6,6 +6,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\CheckUserActive;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -17,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Aliases de Spatie
         $middleware->alias([
+            // Reemplaza el Authenticate de Laravel para que las requests de Livewire
+            // reciban 401 en lugar de redirigir al login (evita el 405 en /livewire/update)
+            'auth' => Authenticate::class,
+
             'role' => RoleMiddleware::class,
             'permission' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,

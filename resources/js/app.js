@@ -1,6 +1,19 @@
 import Swal from 'sweetalert2';
 window.Swal = Swal;
 
+// Cuando la sesión expira, Livewire recibe un 401 en lugar de redirigir a /livewire/update.
+// Hacemos reload completo para que el usuario vea el login normalmente.
+document.addEventListener('livewire:init', () => {
+    Livewire.hook('request', ({ fail }) => {
+        fail(({ status, preventDefault }) => {
+            if (status === 401) {
+                preventDefault();
+                window.location.reload();
+            }
+        });
+    });
+});
+
 import './utils/input-formatter';
 import { initDashboardCharts } from './admin/dashboard-charts';
 

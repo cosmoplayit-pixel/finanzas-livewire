@@ -10,7 +10,7 @@
             $inv = $inversion;
             $invMon = strtoupper($inv?->moneda ?? 'BOB');
             $hasTC = (bool) $needs_tc;
-            $inputCurrency = $isUtilidad ? $invMon : (!empty($mov_moneda) ? $mov_moneda : $invMon);
+            $inputCurrency = $invMon; // Capital y utilidad siempre en moneda base de la inversión
         @endphp
 
         <div class="space-y-4">
@@ -58,20 +58,17 @@
 
                                 <span class="text-gray-300 dark:text-neutral-600">•</span>
 
-                                {{-- Capital actual --}}
+                                {{-- Capital actual + Moneda --}}
                                 <span class="inline-flex items-center gap-1.5">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round">
-                                        <path d="M12 1v22" />
-                                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" />
+                                        <rect x="2" y="6" width="20" height="12" rx="2" />
+                                        <circle cx="12" cy="12" r="2" />
+                                        <path d="M6 12h.01M18 12h.01" />
                                     </svg>
-                                    <span class="tabular-nums">
-                                        {{-- usa el mismo formato que en tu app --}}
-                                        {{ strtoupper((string) ($inversion?->moneda ?? 'BOB')) === 'USD'
-                                            ? '$ ' . number_format((float) ($inversion?->capital_actual ?? 0), 2, ',', '.')
-                                            : number_format((float) ($inversion?->capital_actual ?? 0), 2, ',', '.') . ' Bs' }}
-                                    </span>
+                                    <span class="tabular-nums">{{ number_format((float) ($inversion?->capital_actual ?? 0), 2, ',', '.') }}</span>
+                                    <span class="font-semibold">{{ $invMon }}</span>
                                 </span>
 
                                 <span class="text-gray-300 dark:text-neutral-600">•</span>
@@ -202,6 +199,7 @@
                         @endif
 
                         @if ($modoConfirmar || !$isUtilidad)
+
                             {{-- BANCO --}}
                             <div class="col-span-2 md:col-span-1">
                                 <label class="block text-sm mb-1">
@@ -228,19 +226,6 @@
                                 @endif
                             </div>
 
-                            {{-- COMPROBANTE --}}
-                            <div class="col-span-1 md:col-span-1">
-                                <label class="block text-sm mb-1">Nro Comprobante <span
-                                        class="text-red-500">*</span></label>
-                                <input type="text" wire:model.live="nro_comprobante" placeholder="Ej: 100"
-                                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
-                                           focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
-                                @error('nro_comprobante')
-                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
-                                @enderror
-                            </div>
-
                             {{-- TIPO DE CAMBIO (si aplica) --}}
                             @if ($hasTC)
                                 <div class="col-span-1 md:col-span-1">
@@ -256,31 +241,13 @@
                                         <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                     @enderror
                                 </div>
-
-                                @if (!$isUtilidad)
-                                    <div class="col-span-1 md:col-span-1">
-                                        <label class="block text-sm mb-1">Monto en Moneda Base (preview)</label>
-                                        <input type="text" disabled value="{{ $monto_base_preview ?: '—' }}"
-                                            class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
-                                                   border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
-                                        <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
-                                            Base: <span class="font-semibold">{{ $inversion?->moneda ?? '—' }}</span>
-                                        </div>
-                                    </div>
-                                @endif
                             @endif
                         @endif
 
                         {{-- CAMPOS POR TIPO --}}
                         @if ($isUtilidad)
-                            <div class="col-span-1 md:col-span-1">
-                                <label class="block text-sm mb-1">% Interés (calculado)</label>
-                                <input type="text" disabled
-                                    value="{{ number_format((float) ($utilidad_pct_calc ?? 0), 2, ',', '.') }}%"
-                                    class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
-                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
-                            </div>
 
+                            {{-- MONTO INTERÉS --}}
                             <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
                                     Monto Interés Mes ({{ $inputCurrency }}) <span class="text-red-500">*</span>
@@ -290,27 +257,38 @@
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                     border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                     focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
-                                @if ($hasTC && $monto_base_preview)
-                                    <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
-                                        Banco: <span class="font-semibold">{{ $monto_base_preview }} {{ $mov_moneda }}</span>
-                                    </div>
-                                @endif
                                 @error('utilidad_monto_mes')
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
 
+                            {{-- INTERÉS CALCULADO --}}
+                            <div class="col-span-1 md:col-span-1">
+                                <label class="block text-sm mb-1">% Interés (calculado por
+                                    {{ $utilidad_dias ?? 0 }} Días)</label>
+                                <input type="text" disabled
+                                    value="{{ number_format((float) ($utilidad_pct_calc ?? 0), 2, ',', '.') }}%"
+                                    class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
+                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
+                            </div>
+
+                            {{-- MONTO A PAGAR --}}
                             <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">A Pagar (calculado)
                                     ({{ $inputCurrency }})</label>
                                 <input type="text" disabled value="{{ $utilidad_a_pagar_formatted ?: '0,00' }}"
                                     class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800
                                            border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100">
+                                @if ($hasTC && $monto_base_preview)
+                                    <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
+                                        Banco: <span class="font-semibold">{{ $monto_base_preview }}
+                                            {{ $mov_moneda }}</span>
+                                    </div>
+                                @endif
                                 @error('utilidad_a_pagar')
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
                             </div>
-
                         @else
                             <div class="col-span-1 md:col-span-1">
                                 <label class="block text-sm mb-1">
@@ -321,6 +299,12 @@
                                     class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
                                     border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
                                     focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                                @if ($hasTC && $monto_base_preview)
+                                    <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400">
+                                        Banco: <span class="font-semibold">{{ $monto_base_preview }}
+                                            {{ $mov_moneda }}</span>
+                                    </div>
+                                @endif
                                 @error('monto_capital')
                                     <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                                 @enderror
@@ -328,6 +312,19 @@
                         @endif
 
                         @if ($modoConfirmar || !$isUtilidad)
+                            {{-- COMPROBANTE --}}
+                            <div class="col-span-1 md:col-span-1">
+                                <label class="block text-sm mb-1">Nro Comprobante <span
+                                        class="text-red-500">*</span></label>
+                                <input type="text" wire:model.live="nro_comprobante" placeholder="Ej: 100"
+                                    class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
+                                           border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100
+                                           focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                                @error('nro_comprobante')
+                                    <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
+                                @enderror
+                            </div>
+
                             {{-- FOTO DEL COMPROBANTE --}}
                             <div class="col-span-2 md:col-span-1">
                                 <x-ui.scanner model="comprobante_imagen" label="Foto Comprobante (opcional)"
@@ -336,6 +333,7 @@
                         @endif
 
                         {{-- IMPACTO FINANCIERO --}}
+                        @if ($modoConfirmar || !$isUtilidad)
                         <div class="col-span-2 md:col-span-3">
                             <div class="rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-700 p-4">
                                 <div class="font-semibold text-sm text-gray-900 dark:text-neutral-100">Impacto
@@ -351,6 +349,22 @@
                                             <span
                                                 class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_banco_actual_fmt }}</span>
                                         </div>
+                                        @if ($preview_banco_debito_fmt)
+                                            <div class="mt-1 flex justify-between text-sm">
+                                                @if ($preview_banco_es_ingreso)
+                                                    <span class="text-gray-500 dark:text-neutral-400">Ingreso</span>
+                                                    <span
+                                                        class="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">+
+                                                        {{ $preview_banco_debito_fmt }}</span>
+                                                @else
+                                                    <span class="text-gray-500 dark:text-neutral-400">Débito</span>
+                                                    <span
+                                                        class="font-semibold tabular-nums text-red-500 dark:text-red-400">−
+                                                        {{ $preview_banco_debito_fmt }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="my-1 border-t dark:border-neutral-700"></div>
+                                        @endif
                                         <div class="mt-1 flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-neutral-300">Saldo después</span>
                                             <span
@@ -365,6 +379,22 @@
                                             <span
                                                 class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_capital_actual_fmt }}</span>
                                         </div>
+                                        @if ($preview_capital_debito_fmt)
+                                            <div class="mt-1 flex justify-between text-sm">
+                                                @if ($preview_capital_es_ingreso)
+                                                    <span class="text-gray-500 dark:text-neutral-400">Ingreso</span>
+                                                    <span
+                                                        class="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">+
+                                                        {{ $preview_capital_debito_fmt }}</span>
+                                                @else
+                                                    <span class="text-gray-500 dark:text-neutral-400">Devolución</span>
+                                                    <span
+                                                        class="font-semibold tabular-nums text-red-500 dark:text-red-400">−
+                                                        {{ $preview_capital_debito_fmt }}</span>
+                                                @endif
+                                            </div>
+                                            <div class="my-1 border-t dark:border-neutral-700"></div>
+                                        @endif
                                         <div class="mt-1 flex justify-between text-sm">
                                             <span class="text-gray-600 dark:text-neutral-300">Después</span>
                                             <span
@@ -386,6 +416,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif {{-- modoConfirmar || !isUtilidad --}}
 
                     </div> {{-- grid --}}
                 </div>

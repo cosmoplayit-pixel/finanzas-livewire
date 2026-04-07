@@ -5,12 +5,14 @@ namespace App\Livewire\Admin\Inversiones;
 use App\Models\Inversion;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     protected $paginationTheme = 'tailwind';
 
@@ -28,6 +30,13 @@ class Index extends Component
     public ?int $highlight_inversion_id = null;
 
     public ?int $highlight_movimiento_id = null;
+
+    // Agregar comprobante a inversión
+    public bool $openAgregarComprobante = false;
+
+    public ?int $agregarComprobanteInvId = null;
+
+    public $agregarComprobanteFile = null;
 
     protected $listeners = [
         'inversionUpdated' => '$refresh',
@@ -80,6 +89,31 @@ class Index extends Component
     public function openCreate(): void
     {
         $this->dispatch('openCreateInversion');
+    }
+
+    public function abrirAgregarComprobante(int $invId): void
+    {
+        $this->agregarComprobanteInvId = $invId;
+        $this->agregarComprobanteFile = null;
+        $this->openAgregarComprobante = true;
+    }
+
+    public function guardarComprobanteInversion(): void
+    {
+        $this->validate(['agregarComprobanteFile' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120']);
+
+        $inv = Inversion::findOrFail($this->agregarComprobanteInvId);
+        $path = $this->agregarComprobanteFile->store('comprobantes/inversiones', 'public');
+        $inv->update(['comprobante' => $path]);
+
+        $this->cerrarAgregarComprobante();
+    }
+
+    public function cerrarAgregarComprobante(): void
+    {
+        $this->openAgregarComprobante = false;
+        $this->agregarComprobanteInvId = null;
+        $this->agregarComprobanteFile = null;
     }
 
     // Limpia filtros

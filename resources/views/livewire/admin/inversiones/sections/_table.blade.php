@@ -320,18 +320,34 @@
                                         </button>
                                     @endif
                                 @else
-                                    <span
-                                        class="w-8 h-8 inline-flex items-center justify-center rounded-lg border bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
-                                        title="Sin comprobante">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                            fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <rect x="3" y="3" width="18" height="18" rx="2"
-                                                ry="2" />
-                                            <circle cx="8.5" cy="8.5" r="1.5" />
-                                            <polyline points="21 15 16 10 5 21" />
-                                        </svg>
-                                    </span>
+                                    @can('inversiones.register_pay')
+                                        <button type="button"
+                                            wire:click="abrirAgregarComprobante({{ $inv->id }})"
+                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer
+                                                   bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100 hover:text-gray-600
+                                                   dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700 dark:hover:bg-neutral-700 shadow-sm"
+                                            title="Agregar comprobante">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                                fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                                <polyline points="21 15 16 10 5 21" />
+                                            </svg>
+                                        </button>
+                                    @else
+                                        <span
+                                            class="w-8 h-8 inline-flex items-center justify-center rounded-lg border bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
+                                            title="Sin comprobante">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                                fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                <circle cx="8.5" cy="8.5" r="1.5" />
+                                                <polyline points="21 15 16 10 5 21" />
+                                            </svg>
+                                        </span>
+                                    @endcan
                                 @endif
 
                                 {{-- ELIMINAR TODO --}}

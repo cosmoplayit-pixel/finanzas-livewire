@@ -72,20 +72,19 @@
                     </svg>
                     <span class="font-semibold tabular-nums">{{ $inversionCodigo }}</span>
                 </span>
-                {{-- Saldo deuda --}}
+                {{-- Saldo deuda + Moneda --}}
                 <span
                     class="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-lg
                          bg-indigo-50 border border-indigo-200 text-indigo-800
                          dark:bg-indigo-900/20 dark:border-indigo-800/40 dark:text-indigo-200">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M3 10h18" />
-                        <path d="M5 10V20" />
-                        <path d="M19 10V20" />
-                        <path d="M2 20h20" />
-                        <path d="M12 2 2 7h20L12 2z" />
+                        <rect x="2" y="6" width="20" height="12" rx="2" />
+                        <circle cx="12" cy="12" r="2" />
+                        <path d="M6 12h.01M18 12h.01" />
                     </svg>
                     <span class="font-semibold tabular-nums">{{ $saldoDeudaFmt }}</span>
+                    <span class="font-semibold">{{ $moneda }}</span>
                 </span>
 
                 {{-- Plazo --}}

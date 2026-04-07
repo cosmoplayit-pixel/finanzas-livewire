@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(php -l c:xampphtdocsfinanzas-livewireresourcesviewslivewireadminherramientas.blade.php)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -r \"Livewire\\\\\\\\\\\\\\\\Attributes\" app/Livewire/)",
+      "Bash(grep -E \"^[0-9]+-[[:space:]]*\\(#\\\\[|public|protected|private|//\\).*$|^[0-9]+-[[:space:]]*wire:model|Updated|function\")"
     ]
   }
 }

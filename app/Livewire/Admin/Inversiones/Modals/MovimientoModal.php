@@ -10,9 +10,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 class MovimientoModal extends Component
 {
+    use WithFileUploads;
     // State
     public bool $openMovimientosModal = false;
 
@@ -28,6 +30,13 @@ class MovimientoModal extends Component
     public bool $openFotoModal = false;
 
     public ?string $fotoUrl = null;
+
+    // Agregar foto a movimiento existente
+    public bool $openAgregarFoto = false;
+
+    public ?int $agregarFotoMovId = null;
+
+    public $agregarFotoFile = null;
 
     // UI flags
     public bool $isBanco = false;
@@ -432,6 +441,42 @@ class MovimientoModal extends Component
 
         $this->fotoUrl = $inv->comprobante ? Storage::disk('public')->url($inv->comprobante) : null;
         $this->openFotoModal = true;
+    }
+
+    public function abrirAgregarFoto(int $movId): void
+    {
+        $this->agregarFotoMovId = $movId;
+        $this->agregarFotoFile = null;
+        $this->openAgregarFoto = true;
+    }
+
+    public function guardarFotoMovimiento(): void
+    {
+        $this->validate([
+            'agregarFotoFile' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+        ]);
+
+        $mov = InversionMovimiento::query()
+            ->where('inversion_id', $this->inversion->id)
+            ->findOrFail($this->agregarFotoMovId);
+
+        $empresaId = auth()->user()->empresa_id;
+        $path = $this->agregarFotoFile->storePublicly("empresas/{$empresaId}/inversiones/pagos_privado", 'public');
+
+        $mov->comprobante_imagen_path = $path;
+        $mov->save();
+
+        $this->openAgregarFoto = false;
+        $this->agregarFotoFile = null;
+        $this->agregarFotoMovId = null;
+        $this->dispatch('inversionUpdated');
+    }
+
+    public function cerrarAgregarFoto(): void
+    {
+        $this->openAgregarFoto = false;
+        $this->agregarFotoFile = null;
+        $this->agregarFotoMovId = null;
     }
 
     public function closeFoto(): void

@@ -46,13 +46,12 @@
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                 stroke-linejoin="round">
-                                <path d="M3 10h18" />
-                                <path d="M5 10V20" />
-                                <path d="M19 10V20" />
-                                <path d="M2 20h20" />
-                                <path d="M12 2 2 7h20L12 2z" />
+                                <rect x="2" y="6" width="20" height="12" rx="2" />
+                                <circle cx="12" cy="12" r="2" />
+                                <path d="M6 12h.01M18 12h.01" />
                             </svg>
                             <span class="tabular-nums">{{ $saldoDeudaFmt }}</span>
+                            <span class="font-semibold">{{ $moneda }}</span>
                         </span>
 
                         <span class="text-gray-300 dark:text-neutral-600">•</span>
@@ -278,20 +277,37 @@
                                 <td class="p-2 align-middle">
                                     <div class="flex items-center justify-end gap-2 w-full">
 
+                                        {{-- Agregar imagen --}}
+                                        @if (empty($m['tiene_imagen']) && ($m['estado'] ?? '') !== 'PENDIENTE')
+                                            @can('inversiones.register_pay')
+                                                <button type="button" wire:click="abrirAgregarFoto({{ $m['id'] }})"
+                                                    class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border transition-all
+                                                       bg-gray-50 text-gray-400 border-gray-200 hover:bg-gray-100 hover:text-gray-600
+                                                       dark:bg-neutral-800 dark:text-neutral-500 dark:border-neutral-700 dark:hover:bg-neutral-700 shadow-sm"
+                                                    title="Agregar imagen">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
+                                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                                        <polyline points="21 15 16 10 5 21" />
+                                                    </svg>
+                                                </button>
+                                            @endcan
+                                        @endif
+
                                         {{-- Ver imagen --}}
                                         @if (!empty($m['tiene_imagen']))
                                             <button type="button" wire:click="verFotoMovimiento({{ $m['id'] }})"
-                                                class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border
-                                                    border-gray-300 text-gray-700 hover:bg-gray-100
-                                                    dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                                                class="w-8 h-8 cursor-pointer inline-flex items-center justify-center rounded-lg border transition-all
+                                                   bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400
+                                                   dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
                                                 title="Ver imagen">
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
                                                     viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="3" y="3" width="18" height="18" rx="2"
-                                                        ry="2" />
+                                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                                                     <circle cx="8.5" cy="8.5" r="1.5" />
-                                                    <path d="M21 15l-5-5L5 21" />
+                                                    <polyline points="21 15 16 10 5 21" />
                                                 </svg>
                                             </button>
                                         @endif

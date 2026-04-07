@@ -100,6 +100,14 @@ class PagarUtilidadModal extends Component
 
     public string $preview_banco_despues_fmt = '0,00'; // Formato UI banco después
 
+    public string $preview_banco_debito_fmt = ''; // Formato UI débito banco
+
+    public bool $preview_banco_es_ingreso = false; // true si el banco aumenta
+
+    public string $preview_capital_debito_fmt = ''; // Formato UI suma/resta capital
+
+    public bool $preview_capital_es_ingreso = false; // true si el capital aumenta
+
     public string $preview_capital_actual_fmt = '0,00'; // Formato UI capital actual
 
     public string $preview_capital_despues_fmt = '0,00'; // Formato UI capital después
@@ -362,6 +370,10 @@ class PagarUtilidadModal extends Component
             'preview_capital_despues',
             'preview_banco_actual_fmt',
             'preview_banco_despues_fmt',
+            'preview_banco_debito_fmt',
+            'preview_banco_es_ingreso',
+            'preview_capital_debito_fmt',
+            'preview_capital_es_ingreso',
             'preview_capital_actual_fmt',
             'preview_capital_despues_fmt',
             'impacto_ok',
@@ -849,7 +861,7 @@ class PagarUtilidadModal extends Component
             return;
         }
 
-        // Para capital: el monto ingresado está en moneda banco, convertir a moneda inv
+        // Para capital: el monto ingresado está en moneda base (inv), mostrar cuánto sale del banco
         $monto = (float) ($this->monto_capital ?? 0);
 
         if ($monto <= 0) {
@@ -858,15 +870,15 @@ class PagarUtilidadModal extends Component
             return;
         }
 
-        $baseAmount = null;
+        $bankAmount = null;
         if ($invMon === 'BOB' && $bankMon === 'USD') {
-            $baseAmount = $monto * $tc;
+            $bankAmount = $monto / $tc; // base BOB → banco USD
         } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
-            $baseAmount = $monto / $tc;
+            $bankAmount = $monto * $tc; // base USD → banco BOB
         }
 
         $this->monto_base_preview =
-            $baseAmount !== null ? number_format((float) $baseAmount, 2, ',', '.') : null;
+            $bankAmount !== null ? number_format((float) $bankAmount, 2, ',', '.') : null;
     }
 
     // rules: validación por tipo y por necesidad de TC
@@ -1038,11 +1050,24 @@ class PagarUtilidadModal extends Component
                     $this->dispatch('toast', type: 'success', message: 'Utilidad registrada');
                 }
             } else {
+                // monto_capital está en moneda base (inv); el servicio espera moneda banco
+                $montoBaseGuardar = (float) ($this->monto_capital ?? 0);
+                $montoBancoGuardar = $montoBaseGuardar;
+                if ($this->needs_tc && $tc > 0) {
+                    $invMonGuardar = strtoupper((string) ($this->inversion->moneda ?? 'BOB'));
+                    $bankMonGuardar = strtoupper((string) ($this->mov_moneda ?? $invMonGuardar));
+                    if ($invMonGuardar === 'BOB' && $bankMonGuardar === 'USD') {
+                        $montoBancoGuardar = $montoBaseGuardar / $tc;
+                    } elseif ($invMonGuardar === 'USD' && $bankMonGuardar === 'BOB') {
+                        $montoBancoGuardar = $montoBaseGuardar * $tc;
+                    }
+                }
+
                 $service->registrarMovimiento($this->inversion, [
                     'tipo' => $this->tipo_pago,
                     'fecha' => $this->fecha_inicio_ref,
                     'fecha_pago' => $this->fecha_pago,
-                    'monto' => (float) ($this->monto_capital ?? 0),
+                    'monto' => $montoBancoGuardar,
                     'banco_id' => (int) $this->banco_id,
                     'nro_comprobante' => trim((string) $this->nro_comprobante),
                     'imagen' => $path,
@@ -1158,34 +1183,32 @@ class PagarUtilidadModal extends Component
         // =========================
         // INGRESO / DEVOLUCION
         // =========================
-        $montoBanco = (float) ($this->monto_capital ?? 0);
-        if ($montoBanco <= 0) {
+        // monto_capital siempre en moneda base de la inversión (invMon)
+        $montoBase = (float) ($this->monto_capital ?? 0);
+        if ($montoBase <= 0) {
             $this->impacto_texto = 'Ingrese el monto.';
             $this->formatImpacto($invMon, $bankMon);
 
             return;
         }
 
-        $montoBase = $montoBanco;
+        $montoBanco = $montoBase;
 
         if ($invMon !== $bankMon) {
             $tc = (float) ($this->tipo_cambio ?? 0);
             if ($tc <= 0) {
                 $this->impacto_ok = false;
                 $this->impacto_texto = 'Tipo de cambio requerido.';
-
-                // (Opcional) si quieres también marcar error en tipo_cambio cuando falta
-                // $this->addError('tipo_cambio', 'Tipo de cambio requerido.');
-
                 $this->formatImpacto($invMon, $bankMon);
 
                 return;
             }
 
+            // Base → Banco (dirección inversa a utilidad, que convierte banco→base)
             if ($invMon === 'BOB' && $bankMon === 'USD') {
-                $montoBase = $montoBanco * $tc;
+                $montoBanco = $montoBase / $tc; // BOB base → USD banco
             } elseif ($invMon === 'USD' && $bankMon === 'BOB') {
-                $montoBase = $montoBanco / $tc;
+                $montoBanco = $montoBase * $tc; // USD base → BOB banco
             }
         }
 
@@ -1231,6 +1254,19 @@ class PagarUtilidadModal extends Component
             $this->preview_banco_despues,
             $bankMon ?: 'BOB',
         );
+
+        // 0.005 = tolerancia de redondeo para no mostrar diferencias insignificantes
+        $debito = $this->preview_banco_actual - $this->preview_banco_despues;
+        $this->preview_banco_es_ingreso = $debito < 0;
+        $this->preview_banco_debito_fmt = abs($debito) >= 0.005
+            ? $this->fmtMoney(abs($debito), $bankMon ?: 'BOB')
+            : '';
+
+        $capitalDiff = $this->preview_capital_despues - $this->preview_capital_actual;
+        $this->preview_capital_es_ingreso = $capitalDiff > 0;
+        $this->preview_capital_debito_fmt = abs($capitalDiff) >= 0.005
+            ? $this->fmtMoney(abs($capitalDiff), $invMon)
+            : '';
 
         $this->impacto_detalle = $bankMon ? "Banco: {$bankMon} • Base: {$invMon}" : null;
     }

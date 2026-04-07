@@ -7,7 +7,7 @@
             $inv = $inversion;
             $invMon = strtoupper($inv?->moneda ?? 'BOB');
             $hasTC = (bool) $needs_tc;
-            $inputCurrency = !empty($mov_moneda) ? $mov_moneda : $invMon;
+            $inputCurrency = $invMon; // Siempre moneda base de la inversión
         @endphp
 
         <div class="space-y-4">
@@ -233,9 +233,10 @@
                             @error('monto_total')
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
-                            @if ($needs_tc)
+                            @if ($needs_tc && $monto_base_preview)
                                 <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400 text-right">
-                                    Base: <span class="font-semibold">{{ $monto_base_preview }}</span>
+                                    Banco: <span class="font-semibold">{{ $monto_base_preview }}
+                                        {{ $mov_moneda }}</span>
                                 </div>
                             @endif
 
@@ -252,9 +253,10 @@
                             @error('monto_capital')
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
-                            @if ($needs_tc)
+                            @if ($needs_tc && $monto_capital_base_preview)
                                 <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400 text-right">
-                                    Base: <span class="font-semibold">{{ $monto_capital_base_preview }}</span>
+                                    Banco: <span class="font-semibold">{{ $monto_capital_base_preview }}
+                                        {{ $mov_moneda }}</span>
                                 </div>
                             @endif
                         </div>
@@ -270,9 +272,10 @@
                             @error('monto_interes')
                                 <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
                             @enderror
-                            @if ($needs_tc)
+                            @if ($needs_tc && $monto_interes_base_preview)
                                 <div class="text-[11px] mt-1 text-gray-500 dark:text-neutral-400 text-right">
-                                    Base: <span class="font-semibold">{{ $monto_interes_base_preview }}</span>
+                                    Banco: <span class="font-semibold">{{ $monto_interes_base_preview }}
+                                        {{ $mov_moneda }}</span>
                                 </div>
                             @endif
                         </div>
@@ -286,58 +289,88 @@
                         @endif
 
                         {{-- IMPACTO --}}
-                        <div class="col-span-2 md:col-span-3">
-                            <div class="rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-700 p-4">
-                                <div class="font-semibold text-sm text-gray-900 dark:text-neutral-100">Impacto
-                                    financiero</div>
-                                <div class="text-xs text-gray-500 dark:text-neutral-400 mb-3">Vista previa del
-                                    movimiento.</div>
+                        @if ($modoConfirmar)
+                            <div class="col-span-2 md:col-span-3">
+                                <div
+                                    class="rounded-xl border bg-white dark:bg-neutral-900 dark:border-neutral-700 p-4">
+                                    <div class="font-semibold text-sm text-gray-900 dark:text-neutral-100">Impacto
+                                        financiero</div>
+                                    <div class="text-xs text-gray-500 dark:text-neutral-400 mb-3">Vista previa del
+                                        movimiento.</div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div class="rounded-lg border dark:border-neutral-700 p-3">
-                                        <div class="text-xs text-gray-500 dark:text-neutral-400">Banco</div>
-                                        <div class="mt-1 flex justify-between text-sm">
-                                            <span class="text-gray-600 dark:text-neutral-300">Saldo actual</span>
-                                            <span
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_banco_actual_fmt }}</span>
-                                        </div>
-                                        <div class="mt-1 flex justify-between text-sm">
-                                            <span class="text-gray-600 dark:text-neutral-300">Saldo después</span>
-                                            <span
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_banco_despues_fmt }}</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="rounded-lg border dark:border-neutral-700 p-3">
-                                        <div class="text-xs text-gray-500 dark:text-neutral-400">Deuda (saldo)</div>
-                                        <div class="mt-1 flex justify-between text-sm">
-                                            <span class="text-gray-600 dark:text-neutral-300">Actual</span>
-                                            <span
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_deuda_actual_fmt }}</span>
-                                        </div>
-                                        <div class="mt-1 flex justify-between text-sm">
-                                            <span class="text-gray-600 dark:text-neutral-300">Después</span>
-                                            <span
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_deuda_despues_fmt }}</span>
-                                        </div>
-                                    </div>
-
-                                    <div class="rounded-lg border dark:border-neutral-700 p-3">
-                                        <div class="text-xs text-gray-500 dark:text-neutral-400">Estado</div>
-                                        <div
-                                            class="mt-2 text-sm font-semibold {{ $impacto_ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
-                                            {{ $impacto_texto }}
-                                        </div>
-                                        @if (!empty($impacto_detalle))
-                                            <div class="mt-1 text-xs text-gray-500 dark:text-neutral-400">
-                                                {{ $impacto_detalle }}
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                        <div class="rounded-lg border dark:border-neutral-700 p-3">
+                                            <div class="text-xs text-gray-500 dark:text-neutral-400">Banco</div>
+                                            <div class="mt-1 flex justify-between text-sm">
+                                                <span class="text-gray-600 dark:text-neutral-300">Saldo actual</span>
+                                                <span
+                                                    class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_banco_actual_fmt }}</span>
                                             </div>
-                                        @endif
-                                    </div>
-                                </div>
+                                            @if ($preview_banco_debito_fmt)
+                                                <div class="mt-1 flex justify-between text-sm">
+                                                    @if ($preview_banco_es_debito)
+                                                        <span class="text-gray-500 dark:text-neutral-400">Débito</span>
+                                                        <span
+                                                            class="font-semibold tabular-nums text-red-500 dark:text-red-400">−
+                                                            {{ $preview_banco_debito_fmt }}</span>
+                                                    @else
+                                                        <span
+                                                            class="text-gray-500 dark:text-neutral-400">Ingreso</span>
+                                                        <span
+                                                            class="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">+
+                                                            {{ $preview_banco_debito_fmt }}</span>
+                                                    @endif
+                                                </div>
+                                                <div class="my-1 border-t dark:border-neutral-700"></div>
+                                            @endif
+                                            <div class="mt-1 flex justify-between text-sm">
+                                                <span class="text-gray-600 dark:text-neutral-300">Saldo después</span>
+                                                <span
+                                                    class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_banco_despues_fmt }}</span>
+                                            </div>
+                                        </div>
 
+                                        <div class="rounded-lg border dark:border-neutral-700 p-3">
+                                            <div class="text-xs text-gray-500 dark:text-neutral-400">Capital (saldo)
+                                            </div>
+                                            <div class="mt-1 flex justify-between text-sm">
+                                                <span class="text-gray-600 dark:text-neutral-300">Actual</span>
+                                                <span
+                                                    class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_deuda_actual_fmt }}</span>
+                                            </div>
+                                            @if ($preview_deuda_debito_fmt)
+                                                <div class="mt-1 flex justify-between text-sm">
+                                                    <span class="text-gray-500 dark:text-neutral-400">Pago</span>
+                                                    <span
+                                                        class="font-semibold tabular-nums text-red-500 dark:text-red-400">−
+                                                        {{ $preview_deuda_debito_fmt }}</span>
+                                                </div>
+                                                <div class="my-1 border-t dark:border-neutral-700"></div>
+                                            @endif
+                                            <div class="mt-1 flex justify-between text-sm">
+                                                <span class="text-gray-600 dark:text-neutral-300">Después</span>
+                                                <span
+                                                    class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">{{ $preview_deuda_despues_fmt }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="rounded-lg border dark:border-neutral-700 p-3">
+                                            <div class="text-xs text-gray-500 dark:text-neutral-400">Estado</div>
+                                            <div
+                                                class="mt-2 text-sm font-semibold {{ $impacto_ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400' }}">
+                                                {{ $impacto_texto }}
+                                            </div>
+                                            @if (!empty($impacto_detalle))
+                                                <div class="mt-1 text-xs text-gray-500 dark:text-neutral-400">
+                                                    {{ $impacto_detalle }}
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+
+                                </div>
                             </div>
-                        </div>
+                        @endif {{-- modoConfirmar --}}
 
                     </div> {{-- grid --}}
                 </div>

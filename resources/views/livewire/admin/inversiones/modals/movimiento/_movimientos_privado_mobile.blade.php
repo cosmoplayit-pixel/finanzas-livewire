@@ -72,17 +72,19 @@
                     <span class="font-semibold tabular-nums">{{ $inversionCodigo }}</span>
                 </span>
 
-                {{-- Capital actual --}}
+                {{-- Capital actual + Moneda --}}
                 <span
                     class="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded-lg
                          bg-emerald-50 border border-emerald-200 text-emerald-800
                          dark:bg-emerald-900/20 dark:border-emerald-800/40 dark:text-emerald-200">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 1v22" />
-                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6" />
+                        <rect x="2" y="6" width="20" height="12" rx="2" />
+                        <circle cx="12" cy="12" r="2" />
+                        <path d="M6 12h.01M18 12h.01" />
                     </svg>
                     <span class="font-semibold tabular-nums">{{ $capitalActualFmt }}</span>
+                    <span class="font-semibold">{{ $moneda }}</span>
                 </span>
 
                 {{-- Fechas --}}

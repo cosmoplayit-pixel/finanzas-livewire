@@ -16,8 +16,9 @@
 
     {{-- SELECTOR TIPO --}}
     <div class="mb-4 flex items-center gap-3">
-        <div class="inline-flex rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden {{ $mov_edit_id ? 'opacity-50 pointer-events-none' : '' }}">
-            <button type="button" @if(!$mov_edit_id) wire:click="setMovimientoTipo('COMPRA')" @endif
+        <div
+            class="inline-flex rounded-lg border border-gray-200 dark:border-neutral-700 overflow-hidden {{ $mov_edit_id ? 'opacity-50 pointer-events-none' : '' }}">
+            <button type="button" @if (!$mov_edit_id) wire:click="setMovimientoTipo('COMPRA')" @endif
                 @disabled(!!$mov_edit_id)
                 class="cursor-pointer px-4 py-2 text-xs font-semibold transition
                 {{ $mov_modal_tipo === 'COMPRA'
@@ -26,7 +27,7 @@
                 Compra
             </button>
 
-            <button type="button" @if(!$mov_edit_id) wire:click="setMovimientoTipo('DEVOLUCION')" @endif
+            <button type="button" @if (!$mov_edit_id) wire:click="setMovimientoTipo('DEVOLUCION')" @endif
                 @disabled(!!$mov_edit_id)
                 class="cursor-pointer px-4 py-2 text-xs font-semibold transition
                 {{ $mov_modal_tipo === 'DEVOLUCION'
@@ -59,10 +60,10 @@
             ========================= --}}
             @if ($mov_modal_tipo === 'COMPRA')
 
-                {{-- FILA 1: ENTIDAD / PROYECTO  / MONEDA --}}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
 
-                    <div>
+                    {{-- ENTIDAD / CLIENTE --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
                             Cliente: <span class="text-red-500">*</span>
                         </label>
@@ -82,7 +83,8 @@
                         @enderror
                     </div>
 
-                    <div>
+                    {{-- PROYECTO --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
                             Proyecto: <span class="text-red-500">*</span>
                         </label>
@@ -106,7 +108,8 @@
                         @enderror
                     </div>
 
-                    <div>
+                    {{-- MONEDA --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
                             Moneda: <span class="text-red-500">*</span>
                         </label>
@@ -124,12 +127,8 @@
                         @enderror
                     </div>
 
-                </div>
-
-                {{-- FILA 2: TIPO / NRO / OBS --}}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                    <div>
+                    {{-- TIPO COMPROBANTE --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
                             Tipo comprobante: <span class="text-red-500">*</span>
                         </label>
@@ -149,7 +148,8 @@
                         @enderror
                     </div>
 
-                    <div>
+                    {{-- NRO COMPROBANTE --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Nro comprobante:</label>
                         <input type="text" wire:model.live="mov_nro_comprobante"
                             class="w-full rounded-lg border px-3 py-2
@@ -162,7 +162,8 @@
                         @enderror
                     </div>
 
-                    <div>
+                    {{-- DETALLE --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Detalle:</label>
                         <input type="text" wire:model.live="mov_observacion" placeholder="Ej: Compra de materiales…"
                             class="w-full rounded-lg border px-3 py-2
@@ -175,12 +176,8 @@
                         @enderror
                     </div>
 
-                </div>
-
-                {{-- FILA 3: MONTO / FECHA DE PAGO / FOTO --}}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                    <div>
+                    {{-- MONTO --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
                             Monto: ({{ $mov_moneda }}) <span class="text-red-500">*</span>
                         </label>
@@ -195,7 +192,8 @@
                         @enderror
                     </div>
 
-                    <div>
+                    {{-- FECHA DE PAGO --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
                             Fecha Pago: <span class="text-red-500">*</span>
                         </label>
@@ -211,83 +209,99 @@
                     </div>
 
                     {{-- FOTO --}}
-                    <div>
-                        <x-ui.scanner model="mov_foto"
-                            :label="$mov_edit_id ? 'Comprobante (opcional: reemplaza el actual)' : 'Comprobante'"
-                            :file="$mov_foto" />
+                    <div class="col-span-2 lg:col-span-1">
+                        <x-ui.scanner model="mov_foto" :label="$mov_edit_id ? 'Comprobante (opcional: reemplaza el actual)' : 'Comprobante'" :file="$mov_foto" />
 
                     </div>
-                </div>
 
-                {{-- TIPO DE CAMBIO (SI APLICA) --}}
-                @if ($mov_needs_tc)
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        <div>
+                    @if ($mov_needs_tc)
+                        {{-- TIPO DE CAMBIO --}}
+                        <div class="col-span-1 lg:col-span-1">
                             <label class="block text-sm mb-1">
                                 Tipo de cambio: <span class="text-red-500">*</span>
                             </label>
                             <input type="text" wire:model.live.blur="mov_tipo_cambio_formatted"
                                 placeholder="Ej: 6,96"
                                 class="w-full rounded-lg border px-3 py-2
-                                       bg-white dark:bg-neutral-900
-                                       border-gray-300/60 dark:border-neutral-700/60
-                                       text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                                    bg-white dark:bg-neutral-900
+                                    border-gray-300/60 dark:border-neutral-700/60
+                                    text-gray-900 dark:text-neutral-100
+                                    focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
                             @error('mov_tipo_cambio')
                                 <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
                             @enderror
                         </div>
 
-                        <div>
+                        {{-- EQUIVALENTE EN MONEDA BASE --}}
+                        <div class="col-span-1 lg:col-span-1">
                             <label class="block text-sm mb-1">
-                                Equivalente en moneda base: ({{ $baseMoneda }})
+                                Equivalente moneda base: ({{ $baseMoneda }})
                             </label>
                             <input type="text" readonly value="{{ $mov_monto_base_preview ?? '—' }}" placeholder="—"
                                 class="w-full rounded-lg border px-3 py-2
-                                       bg-gray-50 dark:bg-neutral-900/50
-                                       border-gray-300/60 dark:border-neutral-700/60
-                                       text-gray-900 dark:text-neutral-100" />
+                                    bg-gray-50 dark:bg-neutral-900/50
+                                    border-gray-300/60 dark:border-neutral-700/60
+                                    text-gray-900 dark:text-neutral-100" />
                             <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
                                 Se calcula automáticamente el monto.
                             </div>
                         </div>
-
-                    </div>
-                @endif
+                    @endif
+                </div>
 
                 {{-- IMPACTO FINANCIERO COMPRA --}}
                 <div
                     class="rounded-lg border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden mt-4">
-                    <div class="px-3 sm:px-4 py-2 border-b dark:border-neutral-700 flex justify-between items-center">
+                    <div class="px-3 sm:px-4 py-1 border-b dark:border-neutral-700 flex justify-between items-center">
                         <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto financiero</div>
-                        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                            ({{ $baseMoneda }})
+                        <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">({{ $baseMoneda }})</div>
+                    </div>
+
+                    {{-- MOBILE: tira compacta --}}
+                    <div class="md:hidden p-2">
+                        <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-1">
+                            Saldo a Rendir
+                        </div>
+                        <div class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-neutral-700 bg-white dark:bg-neutral-900 rounded-lg border border-gray-100 dark:border-neutral-700 text-center">
+                            <div class="py-2 px-1">
+                                <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Saldo actual</div>
+                                <div class="text-xs font-bold tabular-nums text-gray-800 dark:text-neutral-200">
+                                    {{ number_format($mov_saldo_actual_preview, 2, ',', '.') }}
+                                </div>
+                            </div>
+                            <div class="py-2 px-1">
+                                <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Descuento</div>
+                                <div class="text-xs font-bold tabular-nums text-red-600 dark:text-red-400">
+                                    - {{ $mov_monto_base_preview ?: '0,00' }}
+                                </div>
+                            </div>
+                            <div class="py-2 px-1">
+                                <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Nuevo saldo</div>
+                                <div class="text-xs font-bold tabular-nums {{ $mov_monto_excede_saldo ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-neutral-200' }}">
+                                    {{ number_format($mov_saldo_despues_preview, 2, ',', '.') }}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="p-3 sm:p-4 pb-4">
+                    {{-- DESKTOP: 3 columnas --}}
+                    <div class="hidden md:block p-3 sm:p-4">
                         <div class="grid grid-cols-3 gap-3 text-sm divide-x divide-gray-200 dark:divide-neutral-700">
                             <div class="text-center">
-                                <div class="text-gray-500 dark:text-neutral-400 mb-1 text-xs">Saldo a rendir actual
-                                </div>
+                                <div class="text-gray-500 dark:text-neutral-400 mb-1 text-xs">Saldo a rendir actual</div>
                                 <div class="font-medium text-gray-900 dark:text-neutral-100">
                                     {{ number_format($mov_saldo_actual_preview, 2, ',', '.') }}
                                 </div>
                             </div>
-
                             <div class="text-center pl-3">
                                 <div class="text-gray-500 dark:text-neutral-400 mb-1 text-xs">Monto a descontar</div>
                                 <div class="font-medium text-red-600 dark:text-red-400">
                                     - {{ $mov_monto_base_preview ?: '0,00' }}
                                 </div>
                             </div>
-
                             <div class="text-center pl-3">
-                                <div class="text-gray-500 dark:text-neutral-400 mb-1 text-xs">Nuevo saldo a rendir
-                                </div>
-                                <div
-                                    class="font-bold {{ $mov_monto_excede_saldo ? 'text-red-600' : 'text-gray-900 dark:text-neutral-100' }}">
+                                <div class="text-gray-500 dark:text-neutral-400 mb-1 text-xs">Nuevo saldo a rendir</div>
+                                <div class="font-bold {{ $mov_monto_excede_saldo ? 'text-red-600' : 'text-gray-900 dark:text-neutral-100' }}">
                                     {{ number_format($mov_saldo_despues_preview, 2, ',', '.') }}
                                 </div>
                             </div>
@@ -302,9 +316,10 @@
             @if ($mov_modal_tipo === 'DEVOLUCION')
 
                 {{-- FILA 1: BANCO / MONTO / NRO TRANSACCION --}}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
 
-                    <div>
+                    {{-- BANCO --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
                             Banco: <span class="text-red-500">*</span>
                         </label>
@@ -326,7 +341,8 @@
                         @enderror
                     </div>
 
-                    <div>
+                    {{-- MONTO --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
                             Monto: ({{ $mov_moneda }}) <span class="text-red-500">*</span>
                         </label>
@@ -341,7 +357,8 @@
                         @enderror
                     </div>
 
-                    <div>
+                    {{-- NRO TRANSACCION --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
                             Nro transacción: <span class="text-red-500">*</span>
                         </label>
@@ -356,50 +373,8 @@
                         @enderror
                     </div>
 
-                </div>
-
-                {{-- TIPO DE CAMBIO (SI APLICA) --}}
-                @if ($mov_needs_tc)
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        <div>
-                            <label class="block text-sm mb-1">
-                                Tipo de cambio: <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" wire:model.live.blur="mov_tipo_cambio_formatted"
-                                placeholder="Ej: 6,96"
-                                class="w-full rounded-lg border px-3 py-2
-                                       bg-white dark:bg-neutral-900
-                                       border-gray-300/60 dark:border-neutral-700/60
-                                       text-gray-900 dark:text-neutral-100
-                                       focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                            @error('mov_tipo_cambio')
-                                <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div>
-                            <label class="block text-sm mb-1">
-                                Equivalente en moneda base: ({{ $baseMoneda }})
-                            </label>
-                            <input type="text" readonly value="{{ $mov_monto_base_preview ?? '—' }}"
-                                placeholder="—"
-                                class="w-full rounded-lg border px-3 py-2
-                                       bg-gray-50 dark:bg-neutral-900/50
-                                       border-gray-300/60 dark:border-neutral-700/60
-                                       text-gray-900 dark:text-neutral-100" />
-                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
-                                Se calcula automáticamente el monto.
-                            </div>
-                        </div>
-
-                    </div>
-                @endif
-
-                {{-- FILA 2: FECHA PAGO / DETALLE / FOTO --}}
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-                    <div>
+                    {{-- DETALLE --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Detalle:</label>
                         <input type="text" wire:model.live="mov_observacion"
                             placeholder="Ej: Devolución de saldo..."
@@ -413,7 +388,8 @@
                         @enderror
                     </div>
 
-                    <div>
+                    {{-- FECHA DE PAGO --}}
+                    <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
                             Fecha Pago: <span class="text-red-500">*</span>
                         </label>
@@ -429,23 +405,112 @@
                     </div>
 
                     {{-- FOTO --}}
-                    <div>
-                        <x-ui.scanner model="mov_foto"
-                            :label="$mov_edit_id ? 'Comprobante (opcional: reemplaza el actual)' : 'Comprobante'"
-                            :file="$mov_foto" />
+                    <div class="col-span-1 lg:col-span-1">
+                        <x-ui.scanner model="mov_foto" :label="$mov_edit_id ? 'Comprobante (opcional: reemplaza el actual)' : 'Comprobante'" :file="$mov_foto" />
                     </div>
 
+                    {{-- TIPO DE CAMBIO (SI APLICA) --}}
+                    @if ($mov_needs_tc)
+                        <div class="col-span-1 lg:col-span-1">
+                            <label class="block text-sm mb-1">
+                                Tipo de cambio: <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" wire:model.live.blur="mov_tipo_cambio_formatted"
+                                placeholder="Ej: 6,96"
+                                class="w-full rounded-lg border px-3 py-2
+                                        bg-white dark:bg-neutral-900
+                                        border-gray-300/60 dark:border-neutral-700/60
+                                        text-gray-900 dark:text-neutral-100
+                                        focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            @error('mov_tipo_cambio')
+                                <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-span-1 lg:col-span-1">
+                            <label class="block text-sm mb-1">
+                                Equivalente en moneda base: ({{ $baseMoneda }})
+                            </label>
+                            <input type="text" readonly value="{{ $mov_monto_base_preview ?? '—' }}"
+                                placeholder="—"
+                                class="w-full rounded-lg border px-3 py-2
+                                        bg-gray-50 dark:bg-neutral-900/50
+                                        border-gray-300/60 dark:border-neutral-700/60
+                                        text-gray-900 dark:text-neutral-100" />
+                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
+                                Se calcula automáticamente el monto.
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 {{-- IMPACTO FINANCIERO DEVOLUCIÓN --}}
                 <div
                     class="rounded-lg border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden mt-4">
-                    <div class="px-3 sm:px-4 py-2 border-b dark:border-neutral-700">
-                        <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">
-                            Impacto financiero
-                        </div>
+                    <div class="px-3 sm:px-4 py-1 border-b dark:border-neutral-700">
+                        <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto financiero</div>
                     </div>
-                    <div class="p-3 sm:p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    {{-- MOBILE: tiras compactas --}}
+                    <div class="md:hidden p-2 space-y-2">
+                        {{-- Saldo a rendir strip --}}
+                        <div>
+                            <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-1">
+                                Saldo a Rendir ({{ $baseMoneda }})
+                            </div>
+                            <div class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-neutral-700 bg-white dark:bg-neutral-900 rounded-lg border border-gray-100 dark:border-neutral-700 text-center">
+                                <div class="py-2 px-1">
+                                    <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Saldo actual</div>
+                                    <div class="text-xs font-bold tabular-nums text-gray-800 dark:text-neutral-200">
+                                        {{ number_format($mov_saldo_actual_preview, 2, ',', '.') }}
+                                    </div>
+                                </div>
+                                <div class="py-2 px-1">
+                                    <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Devolución</div>
+                                    <div class="text-xs font-bold tabular-nums text-red-600 dark:text-red-400">
+                                        - {{ $mov_monto_base_preview ?: '0,00' }}
+                                    </div>
+                                </div>
+                                <div class="py-2 px-1">
+                                    <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Nuevo saldo</div>
+                                    <div class="text-xs font-bold tabular-nums {{ $mov_monto_excede_saldo ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-neutral-200' }}">
+                                        {{ number_format($mov_saldo_despues_preview, 2, ',', '.') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Banco strip --}}
+                        @if ($mov_banco_id)
+                            <div>
+                                <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-1">
+                                    Banco {{ $mov_banco_moneda_preview ? "({$mov_banco_moneda_preview})" : '' }}
+                                </div>
+                                <div class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-neutral-700 bg-white dark:bg-neutral-900 rounded-lg border border-gray-100 dark:border-neutral-700 text-center">
+                                    <div class="py-2 px-1">
+                                        <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Saldo actual</div>
+                                        <div class="text-xs font-bold tabular-nums text-gray-800 dark:text-neutral-200">
+                                            {{ number_format($mov_banco_actual_preview, 2, ',', '.') }}
+                                        </div>
+                                    </div>
+                                    <div class="py-2 px-1">
+                                        <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Ingreso</div>
+                                        <div class="text-xs font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                                            + {{ $mov_monto_formatted ?: '0,00' }}
+                                        </div>
+                                    </div>
+                                    <div class="py-2 px-1">
+                                        <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Nuevo saldo</div>
+                                        <div class="text-xs font-bold tabular-nums text-gray-800 dark:text-neutral-200">
+                                            {{ number_format($mov_banco_despues_preview, 2, ',', '.') }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- DESKTOP: 2 columnas --}}
+                    <div class="hidden md:grid px-2 py-1 sm:p-4 grid-cols-2 gap-6">
 
                         {{-- SALDO A RENDIR --}}
                         <div class="space-y-3 md:border-r md:border-gray-200 md:dark:border-neutral-700 md:pr-6">
@@ -460,9 +525,7 @@
                             </div>
                             <div class="flex items-center justify-between text-sm text-red-600 dark:text-red-400">
                                 <span>Devolución</span>
-                                <span class="font-medium">
-                                    - {{ $mov_monto_base_preview ?: '0,00' }}
-                                </span>
+                                <span class="font-medium">- {{ $mov_monto_base_preview ?: '0,00' }}</span>
                             </div>
                             <div
                                 class="pt-2 border-t border-gray-200 dark:border-neutral-700 flex items-center justify-between text-sm">
@@ -485,12 +548,9 @@
                                     {{ number_format($mov_banco_actual_preview, 2, ',', '.') }}
                                 </span>
                             </div>
-                            <div
-                                class="flex items-center justify-between text-sm text-emerald-600 dark:text-emerald-400">
+                            <div class="flex items-center justify-between text-sm text-emerald-600 dark:text-emerald-400">
                                 <span>Ingreso</span>
-                                <span class="font-medium">
-                                    + {{ $mov_monto_formatted ?: '0,00' }}
-                                </span>
+                                <span class="font-medium">+ {{ $mov_monto_formatted ?: '0,00' }}</span>
                             </div>
                             <div
                                 class="pt-2 border-t border-gray-200 dark:border-neutral-700 flex items-center justify-between text-sm">
@@ -509,7 +569,7 @@
 
     {{-- FOOTER --}}
     @slot('footer')
-        <div class="flex flex-col gap-2 w-full sm:flex-row sm:justify-end sm:gap-3">
+        <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:justify-end sm:gap-3">
 
             <button type="button" wire:click="closeMovimientoModal"
                 class="w-full sm:w-auto px-4 py-2 rounded-lg border cursor-pointer

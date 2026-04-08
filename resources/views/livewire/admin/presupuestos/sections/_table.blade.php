@@ -10,10 +10,13 @@
                   el.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }
           }
-      }" x-init="if (presupuestoId) {
+      }" x-init="
+      const clearP = () => { $wire.set('highlight_presupuesto_id', null); };
+      if (presupuestoId) {
           setTimeout(() => scroll(), 600);
+          setTimeout(clearP, 4000);
       }
-      $watch('presupuestoId', val => { if (val) setTimeout(() => scroll(), 300) });">
+      $watch('presupuestoId', val => { if (val) { setTimeout(() => scroll(), 300); setTimeout(clearP, 4000); } });">
 
       <table wire:key="presupuestos-table" class="w-full table-fixed text-sm">
           <thead

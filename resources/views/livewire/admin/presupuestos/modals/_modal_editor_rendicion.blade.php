@@ -363,9 +363,18 @@
                         {{-- MOBILE: CARDS --}}
                         <div class="md:hidden p-3 space-y-3">
                             @foreach ($editorDevoluciones ?? [] as $i => $m)
+                                @php
+                                    $isDevHighlightedMob =
+                                        isset($highlight_devolucion_id) &&
+                                        $highlight_devolucion_id &&
+                                        (int) $m->id === (int) $highlight_devolucion_id;
+                                @endphp
                                 <div
-                                    class="rounded-xl border border-gray-200 dark:border-neutral-700
-                                     bg-white dark:bg-neutral-900/20 p-3">
+                                    @if ($isDevHighlightedMob) id="mob-devolucion-highlight-{{ $m->id }}" @endif
+                                    class="rounded-xl border-l-4 border border-gray-200 dark:border-neutral-700 p-3 transition-colors
+                                        {{ $isDevHighlightedMob
+                                            ? 'border-l-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+                                            : 'border-l-transparent bg-white dark:bg-neutral-900/20' }}">
 
                                     {{-- CABECERA --}}
                                     <div class="flex items-start justify-between gap-2">
@@ -793,8 +802,18 @@
                         {{--  MOBILE: CARDS --}}
                         <div class="md:hidden p-3 space-y-3">
                             @foreach ($editorCompras ?? [] as $i => $m)
+                                @php
+                                    $isMovHighlightedMob =
+                                        isset($highlight_movimiento_id) &&
+                                        $highlight_movimiento_id &&
+                                        (int) $m->id === (int) $highlight_movimiento_id;
+                                @endphp
                                 <div
-                                    class="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900/20 p-3">
+                                    @if ($isMovHighlightedMob) id="mob-movimiento-highlight-{{ $m->id }}" @endif
+                                    class="rounded-xl border-l-4 border border-gray-200 dark:border-neutral-700 p-3 transition-colors
+                                        {{ $isMovHighlightedMob
+                                            ? 'border-l-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                                            : 'border-l-transparent bg-white dark:bg-neutral-900/20' }}">
 
                                     {{-- Header: # + Proyecto + acciones --}}
                                     <div class="flex items-start justify-between gap-2">
@@ -1106,7 +1125,9 @@
         {{-- Scroll al elemento resaltado cuando se abre el modal --}}
         Livewire.on('rendicion-editor-opened', () => {
             setTimeout(() => {
-                const highlighted = document.querySelector('[id*="-highlight-"]');
+                // Busca el elemento visible (mobile tiene prefix "mob-", desktop no)
+                const all = document.querySelectorAll('[id*="-highlight-"]');
+                const highlighted = Array.from(all).find(el => el.offsetParent !== null);
                 if (highlighted) {
                     highlighted.scrollIntoView({
                         behavior: 'smooth',
@@ -1119,7 +1140,7 @@
                         @this.set('highlight_devolucion_id', null);
                     }, 5000);
                 }
-            }, 500);
+            }, 600);
         });
     });
 </script>

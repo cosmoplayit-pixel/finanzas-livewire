@@ -371,10 +371,10 @@
                     @forelse ($transacciones as $t)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm font-medium text-gray-900">Creación:
-                                    {{ \Carbon\Carbon::parse($t->created_at)->format('d/m/Y H:i') }}</span>
-                                <div class="text-xs text-gray-500">Pago:
-                                    {{ \Carbon\Carbon::parse($t->fecha)->format('d/m/Y H:i') }}</div>
+                                <span class="text-sm font-medium text-gray-900">Pago:
+                                    {{ \Carbon\Carbon::parse($t->fecha)->format('d/m/Y H:i') }}</span>
+                                <div class="text-xs text-gray-500">Creación:
+                                    {{ \Carbon\Carbon::parse($t->created_at)->format('d/m/Y H:i') }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <span

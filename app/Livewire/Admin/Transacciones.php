@@ -212,6 +212,7 @@ class Transacciones extends Component
         )->first();
 
         $transacciones = $query
+            ->orderByDesc('t.fecha')
             ->orderByDesc('t.created_at')
             ->paginate($this->perPage);
 

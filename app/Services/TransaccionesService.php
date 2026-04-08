@@ -235,6 +235,56 @@ class TransaccionesService
             $bancos->where('b.empresa_id', $empresaId);
         }
 
+        // 8. Transferencias bancarias - Salida (EGRESO del banco origen)
+        $transferenciasSalida = DB::table('transferencias_bancarias as t')
+            ->selectRaw("
+                t.id as original_id,
+                'Bancos' as modulo,
+                'EGRESO' as tipo_movimiento,
+                t.fecha as fecha,
+                t.monto_origen as monto,
+                t.moneda_origen as moneda,
+                t.banco_origen_id as banco_id,
+                CONCAT('Transferencia a ', bd.nombre) as concepto,
+                CONCAT_WS(' - ', NULLIF(t.nro_transaccion, ''), bd.numero_cuenta) as referencia,
+                'COMPLETADO' as estado,
+                t.foto_comprobante as comprobante,
+                t.observacion as notas,
+                '/bancos' as url_origen,
+                t.created_at,
+                t.empresa_id
+            ")
+            ->join('bancos as bd', 't.banco_destino_id', '=', 'bd.id');
+
+        if ($empresaId) {
+            $transferenciasSalida->where('t.empresa_id', $empresaId);
+        }
+
+        // 9. Transferencias bancarias - Entrada (INGRESO al banco destino)
+        $transferenciaEntrada = DB::table('transferencias_bancarias as t')
+            ->selectRaw("
+                t.id as original_id,
+                'Bancos' as modulo,
+                'INGRESO' as tipo_movimiento,
+                t.fecha as fecha,
+                t.monto_destino as monto,
+                t.moneda_destino as moneda,
+                t.banco_destino_id as banco_id,
+                CONCAT('Transferencia de ', bo.nombre) as concepto,
+                CONCAT_WS(' - ', NULLIF(t.nro_transaccion, ''), bo.numero_cuenta) as referencia,
+                'COMPLETADO' as estado,
+                t.foto_comprobante as comprobante,
+                t.observacion as notas,
+                '/bancos' as url_origen,
+                t.created_at,
+                t.empresa_id
+            ")
+            ->join('bancos as bo', 't.banco_origen_id', '=', 'bo.id');
+
+        if ($empresaId) {
+            $transferenciaEntrada->where('t.empresa_id', $empresaId);
+        }
+
         // Unimos todas las consultas
         return $facturas
             ->unionAll($presupuestos)
@@ -243,6 +293,8 @@ class TransaccionesService
             ->unionAll($boletasDevoluciones)
             ->unionAll($inversiones)
             ->unionAll($bancos)
+            ->unionAll($transferenciasSalida)
+            ->unionAll($transferenciaEntrada)
             ->orderByDesc('fecha')
             ->orderByDesc('created_at');
     }

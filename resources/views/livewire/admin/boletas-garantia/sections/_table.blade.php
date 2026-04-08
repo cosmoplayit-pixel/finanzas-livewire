@@ -11,12 +11,15 @@
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
-    }" x-init="if (boletaId || devolucionId) {
+    }" x-init="
+    const clearBG = () => { $wire.set('highlight_boleta_id', null); $wire.set('highlight_devolucion_id', null); };
+    if (boletaId || devolucionId) {
         setTimeout(() => scroll(), 600);
+        setTimeout(clearBG, 4000);
     }
-    $watch('boletaId', val => { if (val) setTimeout(() => scroll(), 300) });
-    $watch('devolucionId', val => { if (val) setTimeout(() => scroll(), 300) });"
-    @bg:start-removal-timer.window="setTimeout(() => $wire.clearPendingRemoval($event.detail.boletaId), 5500)">
+    $watch('boletaId',     val => { if (val) { setTimeout(() => scroll(), 300); setTimeout(clearBG, 4000); } });
+    $watch('devolucionId', val => { if (val) { setTimeout(() => scroll(), 300); setTimeout(clearBG, 4000); } });"
+    @bg:start-removal-timer.window="setTimeout(() => $wire.clearPendingRemoval($event.detail.boletaId), 3500)">
 
     <div class="overflow-x-auto">
         <table wire:key="boletas-table" class="w-full table-fixed text-sm min-w-[1100px] lg:min-w-0">
@@ -415,11 +418,11 @@
                         <td class="p-2 whitespace-nowrap align-middle">
                             <div class="flex items-center justify-center gap-1">
                                 @if (isset($pendingRemoval[(string) $bg->id]))
-                                    <div class="flex flex-col items-center gap-1" x-data="{ seconds: 5, progress: 100 }"
+                                    <div class="flex flex-col items-center gap-1" x-data="{ seconds: 3, progress: 100 }"
                                         x-init="let start = Date.now();
                                         setInterval(() => { if (seconds > 0) seconds-- }, 1000);
                                         let interval = setInterval(() => {
-                                            progress = Math.max(0, 100 - ((Date.now() - start) / 5000 * 100));
+                                            progress = Math.max(0, 100 - ((Date.now() - start) / 3000 * 100));
                                             if (progress <= 0) clearInterval(interval);
                                         }, 50);">
                                         <span
@@ -500,56 +503,7 @@
                                     @endcan
 
                                     {{-- VER COMPROBANTE --}}
-                                    @php
-                                        $fPath = $bg->foto_comprobante ?? null;
-                                        $fExt = $fPath ? strtolower(pathinfo($fPath, PATHINFO_EXTENSION)) : '';
-                                        $fIsPdf = $fExt === 'pdf';
-                                    @endphp
-
-                                    @if ($fPath)
-                                        @if ($fIsPdf)
-                                            <a href="{{ asset('storage/' . $fPath) }}" target="_blank"
-                                                class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:bg-neutral-900 dark:text-rose-400 dark:border-rose-700 dark:hover:bg-rose-900/20 shadow-sm"
-                                                title="Ver PDF">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                    <polyline points="14 2 14 8 20 8" />
-                                                    <line x1="9" y1="13" x2="15" y2="13" />
-                                                    <line x1="9" y1="17" x2="15" y2="17" />
-                                                    <line x1="9" y1="9" x2="11" y2="9" />
-                                                </svg>
-                                            </a>
-                                        @else
-                                            <button type="button"
-                                                @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $fPath) }}' })"
-                                                class="w-9 h-9 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
-                                                title="Ver imagen">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="3" y="3" width="18" height="18" rx="2"
-                                                        ry="2" />
-                                                    <circle cx="8.5" cy="8.5" r="1.5" />
-                                                    <polyline points="21 15 16 10 5 21" />
-                                                </svg>
-                                            </button>
-                                        @endif
-                                    @else
-                                        <span
-                                            class="w-9 h-9 inline-flex items-center justify-center rounded-lg border bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
-                                            title="Sin comprobante">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24"
-                                                fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round">
-                                                <rect x="3" y="3" width="18" height="18" rx="2"
-                                                    ry="2" />
-                                                <circle cx="8.5" cy="8.5" r="1.5" />
-                                                <polyline points="21 15 16 10 5 21" />
-                                            </svg>
-                                        </span>
-                                    @endif
+                                    <x-comprobante-btn :path="$bg->foto_comprobante" size-class="w-9 h-9" svg-class="w-4 h-4" />
 
                                     @can('boletas_garantia.delete')
                                         <button type="button" wire:click="abrirEliminarBoletaModal({{ $bg->id }})"
@@ -761,88 +715,7 @@
                                                                 <td class="p-2 text-center align-middle whitespace-nowrap">
                                                                     <div class="flex items-center justify-center gap-1.5">
                                                                         {{-- VER COMPROBANTE DEVOLUCION --}}
-                                                                        @php
-                                                                            $dvPath = $dv->foto_comprobante ?? null;
-                                                                            $dvExt = $dvPath
-                                                                                ? strtolower(
-                                                                                    pathinfo(
-                                                                                        $dvPath,
-                                                                                        PATHINFO_EXTENSION,
-                                                                                    ),
-                                                                                )
-                                                                                : '';
-                                                                            $dvIsPdf = $dvExt === 'pdf';
-                                                                        @endphp
-
-                                                                        @if ($dvPath)
-                                                                            @if ($dvIsPdf)
-                                                                                <a href="{{ asset('storage/' . $dvPath) }}"
-                                                                                    target="_blank"
-                                                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-rose-600 border-rose-300 hover:bg-rose-50 hover:border-rose-400 dark:bg-neutral-900 dark:text-rose-400 dark:border-rose-700 dark:hover:bg-rose-900/20 shadow-sm"
-                                                                                    title="Ver PDF">
-                                                                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                        class="w-3.5 h-3.5"
-                                                                                        viewBox="0 0 24 24" fill="none"
-                                                                                        stroke="currentColor"
-                                                                                        stroke-width="2"
-                                                                                        stroke-linecap="round"
-                                                                                        stroke-linejoin="round">
-                                                                                        <path
-                                                                                            d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                                                        <polyline
-                                                                                            points="14 2 14 8 20 8" />
-                                                                                        <line x1="9"
-                                                                                            y1="13" x2="15"
-                                                                                            y2="13" />
-                                                                                        <line x1="9"
-                                                                                            y1="17" x2="15"
-                                                                                            y2="17" />
-                                                                                        <line x1="9"
-                                                                                            y1="9" x2="11"
-                                                                                            y2="9" />
-                                                                                    </svg>
-                                                                                </a>
-                                                                            @else
-                                                                                <button type="button"
-                                                                                    @click.stop="$dispatch('open-image-modal', { url: '{{ asset('storage/' . $dvPath) }}' })"
-                                                                                    class="w-8 h-8 inline-flex items-center justify-center rounded-lg border transition-all cursor-pointer bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-50 hover:border-indigo-400 dark:bg-neutral-900 dark:text-indigo-400 dark:border-indigo-700 dark:hover:bg-indigo-900/20 shadow-sm"
-                                                                                    title="Ver imagen">
-                                                                                    <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                        class="w-3.5 h-3.5"
-                                                                                        viewBox="0 0 24 24" fill="none"
-                                                                                        stroke="currentColor"
-                                                                                        stroke-width="2"
-                                                                                        stroke-linecap="round"
-                                                                                        stroke-linejoin="round">
-                                                                                        <rect x="3" y="3" width="18"
-                                                                                            height="18" rx="2"
-                                                                                            ry="2" />
-                                                                                        <circle cx="8.5"
-                                                                                            cy="8.5" r="1.5" />
-                                                                                        <polyline
-                                                                                            points="21 15 16 10 5 21" />
-                                                                                    </svg>
-                                                                                </button>
-                                                                            @endif
-                                                                        @else
-                                                                            <span
-                                                                                class="w-8 h-8 inline-flex items-center justify-center rounded-lg border bg-gray-50 text-gray-300 border-gray-200 cursor-not-allowed dark:bg-neutral-800 dark:text-neutral-600 dark:border-neutral-700"
-                                                                                title="Sin comprobante">
-                                                                                <svg xmlns="http://www.w3.org/2000/svg"
-                                                                                    class="w-3.5 h-3.5"
-                                                                                    viewBox="0 0 24 24" fill="none"
-                                                                                    stroke="currentColor" stroke-width="2"
-                                                                                    stroke-linecap="round"
-                                                                                    stroke-linejoin="round">
-                                                                                    <rect x="3" y="3" width="18"
-                                                                                        height="18" rx="2"
-                                                                                        ry="2" />
-                                                                                    <circle cx="8.5" cy="8.5"
-                                                                                        r="1.5" />
-                                                                                    <polyline points="21 15 16 10 5 21" />
-                                                                                </svg>
-                                                                            </span>
-                                                                        @endif
+                                                                        <x-comprobante-btn :path="$dv->foto_comprobante" />
 
                                                                         {{-- Delete: dispara modal Livewire separado (no abrir detalle) --}}
                                                                         <button type="button"

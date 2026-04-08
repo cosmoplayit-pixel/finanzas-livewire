@@ -128,7 +128,7 @@
                 </div>
 
 
-                <div class="col-span-2 lg:col-span-1">
+                <div class="col-span-1">
                     <label class="block text-sm mb-1">Monto <span class="text-red-500">*</span></label>
                     <input type="text" inputmode="decimal" wire:model.blur="retencion_formatted" placeholder="0,00"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -144,12 +144,12 @@
                 </div>
 
                 {{-- Comprobante (Imagen o PDF) --}}
-                <div class="col-span-2 lg:col-span-1">
+                <div class="col-span-1">
                     <x-ui.scanner model="foto_comprobante" label="Comprobante (Imagen/PDF)" :file="$foto_comprobante" />
                 </div>
 
                 {{-- Observación --}}
-                <div class="col-span-2 lg:col-span-2">
+                <div class="col-span-2">
                     <label class="block text-sm mb-1">Observación</label>
                     <input type="text" wire:model.live="observacion" placeholder="Opcional"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40">
@@ -162,8 +162,8 @@
 
 
         {{-- IMPACTO FINANCIERO --}}
-        <div class="rounded-lg border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden ">
-            <div class="px-3 sm:px-4 py-1 border-b dark:border-neutral-700 flex justify-between items-center">
+        <div class="rounded-lg mt-3 border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden ">
+            <div class="px-3 sm:px-4  py-1 border-b dark:border-neutral-700 flex justify-between items-center">
                 <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto financiero</div>
                 <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                     BANCO EGRESO {{ $monedaBanco ? "({$monedaBanco})" : '' }}
@@ -198,7 +198,7 @@
         </div>
 
         {{-- INFORMATIVO PROYECTOS TIPO PROPUESTA --}}
-        <div class="px-1 py-1 flex justify-start">
+        <div class="px-1 py-1 mt-2 flex justify-start">
             <div
                 class="w-fit flex items-center gap-2 text-blue-700 dark:text-blue-400 bg-blue-50/60 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800/40">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24"

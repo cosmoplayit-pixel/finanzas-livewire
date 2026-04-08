@@ -10,11 +10,14 @@
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
-    }" x-init="if (facturaId || pagoId) {
+    }" x-init="
+    const clearF = () => { $wire.set('factura_id', null); $wire.set('pago_id', null); };
+    if (facturaId || pagoId) {
         setTimeout(() => scroll(), 600);
+        setTimeout(clearF, 4000);
     }
-    $watch('facturaId', val => { if (val) setTimeout(() => scroll(), 300) });
-    $watch('pagoId', val => { if (val) setTimeout(() => scroll(), 300) });">
+    $watch('facturaId', val => { if (val) { setTimeout(() => scroll(), 300); setTimeout(clearF, 4000); } });
+    $watch('pagoId',    val => { if (val) { setTimeout(() => scroll(), 300); setTimeout(clearF, 4000); } });">
     <div class="overflow-x-auto">
         <table wire:key="facturas-table" class="w-full table-fixed text-sm min-w-[1100px] lg:min-w-0">
             <thead
@@ -318,11 +321,11 @@
                         <td class="p-2 align-top">
                             <div class="flex text-center items-center justify-center gap-2 flex-wrap min-h-[44px]">
                                 @if (isset($pendingRemoval[(string) $r['id']]))
-                                    <div class="flex flex-col items-center gap-1" x-data="{ seconds: 5, progress: 100 }"
+                                    <div class="flex flex-col items-center gap-1" x-data="{ seconds: 4, progress: 100 }"
                                         x-init="let start = Date.now();
                                         setInterval(() => { if (seconds > 0) seconds-- }, 1000);
                                         let interval = setInterval(() => {
-                                            progress = Math.max(0, 100 - ((Date.now() - start) / 5000 * 100));
+                                            progress = Math.max(0, 100 - ((Date.now() - start) / 4000 * 100));
                                             if (progress <= 0) {
                                                 clearInterval(interval);
                                                 $wire.dispatch('factura:clear-pending-removal', { facturaId: {{ $r['id'] }} });

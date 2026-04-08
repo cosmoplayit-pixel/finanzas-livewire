@@ -1,21 +1,21 @@
 {{-- RESUMEN TOTALES (RESPETA FILTROS) --}}
 @php
     $isBoth = $moneda === 'all';
-    $valClassBase = $isBoth ? 'text-lg' : 'text-2xl';
+    $valClassBase = $isBoth ? 'text-sm sm:text-lg' : 'text-base sm:text-2xl';
 @endphp
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+<div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4">
     {{-- Capital Privado --}}
     <div
-        class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group dark:bg-neutral-800 dark:border-neutral-700 flex flex-col">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <svg class="w-12 h-12 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
+        class="bg-white rounded-xl border border-gray-200 shadow-sm p-2.5 sm:p-4 relative overflow-hidden group dark:bg-neutral-800 dark:border-neutral-700 flex flex-col">
+        <div class="absolute top-0 right-0 p-2 sm:p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <svg class="w-8 h-8 sm:w-12 sm:h-12 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor"
                 viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
                 </path>
             </svg>
         </div>
-        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3">Capital Privado</p>
+        <p class="text-[11px] sm:text-sm font-medium text-gray-500 dark:text-neutral-400 mb-1.5 sm:mb-3 leading-tight">Capital Privado</p>
 
         <div class="mt-auto flex flex-col gap-2 relative z-10">
             @if ($isBoth || $moneda === 'BOB')
@@ -42,16 +42,16 @@
 
     {{-- Capital Banco --}}
     <div
-        class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group dark:bg-neutral-800 dark:border-neutral-700 flex flex-col">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <svg class="w-12 h-12 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor"
+        class="bg-white rounded-xl border border-gray-200 shadow-sm p-2.5 sm:p-4 relative overflow-hidden group dark:bg-neutral-800 dark:border-neutral-700 flex flex-col">
+        <div class="absolute top-0 right-0 p-2 sm:p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <svg class="w-8 h-8 sm:w-12 sm:h-12 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor"
                 viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
                 </path>
             </svg>
         </div>
-        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3">Capital Banco</p>
+        <p class="text-[11px] sm:text-sm font-medium text-gray-500 dark:text-neutral-400 mb-1.5 sm:mb-3 leading-tight">Capital Banco</p>
 
         <div class="mt-auto flex flex-col gap-2 relative z-10">
             @if ($isBoth || $moneda === 'BOB')
@@ -78,15 +78,15 @@
 
     {{-- Pagos Pendientes --}}
     <div
-        class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group dark:bg-neutral-800 dark:border-neutral-700 flex flex-col">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <svg class="w-12 h-12 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor"
+        class="bg-white rounded-xl border border-gray-200 shadow-sm p-2.5 sm:p-4 relative overflow-hidden group dark:bg-neutral-800 dark:border-neutral-700 flex flex-col">
+        <div class="absolute top-0 right-0 p-2 sm:p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <svg class="w-8 h-8 sm:w-12 sm:h-12 text-rose-600 dark:text-rose-400" fill="none" stroke="currentColor"
                 viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
         </div>
-        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3"
+        <p class="text-[11px] sm:text-sm font-medium text-gray-500 dark:text-neutral-400 mb-1.5 sm:mb-3 leading-tight"
             title="Pagos que se deben hasta la fecha de hoy">Pagos Pendientes - {{ date('d/M') }}</p>
 
         <div class="mt-auto flex flex-col gap-2 relative z-10">
@@ -116,16 +116,16 @@
 
     {{-- Total General --}}
     <div
-        class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 relative overflow-hidden group dark:bg-neutral-800 dark:border-neutral-700 flex flex-col">
-        <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <svg class="w-12 h-12 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor"
+        class="bg-white rounded-xl border border-gray-200 shadow-sm p-2.5 sm:p-4 relative overflow-hidden group dark:bg-neutral-800 dark:border-neutral-700 flex flex-col">
+        <div class="absolute top-0 right-0 p-2 sm:p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+            <svg class="w-8 h-8 sm:w-12 sm:h-12 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor"
                 viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
                 </path>
             </svg>
         </div>
-        <p class="text-sm font-medium text-gray-500 dark:text-neutral-400 mb-3">Total General</p>
+        <p class="text-[11px] sm:text-sm font-medium text-gray-500 dark:text-neutral-400 mb-1.5 sm:mb-3 leading-tight">Total General</p>
 
         <div class="mt-auto flex flex-col gap-2 relative z-10">
             @if ($isBoth || $moneda === 'BOB')

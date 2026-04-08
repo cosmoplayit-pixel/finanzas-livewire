@@ -60,7 +60,7 @@
                 </div>
 
                 {{-- Comprobante (Imagen o PDF) --}}
-                <div class="col-span-2 lg:col-span-1">
+                <div class="col-span-1 lg:col-span-1">
                     <x-ui.scanner model="foto_comprobante" label="Comprobante (Imagen/PDF)" :file="$foto_comprobante" />
                 </div>
 
@@ -77,7 +77,7 @@
                 </div>
 
                 {{-- OBSERVACIÓN --}}
-                <div class="col-span-2 lg:col-span-1">
+                <div class="col-span-1 lg:col-span-1">
                     <label class="block text-sm mb-1">Observación</label>
                     <input type="text" wire:model.live="observacion" placeholder="Opcional"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900
@@ -92,7 +92,8 @@
         </div>
 
         {{-- IMPACTO FINANCIERO --}}
-        <div class="rounded-lg border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden ">
+        <div
+            class="rounded-lg mt-3 border bg-gray-50 dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden mt-2">
             <div class="px-3 sm:px-4 py-1 border-b dark:border-neutral-700 flex justify-between items-center">
                 <div class="text-sm font-semibold text-gray-800 dark:text-neutral-100">Impacto financiero</div>
                 <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -112,7 +113,7 @@
                     <div class="text-center pl-3">
                         <div
                             class="text-gray-500 dark:text-neutral-400 mb-1 text-xs text-emerald-600 dark:text-emerald-400">
-                            Ingreso por Devolución</div>
+                            Ingreso Devolución</div>
                         <div class="font-medium text-emerald-600 dark:text-emerald-400">
                             + {{ $devol_monto_formatted ?: '0,00' }}
                         </div>
@@ -124,6 +125,23 @@
                             {{ number_format((float) $this->saldo_banco_despues_preview, 2, ',', '.') }}
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- INFORMATIVO PROYECTOS TIPO PROPUESTA --}}
+        <div class="px-1 py-1 mt-2 flex justify-start">
+            <div
+                class="w-fit flex items-center gap-2 text-blue-700 dark:text-blue-400 bg-blue-50/60 dark:bg-blue-900/20 px-3 py-1.5 rounded-lg border border-blue-100 dark:border-blue-800/40">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                <div class="text-[11px] leading-tight whitespace-nowrap">
+                    <span class="font-semibold text-blue-800 dark:text-blue-300">Nota:</span> Se Puede Registrar Varias
+                    <span class="font-bold underline decoration-blue-300 dark:decoration-blue-700">Devoluciones</span>.
                 </div>
             </div>
         </div>

@@ -47,4 +47,5 @@
             }
         </style>
     @endpush
+
 </div>

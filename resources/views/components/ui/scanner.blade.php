@@ -195,47 +195,8 @@
                     },
 
                     /* ── CÁMARA ─────────────────────────────────── */
-                    async startCamera() {
-                        if (/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)) {
-                            this.$refs.cameraInput.click();
-                            return;
-                        }
-                        try {
-                            this.stream = await navigator.mediaDevices.getUserMedia({
-                                video: {
-                                    facingMode: { ideal: 'environment' },
-                                    width: {
-                                        ideal: 1920
-                                    },
-                                    height: {
-                                        ideal: 1080
-                                    }
-                                }
-                            });
-                            const caps = this.stream.getVideoTracks()[0].getCapabilities?.() ?? {};
-                            if (caps.zoom) {
-                                this.canZoom = true;
-                                this.useDigitalZoom = false;
-                                this.minZoom = caps.zoom.min;
-                                this.maxZoom = caps.zoom.max;
-                                this.stepZoom = caps.zoom.step ?? 0.1;
-                                this.zoomValue = caps.zoom.min;
-                            } else {
-                                this.canZoom = true;
-                                this.useDigitalZoom = true;
-                                this.minZoom = 1;
-                                this.maxZoom = 4;
-                                this.stepZoom = 0.1;
-                                this.zoomValue = 1;
-                            }
-                            this.rotation = 0;
-                            this.phase = 'camera';
-                            await this.$nextTick();
-                            if (this.$refs.video) this.$refs.video.srcObject = this.stream;
-                        } catch (e) {
-                            alert(e.name === 'NotAllowedError' ? 'Permiso de cámara denegado.' :
-                                'Error: ' + e.name);
-                        }
+                    startCamera() {
+                        this.$refs.cameraInput.click();
                     },
 
                     applyOpticalZoom() {
@@ -386,6 +347,7 @@
                                 this.srcCanvas = this._resizeCanvas(c, 2400);
                                 this.srcDataURL = this.srcCanvas.toDataURL('image/jpeg', 0.9);
                                 this._initEditor();
+                                this._autoDetectEdges();
                                 this.phase = 'editor';
                             };
                             img.src = ev.target.result;
@@ -419,6 +381,75 @@
                         this.warpedDataURL = '';
                         this._warpDirty = true;
                         this.editorTab = 'persp';
+                    },
+
+                    _autoDetectEdges() {
+                        const src = this.srcCanvas;
+                        if (!src) return;
+
+                        // Downsample a ~200px para velocidad
+                        const scale = Math.min(1, 200 / Math.max(src.width, src.height));
+                        const sw = Math.round(src.width * scale);
+                        const sh = Math.round(src.height * scale);
+                        const small = document.createElement('canvas');
+                        small.width = sw;
+                        small.height = sh;
+                        small.getContext('2d').drawImage(src, 0, 0, sw, sh);
+                        const ctx = small.getContext('2d', { willReadFrequently: true });
+                        const data = ctx.getImageData(0, 0, sw, sh).data;
+
+                        const lum = (x, y) => {
+                            const i = (Math.round(y) * sw + Math.round(x)) * 4;
+                            return 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                        };
+
+                        // Color de fondo: promedio de 4 esquinas
+                        const bgL = (lum(0, 0) + lum(sw - 1, 0) + lum(0, sh - 1) + lum(sw - 1, sh - 1)) / 4;
+                        const threshold = 28;
+                        const minHits = ratio => v => v > ratio;
+
+                        const scanH = (y, x0, x1) => {
+                            let hits = 0;
+                            for (let x = x0; x < x1; x++)
+                                if (Math.abs(lum(x, y) - bgL) > threshold) hits++;
+                            return hits;
+                        };
+                        const scanV = (x, y0, y1) => {
+                            let hits = 0;
+                            for (let y = y0; y < y1; y++)
+                                if (Math.abs(lum(x, y) - bgL) > threshold) hits++;
+                            return hits;
+                        };
+
+                        const cx0 = Math.floor(sw * 0.15), cx1 = Math.ceil(sw * 0.85);
+                        const cy0 = Math.floor(sh * 0.15), cy1 = Math.ceil(sh * 0.85);
+                        const minHW = (cx1 - cx0) * 0.25;
+                        const minVH = (cy1 - cy0) * 0.25;
+
+                        let top = 0, bottom = sh - 1, left = 0, right = sw - 1;
+
+                        for (let y = 0; y < sh; y++)
+                            if (scanH(y, cx0, cx1) >= minHW) { top = Math.max(0, y - 1); break; }
+                        for (let y = sh - 1; y >= 0; y--)
+                            if (scanH(y, cx0, cx1) >= minHW) { bottom = Math.min(sh - 1, y + 1); break; }
+                        for (let x = 0; x < sw; x++)
+                            if (scanV(x, cy0, cy1) >= minVH) { left = Math.max(0, x - 1); break; }
+                        for (let x = sw - 1; x >= 0; x--)
+                            if (scanV(x, cy0, cy1) >= minVH) { right = Math.min(sw - 1, x + 1); break; }
+
+                        const lx = left / sw * 100, rx = right / sw * 100;
+                        const ty = top / sh * 100, by = bottom / sh * 100;
+
+                        // Solo aplicar si detectó algo más pequeño que el 95% de la imagen
+                        if (lx > 1 || rx < 99 || ty > 1 || by < 99) {
+                            this.handles = [
+                                { x: lx, y: ty },
+                                { x: rx, y: ty },
+                                { x: rx, y: by },
+                                { x: lx, y: by },
+                            ];
+                            this._warpDirty = true;
+                        }
                     },
 
                     switchTab(tab) {
@@ -949,10 +980,11 @@
             </div>
 
             {{-- ── Cuerpo: sidebar + imagen ────────────── --}}
-            <div class="flex flex-1 overflow-hidden min-h-0">
+            {{-- Desktop: flex-row | Mobile: flex-col (imagen arriba, controles abajo) --}}
+            <div class="flex flex-1 overflow-hidden min-h-0 flex-col md:flex-row">
 
-                {{-- SIDEBAR IZQUIERDO --}}
-                <div class="w-56 shrink-0 bg-black/40 border-r border-white/5 flex flex-col overflow-y-auto">
+                {{-- SIDEBAR IZQUIERDO (solo desktop) --}}
+                <div class="hidden md:flex w-56 shrink-0 bg-black/40 border-r border-white/5 flex-col overflow-y-auto">
 
                     {{-- Botones de pestaña --}}
                     <div class="p-3 flex flex-col gap-1">
@@ -1002,8 +1034,6 @@
                     {{-- Separador --}}
                     <div class="border-t border-white/5 mx-3"></div>
 
-                    {{-- Contenido según pestaña activa --}}
-
                     {{-- Perspectiva --}}
                     <div x-show="editorTab === 'persp'" class="p-4 flex flex-col gap-4">
                         <p class="text-white/35 text-xs leading-relaxed">Arrastrá las 4 esquinas (puntos de colores) al
@@ -1027,27 +1057,22 @@
 
                     {{-- Ajustes --}}
                     <div x-show="editorTab === 'adjust'" class="p-4 flex flex-col gap-5">
-
                         <div>
                             <div class="flex justify-between mb-2">
-                                <span
-                                    class="text-[10px] text-white/50 uppercase font-black tracking-widest">Brillo</span>
+                                <span class="text-[10px] text-white/50 uppercase font-black tracking-widest">Brillo</span>
                                 <span class="text-[10px] text-indigo-400 font-mono" x-text="adjBrightness+'%'"></span>
                             </div>
                             <input type="range" x-model="adjBrightness" min="50" max="200"
                                 class="w-full h-1.5 accent-indigo-500 bg-white/10 rounded-full appearance-none cursor-pointer">
                         </div>
-
                         <div>
                             <div class="flex justify-between mb-2">
-                                <span
-                                    class="text-[10px] text-white/50 uppercase font-black tracking-widest">Contraste</span>
+                                <span class="text-[10px] text-white/50 uppercase font-black tracking-widest">Contraste</span>
                                 <span class="text-[10px] text-indigo-400 font-mono" x-text="adjContrast+'%'"></span>
                             </div>
                             <input type="range" x-model="adjContrast" min="50" max="300"
                                 class="w-full h-1.5 accent-indigo-500 bg-white/10 rounded-full appearance-none cursor-pointer">
                         </div>
-
                         <div class="border-t border-white/5 pt-3">
                             <button type="button" @click="adjBrightness=100;adjContrast=100"
                                 class="w-full text-xs text-white/40 hover:text-white border border-white/10 hover:border-white/20 py-2 rounded-xl transition font-medium uppercase tracking-wider">
@@ -1173,6 +1198,92 @@
                     </div>
 
                 </div>
+
+                {{-- BARRA INFERIOR (solo mobile) --}}
+                <div class="md:hidden shrink-0 bg-black/70 border-t border-white/10">
+
+                    {{-- Tabs horizontales --}}
+                    <div class="flex border-b border-white/5">
+                        <button type="button" @click="switchTab('persp')"
+                            class="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition"
+                            :class="editorTab === 'persp' ? 'text-white border-b-2 border-indigo-500' : 'text-white/40'">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 3L3 9l7 3 3 9 8-18z" />
+                            </svg>
+                            Perspectiva
+                        </button>
+                        <button type="button" @click="switchTab('crop')"
+                            class="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition"
+                            :class="editorTab === 'crop' ? 'text-white border-b-2 border-indigo-500' : 'text-white/40'">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 2 6 6 2 6" />
+                                <polyline points="18 2 18 6 22 6" />
+                                <polyline points="6 22 6 18 2 18" />
+                                <polyline points="18 22 18 18 22 18" />
+                            </svg>
+                            Recortar
+                        </button>
+                        <button type="button" @click="switchTab('adjust')"
+                            class="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition"
+                            :class="editorTab === 'adjust' ? 'text-white border-b-2 border-indigo-500' : 'text-white/40'">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
+                                <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
+                                <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
+                                <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" />
+                                <line x1="17" y1="16" x2="23" y2="16" />
+                            </svg>
+                            Ajustes
+                        </button>
+                    </div>
+
+                    {{-- Contenido compacto según tab --}}
+                    <div class="px-4 py-3">
+
+                        {{-- Perspectiva --}}
+                        <div x-show="editorTab === 'persp'" class="flex items-center justify-between gap-3">
+                            <p class="text-white/40 text-xs">Arrastrá las 4 esquinas al borde del documento.</p>
+                            <button type="button"
+                                @click="handles=[{x:0,y:0},{x:100,y:0},{x:100,y:100},{x:0,y:100}]; _warpDirty=true"
+                                class="shrink-0 text-xs text-white/50 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition font-medium">
+                                Resetear
+                            </button>
+                        </div>
+
+                        {{-- Recortar --}}
+                        <div x-show="editorTab === 'crop'" class="flex items-center justify-between gap-3">
+                            <p class="text-white/40 text-xs">Arrastrá los bordes para ajustar el recorte.</p>
+                            <button type="button" @click="crop={x:0,y:0,w:100,h:100}"
+                                class="shrink-0 text-xs text-white/50 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition font-medium">
+                                Resetear
+                            </button>
+                        </div>
+
+                        {{-- Ajustes --}}
+                        <div x-show="editorTab === 'adjust'" class="space-y-2.5">
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] text-white/50 uppercase font-black tracking-widest w-16 shrink-0">Brillo</span>
+                                <input type="range" x-model="adjBrightness" min="50" max="200"
+                                    class="flex-1 h-1.5 accent-indigo-500 bg-white/10 rounded-full appearance-none cursor-pointer">
+                                <span class="text-[10px] text-indigo-400 font-mono w-9 text-right shrink-0" x-text="adjBrightness+'%'"></span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] text-white/50 uppercase font-black tracking-widest w-16 shrink-0">Contraste</span>
+                                <input type="range" x-model="adjContrast" min="50" max="300"
+                                    class="flex-1 h-1.5 accent-indigo-500 bg-white/10 rounded-full appearance-none cursor-pointer">
+                                <span class="text-[10px] text-indigo-400 font-mono w-9 text-right shrink-0" x-text="adjContrast+'%'"></span>
+                            </div>
+                            <div class="flex justify-end pt-0.5">
+                                <button type="button" @click="adjBrightness=100;adjContrast=100"
+                                    class="text-xs text-white/40 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition font-medium">
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
 
         </div>

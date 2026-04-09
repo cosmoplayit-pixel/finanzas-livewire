@@ -21,10 +21,10 @@
 
             // Accent border based on state
             $accentBorder = match (true) {
-                $cerrada     => 'border-l-emerald-400 dark:border-l-emerald-500',
-                $saldo > 0   => 'border-l-blue-400 dark:border-l-blue-500',
-                $retPend > 0 => 'border-l-amber-400 dark:border-l-amber-500',
-                default      => 'border-l-gray-300 dark:border-l-neutral-600',
+                $cerrada     => 'border-t-emerald-400 dark:border-t-emerald-500',
+                $saldo > 0   => 'border-t-blue-400 dark:border-t-blue-500',
+                $retPend > 0 => 'border-t-amber-400 dark:border-t-amber-500',
+                default      => 'border-t-gray-300 dark:border-t-neutral-600',
             };
 
             $isTarget = isset($factura_id) && $factura_id == $f->id;
@@ -32,7 +32,7 @@
 
         <div @if ($isTarget) id="factura-mobile-target-{{ $f->id }}" @endif
             wire:key="factura-card-{{ $f->id }}"
-            class="rounded-xl border-l-4 border border-gray-200 dark:border-neutral-700 overflow-hidden
+            class="rounded-xl border-t-4 border border-gray-200 dark:border-neutral-700 overflow-hidden
                    {{ $accentBorder }}
                    {{ $isTarget ? 'bg-indigo-50/50 border-indigo-300 dark:border-indigo-500/40 dark:bg-indigo-900/10' : 'bg-white dark:bg-neutral-900/50' }}">
 

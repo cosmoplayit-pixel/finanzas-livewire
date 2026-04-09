@@ -124,7 +124,7 @@
                     <div
                         class="rounded-xl border border-emerald-200/60 dark:border-emerald-800/30 bg-white dark:bg-neutral-900/40 overflow-hidden shadow-sm mb-4">
                         <div
-                            class="px-4 py-3 border-b border-emerald-100 dark:border-emerald-800/30 bg-emerald-50/50 dark:bg-emerald-900/10 flex items-center justify-between">
+                            class="p-2 border-b border-emerald-100 dark:border-emerald-800/30 bg-emerald-50/50 dark:bg-emerald-900/10 flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <div
                                     class="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-800/50 text-emerald-600 dark:text-emerald-400">
@@ -153,14 +153,13 @@
                                     class="bg-gray-50/50 dark:bg-neutral-800/50 border-b border-gray-100 dark:border-neutral-700/50">
                                     <tr
                                         class="text-left text-[11px] uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold">
-                                        <th class="p-3 text-center w-[50px]">Nro</th>
-                                        <th class="p-3 text-center w-[90px]">Fecha</th>
-                                        <th class="p-3">Banco</th>
-                                        <th class="p-3">Transacción</th>
-                                        <th class="p-3">Observación</th>
-                                        <th class="p-3 text-right">Monto</th>
-                                        <th class="p-3 text-right">Base</th>
-                                        <th class="p-3 text-center w-[110px]">Acc.</th>
+                                        <th class="p-2 text-center w-[5%]">Nro</th>
+                                        <th class="p-2 text-center w-[10%]">Fecha</th>
+                                        <th class="p-2 w-[30%]">Banco</th>
+                                        <th class="p-2 w-[15%]">Transacción</th>
+                                        <th class="p-2 w-[20%]">Detalle</th>
+                                        <th class="p-2 w-[10%]">Monto</th>
+                                        <th class="p-2 text-center w-[10%]">Acc.</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100 dark:divide-neutral-800/80">
@@ -174,8 +173,10 @@
                                         <tr @if ($isDevHighlighted) id="devolucion-highlight-{{ $m->id }}" @endif
                                             class="transition group
                                             {{ $isDevHighlighted ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10' }}">
+
+                                            {{-- NRO (con highlight si corresponde) --}}
                                             <td
-                                                class="p-3 text-center font-medium
+                                                class="p-1 text-center font-medium
                                                 {{ $isDevHighlighted ? 'border-l-4 border-emerald-400' : 'border-l-4 border-transparent' }}">
                                                 @if ($isDevHighlighted)
                                                     <span
@@ -186,50 +187,71 @@
                                                         class="text-gray-400 dark:text-neutral-500">{{ $i + 1 }}</span>
                                                 @endif
                                             </td>
+
+                                            {{-- FECHA --}}
                                             <td
-                                                class="p-3 text-gray-600 dark:text-neutral-300 whitespace-nowrap text-center">
+                                                class="p-1 text-gray-600 dark:text-neutral-300 whitespace-nowrap text-center">
                                                 <div class="text-xs">{{ $m->fecha?->format('d/m/Y') ?? '—' }}</div>
                                                 <div class="text-[10px] text-gray-400">
                                                     {{ $m->fecha?->format('H:i') ?? '' }}</div>
                                             </td>
+
+                                            {{-- BANCO --}}
                                             <td
-                                                class="p-3 text-gray-700 dark:text-neutral-200 font-medium whitespace-nowrap">
+                                                class="p-1 text-gray-700 dark:text-neutral-200 font-medium whitespace-nowrap">
                                                 <div class="text-sm font-semibold">
                                                     {{ $m->banco?->nombre ?? '—' }}
                                                 </div>
                                                 @if ($m->banco?->titular)
                                                     <div class="text-[10px] text-gray-500 font-normal">
-                                                        Titular: {{ $m->banco->titular }}
+                                                        {{ $m->banco->titular }}
                                                     </div>
                                                 @endif
-                                            </td>
-                                            <td class="p-3 text-gray-600 dark:text-neutral-300 whitespace-nowrap">
-                                                {{ $m->nro_transaccion ?? '—' }}
-                                            </td>
-                                            <td class="p-3 text-gray-500 dark:text-neutral-400 text-xs"
-                                                title="{{ $m->observacion }}">
-                                                <div class="line-clamp-2 min-w-[120px]">{{ $m->observacion ?: '—' }}
+                                                <div
+                                                    class="text-[10px] text-gray-500 font-normal mt-0.5 flex items-center gap-1">
+                                                    @if ($m->tipo_cambio && $m->moneda !== ($editorMonedaBase ?? 'BOB'))
+                                                        <span>TC:
+                                                            {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }}</span>
+                                                        <span class="text-gray-300">·</span>
+                                                    @endif
+                                                    <span
+                                                        class="font-semibold text-gray-700 dark:text-neutral-200">{{ number_format((float) $m->monto, 2, ',', '.') }}
+                                                        {{ $m->moneda }}</span>
                                                 </div>
                                             </td>
-                                            <td
-                                                class="p-3 text-right tabular-nums text-gray-900 dark:text-neutral-100 font-medium whitespace-nowrap">
-                                                {{ number_format((float) $m->monto, 2, ',', '.') }}
-                                                <span class="text-[10px] text-gray-400">{{ $m->moneda }}</span>
+
+                                            {{-- NRO TRANSACCION --}}
+                                            <td class="p-1 text-gray-600 dark:text-neutral-300 whitespace-nowrap">
+                                                {{ $m->nro_transaccion ?? '—' }}
                                             </td>
+
+                                            {{-- OBSERVACION --}}
+                                            <td class="p-1 text-gray-500 dark:text-neutral-400 text-xs"
+                                                title="{{ $m->observacion }}"> {{ $m->observacion ?: '—' }}
+                                            </td>
+
+                                            {{-- MONTO BASE --}}
                                             <td
-                                                class="p-3 text-right tabular-nums text-emerald-700 dark:text-emerald-400 font-semibold whitespace-nowrap">
+                                                class="p-1 tabular-nums text-emerald-700 dark:text-emerald-400 font-semibold whitespace-nowrap">
                                                 <div>
                                                     {{ number_format((float) $m->monto_base, 2, ',', '.') }}
                                                     <span
                                                         class="text-[10px] opacity-70">{{ $editorMonedaBase ?? 'BOB' }}</span>
                                                 </div>
-                                                @if ($m->moneda !== ($editorMonedaBase ?? 'BOB'))
-                                                    <div class="text-[10px] text-gray-400 font-normal">
-                                                        TC: {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }}
-                                                    </div>
-                                                @endif
+
+                                                <div class="text-[10px] text-gray-500 flex items-center ">
+                                                    @if ($m->tipo_cambio && $m->moneda !== ($editorMonedaBase ?? 'BOB'))
+                                                        <span>TC:
+                                                            {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }} -
+                                                            {{ number_format((float) $m->monto, 2, ',', '.') }}
+                                                            {{ $m->moneda }}</span>
+                                                    @endif
+                                                </div>
+
                                             </td>
-                                            <td class="p-3 text-center">
+
+                                            {{-- ACCIONES --}}
+                                            <td class="p-1 text-center">
                                                 <div class="flex items-center justify-center gap-1">
                                                     {{-- EDITAR --}}
                                                     @can('agente_presupuestos.delete_movement')
@@ -369,30 +391,25 @@
                                         $highlight_devolucion_id &&
                                         (int) $m->id === (int) $highlight_devolucion_id;
                                 @endphp
-                                <div
-                                    @if ($isDevHighlightedMob) id="mob-devolucion-highlight-{{ $m->id }}" @endif
-                                    class="rounded-xl border-l-4 border border-gray-200 dark:border-neutral-700 p-3 transition-colors
-                                        {{ $isDevHighlightedMob
-                                            ? 'border-l-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
-                                            : 'border-l-transparent bg-white dark:bg-neutral-900/20' }}">
+                                <div @if ($isDevHighlightedMob) id="mob-devolucion-highlight-{{ $m->id }}" @endif
+                                    class="rounded-xl border-l-4 border-t border-r border-b border-t-gray-200 border-r-gray-200 border-b-gray-200 dark:border-t-neutral-700 dark:border-r-neutral-700 dark:border-b-neutral-700 border-l-emerald-400 dark:border-l-emerald-500 p-3 transition-colors
+                                        {{ $isDevHighlightedMob ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-white dark:bg-neutral-900/20' }}">
 
-                                    {{-- CABECERA --}}
+                                    {{-- FILA 1: # · Banco + Acciones --}}
                                     <div class="flex items-start justify-between gap-2">
-                                        <div class="min-w-0">
-                                            <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                                                #{{ $i + 1 }} · {{ $m->banco?->nombre ?? '—' }}
+                                        <div class="min-w-0 flex-1">
+                                            <div
+                                                class="text-sm font-semibold text-gray-900 dark:text-neutral-100 truncate">
+                                                <span
+                                                    class="text-xs font-normal text-gray-400 dark:text-neutral-500">#{{ $i + 1 }}</span>
+                                                <span class="mx-1 text-gray-300 dark:text-neutral-600">·</span>
+                                                {{ $m->banco?->nombre ?? '—' }}
                                             </div>
                                             @if ($m->banco?->titular)
-                                                <div class="text-[10px] text-gray-400 font-normal">
-                                                    Titular: {{ $m->banco->titular }}
+                                                <div class="text-[11px] text-gray-400 dark:text-neutral-500 truncate">
+                                                    {{ $m->banco->titular }}
                                                 </div>
                                             @endif
-
-                                            <div class="mt-0.5 text-xs text-gray-500 dark:text-neutral-400">
-                                                {{ $m->fecha?->format('d/m/Y H:i') ?? '-' }}
-                                                <span class="mx-1">•</span>
-                                                Tx: {{ $m->nro_transaccion ?? '—' }}
-                                            </div>
                                         </div>
 
                                         {{-- ACCIONES --}}
@@ -507,46 +524,55 @@
                                         </div>
                                     </div>
 
-                                    {{-- OBSERVACIÓN (ABAJO, FULL WIDTH) --}}
-                                    <div class="mt-2 text-xs text-gray-600 dark:text-neutral-300">
-                                        <span class="font-medium text-gray-700 dark:text-neutral-200">Obs:</span>
+                                    {{-- FILA 2: Fecha + Tx | Monto --}}
+                                    <div
+                                        class="mt-2 pt-2 border-t border-gray-100 dark:border-neutral-700/50 flex items-start justify-between gap-2">
+                                        <div class="text-xs text-gray-500 dark:text-neutral-400 space-y-0.5">
+                                            <div>
+                                                {{ $m->fecha?->format('d/m/Y H:i') ?? '—' }}
+                                                @if ($m->nro_transaccion)
+                                                    <span class="mx-0.5 text-gray-300">·</span>Tx:
+                                                    {{ $m->nro_transaccion }}
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- OBSERVACIÓN --}}
+                                    @if (!empty($m->observacion))
+                                        <div
+                                            class="mt-2 pt-2 border-t border-gray-100 dark:border-neutral-700/50 text-xs text-gray-500 dark:text-neutral-400">
+                                            <span class="font-medium text-gray-600 dark:text-neutral-300">Obs:</span>
+                                            {{ $m->observacion }}
+                                        </div>
+                                    @endif
+
+                                    {{-- MONTO --}}
+                                    <div
+                                        class="mt-2 pt-2 border-t border-gray-100 dark:border-neutral-700/50 flex items-center justify-between">
                                         <span
-                                            class="{{ empty($m->observacion) ? 'text-gray-400 dark:text-neutral-500' : '' }}">
-                                            {{ $m->observacion ?: '—' }}
+                                            class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-neutral-500">Monto</span>
+                                        <span
+                                            class="text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-400">
+                                            {{ number_format((float) $m->monto_base, 2, ',', '.') }}
+                                            {{ $editorMonedaBase ?? 'BOB' }}
                                         </span>
                                     </div>
 
-                                    {{-- MONTOS --}}
-                                    <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
-                                        <div>
-                                            <div
-                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">
-                                                Monto
-                                            </div>
-                                            <div
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+                                    {{-- BASE --}}
+                                    @if ($m->tipo_cambio && $m->moneda !== ($editorMonedaBase ?? 'BOB'))
+                                        <div
+                                            class="mt-2 pt-2 border-t border-gray-100 dark:border-neutral-700/50 flex justify-between">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-neutral-500">Base</span>
+                                            <span
+                                                class="text-[11.5px] font-semibold tabular-nums text-gray-700 dark:text-gray-400">
                                                 {{ number_format((float) $m->monto, 2, ',', '.') }}
-                                                {{ $m->moneda }}
-                                            </div>
+                                                {{ $m->moneda }} — TC:
+                                                {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }}
+                                            </span>
                                         </div>
-
-                                        <div class="text-right">
-                                            <div
-                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">
-                                                Base
-                                            </div>
-                                            <div
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
-                                                {{ number_format((float) $m->monto_base, 2, ',', '.') }}
-                                                {{ $editorMonedaBase ?? 'BOB' }}
-                                            </div>
-                                            @if ($m->moneda !== ($editorMonedaBase ?? 'BOB'))
-                                                <div class="text-[10px] text-gray-400 font-normal">
-                                                    TC: {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
+                                    @endif
 
                                 </div>
                             @endforeach
@@ -560,7 +586,7 @@
                     <div
                         class="rounded-xl border border-blue-200/60 dark:border-blue-800/30 bg-white dark:bg-neutral-900/40 overflow-hidden shadow-sm mb-4">
                         <div
-                            class="px-4 py-3 border-b border-blue-100 dark:border-blue-800/30 bg-blue-50/50 dark:bg-blue-900/10 flex items-center justify-between">
+                            class="p-2 border-b border-blue-100 dark:border-blue-800/30 bg-blue-50/50 dark:bg-blue-900/10 flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <div
                                     class="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-800/50 text-blue-600 dark:text-blue-400">
@@ -590,14 +616,13 @@
                                     class="bg-gray-50/50 dark:bg-neutral-800/50 border-b border-gray-100 dark:border-neutral-700/50">
                                     <tr
                                         class="text-left text-[11px] uppercase tracking-wider text-gray-500 dark:text-neutral-400 font-semibold">
-                                        <th class="p-3 text-center w-[50px]">Nro</th>
-                                        <th class="p-3 text-center w-[90px]">Fecha</th>
-                                        <th class="p-3 min-w-[150px]">Entidad / Proyecto</th>
-                                        <th class="p-3">Comprobante</th>
-                                        <th class="p-3">Observación</th>
-                                        <th class="p-3 text-right">Monto</th>
-                                        <th class="p-3 text-right">Base</th>
-                                        <th class="p-3 text-center w-[110px]">Acc.</th>
+                                        <th class="p-2 text-center w-[5%]">Nro</th>
+                                        <th class="p-2 text-center w-[10%]">Fecha</th>
+                                        <th class="p-2 w-[30%]">Entidad / Proyecto</th>
+                                        <th class="p-2 w-[15%]">Comprobante</th>
+                                        <th class="p-2 w-[20%]">Detalle</th>
+                                        <th class="p-2 w-[10%]">Monto</th>
+                                        <th class="p-2 text-center w-[10%]">Acc.</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-100 dark:divide-neutral-800/80">
@@ -611,8 +636,10 @@
                                         <tr @if ($isMovHighlighted) id="movimiento-highlight-{{ $m->id }}" @endif
                                             class="transition group
                                             {{ $isMovHighlighted ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-blue-50/30 dark:hover:bg-blue-900/10' }}">
+
+                                            {{-- NRO --}}
                                             <td
-                                                class="p-3 text-center font-medium
+                                                class="p-1 text-center font-medium
                                                 {{ $isMovHighlighted ? 'border-l-4 border-blue-400' : 'border-l-4 border-transparent' }}">
                                                 @if ($isMovHighlighted)
                                                     <span
@@ -623,51 +650,60 @@
                                                         class="text-gray-400 dark:text-neutral-500">{{ $i + 1 }}</span>
                                                 @endif
                                             </td>
+
+                                            {{-- FECHA --}}
                                             <td
-                                                class="p-3 text-gray-600 dark:text-neutral-300 whitespace-nowrap text-center">
+                                                class="p-1 text-gray-600 dark:text-neutral-300 whitespace-nowrap text-center">
                                                 <div class="text-xs">{{ $m->fecha?->format('d/m/Y') ?? '—' }}</div>
                                                 <div class="text-[10px] text-gray-400">
                                                     {{ $m->fecha?->format('H:i') ?? '' }}</div>
                                             </td>
-                                            <td class="p-3 pr-4">
-                                                <div class="text-sm font-medium text-gray-800 dark:text-neutral-200 line-clamp-1 truncate max-w-[200px]"
+
+                                            {{-- ENTIDAD / PROYECTO --}}
+                                            <td class="p-1">
+                                                <div class="text-sm font-medium text-gray-800 dark:text-neutral-200"
                                                     title="{{ $m->entidad?->nombre }}">
                                                     {{ $m->entidad?->nombre ?? '—' }}</div>
-                                                <div class="text-[11px] text-gray-500 dark:text-neutral-400 line-clamp-1 truncate max-w-[200px]"
+                                                <div class="text-[11px] text-gray-500 dark:text-neutral-400"
                                                     title="{{ $m->proyecto?->nombre }}">
                                                     {{ $m->proyecto?->nombre ?? '—' }}</div>
                                             </td>
-                                            <td class="p-3 text-gray-600 dark:text-neutral-300 text-xs">
+
+                                            {{-- COMPROBANTE --}}
+                                            <td class="p-1 text-gray-600 dark:text-neutral-300 text-xs">
                                                 <div class="font-medium text-gray-700 dark:text-neutral-200">
-                                                    {{ $m->tipo_comprobante ?? '—' }}</div>
-                                                @if (!empty($m->nro_comprobante))
-                                                    <div class="text-gray-500">{{ $m->nro_comprobante }}</div>
-                                                @endif
+                                                    {{ $m->tipo_comprobante ?? '—' }}
+                                                    @if (!empty($m->nro_comprobante))
+                                                        - {{ $m->nro_comprobante }}
+                                                    @endif
+                                                </div>
+
                                             </td>
-                                            <td class="p-3 text-gray-500 dark:text-neutral-400 text-xs"
+
+                                            {{-- DETALLE / OBSERVACIÓN --}}
+                                            <td class="p-1 text-gray-500 dark:text-neutral-400 text-xs"
                                                 title="{{ $m->observacion }}">
-                                                <div class="line-clamp-2 min-w-[120px]">{{ $m->observacion ?: '—' }}
+                                                {{ $m->observacion ?: '—' }}
+                                            </td>
+
+                                            {{-- MONTO BASE --}}
+                                            <td
+                                                class="p-1 tabular-nums text-blue-700 dark:text-blue-400 font-semibold whitespace-nowrap">
+                                                {{ number_format((float) $m->monto_base, 2, ',', '.') }}
+                                                <span
+                                                    class="text-[10px] opacity-70">{{ $editorMonedaBase ?? 'BOB' }}</span>
+                                                <div class="text-[10px] text-gray-500 flex items-center ">
+                                                    @if ($m->tipo_cambio && $m->moneda !== ($editorMonedaBase ?? 'BOB'))
+                                                        <span>TC:
+                                                            {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }} -
+                                                            {{ number_format((float) $m->monto, 2, ',', '.') }}
+                                                            {{ $m->moneda }}</span>
+                                                    @endif
                                                 </div>
                                             </td>
-                                            <td
-                                                class="p-3 text-right tabular-nums text-gray-900 dark:text-neutral-100 font-medium whitespace-nowrap">
-                                                {{ number_format((float) $m->monto, 2, ',', '.') }}
-                                                <span class="text-[10px] text-gray-400">{{ $m->moneda }}</span>
-                                            </td>
-                                            <td
-                                                class="p-3 text-right tabular-nums text-blue-700 dark:text-blue-400 font-semibold whitespace-nowrap">
-                                                <div>
-                                                    {{ number_format((float) $m->monto_base, 2, ',', '.') }}
-                                                    <span
-                                                        class="text-[10px] opacity-70">{{ $editorMonedaBase ?? 'BOB' }}</span>
-                                                </div>
-                                                @if ($m->moneda !== ($editorMonedaBase ?? 'BOB'))
-                                                    <div class="text-[10px] text-gray-400 font-normal">
-                                                        TC: {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }}
-                                                    </div>
-                                                @endif
-                                            </td>
-                                            <td class="p-3 text-center">
+
+                                            {{-- ACCIONES --}}
+                                            <td class="p-1 text-center">
                                                 <div class="flex items-center justify-center gap-1">
                                                     {{-- EDITAR --}}
                                                     @can('agente_presupuestos.delete_movement')
@@ -808,38 +844,29 @@
                                         $highlight_movimiento_id &&
                                         (int) $m->id === (int) $highlight_movimiento_id;
                                 @endphp
-                                <div
-                                    @if ($isMovHighlightedMob) id="mob-movimiento-highlight-{{ $m->id }}" @endif
-                                    class="rounded-xl border-l-4 border border-gray-200 dark:border-neutral-700 p-3 transition-colors
-                                        {{ $isMovHighlightedMob
-                                            ? 'border-l-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                                            : 'border-l-transparent bg-white dark:bg-neutral-900/20' }}">
+                                <div @if ($isMovHighlightedMob) id="mob-movimiento-highlight-{{ $m->id }}" @endif
+                                    class="rounded-xl border-l-4 border-t border-r border-b border-t-gray-200 border-r-gray-200 border-b-gray-200 dark:border-t-neutral-700 dark:border-r-neutral-700 dark:border-b-neutral-700 border-l-blue-400 dark:border-l-blue-500 p-3 transition-colors
+                                        {{ $isMovHighlightedMob ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-neutral-900/20' }}">
 
-                                    {{-- Header: # + Proyecto + acciones --}}
+                                    {{-- FILA 1: # · Proyecto + Acciones --}}
                                     <div class="flex items-start justify-between gap-2">
-                                        <div class="min-w-0">
-                                            <div class="text-sm font-semibold text-gray-900 dark:text-neutral-100">
-                                                #{{ $i + 1 }}
-                                                <span class="text-gray-400 dark:text-neutral-600">·</span>
+                                        <div class="min-w-0 flex-1">
+                                            <div
+                                                class="text-sm font-semibold text-gray-900 dark:text-neutral-100 line-clamp-2">
+                                                <span
+                                                    class="text-xs font-normal text-gray-400 dark:text-neutral-500">#{{ $i + 1 }}</span>
+                                                <span class="mx-1 text-gray-300 dark:text-neutral-600">·</span>
                                                 {{ $m->proyecto?->nombre ?? '—' }}
                                             </div>
-
-                                            <div class="mt-0.5 text-xs text-gray-500 dark:text-neutral-400">
+                                            <div class="text-[12px] text-gray-400 dark:text-neutral-500 truncate">
                                                 {{ $m->entidad?->nombre ?? '—' }}
-                                                <span class="mx-1">•</span>
-                                                {{ $m->fecha?->format('d/m/Y H:i') ?? '-' }}
-                                            </div>
-
-                                            <div class="mt-0.5 text-xs text-gray-500 dark:text-neutral-400">
-                                                {{ $m->tipo_comprobante ?? '—' }}
-                                                @if (!empty($m->nro_comprobante))
-                                                    <span class="text-gray-400">•</span> {{ $m->nro_comprobante }}
-                                                @endif
+                                                <span class="mx-0.5 text-gray-300">·</span>
+                                                {{ $m->fecha?->format('d/m/Y H:i') ?? '—' }}
                                             </div>
                                         </div>
 
                                         {{-- Acciones (editar + foto + eliminar) --}}
-                                        <div class="shrink-0 flex items-center gap-2">
+                                        <div class="shrink-0 flex items-center gap-1">
                                             {{-- EDITAR --}}
                                             @can('agente_presupuestos.delete_movement')
                                                 <button type="button"
@@ -948,44 +975,57 @@
                                         </div>
                                     </div>
 
-                                    <div class="mt-2 text-xs text-gray-600 dark:text-neutral-300">
-                                        <span class="font-medium text-gray-700 dark:text-neutral-200">Obs:</span>
+                                    {{-- FILA 2: Comprobante + Monto --}}
+                                    <div
+                                        class="mt-2 pt-2 border-t border-gray-100 dark:border-neutral-700/50 flex items-start justify-between gap-2">
+                                        <div class="text-xs text-gray-500 dark:text-neutral-400 space-y-0.5">
+                                            <div class="flex items-center gap-1 flex-wrap">
+                                                <span class="font-medium">{{ $m->tipo_comprobante ?? '—' }}</span>
+                                                @if (!empty($m->nro_comprobante))
+                                                    <span class="text-gray-300">—</span>
+                                                    <span>{{ $m->nro_comprobante }}</span>
+                                                @endif
+                                            </div>
+
+                                        </div>
+                                    </div>
+
+                                    {{-- OBSERVACIÓN --}}
+                                    @if (!empty($m->observacion))
+                                        <div
+                                            class="mt-2 pt-2 border-t border-gray-100 dark:border-neutral-700/50 text-xs text-gray-500 dark:text-neutral-400">
+                                            <span class="font-medium text-gray-600 dark:text-neutral-300">OBS:</span>
+                                            {{ $m->observacion }}
+                                        </div>
+                                    @endif
+
+                                    {{-- MONTO --}}
+                                    <div
+                                        class="mt-2 pt-2 border-t border-gray-100 dark:border-neutral-700/50 flex items-center justify-between">
                                         <span
-                                            class="{{ empty($m->observacion) ? 'text-gray-400 dark:text-neutral-500' : '' }}">
-                                            {{ $m->observacion ?: '—' }}
+                                            class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-neutral-500">Base</span>
+                                        <span
+                                            class="text-sm font-semibold tabular-nums text-blue-700 dark:text-blue-400">
+                                            {{ number_format((float) $m->monto_base, 2, ',', '.') }}
+                                            {{ $editorMonedaBase ?? 'BOB' }}
                                         </span>
                                     </div>
 
-                                    {{-- Montos --}}
-                                    <div class="mt-3 grid grid-cols-2 gap-2 text-sm">
-                                        <div>
-                                            <div
-                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">
-                                                Monto</div>
-                                            <div
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
+
+                                    {{-- BASE --}}
+                                    @if ($m->tipo_cambio && $m->moneda !== ($editorMonedaBase ?? 'BOB'))
+                                        <div
+                                            class="mt-2 pt-2 border-t border-gray-100 dark:border-neutral-700/50 flex justify-between">
+                                            <span
+                                                class="text-[10px] uppercase tracking-wide text-gray-400 dark:text-neutral-500">Monto</span>
+                                            <span
+                                                class="text-[11.5px] font-semibold tabular-nums text-gray-700 dark:text-gray-400">
                                                 {{ number_format((float) $m->monto, 2, ',', '.') }}
-                                                {{ $m->moneda }}
-                                            </div>
+                                                {{ $m->moneda }} — TC:
+                                                {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }}
+                                            </span>
                                         </div>
-
-                                        <div class="text-right">
-                                            <div
-                                                class="text-[10px] uppercase tracking-wide text-gray-500 dark:text-neutral-400">
-                                                Base</div>
-                                            <div
-                                                class="font-semibold tabular-nums text-gray-900 dark:text-neutral-100">
-                                                {{ number_format((float) $m->monto_base, 2, ',', '.') }}
-                                                {{ $editorMonedaBase ?? 'BOB' }}
-                                            </div>
-                                            @if ($m->moneda !== ($editorMonedaBase ?? 'BOB'))
-                                                <div class="text-[10px] text-gray-400 font-normal">
-                                                    TC: {{ number_format((float) $m->tipo_cambio, 2, ',', '.') }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-
+                                    @endif
                                 </div>
                             @endforeach
                         </div>

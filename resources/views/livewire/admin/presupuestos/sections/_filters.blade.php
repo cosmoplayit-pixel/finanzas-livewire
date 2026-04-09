@@ -1,8 +1,8 @@
 {{-- FILTROS --}}
 @php
     $filtrosActivos = 0;
-    if (isset($soloPendientes)) {
-        $filtrosActivos++; // El estado (Abiertos/Cerrados) siempre es un filtro activo
+    if (!empty($filtroEstados) && count($filtroEstados) < 2) {
+        $filtrosActivos++; // filtro activo si no están ambos seleccionados
     }
     if (($moneda ?? 'all') !== 'all') {
         $filtrosActivos++;
@@ -147,32 +147,19 @@
                     <span class="text-gray-400" x-text="secEstado ? '▾' : '▸'"></span>
                 </button>
 
-                <div x-show="secEstado" class="mt-3">
-                    <div
-                        class="w-full rounded-lg border px-3 py-1.5
-                                bg-gray-50/60 border-gray-200
-                                dark:bg-neutral-900/40 dark:border-neutral-700">
-                        <div class="flex items-center justify-between gap-3">
-                            <span class="text-sm text-gray-600 dark:text-neutral-400">
-                                Cerrados
-                            </span>
-
-                            <button type="button" wire:click="$toggle('soloPendientes')"
-                                class="cursor-pointer relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-                                    {{ $soloPendientes ? 'bg-emerald-600' : 'bg-gray-300 dark:bg-neutral-700' }}
-                                    focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
-                                <span
-                                    class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-                                            {{ $soloPendientes ? 'translate-x-6' : 'translate-x-1' }}"></span>
-                            </button>
-
-                            <span
-                                class="text-sm font-medium
-                                    {{ $soloPendientes ? 'text-emerald-600' : 'text-gray-600 dark:text-neutral-400' }}">
-                                Abiertos
-                            </span>
-                        </div>
-                    </div>
+                <div x-show="secEstado" class="mt-3 space-y-2">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" value="abierto"
+                            wire:model.live="filtroEstados"
+                            class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 dark:border-neutral-600 dark:bg-neutral-800">
+                        <span class="text-sm text-gray-700 dark:text-neutral-300">Abiertas</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" value="cerrado"
+                            wire:model.live="filtroEstados"
+                            class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500 dark:border-neutral-600 dark:bg-neutral-800">
+                        <span class="text-sm text-gray-700 dark:text-neutral-300">Cerradas</span>
+                    </label>
                 </div>
             </div>
 

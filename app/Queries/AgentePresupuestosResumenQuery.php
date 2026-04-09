@@ -16,7 +16,7 @@ class AgentePresupuestosResumenQuery
         $empresaFilter = $filters['empresaFilter'] ?? 'all';
         $search        = trim((string) ($filters['search'] ?? ''));
         $moneda        = strtoupper(trim((string) ($filters['moneda'] ?? 'all')));
-        $soloPendientes = (bool) ($filters['soloPendientes'] ?? true);
+        $filtroEstados  = (array) ($filters['filtroEstados'] ?? ['abierto']);
 
         // Ahora lee de `rendiciones` (tabla unificada)
         $q = DB::table('rendiciones as r')
@@ -45,10 +45,8 @@ class AgentePresupuestosResumenQuery
         }
 
         // ESTADO
-        if ($soloPendientes) {
-            $q->where('r.estado', 'abierto');
-        } else {
-            $q->where('r.estado', 'cerrado');
+        if (!empty($filtroEstados)) {
+            $q->whereIn('r.estado', $filtroEstados);
         }
 
         // FECHA RANGO

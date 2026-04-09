@@ -96,6 +96,10 @@ trait RendicionEditorModal
 
     public $mov_foto = null;
 
+    public ?string $mov_existing_foto_path = null;
+
+    public bool $mov_remove_foto = false;
+
     public ?string $mov_monto_formatted = null;
 
     public ?string $mov_tipo_cambio_formatted = null;
@@ -313,11 +317,15 @@ trait RendicionEditorModal
 
     public function updatedMovEntidadId($value): void
     {
-        $this->mov_proyecto_id = null;
-        $this->loadProyectosByEntidad((int) $value);
+        // Preserve current project if it belongs to the new entity (e.g. during edit load)
+        $this->loadProyectosByEntidad((int) $value, $this->mov_proyecto_id);
+        $validIds = array_column($this->editorProyectos, 'id');
+        if (! in_array((int) $this->mov_proyecto_id, $validIds, true)) {
+            $this->mov_proyecto_id = null;
+        }
     }
 
-    protected function loadProyectosByEntidad(?int $entidadId): void
+    protected function loadProyectosByEntidad(?int $entidadId, ?int $includeId = null): void
     {
         $this->editorProyectos = [];
         if (! $entidadId) {
@@ -329,7 +337,7 @@ trait RendicionEditorModal
         $this->editorProyectos = Proyecto::query()
             ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('entidad_id', $entidadId)
-            ->where('active', true)
+            ->where(fn ($q) => $q->where('active', true)->when($includeId, fn ($q2) => $q2->orWhere('id', $includeId)))
             ->orderBy('nombre')
             ->get(['id', 'nombre'])
             ->map(fn ($p) => ['id' => $p->id, 'nombre' => $p->nombre])
@@ -432,9 +440,11 @@ trait RendicionEditorModal
             $this->mov_tipo_cambio_formatted = number_format((float) $m->tipo_cambio, 2, ',', '.');
         }
 
+        $this->mov_existing_foto_path = $m->foto_path ?: null;
+
         if ($m->tipo === 'COMPRA') {
             $this->mov_entidad_id = $m->entidad_id;
-            $this->loadProyectosByEntidad((int) $m->entidad_id);
+            $this->loadProyectosByEntidad((int) $m->entidad_id, $m->proyecto_id);
             $this->mov_proyecto_id = $m->proyecto_id;
             $this->mov_tipo_comprobante = $m->tipo_comprobante;
             $this->mov_nro_comprobante = $m->nro_comprobante;
@@ -448,6 +458,12 @@ trait RendicionEditorModal
         $this->recalcMovimientoConversion();
 
         $this->openMovimientoModal = true;
+    }
+
+    public function removeExistingFoto(): void
+    {
+        $this->mov_existing_foto_path = null;
+        $this->mov_remove_foto = true;
     }
 
     public function setMovimientoTipo(string $tipo): void
@@ -662,6 +678,7 @@ trait RendicionEditorModal
                     data: $data,
                     user: auth()->user(),
                     foto: $this->mov_foto,
+                    removeFoto: $this->mov_remove_foto,
                 );
                 if ($this->mov_modal_tipo === 'DEVOLUCION') {
                     $this->highlight_devolucion_id = $updatedMov->id;
@@ -807,6 +824,8 @@ trait RendicionEditorModal
 
         $this->mov_observacion = null;
         $this->mov_foto = null;
+        $this->mov_existing_foto_path = null;
+        $this->mov_remove_foto = false;
 
         $this->editorProyectos = [];
 

@@ -32,9 +32,9 @@
             };
             // left-border + badge colors per tipo
             $accentBorder = match ($bg->tipo) {
-                'SERIEDAD' => 'border-l-blue-400 dark:border-l-blue-500',
-                'CUMPLIMIENTO' => 'border-l-amber-400 dark:border-l-amber-500',
-                default => 'border-l-gray-300 dark:border-l-neutral-600',
+                'SERIEDAD' => 'border-t-blue-400 dark:border-t-blue-500',
+                'CUMPLIMIENTO' => 'border-t-amber-400 dark:border-t-amber-500',
+                default => 'border-t-gray-300 dark:border-t-neutral-600',
             };
             $tipoBadge = match ($bg->tipo) {
                 'SERIEDAD'
@@ -50,7 +50,7 @@
 
         <div @if ($isTargetBoleta) id="boleta-mob-row-target-{{ $bg->id }}" @endif
             wire:key="boleta-mob-{{ $bg->id }}"
-            class="rounded-xl border-l-4 border border-gray-200 dark:border-neutral-700 overflow-hidden
+            class="rounded-xl border-t-4 border border-gray-200 dark:border-neutral-700 overflow-hidden
                 {{ $accentBorder }}
                 {{ $isTargetBoleta ? 'bg-indigo-50/50 border-indigo-300 dark:border-indigo-500/40 dark:bg-indigo-900/10' : 'bg-white dark:bg-neutral-900/50' }}">
 

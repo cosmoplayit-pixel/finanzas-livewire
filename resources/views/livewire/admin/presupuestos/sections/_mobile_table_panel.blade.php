@@ -26,8 +26,9 @@
         @endphp
         <div wire:key="panel-mobile-{{ $rowKey }}-pres-{{ $p->id }}"
             @if ($isHighlighted) id="presupuesto-mob-panel-target-{{ $p->id }}" @endif
-            class="rounded-xl border {{ $isHighlighted ? 'border-amber-400' : 'border-gray-200 dark:border-neutral-700' }}
-            {{ $isHighlighted ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-white dark:bg-neutral-900/30' }} px-3 py-3">
+            class="rounded-xl border-t border-r border-b border-l-4
+            {{ $rowMoneda === 'USD' ? 'border-l-blue-400 dark:border-l-blue-500' : 'border-l-emerald-400 dark:border-l-emerald-500' }}
+            {{ $isHighlighted ? 'border-t-amber-400 border-r-amber-400 border-b-amber-400 bg-amber-50 dark:bg-amber-900/20' : 'border-t-gray-200 border-r-gray-200 border-b-gray-200 dark:border-t-neutral-700 dark:border-r-neutral-700 dark:border-b-neutral-700 bg-white dark:bg-neutral-900/30' }} px-3 py-3">
 
             <div class="flex gap-3">
 
@@ -49,8 +50,9 @@
                                     wire:loading.class="opacity-60 cursor-not-allowed"
                                     class="inline-flex items-center gap-1 px-3 py-1 rounded-md
                                     text-xs font-semibold transition
-                                    bg-emerald-600 text-white hover:bg-emerald-700
-                                    dark:bg-emerald-500 dark:hover:bg-emerald-400"
+                                    {{ $rowMoneda === 'USD'
+                                        ? 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-400'
+                                        : 'bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-500 dark:hover:bg-emerald-400' }}"
                                     title="Ver movimientos">
 
                                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none"
@@ -107,7 +109,9 @@
                                 $estadoStr = strtoupper($p->estado ?? '');
                                 $bgEstado = match ($estadoStr) {
                                     'ABIERTO'
-                                        => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
+                                        => $rowMoneda === 'USD'
+                                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
+                                            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',
                                     'CERRADO'
                                         => 'bg-gray-100 text-gray-600 dark:bg-neutral-800 dark:text-neutral-400 border border-gray-200 dark:border-neutral-700',
                                     'ANULADO'

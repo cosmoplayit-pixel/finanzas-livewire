@@ -34,20 +34,24 @@ $watch('presupuestoId', val => { if (val) { setTimeout(() => scroll(), 300);
                 collect($panelData[$rowKey] ?? [])->contains(
                     fn($p) => (int) $p->id === (int) $highlight_presupuesto_id,
                 );
+
+            $accentBorder = $rowMoneda === 'USD'
+                ? 'border-t-blue-400 dark:border-t-blue-500'
+                : 'border-t-emerald-400 dark:border-t-emerald-500';
         @endphp
 
         <div wire:key="agente-card-{{ $rowKey }}"
             @if ($isTargetAgente) id="presupuesto-mob-card-target-{{ (int) ($highlight_presupuesto_id ?? 0) }}" @endif
-            class="rounded-2xl border {{ $isTargetAgente ? 'border-indigo-400' : 'border-gray-200 dark:border-neutral-700' }}
-                   bg-white dark:bg-neutral-800/70 shadow-sm overflow-hidden">
+            class="rounded-xl border-t-4 border {{ $isTargetAgente ? 'border-indigo-400' : 'border-gray-200 dark:border-neutral-700' }}
+                   {{ $accentBorder }} bg-white dark:bg-neutral-800/70 shadow-sm overflow-hidden">
 
-            {{-- HEADER (TOGGLE COMPLETO) --}}
+            {{-- HEADER + KPIs (TOGGLE COMPLETO) --}}
             <button type="button" wire:click="togglePanel({{ $agenteId }}, '{{ $rowMoneda }}')"
                 wire:loading.attr="disabled" wire:target="togglePanel({{ $agenteId }}, '{{ $rowMoneda }}')"
                 class="w-full text-left">
 
                 <div
-                    class="grid grid-cols-[1fr_auto] gap-3 p-4  hover:bg-gray-50/70 dark:hover:bg-neutral-900/40 transition">
+                    class="grid grid-cols-[1fr_auto] gap-3 p-4 hover:bg-gray-50/70 dark:hover:bg-neutral-900/40 transition">
 
                     {{-- DATOS AGENTE --}}
                     <div class="min-w-0">
@@ -85,19 +89,9 @@ $watch('presupuestoId', val => { if (val) { setTimeout(() => scroll(), 300);
                         </div>
                     </div>
 
-                    {{-- CHEVRON / ESTADO --}}
-                    <div class="flex py-1 text-xs text-gray-400 dark:text-neutral-500">
-                        <span>{{ $open ? 'Ocultar' : 'Ver' }}</span>
-                        <svg class="size-5 transition-transform {{ $open ? 'rotate-180' : 'rotate-0' }}"
-                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                        </svg>
-                    </div>
                 </div>
-            </button>
 
-            {{-- KPIs --}}
+            {{-- KPIs (dentro del botón para hacer todo el card clickeable) --}}
             <div class="px-4 pb-2">
                 <div class="grid grid-cols-2 gap-2">
                     <div class="rounded-xl border border-gray-200 dark:border-neutral-700 p-2">
@@ -143,6 +137,7 @@ $watch('presupuestoId', val => { if (val) { setTimeout(() => scroll(), 300);
                     </div>
                 </div>
             </div>
+            </button>
 
             {{-- PANEL DETALLE --}}
             <div class="{{ $open ? 'block' : 'hidden' }} border-t border-gray-200 dark:border-neutral-700">

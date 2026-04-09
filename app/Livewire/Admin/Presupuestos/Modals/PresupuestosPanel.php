@@ -54,7 +54,7 @@ trait PresupuestosPanel
             'empresaFilter' => $this->empresaFilter,
             'search' => $this->search,
             'moneda' => $this->moneda,
-            'soloPendientes' => $this->soloPendientes,
+            'filtroEstados' => $this->filtroEstados,
             'sortField' => $this->sortField,
             'sortDirection' => $this->sortDirection,
         ];
@@ -104,7 +104,7 @@ trait PresupuestosPanel
             ->where('agente_servicio_id', $agenteId)
             ->where('moneda', $moneda)
             ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
-            ->where('estado', $this->soloPendientes ? 'abierto' : 'cerrado')
+            ->when(!empty($this->filtroEstados), fn ($q) => $q->whereIn('estado', $this->filtroEstados))
             ->orderByDesc('fecha_presupuesto')
             ->orderByDesc('id')
             ->get();

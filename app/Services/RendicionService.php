@@ -329,8 +329,9 @@ class RendicionService
         array $data,
         User $user,
         $foto = null,
+        bool $removeFoto = false,
     ): RendicionMovimiento {
-        return DB::transaction(function () use ($rendicion, $movimientoId, $data, $user, $foto) {
+        return DB::transaction(function () use ($rendicion, $movimientoId, $data, $user, $foto, $removeFoto) {
             /** @var Rendicion $r */
             $r = Rendicion::query()->lockForUpdate()->findOrFail($rendicion->id);
 
@@ -453,6 +454,9 @@ class RendicionService
                     Storage::disk('public')->delete($m->foto_path);
                 }
                 $path = $foto->store("empresas/{$r->empresa_id}/agente_presupuestos/rendiciones", 'public');
+            } elseif ($removeFoto && !empty($m->foto_path)) {
+                Storage::disk('public')->delete($m->foto_path);
+                $path = null;
             }
 
             $updateData = [

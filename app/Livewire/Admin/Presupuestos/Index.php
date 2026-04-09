@@ -23,7 +23,7 @@ class Index extends Component
 
     public int $perPage = 10;
 
-    public bool $soloPendientes = true;
+    public array $filtroEstados = ['abierto'];
 
     public string $moneda = 'all'; // all | BOB | USD
 
@@ -105,7 +105,7 @@ class Index extends Component
                 // Si el presupuesto está cerrado, desactivar filtro de pendientes
                 $estadoRendicion = strtolower((string) ($rendicion->estado ?? 'abierto'));
                 if ($estadoRendicion === 'cerrado') {
-                    $this->soloPendientes = false;
+                    $this->filtroEstados = ['cerrado'];
                 }
 
                 // Expandir el panel del agente
@@ -143,7 +143,7 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function updatedSoloPendientes(): void
+    public function updatedFiltroEstados(): void
     {
         $this->resetPage();
         $this->reloadOpenPanels();
@@ -208,7 +208,7 @@ class Index extends Component
             'empresaFilter' => $this->empresaFilter,
             'search' => $this->search,
             'moneda' => $this->moneda,
-            'soloPendientes' => $this->soloPendientes,
+            'filtroEstados' => $this->filtroEstados,
             'sortField' => $this->sortField,
             'sortDirection' => $this->sortDirection,
             'f_fecha_desde' => $this->f_fecha_desde,
@@ -221,7 +221,7 @@ class Index extends Component
         // Optimizar: Solo recalcular totales si cambian los filtros principales
         $filterHash = md5(serialize([
             $this->empresaFilter, $this->search, $this->moneda,
-            $this->soloPendientes, $this->f_fecha_desde, $this->f_fecha_hasta,
+            $this->filtroEstados, $this->f_fecha_desde, $this->f_fecha_hasta,
             $this->dateFilterModified,
         ]));
 

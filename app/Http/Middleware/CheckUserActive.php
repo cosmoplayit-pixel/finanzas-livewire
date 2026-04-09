@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckUserActive
@@ -28,7 +29,15 @@ class CheckUserActive
             }
 
             // B) Rol inactivo asignado => logout
-            if ($user->roles()->where('active', false)->exists()) {
+            // Cacheado en archivo por 5 min para no ejecutar una query extra en cada request de Livewire.
+            // Al desactivar un rol, llamar: Cache::store('file')->forget("user_{id}_role_check")
+            $hasInactiveRole = Cache::store('file')->remember(
+                "user_{$user->id}_role_check",
+                now()->addMinutes(5),
+                fn () => $user->roles()->where('active', false)->exists()
+            );
+
+            if ($hasInactiveRole) {
                 auth()->logout();
 
                 $request->session()->invalidate();

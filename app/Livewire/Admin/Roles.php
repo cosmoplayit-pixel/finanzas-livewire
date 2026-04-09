@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin;
 
 use App\Models\Role; // Tu modelo (debe extender/usar Spatie internamente si corresponde)
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -71,6 +72,15 @@ class Roles extends Component
     private function flushSpatieCache(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    // Limpia el caché de CheckUserActive para los usuarios afectados por el cambio de rol.
+    // Llamar antes de guardar el rol para poder obtener los usuarios que lo tienen asignado.
+    private function forgetRoleCheckCacheForRole(Role $role): void
+    {
+        $role->users()->each(function ($user) {
+            Cache::store('file')->forget("user_{$user->id}_role_check");
+        });
     }
 
     public function mount(): void
@@ -210,6 +220,8 @@ class Roles extends Component
                 abort(403, 'No se puede modificar un rol del sistema.');
             }
 
+            $this->forgetRoleCheckCacheForRole($role);
+
             $role->update([
                 'name' => $data['name'],
                 'description' => $data['description'],
@@ -260,6 +272,8 @@ class Roles extends Component
                 return;
             }
         }
+
+        $this->forgetRoleCheckCacheForRole($role);
 
         $role->active = !$role->active;
         $role->save();

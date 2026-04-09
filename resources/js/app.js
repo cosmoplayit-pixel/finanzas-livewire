@@ -6,9 +6,9 @@ window.Swal = Swal;
 document.addEventListener('livewire:init', () => {
     Livewire.hook('request', ({ fail }) => {
         fail(({ status, preventDefault }) => {
-            if (status === 401) {
+            if (status === 401 || status === 419) {
                 preventDefault();
-                window.location.reload();
+                window.location.href = window.location.href;
             }
         });
     });

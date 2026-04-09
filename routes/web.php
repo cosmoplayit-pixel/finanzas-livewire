@@ -21,6 +21,9 @@ use Livewire\Volt\Volt;
 
 Route::get('/', fn () => redirect()->route('login'))->name('home');
 
+// Livewire update endpoint only accepts POST; redirect stale GET navigations
+Route::get('/livewire/update', fn () => redirect()->route('dashboard'));
+
 Route::get('panel', Dashboard::class)
     ->middleware(['auth', 'verified', 'active'])
     ->name('dashboard');

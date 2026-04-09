@@ -177,9 +177,6 @@ class Facturas extends Component
         $this->factura_id = (int) request('factura_id') ?: null;
         $this->pago_id = (int) request('pago_id') ?: null;
 
-        $this->f_fecha_desde = now()->startOfYear()->toDateString();
-        $this->f_fecha_hasta = now()->endOfYear()->toDateString();
-
         // Si viene factura_id desde Transacciones, auto-expandir y mostrar todas (abiertas+cerradas).
         if ($this->factura_id) {
             $this->dateFilterModified = true; // Si venimos de afuera, forzamos que respete filtros si los hay

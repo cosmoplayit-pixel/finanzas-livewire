@@ -54,10 +54,14 @@ trait RendicionEditorModal
 
     // Filtros dentro del modal
     public string $editorFiltroModo = 'mes';   // 'mes' | 'rango'
+
     public string $editorFiltroMes = '';        // YYYY-MM
+
     public string $editorFiltroDesde = '';
+
     public string $editorFiltroHasta = '';
-    public ?int   $editorFiltroProyecto = null;
+
+    public ?int $editorFiltroProyecto = null;
 
     public float $editorTotalComprasBase = 0;
 
@@ -559,10 +563,26 @@ trait RendicionEditorModal
     // =========================================================
     // FILTROS DEL EDITOR
     // =========================================================
-    public function updatedEditorFiltroMes(): void          { $this->loadEditorMovimientos(); }
-    public function updatedEditorFiltroDesde(): void        { $this->loadEditorMovimientos(); }
-    public function updatedEditorFiltroHasta(): void        { $this->loadEditorMovimientos(); }
-    public function updatedEditorFiltroProyecto(): void     { $this->loadEditorMovimientos(); }
+    public function updatedEditorFiltroMes(): void
+    {
+        $this->loadEditorMovimientos();
+    }
+
+    public function updatedEditorFiltroDesde(): void
+    {
+        $this->loadEditorMovimientos();
+    }
+
+    public function updatedEditorFiltroHasta(): void
+    {
+        $this->loadEditorMovimientos();
+    }
+
+    public function updatedEditorFiltroProyecto(): void
+    {
+        $this->loadEditorMovimientos();
+    }
+
     public function updatedEditorFiltroModo(): void
     {
         $this->editorFiltroMes = '';

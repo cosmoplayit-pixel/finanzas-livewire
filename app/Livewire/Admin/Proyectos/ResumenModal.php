@@ -20,13 +20,18 @@ class ResumenModal extends Component
 
     // Filtros del modal
     public $filtro_modo = 'historico'; // 'historico', 'mes' o 'rango'
+
     public $filtro_mes = '';
+
     public $filtro_desde = '';
+
     public $filtro_hasta = '';
+
     public array $mesesConCompras = [];
 
     // Visor de fotos
     public bool $openFotoModal = false;
+
     public ?string $fotoUrl = null;
 
     #[On('open-modal-detalle-proyecto')]
@@ -66,13 +71,64 @@ class ResumenModal extends Component
         $this->cargarMovimientos();
     }
 
-    public function updatedFiltroDesde()
+    public function updatedFiltroDesde($value)
     {
+        $this->filtro_desde = $this->fixInvalidDate($value);
         $this->cargarMovimientos();
     }
 
-    public function updatedFiltroHasta()
+    public function updatedFiltroHasta($value)
     {
+        $this->filtro_hasta = $this->fixInvalidDate($value);
+        $this->cargarMovimientos();
+    }
+
+    private function fixInvalidDate($value)
+    {
+        if (empty($value)) {
+            return '';
+        }
+
+        $parts = explode('-', $value);
+        if (count($parts) === 3) {
+            $year = (int) $parts[0];
+            $month = (int) $parts[1];
+            $day = (int) $parts[2];
+
+            if ($month >= 1 && $month <= 12) {
+                // Verificamos el tope de días de ese mes
+                $maxDays = cal_days_in_month(CAL_GREGORIAN, $month, $year);
+                if ($day > $maxDays) {
+                    $day = $maxDays;
+                }
+                if ($day < 1) {
+                    $day = 1;
+                }
+
+                return sprintf('%04d-%02d-%02d', $year, $month, $day);
+            }
+        }
+
+        return $value;
+    }
+
+    public function autoCorrectDesde()
+    {
+        if ($this->filtro_hasta) {
+            $this->filtro_desde = \Carbon\Carbon::parse($this->filtro_hasta)->startOfMonth()->toDateString();
+        } else {
+            $this->filtro_desde = now()->startOfMonth()->toDateString();
+        }
+        $this->cargarMovimientos();
+    }
+
+    public function autoCorrectHasta()
+    {
+        if ($this->filtro_desde) {
+            $this->filtro_hasta = \Carbon\Carbon::parse($this->filtro_desde)->endOfMonth()->toDateString();
+        } else {
+            $this->filtro_hasta = now()->endOfMonth()->toDateString();
+        }
         $this->cargarMovimientos();
     }
 
@@ -100,24 +156,25 @@ class ResumenModal extends Component
         // 1. Cargar Gastos/Compras de Rendiciones asociadas al proyecto (Módulo de Presupuestos)
         $query = RendicionMovimiento::with(['rendicion.agente'])
             ->where('proyecto_id', $this->proyecto->id)
-            ->where('tipo', 'compra');
-            
+            ->where('tipo', 'compra')
+            ->where('active', 1);
+
         // Aplicar filtros
         if ($this->filtro_modo === 'mes' && $this->filtro_mes !== '') {
             $query->whereRaw("DATE_FORMAT(fecha, '%Y-%m') = ?", [$this->filtro_mes]);
         } elseif ($this->filtro_modo === 'rango') {
             if ($this->filtro_desde !== '') {
-                $query->whereDate('fecha', '>=', $this->filtro_desde);
+                $query->where('fecha', '>=', $this->filtro_desde.' 00:00:00');
             }
             if ($this->filtro_hasta !== '') {
-                $query->whereDate('fecha', '<=', $this->filtro_hasta);
+                $query->where('fecha', '<=', $this->filtro_hasta.' 23:59:59');
             }
         }
 
         $rendiciones = $query->get();
 
         foreach ($rendiciones as $r) {
-            $monto = (float) $r->monto;
+            $monto = (float) $r->monto_base;
             $totalEgresos += $monto;
 
             $this->movimientos[] = [
@@ -152,6 +209,7 @@ class ResumenModal extends Component
     {
         $meses = RendicionMovimiento::where('proyecto_id', $this->proyecto->id)
             ->where('tipo', 'compra')
+            ->where('active', 1)
             ->whereNotNull('fecha')
             ->selectRaw("DATE_FORMAT(fecha, '%Y-%m') as mes_valor")
             ->selectRaw("DATE_FORMAT(fecha, '%Y-%m-01') as fecha_para_orden")
@@ -161,13 +219,14 @@ class ResumenModal extends Component
             ->map(function ($item) {
                 // $item->mes_valor es "2026-05"
                 $date = \Carbon\Carbon::createFromFormat('Y-m', $item->mes_valor)->locale('es');
+
                 return [
                     'value' => $item->mes_valor,
                     'label' => ucfirst($date->translatedFormat('F - Y')),
                 ];
             })
             ->toArray();
-            
+
         $this->mesesConCompras = $meses;
     }
 

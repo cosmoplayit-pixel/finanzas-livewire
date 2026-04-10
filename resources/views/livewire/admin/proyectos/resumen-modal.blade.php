@@ -20,8 +20,10 @@
 
             {{-- FILTROS --}}
             <div
-                class="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-sm p-3 mb-6">
-                <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-end flex-wrap">
+                class="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-sm p-3 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+
+                {{-- Controles Izquierda --}}
+                <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-wrap w-full sm:w-auto">
 
                     {{-- Toggle modo --}}
                     <div class="flex items-center gap-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1 shrink-0">
@@ -57,10 +59,12 @@
                     @elseif ($filtro_modo === 'rango')
                         <div class="flex items-center gap-2 flex-wrap">
                             <label class="text-xs text-gray-500 dark:text-neutral-400 shrink-0">Desde:</label>
-                            <input type="date" wire:model.live="filtro_desde"
+                            <input type="date" wire:model.live="filtro_desde" x-data
+                                x-on:blur="if ($el.validity.badInput) { @this.call('autoCorrectDesde') }"
                                 class="text-xs rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer" />
                             <label class="text-xs text-gray-500 dark:text-neutral-400 shrink-0">Hasta:</label>
-                            <input type="date" wire:model.live="filtro_hasta"
+                            <input type="date" wire:model.live="filtro_hasta" x-data
+                                x-on:blur="if ($el.validity.badInput) { @this.call('autoCorrectHasta') }"
                                 class="text-xs rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer" />
                         </div>
                     @endif
@@ -74,6 +78,20 @@
                     @endif
 
                 </div>
+
+                {{-- Total Derecha --}}
+                @if ($total_compras > 0)
+                    <div
+                        class="flex items-end shrink-0 w-full sm:w-auto bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/30 rounded-lg px-3 py-1.5 whitespace-nowrap">
+                        <span
+                            class="text-[10px] font-bold text-red-800 dark:text-red-400 uppercase tracking-widest leading-none mb-1">
+                            Total Egresos:
+                        </span>
+                        <span class="text-lg font-black text-red-700 dark:text-red-400 leading-none tabular-nums">
+                            −{{ number_format((float) $total_compras, 2, ',', '.') }}
+                        </span>
+                    </div>
+                @endif
             </div>
 
             {{-- TABLA --}}
@@ -271,20 +289,6 @@
                             @endforelse
                         </tbody>
 
-                        <tfoot
-                            class="bg-gray-50 dark:bg-neutral-800/60 border-t border-gray-200 dark:border-neutral-700">
-                            <tr>
-                                <td colspan="6"
-                                    class="px-3 py-3 text-right text-[10px] font-medium text-gray-400 dark:text-neutral-500 uppercase tracking-wider">
-                                    Total egresos
-                                </td>
-                                <td
-                                    class="px-3 py-3 text-right text-[15px] font-medium text-red-700 dark:text-red-400 tabular-nums whitespace-nowrap">
-                                    −{{ number_format((float) $total_compras, 2, ',', '.') }}
-                                </td>
-                                <td colspan="2"></td>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
             </div>

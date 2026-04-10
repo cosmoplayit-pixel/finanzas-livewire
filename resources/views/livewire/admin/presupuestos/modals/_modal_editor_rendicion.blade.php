@@ -170,7 +170,8 @@
                                                 $highlight_devolucion_id &&
                                                 (int) $m->id === (int) $highlight_devolucion_id;
                                         @endphp
-                                        <tr @if ($isDevHighlighted) id="devolucion-highlight-{{ $m->id }}" @endif
+                                        <tr wire:key="dev-table-{{ $m->id }}"
+                                            @if ($isDevHighlighted) id="devolucion-highlight-{{ $m->id }}" @endif
                                             class="transition group
                                             {{ $isDevHighlighted ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'hover:bg-emerald-50/30 dark:hover:bg-emerald-900/10' }}">
 
@@ -391,7 +392,8 @@
                                         $highlight_devolucion_id &&
                                         (int) $m->id === (int) $highlight_devolucion_id;
                                 @endphp
-                                <div @if ($isDevHighlightedMob) id="mob-devolucion-highlight-{{ $m->id }}" @endif
+                                <div wire:key="dev-mob-{{ $m->id }}"
+                                    @if ($isDevHighlightedMob) id="mob-devolucion-highlight-{{ $m->id }}" @endif
                                     class="rounded-xl border-l-4 border-t border-r border-b border-t-gray-200 border-r-gray-200 border-b-gray-200 dark:border-t-neutral-700 dark:border-r-neutral-700 dark:border-b-neutral-700 border-l-emerald-400 dark:border-l-emerald-500 p-3 transition-colors
                                         {{ $isDevHighlightedMob ? 'bg-emerald-50 dark:bg-emerald-900/20' : 'bg-white dark:bg-neutral-900/20' }}">
 
@@ -633,7 +635,8 @@
                                                 $highlight_movimiento_id &&
                                                 (int) $m->id === (int) $highlight_movimiento_id;
                                         @endphp
-                                        <tr @if ($isMovHighlighted) id="movimiento-highlight-{{ $m->id }}" @endif
+                                        <tr wire:key="compra-table-{{ $m->id }}"
+                                            @if ($isMovHighlighted) id="movimiento-highlight-{{ $m->id }}" @endif
                                             class="transition group
                                             {{ $isMovHighlighted ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-blue-50/30 dark:hover:bg-blue-900/10' }}">
 
@@ -844,7 +847,8 @@
                                         $highlight_movimiento_id &&
                                         (int) $m->id === (int) $highlight_movimiento_id;
                                 @endphp
-                                <div @if ($isMovHighlightedMob) id="mob-movimiento-highlight-{{ $m->id }}" @endif
+                                <div wire:key="compra-mob-{{ $m->id }}"
+                                    @if ($isMovHighlightedMob) id="mob-movimiento-highlight-{{ $m->id }}" @endif
                                     class="rounded-xl border-l-4 border-t border-r border-b border-t-gray-200 border-r-gray-200 border-b-gray-200 dark:border-t-neutral-700 dark:border-r-neutral-700 dark:border-b-neutral-700 border-l-blue-400 dark:border-l-blue-500 p-3 transition-colors
                                         {{ $isMovHighlightedMob ? 'bg-blue-50 dark:bg-blue-900/20' : 'bg-white dark:bg-neutral-900/20' }}">
 

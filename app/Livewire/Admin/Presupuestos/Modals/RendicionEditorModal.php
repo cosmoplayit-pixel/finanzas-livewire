@@ -533,12 +533,10 @@ trait RendicionEditorModal
     // =========================================================
     // RECALCULO REALTIME
     // =========================================================
-    public function updated($property, $value)
-    {
-        if (in_array($property, ['mov_moneda', 'mov_monto', 'mov_monto_formatted', 'mov_tipo_cambio', 'mov_tipo_cambio_formatted', 'mov_banco_id'])) {
-            $this->recalcMovimientoConversion();
-        }
-    }
+    // Nota: NO existe un hook genérico updated() aquí intencionalmente.
+    // Cada propiedad relevante tiene su propio hook específico abajo,
+    // evitando que recalcMovimientoConversion() se ejecute dos veces
+    // por interacción (lo cual generaba requests concurrentes a /livewire/update).
 
     public function updatedMovMoneda(): void
     {

@@ -680,11 +680,12 @@ trait RendicionEditorModal
                 );
                 $this->dispatch('toast', type: 'success', message: 'Movimiento actualizado');
 
-                $params = ['presupuesto_id' => $r->id];
                 if ($this->mov_modal_tipo === 'DEVOLUCION') {
-                    $params['devolucion_id'] = $updatedMov->id;
+                    $this->highlight_devolucion_id = $updatedMov->id;
+                    $this->highlight_movimiento_id = null;
                 } else {
-                    $params['movimiento_id'] = $updatedMov->id;
+                    $this->highlight_movimiento_id = $updatedMov->id;
+                    $this->highlight_devolucion_id = null;
                 }
             } else {
                 $newMov = $service->registrarMovimiento(
@@ -696,15 +697,23 @@ trait RendicionEditorModal
                 );
                 $this->dispatch('toast', type: 'success', message: 'Movimiento registrado');
 
-                $params = ['presupuesto_id' => $r->id];
                 if ($this->mov_modal_tipo === 'DEVOLUCION') {
-                    $params['devolucion_id'] = $newMov->id;
+                    $this->highlight_devolucion_id = $newMov->id;
+                    $this->highlight_movimiento_id = null;
                 } else {
-                    $params['movimiento_id'] = $newMov->id;
+                    $this->highlight_movimiento_id = $newMov->id;
+                    $this->highlight_devolucion_id = null;
                 }
             }
 
-            $this->redirect(route('agente_presupuestos', $params), navigate: true);
+            // Cerrar el modal de movimiento y recargar datos del editor
+            // sin redirigir: evita el error GET /livewire/update por requests concurrentes
+            $this->closeMovimientoModal();
+            $this->openRendicionEditor((int) $r->id);
+
+            if (method_exists($this, 'reloadOpenPanels')) {
+                $this->reloadOpenPanels();
+            }
         } catch (DomainException $e) {
             $this->addError('mov_monto', $e->getMessage());
         }
@@ -727,10 +736,13 @@ trait RendicionEditorModal
             $service->eliminarMovimiento($r, $movId, auth()->user());
 
             $this->dispatch('toast', type: 'success', message: 'Movimiento eliminado');
-            $this->redirect(
-                route('agente_presupuestos', ['presupuesto_id' => $r->id, 'open_editor' => 1]),
-                navigate: true,
-            );
+
+            // Recargar editor sin redirigir
+            $this->openRendicionEditor((int) $r->id);
+
+            if (method_exists($this, 'reloadOpenPanels')) {
+                $this->reloadOpenPanels();
+            }
         } catch (DomainException $e) {
             $bancoNombre = $mov?->banco?->nombre ?? null;
             $moneda = $mov?->moneda ?? '';

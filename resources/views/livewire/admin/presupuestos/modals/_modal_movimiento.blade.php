@@ -114,7 +114,7 @@
                         <label class="block text-sm mb-1">
                             Moneda: <span class="text-red-500">*</span>
                         </label>
-                        <select wire:model.live="mov_moneda"
+                        <select wire:model.blur="mov_moneda"
                             class="cursor-pointer w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -193,6 +193,40 @@
                         @enderror
                     </div>
 
+                    @if ($mov_needs_tc)
+                        {{-- TIPO DE CAMBIO --}}
+                        <div class="col-span-1 lg:col-span-1">
+                            <label class="block text-sm mb-1">
+                                Tipo de cambio: <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" wire:model.live.blur="mov_tipo_cambio_formatted"
+                                placeholder="Ej: 6,96"
+                                class="w-full rounded-lg border px-3 py-2
+                                    bg-white dark:bg-neutral-900
+                                    border-gray-300/60 dark:border-neutral-700/60
+                                    text-gray-900 dark:text-neutral-100
+                                    focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            @error('mov_tipo_cambio')
+                                <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- EQUIVALENTE EN MONEDA BASE --}}
+                        <div class="col-span-1 lg:col-span-1">
+                            <label class="block text-sm mb-1">
+                                Equivalente moneda base: ({{ $baseMoneda }})
+                            </label>
+                            <input type="text" readonly value="{{ $mov_monto_base_preview ?? '—' }}" placeholder="—"
+                                class="w-full rounded-lg border px-3 py-2
+                                    bg-gray-50 dark:bg-neutral-900/50
+                                    border-gray-300/60 dark:border-neutral-700/60
+                                    text-gray-900 dark:text-neutral-100" />
+                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
+                                Se calcula automáticamente el monto.
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- FECHA DE PAGO --}}
                     <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
@@ -267,41 +301,6 @@
                             </div>
                         @endif
                     </div>
-
-                    @if ($mov_needs_tc)
-                        {{-- TIPO DE CAMBIO --}}
-                        <div class="col-span-1 lg:col-span-1">
-                            <label class="block text-sm mb-1">
-                                Tipo de cambio: <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" wire:model.live.blur="mov_tipo_cambio_formatted"
-                                placeholder="Ej: 6,96"
-                                class="w-full rounded-lg border px-3 py-2
-                                    bg-white dark:bg-neutral-900
-                                    border-gray-300/60 dark:border-neutral-700/60
-                                    text-gray-900 dark:text-neutral-100
-                                    focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                            @error('mov_tipo_cambio')
-                                <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        {{-- EQUIVALENTE EN MONEDA BASE --}}
-                        <div class="col-span-1 lg:col-span-1">
-                            <label class="block text-sm mb-1">
-                                Equivalente moneda base: ({{ $baseMoneda }})
-                            </label>
-                            <input type="text" readonly value="{{ $mov_monto_base_preview ?? '—' }}"
-                                placeholder="—"
-                                class="w-full rounded-lg border px-3 py-2
-                                    bg-gray-50 dark:bg-neutral-900/50
-                                    border-gray-300/60 dark:border-neutral-700/60
-                                    text-gray-900 dark:text-neutral-100" />
-                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
-                                Se calcula automáticamente el monto.
-                            </div>
-                        </div>
-                    @endif
                 </div>
 
                 {{-- IMPACTO FINANCIERO COMPRA --}}
@@ -407,7 +406,7 @@
                         <label class="block text-sm mb-1">
                             Monto: ({{ $mov_moneda }}) <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" wire:model.live.blur="mov_monto_formatted" placeholder="0,00"
+                        <input type="text" wire:model.blur="mov_monto_formatted" placeholder="0,00"
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -418,12 +417,46 @@
                         @enderror
                     </div>
 
+
+                    {{-- TIPO DE CAMBIO (SI APLICA) --}}
+                    @if ($mov_needs_tc)
+                        <div class="col-span-1 lg:col-span-1">
+                            <label class="block text-sm mb-1">
+                                Tipo de cambio: <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" wire:model.blur="mov_tipo_cambio_formatted" placeholder="Ej: 6,96"
+                                class="w-full rounded-lg border px-3 py-2
+                                        bg-white dark:bg-neutral-900
+                                        border-gray-300/60 dark:border-neutral-700/60
+                                        text-gray-900 dark:text-neutral-100
+                                        focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            @error('mov_tipo_cambio')
+                                <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-span-1 lg:col-span-1">
+                            <label class="block text-sm mb-1">
+                                Equivalente moneda base: ({{ $baseMoneda }})
+                            </label>
+                            <input type="text" readonly value="{{ $mov_monto_base_preview ?? '—' }}"
+                                placeholder="—"
+                                class="w-full rounded-lg border px-3 py-2
+                                        bg-gray-50 dark:bg-neutral-900/50
+                                        border-gray-300/60 dark:border-neutral-700/60
+                                        text-gray-900 dark:text-neutral-100" />
+                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
+                                Se calcula automáticamente el monto.
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- NRO TRANSACCION --}}
                     <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
                             Nro transacción: <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" wire:model.blur="mov_nro_transaccion"
+                        <input type="text" wire:model="mov_nro_transaccion"
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -464,8 +497,7 @@
                     {{-- DETALLE --}}
                     <div class="col-span-2 lg:col-span-1">
                         <label class="block text-sm mb-1">Detalle:</label>
-                        <input type="text" wire:model.blur="mov_observacion"
-                            placeholder="Ej: Devolución de saldo..."
+                        <input type="text" wire:model="mov_observacion" placeholder="Ej: Devolución de saldo..."
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -523,40 +555,6 @@
                             </div>
                         @endif
                     </div>
-
-                    {{-- TIPO DE CAMBIO (SI APLICA) --}}
-                    @if ($mov_needs_tc)
-                        <div class="col-span-1 lg:col-span-1">
-                            <label class="block text-sm mb-1">
-                                Tipo de cambio: <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" wire:model.live.blur="mov_tipo_cambio_formatted"
-                                placeholder="Ej: 6,96"
-                                class="w-full rounded-lg border px-3 py-2
-                                        bg-white dark:bg-neutral-900
-                                        border-gray-300/60 dark:border-neutral-700/60
-                                        text-gray-900 dark:text-neutral-100
-                                        focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
-                            @error('mov_tipo_cambio')
-                                <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="col-span-1 lg:col-span-1">
-                            <label class="block text-sm mb-1">
-                                Equivalente moneda base: ({{ $baseMoneda }})
-                            </label>
-                            <input type="text" readonly value="{{ $mov_monto_base_preview ?? '—' }}"
-                                placeholder="—"
-                                class="w-full rounded-lg border px-3 py-2
-                                        bg-gray-50 dark:bg-neutral-900/50
-                                        border-gray-300/60 dark:border-neutral-700/60
-                                        text-gray-900 dark:text-neutral-100" />
-                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
-                                Se calcula automáticamente el monto.
-                            </div>
-                        </div>
-                    @endif
                 </div>
 
                 {{-- IMPACTO FINANCIERO DEVOLUCIÓN --}}

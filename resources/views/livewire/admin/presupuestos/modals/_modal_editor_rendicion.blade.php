@@ -115,6 +115,65 @@
             </div>
         </div>
 
+        {{-- FILTROS DEL MODAL --}}
+        <div class="rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 shadow-sm p-3">
+            <div class="flex flex-col sm:flex-row gap-3 items-start sm:items-end flex-wrap">
+
+                {{-- Toggle modo --}}
+                <div class="flex items-center gap-1 bg-gray-100 dark:bg-neutral-800 rounded-lg p-1 shrink-0">
+                    <button type="button" wire:click="$set('editorFiltroModo','mes')"
+                        class="px-3 py-1.5 text-xs font-medium rounded-md transition-all
+                            {{ $editorFiltroModo === 'mes' ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm' : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700' }}">
+                        Por mes
+                    </button>
+                    <button type="button" wire:click="$set('editorFiltroModo','rango')"
+                        class="px-3 py-1.5 text-xs font-medium rounded-md transition-all
+                            {{ $editorFiltroModo === 'rango' ? 'bg-white dark:bg-neutral-700 text-gray-900 dark:text-neutral-100 shadow-sm' : 'text-gray-500 dark:text-neutral-400 hover:text-gray-700' }}">
+                        Rango
+                    </button>
+                </div>
+
+                {{-- Input mes --}}
+                @if ($editorFiltroModo === 'mes')
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs text-gray-500 dark:text-neutral-400 shrink-0">Mes:</label>
+                        <input type="month" wire:model.live="editorFiltroMes"
+                            class="text-xs rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer" />
+                    </div>
+                @else
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <label class="text-xs text-gray-500 dark:text-neutral-400 shrink-0">Desde:</label>
+                        <input type="date" wire:model.live="editorFiltroDesde"
+                            class="text-xs rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer" />
+                        <label class="text-xs text-gray-500 dark:text-neutral-400 shrink-0">Hasta:</label>
+                        <input type="date" wire:model.live="editorFiltroHasta"
+                            class="text-xs rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer" />
+                    </div>
+                @endif
+
+                {{-- Filtro proyecto --}}
+                <div class="flex items-center gap-2">
+                    <label class="text-xs text-gray-500 dark:text-neutral-400 shrink-0">Proyecto:</label>
+                    <select wire:model.live="editorFiltroProyecto"
+                        class="text-xs rounded-lg border border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-800 text-gray-900 dark:text-neutral-100 px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 cursor-pointer">
+                        <option value="">Todos</option>
+                        @foreach ($editorProyectos as $p)
+                            <option value="{{ $p['id'] }}">{{ $p['nombre'] }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Limpiar --}}
+                @if ($editorFiltroMes || $editorFiltroDesde || $editorFiltroHasta || $editorFiltroProyecto)
+                    <button type="button" wire:click="clearEditorFiltros"
+                        class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-neutral-200 underline shrink-0 transition-colors">
+                        Limpiar filtros
+                    </button>
+                @endif
+
+            </div>
+        </div>
+
         {{-- TABLAS --}}
         @if ($hasMovs)
             <div class="grid grid-cols-1 gap-4">

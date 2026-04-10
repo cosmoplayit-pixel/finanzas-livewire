@@ -16,7 +16,6 @@ class ProyectoResumenQuery
 
         $fFechaDesde = $params['f_fecha_desde'] ?? null; // YYYY-MM-DD|null
         $fFechaHasta = $params['f_fecha_hasta'] ?? null; // YYYY-MM-DD|null
-
         $fDeuda = $params['f_deuda'] ?? [];
         $fCompras = $params['f_compras'] ?? [];
         $fFacturas = $params['f_facturas'] ?? [];
@@ -80,7 +79,7 @@ class ProyectoResumenQuery
                     ->where('facturas.active', 1)
                     ->where('factura_pagos.tipo', 'retencion');
             }, 'pagado_retencion')
-            // Subquery Total Compras (monto_base o monto) - asuminos monto_base para normalizar
+            // Subquery Total Compras (monto_base o monto) - asumimos monto_base para normalizar
             ->selectSub(function ($q) {
                 $q->from('rendicion_movimientos')
                     ->selectRaw('COALESCE(SUM(monto_base), 0)')
@@ -113,6 +112,7 @@ class ProyectoResumenQuery
                        ->orWhereDate('proyectos.fecha_fin', '<=', $fFechaHasta);
                 });
             });
+
 
         // Convertir a subquery
         $q = DB::query()->fromSub($base, 't');

@@ -18,6 +18,13 @@ class ResumenModal extends Component
 
     public $total_compras = 0;
 
+    // Filtros del modal
+    public $filtro_modo = 'historico'; // 'historico', 'mes' o 'rango'
+    public $filtro_mes = '';
+    public $filtro_desde = '';
+    public $filtro_hasta = '';
+    public array $mesesConCompras = [];
+
     // Visor de fotos
     public bool $openFotoModal = false;
     public ?string $fotoUrl = null;
@@ -40,6 +47,33 @@ class ResumenModal extends Component
         $this->isOpen = false;
         $this->proyecto = null;
         $this->movimientos = [];
+        $this->filtro_mes = '';
+        $this->filtro_desde = '';
+        $this->filtro_hasta = '';
+        $this->mesesConCompras = [];
+    }
+
+    public function updatedFiltroModo()
+    {
+        $this->filtro_mes = '';
+        $this->filtro_desde = '';
+        $this->filtro_hasta = '';
+        $this->cargarMovimientos();
+    }
+
+    public function updatedFiltroMes()
+    {
+        $this->cargarMovimientos();
+    }
+
+    public function updatedFiltroDesde()
+    {
+        $this->cargarMovimientos();
+    }
+
+    public function updatedFiltroHasta()
+    {
+        $this->cargarMovimientos();
     }
 
     public function openFotoComprobante($url)
@@ -60,11 +94,27 @@ class ResumenModal extends Component
         $totalIngresos = 0;
         $totalEgresos = 0;
 
+        // Cargar meses disponibles para este proyecto (solo compras)
+        $this->cargarMesesDisponibles();
+
         // 1. Cargar Gastos/Compras de Rendiciones asociadas al proyecto (Módulo de Presupuestos)
-        $rendiciones = RendicionMovimiento::with(['rendicion.agente'])
+        $query = RendicionMovimiento::with(['rendicion.agente'])
             ->where('proyecto_id', $this->proyecto->id)
-            ->where('tipo', 'compra')
-            ->get();
+            ->where('tipo', 'compra');
+            
+        // Aplicar filtros
+        if ($this->filtro_modo === 'mes' && $this->filtro_mes !== '') {
+            $query->whereRaw("DATE_FORMAT(fecha, '%Y-%m') = ?", [$this->filtro_mes]);
+        } elseif ($this->filtro_modo === 'rango') {
+            if ($this->filtro_desde !== '') {
+                $query->whereDate('fecha', '>=', $this->filtro_desde);
+            }
+            if ($this->filtro_hasta !== '') {
+                $query->whereDate('fecha', '<=', $this->filtro_hasta);
+            }
+        }
+
+        $rendiciones = $query->get();
 
         foreach ($rendiciones as $r) {
             $monto = (float) $r->monto;
@@ -96,6 +146,29 @@ class ResumenModal extends Component
         });
 
         $this->total_compras = $totalEgresos;
+    }
+
+    private function cargarMesesDisponibles()
+    {
+        $meses = RendicionMovimiento::where('proyecto_id', $this->proyecto->id)
+            ->where('tipo', 'compra')
+            ->whereNotNull('fecha')
+            ->selectRaw("DATE_FORMAT(fecha, '%Y-%m') as mes_valor")
+            ->selectRaw("DATE_FORMAT(fecha, '%Y-%m-01') as fecha_para_orden")
+            ->distinct()
+            ->orderBy('fecha_para_orden', 'desc')
+            ->get()
+            ->map(function ($item) {
+                // $item->mes_valor es "2026-05"
+                $date = \Carbon\Carbon::createFromFormat('Y-m', $item->mes_valor)->locale('es');
+                return [
+                    'value' => $item->mes_valor,
+                    'label' => ucfirst($date->translatedFormat('F - Y')),
+                ];
+            })
+            ->toArray();
+            
+        $this->mesesConCompras = $meses;
     }
 
     public function render()

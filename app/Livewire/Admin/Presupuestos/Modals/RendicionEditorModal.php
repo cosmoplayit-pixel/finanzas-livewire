@@ -52,6 +52,13 @@ trait RendicionEditorModal
 
     public array $editorDevoluciones = [];
 
+    // Filtros dentro del modal
+    public string $editorFiltroModo = 'mes';   // 'mes' | 'rango'
+    public string $editorFiltroMes = '';        // YYYY-MM
+    public string $editorFiltroDesde = '';
+    public string $editorFiltroHasta = '';
+    public ?int   $editorFiltroProyecto = null;
+
     public float $editorTotalComprasBase = 0;
 
     public float $editorTotalDevolucionesBase = 0;
@@ -241,6 +248,12 @@ trait RendicionEditorModal
 
         $this->editorEstado = $r->estado ?: ($r->fecha_cierre ? 'cerrado' : 'abierto');
 
+        $this->editorFiltroModo = 'mes';
+        $this->editorFiltroMes = '';
+        $this->editorFiltroDesde = '';
+        $this->editorFiltroHasta = '';
+        $this->editorFiltroProyecto = null;
+
         $this->loadEditorCatalogos();
         $this->loadEditorMovimientos();
 
@@ -359,6 +372,19 @@ trait RendicionEditorModal
             ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
             ->where('rendicion_id', $this->editorRendicionId)
             ->where('active', true)
+            ->when($this->editorFiltroProyecto, fn ($q) => $q->where('proyecto_id', $this->editorFiltroProyecto))
+            ->when($this->editorFiltroModo === 'mes' && $this->editorFiltroMes, function ($q) {
+                [$y, $m] = explode('-', $this->editorFiltroMes);
+                $q->whereYear('fecha', $y)->whereMonth('fecha', $m);
+            })
+            ->when($this->editorFiltroModo === 'rango', function ($q) {
+                if ($this->editorFiltroDesde) {
+                    $q->whereDate('fecha', '>=', $this->editorFiltroDesde);
+                }
+                if ($this->editorFiltroHasta) {
+                    $q->whereDate('fecha', '<=', $this->editorFiltroHasta);
+                }
+            })
             ->with(['entidad', 'proyecto', 'banco'])
             ->orderBy('fecha')
             ->orderBy('id')
@@ -528,6 +554,30 @@ trait RendicionEditorModal
         $this->recalcMovimientoConversion();
         $this->resetErrorBag();
         $this->resetValidation();
+    }
+
+    // =========================================================
+    // FILTROS DEL EDITOR
+    // =========================================================
+    public function updatedEditorFiltroMes(): void          { $this->loadEditorMovimientos(); }
+    public function updatedEditorFiltroDesde(): void        { $this->loadEditorMovimientos(); }
+    public function updatedEditorFiltroHasta(): void        { $this->loadEditorMovimientos(); }
+    public function updatedEditorFiltroProyecto(): void     { $this->loadEditorMovimientos(); }
+    public function updatedEditorFiltroModo(): void
+    {
+        $this->editorFiltroMes = '';
+        $this->editorFiltroDesde = '';
+        $this->editorFiltroHasta = '';
+        $this->loadEditorMovimientos();
+    }
+
+    public function clearEditorFiltros(): void
+    {
+        $this->editorFiltroMes = '';
+        $this->editorFiltroDesde = '';
+        $this->editorFiltroHasta = '';
+        $this->editorFiltroProyecto = null;
+        $this->loadEditorMovimientos();
     }
 
     // =========================================================

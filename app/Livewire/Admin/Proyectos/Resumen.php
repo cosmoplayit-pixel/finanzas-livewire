@@ -5,6 +5,7 @@ namespace App\Livewire\Admin\Proyectos;
 use App\Models\Entidad;
 use App\Queries\ProyectoResumenQuery;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -21,6 +22,7 @@ class Resumen extends Component
     public $f_fecha_hasta = '';
 
     public $f_entidad = '';
+
 
     // Listas multi-select
     public $f_deuda = [];
@@ -63,9 +65,6 @@ class Resumen extends Component
 
     public function mount()
     {
-        $this->f_fecha_desde = now()->startOfYear()->toDateString();
-        $this->f_fecha_hasta = now()->endOfYear()->toDateString();
-
         $this->entidadesOpciones = collect(Entidad::where('empresa_id', Auth::user()->empresa_id)
             ->where('active', true)
             ->select('id', 'nombre')
@@ -74,6 +73,8 @@ class Resumen extends Component
             ->map(fn ($e) => ['value' => (string) $e->id, 'label' => $e->nombre])
             ->toArray();
     }
+
+
 
     public function updatingSearch()
     {
@@ -111,6 +112,7 @@ class Resumen extends Component
     {
         $this->resetPage();
     }
+
 
     public function sortBy($field)
     {
@@ -227,25 +229,21 @@ class Resumen extends Component
         }
 
         // Etiquetas de fecha
-        $dateLabel = '';
-        if ($this->f_fecha_desde && $this->f_fecha_hasta) {
-            $from = \Carbon\Carbon::parse($this->f_fecha_desde);
-            $to = \Carbon\Carbon::parse($this->f_fecha_hasta);
-
-            if ($from->isStartOfYear() && $to->isEndOfYear() && $from->year === $to->year) {
-                $dateLabel = (string) $from->year;
-            } else {
+        $dateLabel = 'Histórico';
+        if ($this->dateFilterModified) {
+            if ($this->f_fecha_desde && $this->f_fecha_hasta) {
+                $from = \Carbon\Carbon::parse($this->f_fecha_desde);
+                $to = \Carbon\Carbon::parse($this->f_fecha_hasta);
                 $dateLabel = $from->format('d/m/y').' - '.$to->format('d/m/y');
+            } elseif ($this->f_fecha_desde) {
+                $dateLabel = 'Desde '.\Carbon\Carbon::parse($this->f_fecha_desde)->format('d/m/y');
+            } elseif ($this->f_fecha_hasta) {
+                $dateLabel = 'Hasta '.\Carbon\Carbon::parse($this->f_fecha_hasta)->format('d/m/y');
             }
-        } elseif ($this->f_fecha_desde) {
-            $dateLabel = 'Desde '.\Carbon\Carbon::parse($this->f_fecha_desde)->format('d/m/y');
-        } elseif ($this->f_fecha_hasta) {
-            $dateLabel = 'Hasta '.\Carbon\Carbon::parse($this->f_fecha_hasta)->format('d/m/y');
-        } else {
-            $dateLabel = 'Histórico';
         }
 
-        $historicalLabel = $this->dateFilterModified ? $dateLabel : 'Histórico';
+        $historicalLabel = 'Histórico';
+
 
         // Lookup entities names efficiently if we needed it, but query returns entidad_id
         $entidadesIds = collect($paginator->items())->pluck('entidad_id')->unique();

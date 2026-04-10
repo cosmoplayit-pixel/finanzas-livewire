@@ -5,8 +5,10 @@ namespace App\Livewire\Admin;
 use App\Livewire\Traits\WithFinancialFormatting;
 use App\Models\Banco;
 use App\Models\Empresa;
+use App\Models\TransferenciaBancaria;
 use App\Services\TransferenciaBancariaService;
 use DomainException;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
@@ -15,45 +17,55 @@ use Livewire\WithPagination;
 
 class Bancos extends Component
 {
-    use WithPagination;
     use WithFileUploads;
     use WithFinancialFormatting;
+    use WithPagination;
 
     // =========================
     // Monto (UI formateada + valor real)
     // =========================
     public string $monto_formatted = '';
+
     public float $monto = 0;
 
     // =========================
     // Filtros
     // =========================
     public string $search = '';
+
     public int $perPage = 10;
 
     public string $status = 'all'; // all | active | inactive
+
     public string $empresaFilter = 'all'; // all | {empresa_id}
+
     public string $monedaFilter = 'all'; // all | BOB | USD
 
     // =========================
     // Ordenamiento
     // =========================
     public string $sortField = 'id';
+
     public string $sortDirection = 'desc';
 
     // =========================
     // Modal Banco (create / edit)
     // =========================
     public bool $openModal = false;
+
     public ?int $bancoId = null;
 
     // =========================
     // Form Banco
     // =========================
     public $empresa_id = '';
+
     public string $nombre = '';
+
     public string $titular = '';
+
     public string $numero_cuenta = '';
+
     public string $moneda = '';
 
     // =========================
@@ -61,29 +73,63 @@ class Bancos extends Component
     // =========================
     public bool $openTransferenciaModal = false;
 
+    // =========================
+    // Modal Historial Transferencias
+    // =========================
+    public bool $openHistorialTransferenciasModal = false;
+
+    public array $historialTransferencias = [];
+
+    // =========================
+    // Modal Eliminar Transferencia
+    // =========================
+    public bool $openDeleteTransferenciaModal = false;
+
+    public ?int $transferenciaToDeleteId = null;
+
+    public string $deleteTransferenciaPassword = '';
+
     // Campos del formulario de transferencia
-    public $tr_banco_origen_id  = '';
+    public $tr_banco_origen_id = '';
+
     public $tr_banco_destino_id = '';
-    public string $tr_monto_formatted      = '';
-    public float  $tr_monto                = 0;
+
+    public string $tr_monto_formatted = '';
+
+    public float $tr_monto = 0;
+
     public string $tr_tipo_cambio_formatted = '';
-    public float  $tr_tipo_cambio           = 0;
+
+    public float $tr_tipo_cambio = 0;
+
     public string $tr_nro_transaccion = '';
-    public string $tr_fecha          = '';
-    public string $tr_observacion    = '';
+
+    public string $tr_fecha = '';
+
+    public string $tr_observacion = '';
+
     public $tr_foto = null;
 
     // Valores calculados/preview (no son inputs directos)
-    public string $tr_moneda_origen          = '';
-    public string $tr_moneda_destino         = '';
-    public float  $tr_saldo_origen           = 0;
+    public string $tr_moneda_origen = '';
+
+    public string $tr_moneda_destino = '';
+
+    public float $tr_saldo_origen = 0;
+
     public string $tr_saldo_origen_formatted = '';
-    public float  $tr_saldo_destino          = 0;
+
+    public float $tr_saldo_destino = 0;
+
     public string $tr_saldo_destino_formatted = '';
-    public float  $tr_monto_destino          = 0;
-    public bool   $tr_necesita_tc            = false;
-    public bool   $tr_saldo_insuficiente     = false;
-    public bool   $tr_mismo_banco            = false;
+
+    public float $tr_monto_destino = 0;
+
+    public bool $tr_necesita_tc = false;
+
+    public bool $tr_saldo_insuficiente = false;
+
+    public bool $tr_mismo_banco = false;
 
     protected $listeners = [
         'doToggleActiveBanco' => 'toggleActive',
@@ -91,7 +137,7 @@ class Bancos extends Component
 
     public function mount(): void
     {
-        if (!$this->isAdmin()) {
+        if (! $this->isAdmin()) {
             $this->empresaFilter = (string) $this->userEmpresaId();
         }
 
@@ -114,15 +160,15 @@ class Bancos extends Component
 
     public function updatedTrBancoOrigenId(): void
     {
-        $this->tr_moneda_origen          = '';
-        $this->tr_saldo_origen           = 0;
+        $this->tr_moneda_origen = '';
+        $this->tr_saldo_origen = 0;
         $this->tr_saldo_origen_formatted = '';
 
         if ($this->tr_banco_origen_id) {
             $banco = Banco::find($this->tr_banco_origen_id);
             if ($banco) {
-                $this->tr_moneda_origen          = $banco->moneda;
-                $this->tr_saldo_origen           = round((float) ($banco->monto ?? 0), 2);
+                $this->tr_moneda_origen = $banco->moneda;
+                $this->tr_saldo_origen = round((float) ($banco->monto ?? 0), 2);
                 $this->tr_saldo_origen_formatted = $this->formatFloatValue($this->tr_saldo_origen);
             }
         }
@@ -132,15 +178,15 @@ class Bancos extends Component
 
     public function updatedTrBancoDestinoId(): void
     {
-        $this->tr_moneda_destino          = '';
-        $this->tr_saldo_destino           = 0;
+        $this->tr_moneda_destino = '';
+        $this->tr_saldo_destino = 0;
         $this->tr_saldo_destino_formatted = '';
 
         if ($this->tr_banco_destino_id) {
             $banco = Banco::find($this->tr_banco_destino_id);
             if ($banco) {
-                $this->tr_moneda_destino          = $banco->moneda;
-                $this->tr_saldo_destino           = round((float) ($banco->monto ?? 0), 2);
+                $this->tr_moneda_destino = $banco->moneda;
+                $this->tr_saldo_destino = round((float) ($banco->monto ?? 0), 2);
                 $this->tr_saldo_destino_formatted = $this->formatFloatValue($this->tr_saldo_destino);
             }
         }
@@ -168,10 +214,10 @@ class Bancos extends Component
      */
     public function recalcTransferencia(): void
     {
-        $this->tr_monto_destino      = 0;
-        $this->tr_necesita_tc        = false;
+        $this->tr_monto_destino = 0;
+        $this->tr_necesita_tc = false;
         $this->tr_saldo_insuficiente = false;
-        $this->tr_mismo_banco        = false;
+        $this->tr_mismo_banco = false;
 
         if ($this->tr_banco_origen_id && $this->tr_banco_destino_id) {
             $this->tr_mismo_banco = (string) $this->tr_banco_origen_id === (string) $this->tr_banco_destino_id;
@@ -205,7 +251,7 @@ class Bancos extends Component
         return [
             'empresa_id' => $this->isAdmin() ? ['required', 'exists:empresas,id'] : ['nullable'],
 
-            'nombre'  => ['required', 'string', 'min:3', 'max:150'],
+            'nombre' => ['required', 'string', 'min:3', 'max:150'],
             'titular' => ['required', 'string', 'min:3', 'max:150'],
 
             'numero_cuenta' => [
@@ -213,28 +259,28 @@ class Bancos extends Component
                 'string',
                 'max:50',
                 Rule::unique('bancos')
-                    ->where(fn($q) => $q->where('empresa_id', $empresaId))
+                    ->where(fn ($q) => $q->where('empresa_id', $empresaId))
                     ->ignore($this->bancoId),
             ],
 
             'moneda' => ['required', 'in:BOB,USD'],
-            'monto'  => ['required', 'numeric', 'min:0'],
+            'monto' => ['required', 'numeric', 'min:0'],
         ];
     }
 
     protected function transferenciaRules(): array
     {
         return [
-            'tr_banco_origen_id'  => ['required', 'exists:bancos,id'],
+            'tr_banco_origen_id' => ['required', 'exists:bancos,id'],
             'tr_banco_destino_id' => ['required', 'exists:bancos,id'],
-            'tr_monto'            => ['required', 'numeric', 'min:0.01'],
-            'tr_tipo_cambio'      => $this->tr_necesita_tc
+            'tr_monto' => ['required', 'numeric', 'min:0.01'],
+            'tr_tipo_cambio' => $this->tr_necesita_tc
                 ? ['required', 'numeric', 'min:0.000001']
                 : ['nullable', 'numeric'],
-            'tr_nro_transaccion'  => ['nullable', 'string', 'max:60'],
-            'tr_fecha'            => ['required', 'date'],
-            'tr_observacion'      => ['nullable', 'string', 'max:255'],
-            'tr_foto'             => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'tr_nro_transaccion' => ['nullable', 'string', 'max:60'],
+            'tr_fecha' => ['required', 'date'],
+            'tr_observacion' => ['nullable', 'string', 'max:255'],
+            'tr_foto' => ['nullable', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ];
     }
 
@@ -242,20 +288,40 @@ class Bancos extends Component
     // Filtros / Paginación
     // =========================
 
-    public function updatedSearch(): void        { $this->resetPage(); }
-    public function updatedEmpresaFilter(): void { $this->resetPage(); }
-    public function updatedMonedaFilter(): void  { $this->resetPage(); }
-    public function updatedStatus(): void        { $this->resetPage(); }
-    public function updatedPerPage(): void       { $this->resetPage(); }
+    public function updatedSearch(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedEmpresaFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedMonedaFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedStatus(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedPerPage(): void
+    {
+        $this->resetPage();
+    }
 
     public function sortBy(string $field): void
     {
         if ($this->sortField === $field) {
             $this->sortDirection = $this->sortDirection === 'asc' ? 'desc' : 'asc';
+
             return;
         }
 
-        $this->sortField     = $field;
+        $this->sortField = $field;
         $this->sortDirection = 'asc';
     }
 
@@ -267,12 +333,12 @@ class Bancos extends Component
     {
         $query = Banco::with('empresa');
 
-        if (!$this->isAdmin()) {
+        if (! $this->isAdmin()) {
             $query->where('empresa_id', $this->userEmpresaId());
         } else {
             $query->when(
                 $this->empresaFilter !== 'all',
-                fn($q) => $q->where('empresa_id', $this->empresaFilter),
+                fn ($q) => $q->where('empresa_id', $this->empresaFilter),
             );
         }
 
@@ -287,11 +353,11 @@ class Bancos extends Component
             })
             ->when(
                 $this->monedaFilter !== 'all',
-                fn($q) => $q->where('moneda', $this->monedaFilter),
+                fn ($q) => $q->where('moneda', $this->monedaFilter),
             )
             ->when(
                 $this->status !== 'all',
-                fn($q) => $q->where('active', $this->status === 'active'),
+                fn ($q) => $q->where('active', $this->status === 'active'),
             )
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
@@ -299,15 +365,15 @@ class Bancos extends Component
         // Solo se consulta cuando el modal está abierto
         $bancosTransferencia = $this->openTransferenciaModal
             ? Banco::where('active', true)
-                ->when(!$this->isAdmin(), fn($q) => $q->where('empresa_id', $this->userEmpresaId()))
+                ->when(! $this->isAdmin(), fn ($q) => $q->where('empresa_id', $this->userEmpresaId()))
                 ->orderBy('nombre')
                 ->get()
             : collect();
 
         return view('livewire.admin.bancos', [
-            'bancos'              => $bancos,
+            'bancos' => $bancos,
             'bancosTransferencia' => $bancosTransferencia,
-            'empresas'           => $this->isAdmin()
+            'empresas' => $this->isAdmin()
                 ? Empresa::orderBy('nombre')->get()
                 : Empresa::where('id', $this->userEmpresaId())->get(),
         ]);
@@ -323,7 +389,7 @@ class Bancos extends Component
         $this->resetValidation();
         $this->resetForm();
 
-        if (!$this->isAdmin()) {
+        if (! $this->isAdmin()) {
             $this->empresa_id = (string) $this->userEmpresaId();
         }
 
@@ -336,18 +402,18 @@ class Bancos extends Component
         $this->resetValidation();
         $b = Banco::findOrFail($id);
 
-        if (!$this->isAdmin() && (int) $b->empresa_id !== (int) $this->userEmpresaId()) {
+        if (! $this->isAdmin() && (int) $b->empresa_id !== (int) $this->userEmpresaId()) {
             abort(403);
         }
 
-        $this->bancoId      = $b->id;
-        $this->empresa_id   = (string) $b->empresa_id;
-        $this->nombre       = (string) $b->nombre;
-        $this->titular      = (string) ($b->titular ?? '');
+        $this->bancoId = $b->id;
+        $this->empresa_id = (string) $b->empresa_id;
+        $this->nombre = (string) $b->nombre;
+        $this->titular = (string) ($b->titular ?? '');
         $this->numero_cuenta = (string) $b->numero_cuenta;
-        $this->moneda       = (string) $b->moneda;
+        $this->moneda = (string) $b->moneda;
 
-        $this->monto           = (float) ($b->monto ?? 0);
+        $this->monto = (float) ($b->monto ?? 0);
         $this->monto_formatted = $this->monto > 0 ? number_format($this->monto, 2, ',', '.') : '';
 
         $this->openModal = true;
@@ -357,18 +423,18 @@ class Bancos extends Component
     {
         $data = $this->validate();
 
-        $data['nombre']       = trim($data['nombre']);
-        $data['titular']      = trim($data['titular']);
+        $data['nombre'] = trim($data['nombre']);
+        $data['titular'] = trim($data['titular']);
         $data['numero_cuenta'] = preg_replace('/\s+/', '', $data['numero_cuenta']);
 
-        if (!$this->isAdmin()) {
+        if (! $this->isAdmin()) {
             $data['empresa_id'] = $this->userEmpresaId();
         }
 
         if ($this->bancoId) {
             $b = Banco::findOrFail($this->bancoId);
 
-            if (!$this->isAdmin() && (int) $b->empresa_id !== (int) $this->userEmpresaId()) {
+            if (! $this->isAdmin() && (int) $b->empresa_id !== (int) $this->userEmpresaId()) {
                 abort(403);
             }
 
@@ -386,7 +452,7 @@ class Bancos extends Component
     public function toggleActive(int $id): void
     {
         $b = Banco::findOrFail($id);
-        $b->update(['active' => !$b->active]);
+        $b->update(['active' => ! $b->active]);
         $this->dispatch('toast', type: 'success', message: $b->active ? 'Banco activado' : 'Banco desactivado');
     }
 
@@ -419,11 +485,13 @@ class Bancos extends Component
         // Validaciones adicionales de UI
         if ($this->tr_mismo_banco) {
             $this->addError('tr_banco_destino_id', 'El banco destino debe ser diferente al banco origen.');
+
             return;
         }
 
         if ($this->tr_saldo_insuficiente) {
             $this->addError('tr_monto', 'El monto excede el saldo disponible en el banco origen.');
+
             return;
         }
 
@@ -436,13 +504,13 @@ class Bancos extends Component
         try {
             $service->transferir(
                 [
-                    'banco_origen_id'  => (int) $this->tr_banco_origen_id,
+                    'banco_origen_id' => (int) $this->tr_banco_origen_id,
                     'banco_destino_id' => (int) $this->tr_banco_destino_id,
-                    'monto_origen'     => $this->tr_monto,
-                    'tipo_cambio'      => $this->tr_tipo_cambio > 0 ? $this->tr_tipo_cambio : null,
-                    'nro_transaccion'  => $this->tr_nro_transaccion,
-                    'fecha'            => $this->tr_fecha,
-                    'observacion'      => $this->tr_observacion,
+                    'monto_origen' => $this->tr_monto,
+                    'tipo_cambio' => $this->tr_tipo_cambio > 0 ? $this->tr_tipo_cambio : null,
+                    'nro_transaccion' => $this->tr_nro_transaccion,
+                    'fecha' => $this->tr_fecha,
+                    'observacion' => $this->tr_observacion,
                     'foto_comprobante' => $fotoPath,
                 ],
                 $this->userEmpresaId(),
@@ -468,12 +536,122 @@ class Bancos extends Component
     }
 
     // =========================
+    // Historial Transferencias
+    // =========================
+
+    public function openHistorialTransferencias(): void
+    {
+        $this->deleteTransferenciaPassword = '';
+        $this->resetErrorBag('deleteTransferenciaPassword');
+        $this->loadHistorialTransferencias();
+        $this->openHistorialTransferenciasModal = true;
+    }
+
+    public function closeHistorialTransferencias(): void
+    {
+        $this->openHistorialTransferenciasModal = false;
+        $this->historialTransferencias = [];
+        $this->deleteTransferenciaPassword = '';
+        $this->resetErrorBag('deleteTransferenciaPassword');
+    }
+
+    public function loadHistorialTransferencias(): void
+    {
+        $query = TransferenciaBancaria::query()
+            ->with(['bancoOrigen', 'bancoDestino'])
+            ->orderBy('fecha', 'desc')
+            ->orderBy('id', 'desc');
+
+        if (! $this->isAdmin()) {
+            $query->where('empresa_id', $this->userEmpresaId());
+        }
+
+        $this->historialTransferencias = $query->get()->all();
+    }
+
+    public function confirmDeleteTransferencia(int $id): void
+    {
+        $this->transferenciaToDeleteId = $id;
+        $this->deleteTransferenciaPassword = '';
+        $this->resetErrorBag('deleteTransferenciaPassword');
+        $this->openDeleteTransferenciaModal = true;
+    }
+
+    public function closeDeleteTransferenciaModal(): void
+    {
+        $this->openDeleteTransferenciaModal = false;
+        $this->transferenciaToDeleteId = null;
+        $this->deleteTransferenciaPassword = '';
+        $this->resetErrorBag('deleteTransferenciaPassword');
+    }
+
+    public function deleteTransferencia(TransferenciaBancariaService $service): void
+    {
+        if (! $this->transferenciaToDeleteId) {
+            return;
+        }
+
+        $this->resetErrorBag('deleteTransferenciaPassword');
+
+        if (trim($this->deleteTransferenciaPassword) === '') {
+            $this->addError('deleteTransferenciaPassword', 'Ingrese su contraseña.');
+
+            return;
+        }
+
+        $user = auth()->user();
+        if (! $user || ! Hash::check($this->deleteTransferenciaPassword, (string) $user->password)) {
+            $this->addError('deleteTransferenciaPassword', 'Contraseña incorrecta.');
+
+            return;
+        }
+
+        try {
+            $service->eliminarTransferencia($this->transferenciaToDeleteId, $this->userEmpresaId(), $this->isAdmin());
+            $this->closeDeleteTransferenciaModal();
+            $this->dispatch('toast', type: 'success', message: 'Transferencia eliminada y saldos revertidos.');
+            $this->loadHistorialTransferencias();
+        } catch (DomainException $e) {
+            $msg = $e->getMessage();
+
+            if (str_starts_with($msg, 'SALDO_DESTINO_INSUFICIENTE:')) {
+                $partes = explode(':', $msg);
+                $saldoActual = (float) ($partes[1] ?? 0);
+                $montoRevert = (float) ($partes[2] ?? 0);
+                $bancoNombre = $partes[3] ?? 'Banco destino';
+                $moneda = $partes[4] ?? '';
+                $faltante = max(0, $montoRevert - $saldoActual);
+
+                $fmtSaldo = number_format($saldoActual, 2, ',', '.').' '.$moneda;
+                $fmtMonto = number_format($montoRevert, 2, ',', '.').' '.$moneda;
+                $fmtFaltante = number_format($faltante, 2, ',', '.').' '.$moneda;
+
+                $html = "El banco destino <strong>{$bancoNombre}</strong> no tiene saldo suficiente para revertir esta transferencia.";
+                $html .= '<br><br>';
+                $html .= "<table style='margin:0 auto;width:auto;min-width:220px;font-size:0.9em;text-align:left;border-collapse:collapse;'>";
+                $html .= "<tr><td style='padding:4px 16px 4px 0;color:#6b7280;'>Saldo disponible:</td><td style='padding:4px 0;font-weight:600;text-align:right;'>{$fmtSaldo}</td></tr>";
+                $html .= "<tr><td style='padding:4px 16px 4px 0;color:#6b7280;'>Monto a revertir:</td><td style='padding:4px 0;font-weight:600;text-align:right;'>{$fmtMonto}</td></tr>";
+                $html .= "<tr style='border-top:1px solid #e5e7eb;'><td style='padding:8px 16px 4px 0;color:#ef4444;font-weight:600;'>Falta:</td><td style='padding:8px 0 4px;font-weight:700;color:#ef4444;text-align:right;'>{$fmtFaltante}</td></tr>";
+                $html .= '</table>';
+
+                $this->closeDeleteTransferenciaModal();
+                $this->dispatch('swal:error-transferencia', title: 'No se pudo eliminar', html: $html);
+
+                return;
+            }
+
+            $this->closeDeleteTransferenciaModal();
+            $this->dispatch('toast', type: 'error', message: $msg);
+        }
+    }
+
+    // =========================
     // Filtros
     // =========================
 
     public function clearFilters(): void
     {
-        $this->status      = 'active';
+        $this->status = 'active';
         $this->monedaFilter = 'all';
         $this->resetPage();
     }

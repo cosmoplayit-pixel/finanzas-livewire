@@ -20,7 +20,7 @@
             </p>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex flex-wrap gap-2">
             {{-- Botón Transferencia --}}
             @can('bancos.create')
                 <button wire:click="openTransferencia" wire:loading.attr="disabled" wire:target="openTransferencia"
@@ -31,6 +31,20 @@
                     </svg>
                     <span wire:loading.remove wire:target="openTransferencia">Transferir</span>
                     <span wire:loading wire:target="openTransferencia">Abriendo…</span>
+                </button>
+            @endcan
+
+            {{-- Botón Eliminar Transferencia --}}
+            @can('bancos.create')
+                <button wire:click="openHistorialTransferencias" wire:loading.attr="disabled"
+                    wire:target="openHistorialTransferencias"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span wire:loading.remove wire:target="openHistorialTransferencias">Eliminar</span>
+                    <span wire:loading wire:target="openHistorialTransferencias">Abriendo…</span>
                 </button>
             @endcan
 
@@ -888,15 +902,15 @@
 
     {{-- MODAL TRANSFERENCIA --}}
     @can('bancos.create')
-        <x-ui.modal wire:key="transferencia-modal" model="openTransferenciaModal"
-            maxWidth="sm:max-w-xl md:max-w-2xl"
+        <x-ui.modal wire:key="transferencia-modal" model="openTransferenciaModal" maxWidth="sm:max-w-xl md:max-w-2xl"
             onClose="closeTransferencia">
 
             <x-slot:title>
                 <div class="flex flex-col sm:flex-row sm:items-center gap-2 flex-wrap">
                     <span class="shrink-0">Transferencia entre Cuentas</span>
                     @if ($tr_moneda_origen && $tr_moneda_destino && $tr_moneda_origen !== $tr_moneda_destino)
-                        <span class="text-xs font-normal text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded-full">
+                        <span
+                            class="text-xs font-normal text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 rounded-full">
                             {{ $tr_moneda_origen }} → {{ $tr_moneda_destino }} · con conversión
                         </span>
                     @endif
@@ -917,7 +931,9 @@
                                    focus:outline-none focus:ring-2 focus:ring-gray-500/40">
                             <option value="">Seleccione…</option>
                             @foreach ($bancosTransferencia as $b)
-                                <option value="{{ $b->id }}">{{ $b->nombre }} — {{ $b->numero_cuenta }} ({{ $b->moneda }})</option>
+                                <option value="{{ $b->id }}">{{ $b->nombre }} — {{ $b->numero_cuenta }}
+                                    ({{ $b->moneda }})
+                                </option>
                             @endforeach
                         </select>
                         @error('tr_banco_origen_id')
@@ -925,7 +941,9 @@
                         @enderror
                         @if ($tr_moneda_origen)
                             <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
-                                Saldo: <span class="font-semibold {{ $tr_saldo_insuficiente ? 'text-red-600 dark:text-red-400' : '' }}">{{ $tr_moneda_origen }} {{ $tr_saldo_origen_formatted }}</span>
+                                Saldo: <span
+                                    class="font-semibold {{ $tr_saldo_insuficiente ? 'text-red-600 dark:text-red-400' : '' }}">{{ $tr_moneda_origen }}
+                                    {{ $tr_saldo_origen_formatted }}</span>
                             </div>
                         @endif
                     </div>
@@ -941,17 +959,21 @@
                                    focus:outline-none focus:ring-2 focus:ring-gray-500/40">
                             <option value="">Seleccione…</option>
                             @foreach ($bancosTransferencia as $b)
-                                <option value="{{ $b->id }}">{{ $b->nombre }} — {{ $b->numero_cuenta }} ({{ $b->moneda }})</option>
+                                <option value="{{ $b->id }}">{{ $b->nombre }} — {{ $b->numero_cuenta }}
+                                    ({{ $b->moneda }})
+                                </option>
                             @endforeach
                         </select>
                         @error('tr_banco_destino_id')
                             <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                         @enderror
                         @if ($tr_mismo_banco)
-                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">Debe ser diferente al banco origen.</div>
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">Debe ser diferente al banco origen.
+                            </div>
                         @elseif ($tr_moneda_destino)
                             <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">
-                                Saldo: <span class="font-semibold">{{ $tr_moneda_destino }} {{ $tr_saldo_destino_formatted }}</span>
+                                Saldo: <span class="font-semibold">{{ $tr_moneda_destino }}
+                                    {{ $tr_saldo_destino_formatted }}</span>
                             </div>
                         @endif
                     </div>
@@ -973,7 +995,8 @@
                     {{-- Monto --}}
                     <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">
-                            Monto{{ $tr_moneda_origen ? " ($tr_moneda_origen)" : '' }}: <span class="text-red-500">*</span>
+                            Monto{{ $tr_moneda_origen ? " ($tr_moneda_origen)" : '' }}: <span
+                                class="text-red-500">*</span>
                         </label>
                         <input type="text" inputmode="decimal" wire:model.lazy="tr_monto_formatted"
                             placeholder="0,00" autocomplete="off"
@@ -987,7 +1010,8 @@
                             <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
                         @enderror
                         @if ($tr_saldo_insuficiente)
-                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">Saldo insuficiente en banco origen.</div>
+                            <div class="text-red-600 dark:text-red-400 text-xs mt-1">Saldo insuficiente en banco origen.
+                            </div>
                         @endif
                     </div>
 
@@ -1030,7 +1054,8 @@
 
                         {{-- Equivalente en moneda destino (readonly) --}}
                         <div class="col-span-1 lg:col-span-1">
-                            <label class="block text-sm mb-1">Equivalente{{ $tr_moneda_destino ? " ($tr_moneda_destino)" : '' }}:</label>
+                            <label
+                                class="block text-sm mb-1">Equivalente{{ $tr_moneda_destino ? " ($tr_moneda_destino)" : '' }}:</label>
                             <input type="text" readonly
                                 value="{{ $tr_monto_destino > 0 ? number_format($tr_monto_destino, 2, ',', '.') : '—' }}"
                                 class="w-full rounded-lg border px-3 py-2
@@ -1038,14 +1063,16 @@
                                        border-gray-300/60 dark:border-neutral-700/60
                                        text-gray-900 dark:text-neutral-100
                                        opacity-80 cursor-not-allowed" />
-                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">Se calcula automáticamente.</div>
+                            <div class="mt-1 text-[11px] text-gray-500 dark:text-neutral-400">Se calcula automáticamente.
+                            </div>
                         </div>
                     @endif
 
                     {{-- Detalle (ancho completo) --}}
                     <div class="col-span-2 lg:col-span-3">
                         <label class="block text-sm mb-1">Detalle (Opcional):</label>
-                        <input wire:model="tr_observacion" autocomplete="off" placeholder="Observación o detalle de la transferencia…"
+                        <input wire:model="tr_observacion" autocomplete="off"
+                            placeholder="Observación o detalle de la transferencia…"
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -1070,18 +1097,22 @@
                             <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-1">
                                 Banco Origen {{ $tr_moneda_origen ? "($tr_moneda_origen)" : '' }}
                             </div>
-                            <div class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-neutral-700 bg-white dark:bg-neutral-900 rounded-lg border border-gray-100 dark:border-neutral-700 text-center">
+                            <div
+                                class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-neutral-700 bg-white dark:bg-neutral-900 rounded-lg border border-gray-100 dark:border-neutral-700 text-center">
                                 <div class="py-2 px-1">
                                     <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Saldo actual</div>
-                                    <div class="text-xs font-bold tabular-nums text-gray-800 dark:text-neutral-200">{{ $tr_saldo_origen_formatted ?: '0,00' }}</div>
+                                    <div class="text-xs font-bold tabular-nums text-gray-800 dark:text-neutral-200">
+                                        {{ $tr_saldo_origen_formatted ?: '0,00' }}</div>
                                 </div>
                                 <div class="py-2 px-1">
                                     <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Salida</div>
-                                    <div class="text-xs font-bold tabular-nums text-red-600 dark:text-red-400">- {{ $tr_monto_formatted ?: '0,00' }}</div>
+                                    <div class="text-xs font-bold tabular-nums text-red-600 dark:text-red-400">-
+                                        {{ $tr_monto_formatted ?: '0,00' }}</div>
                                 </div>
                                 <div class="py-2 px-1">
                                     <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Nuevo saldo</div>
-                                    <div class="text-xs font-bold tabular-nums {{ $tr_saldo_insuficiente ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-neutral-200' }}">
+                                    <div
+                                        class="text-xs font-bold tabular-nums {{ $tr_saldo_insuficiente ? 'text-red-600 dark:text-red-400' : 'text-gray-800 dark:text-neutral-200' }}">
                                         {{ number_format(max(0, $tr_saldo_origen - $tr_monto), 2, ',', '.') }}
                                     </div>
                                 </div>
@@ -1092,17 +1123,24 @@
                                 <div class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider px-1 mb-1">
                                     Banco Destino {{ $tr_moneda_destino ? "($tr_moneda_destino)" : '' }}
                                 </div>
-                                <div class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-neutral-700 bg-white dark:bg-neutral-900 rounded-lg border border-gray-100 dark:border-neutral-700 text-center">
+                                <div
+                                    class="grid grid-cols-3 divide-x divide-gray-200 dark:divide-neutral-700 bg-white dark:bg-neutral-900 rounded-lg border border-gray-100 dark:border-neutral-700 text-center">
                                     <div class="py-2 px-1">
-                                        <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Saldo actual</div>
-                                        <div class="text-xs font-bold tabular-nums text-gray-800 dark:text-neutral-200">{{ $tr_saldo_destino_formatted ?: '0,00' }}</div>
+                                        <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Saldo actual
+                                        </div>
+                                        <div class="text-xs font-bold tabular-nums text-gray-800 dark:text-neutral-200">
+                                            {{ $tr_saldo_destino_formatted ?: '0,00' }}</div>
                                     </div>
                                     <div class="py-2 px-1">
                                         <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Entrada</div>
-                                        <div class="text-xs font-bold tabular-nums text-emerald-600 dark:text-emerald-400">+ {{ $tr_monto_destino > 0 ? number_format($tr_monto_destino, 2, ',', '.') : '0,00' }}</div>
+                                        <div class="text-xs font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                                            +
+                                            {{ $tr_monto_destino > 0 ? number_format($tr_monto_destino, 2, ',', '.') : '0,00' }}
+                                        </div>
                                     </div>
                                     <div class="py-2 px-1">
-                                        <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Nuevo saldo</div>
+                                        <div class="text-[10px] text-gray-400 dark:text-neutral-500 mb-0.5">Nuevo saldo
+                                        </div>
                                         <div class="text-xs font-bold tabular-nums text-gray-800 dark:text-neutral-200">
                                             {{ number_format($tr_saldo_destino + $tr_monto_destino, 2, ',', '.') }}
                                         </div>
@@ -1120,15 +1158,18 @@
                             </div>
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-gray-600 dark:text-neutral-400">Saldo actual</span>
-                                <span class="font-medium text-gray-900 dark:text-neutral-100">{{ $tr_saldo_origen_formatted ?: '0,00' }}</span>
+                                <span
+                                    class="font-medium text-gray-900 dark:text-neutral-100">{{ $tr_saldo_origen_formatted ?: '0,00' }}</span>
                             </div>
                             <div class="flex items-center justify-between text-sm text-red-600 dark:text-red-400">
                                 <span>Salida</span>
                                 <span class="font-medium">- {{ $tr_monto_formatted ?: '0,00' }}</span>
                             </div>
-                            <div class="pt-2 border-t border-gray-200 dark:border-neutral-700 flex items-center justify-between text-sm">
+                            <div
+                                class="pt-2 border-t border-gray-200 dark:border-neutral-700 flex items-center justify-between text-sm">
                                 <span class="font-medium text-gray-900 dark:text-neutral-100">Nuevo saldo</span>
-                                <span class="font-bold {{ $tr_saldo_insuficiente ? 'text-red-600' : 'text-gray-900 dark:text-neutral-100' }}">
+                                <span
+                                    class="font-bold {{ $tr_saldo_insuficiente ? 'text-red-600' : 'text-gray-900 dark:text-neutral-100' }}">
                                     {{ number_format(max(0, $tr_saldo_origen - $tr_monto), 2, ',', '.') }}
                                 </span>
                             </div>
@@ -1139,13 +1180,16 @@
                             </div>
                             <div class="flex items-center justify-between text-sm">
                                 <span class="text-gray-600 dark:text-neutral-400">Saldo actual</span>
-                                <span class="font-medium text-gray-900 dark:text-neutral-100">{{ $tr_saldo_destino_formatted ?: '0,00' }}</span>
+                                <span
+                                    class="font-medium text-gray-900 dark:text-neutral-100">{{ $tr_saldo_destino_formatted ?: '0,00' }}</span>
                             </div>
                             <div class="flex items-center justify-between text-sm text-emerald-600 dark:text-emerald-400">
                                 <span>Entrada</span>
-                                <span class="font-medium">+ {{ $tr_monto_destino > 0 ? number_format($tr_monto_destino, 2, ',', '.') : '0,00' }}</span>
+                                <span class="font-medium">+
+                                    {{ $tr_monto_destino > 0 ? number_format($tr_monto_destino, 2, ',', '.') : '0,00' }}</span>
                             </div>
-                            <div class="pt-2 border-t border-gray-200 dark:border-neutral-700 flex items-center justify-between text-sm">
+                            <div
+                                class="pt-2 border-t border-gray-200 dark:border-neutral-700 flex items-center justify-between text-sm">
                                 <span class="font-medium text-gray-900 dark:text-neutral-100">Nuevo saldo</span>
                                 <span class="font-bold text-gray-900 dark:text-neutral-100">
                                     {{ number_format($tr_saldo_destino + $tr_monto_destino, 2, ',', '.') }}
@@ -1157,10 +1201,8 @@
             </div>
 
             @slot('footer')
-                <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:justify-end sm:gap-3"
-                    x-data="{ uploading: false }"
-                    x-on:livewire-upload-start="uploading = true"
-                    x-on:livewire-upload-finish="uploading = false"
+                <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:justify-end sm:gap-3" x-data="{ uploading: false }"
+                    x-on:livewire-upload-start="uploading = true" x-on:livewire-upload-finish="uploading = false"
                     x-on:livewire-upload-error="uploading = false">
 
                     <button type="button" @click="close()"
@@ -1171,8 +1213,8 @@
                         Cancelar
                     </button>
 
-                    <button type="button" wire:click="saveTransferencia"
-                        wire:loading.attr="disabled" wire:target="saveTransferencia, tr_foto"
+                    <button type="button" wire:click="saveTransferencia" wire:loading.attr="disabled"
+                        wire:target="saveTransferencia, tr_foto"
                         x-bind:disabled="uploading || @js($tr_saldo_insuficiente) || @js($tr_mismo_banco)"
                         class="w-full sm:w-auto px-4 py-2 rounded-lg cursor-pointer
                                bg-black text-white hover:opacity-90
@@ -1186,5 +1228,182 @@
             @endslot
         </x-ui.modal>
     @endcan
+
+    {{-- MODAL HISTORIAL DE TRANSFERENCIAS --}}
+    @can('bancos.create')
+        <x-ui.modal wire:key="historial-transferencia-modal" model="openHistorialTransferenciasModal"
+            maxWidth="sm:max-w-xl md:max-w-4xl" onClose="closeHistorialTransferencias">
+
+            <x-slot:title>
+                Historial de Transferencias
+            </x-slot:title>
+
+            <div class="space-y-4">
+                {{-- Tabla de transferencias --}}
+                <div class="overflow-x-auto border border-gray-200 dark:border-neutral-700 rounded-lg">
+                    <table class="w-full text-sm text-left align-middle">
+                        <thead class="bg-gray-50 dark:bg-neutral-800 text-gray-700 dark:text-neutral-300">
+                            <tr>
+                                <th class="px-3 py-2 font-semibold">Fecha</th>
+                                <th class="px-3 py-2 font-semibold">Origen</th>
+                                <th class="px-3 py-2 font-semibold">Destino</th>
+                                <th class="px-3 py-2 font-semibold text-right">Monto Origen</th>
+                                <th class="px-3 py-2 font-semibold text-right">Monto Destino</th>
+                                <th class="px-3 py-2 font-semibold text-center w-20">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 dark:divide-neutral-700 bg-white dark:bg-neutral-900">
+                            @forelse($historialTransferencias as $t)
+                                <tr>
+                                    <td class="px-3 py-2 whitespace-nowrap text-gray-600 dark:text-neutral-400">
+                                        {{ \Carbon\Carbon::parse($t->fecha)->format('d/m/Y H:i') }}
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <div class="font-medium text-gray-900 dark:text-neutral-100">
+                                            {{ $t->bancoOrigen->nombre ?? 'N/A' }}</div>
+                                        @if ($t->bancoOrigen && $t->bancoOrigen->titular)
+                                            <div class="text-xs text-gray-400 dark:text-neutral-500">
+                                                {{ $t->bancoOrigen->titular }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2">
+                                        <div class="font-medium text-gray-900 dark:text-neutral-100">
+                                            {{ $t->bancoDestino->nombre ?? 'N/A' }}</div>
+                                        @if ($t->bancoDestino && $t->bancoDestino->titular)
+                                            <div class="text-xs text-gray-400 dark:text-neutral-500">
+                                                {{ $t->bancoDestino->titular }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-3 py-2 text-right text-red-600 dark:text-red-400 tabular-nums">
+                                        {{ number_format($t->monto_origen, 2, ',', '.') }}
+                                        <span class="text-xs">{{ $t->moneda_origen }}</span>
+                                    </td>
+                                    <td class="px-3 py-2 text-right text-emerald-600 dark:text-emerald-400 tabular-nums">
+                                        {{ number_format($t->monto_destino, 2, ',', '.') }}
+                                        <span class="text-xs">{{ $t->moneda_destino }}</span>
+                                    </td>
+                                    <td class="px-3 py-2 text-center">
+                                        <button type="button"
+                                            wire:click="confirmDeleteTransferencia({{ $t->id }})"
+                                            wire:loading.attr="disabled"
+                                            wire:target="confirmDeleteTransferencia({{ $t->id }})"
+                                            class="inline-flex p-1.5 rounded-lg border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 dark:border-red-800 dark:text-red-400 dark:bg-red-900/20 dark:hover:bg-red-900/40 transition disabled:opacity-50">
+                                            <svg wire:loading.remove
+                                                wire:target="confirmDeleteTransferencia({{ $t->id }})"
+                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                                stroke-width="2" stroke="currentColor" class="size-4">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                            </svg>
+                                            <svg wire:loading
+                                                wire:target="confirmDeleteTransferencia({{ $t->id }})"
+                                                class="size-4 animate-spin" xmlns="http://www.w3.org/2000/svg"
+                                                fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                    stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path>
+                                            </svg>
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-3 py-6 text-center text-gray-500 dark:text-neutral-400">
+                                        No hay transferencias registradas.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+
+            </div>
+
+            @slot('footer')
+                <button type="button" wire:click="closeHistorialTransferencias"
+                    class="px-4 py-2 rounded-lg border cursor-pointer border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800">
+                    Cerrar
+                </button>
+            @endslot
+        </x-ui.modal>
+
+        {{-- MODAL ELIMINAR TRANSFERENCIA --}}
+        <x-ui.modal wire:key="delete-transferencia-modal" model="openDeleteTransferenciaModal" maxWidth="sm:max-w-md"
+            onClose="closeDeleteTransferenciaModal">
+
+            <x-slot:title>
+                <div class="flex items-center gap-2 text-red-600 dark:text-red-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Confirmar Eliminación
+                </div>
+            </x-slot:title>
+
+            <div class="space-y-4">
+                <p class="text-sm text-gray-700 dark:text-gray-300">
+                    ¿Estás seguro que deseas eliminar esta transferencia?
+                    <br><strong>Se revertirán los saldos de los bancos involucrados.</strong>
+                    <br>Esta acción no se puede deshacer.
+                </p>
+
+                <div>
+                    <label class="block text-sm mb-1 text-gray-700 dark:text-gray-300">
+                        Confirmar con contraseña <span class="text-red-500">*</span>
+                    </label>
+
+                    {{-- Interceptar el autofill del navegador para evitar que rellene otros campos (ej. buscador) --}}
+                    <input type="email" autocomplete="username" class="sr-only" tabindex="-1" aria-hidden="true"
+                        value="">
+
+                    <flux:input wire:model.defer="deleteTransferenciaPassword" name="deleteTransferenciaPasswordConfirm"
+                        type="password" required autocomplete="current-password" readonly
+                        onfocus="this.removeAttribute('readonly')" :placeholder="__('Ingresa tu contraseña')" viewable />
+                    @error('deleteTransferenciaPassword')
+                        <div class="text-red-600 dark:text-red-400 text-xs mt-1">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+
+            @slot('footer')
+                <button type="button" wire:click="closeDeleteTransferenciaModal"
+                    class="px-4 py-2 rounded border cursor-pointer border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800">
+                    Cancelar
+                </button>
+                <button type="button" wire:click="deleteTransferencia" wire:loading.attr="disabled"
+                    wire:target="deleteTransferencia"
+                    class="px-4 py-2 cursor-pointer rounded bg-red-600 text-white hover:bg-red-700
+                           disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center gap-2">
+                    <span wire:loading.remove wire:target="deleteTransferencia">Eliminar Transferencia</span>
+                    <span wire:loading wire:target="deleteTransferencia">Eliminando...</span>
+                </button>
+            @endslot
+        </x-ui.modal>
+    @endcan
+
+    @push('js')
+        <script>
+            document.addEventListener('livewire:init', () => {
+                Livewire.on('swal:error-transferencia', (payload) => {
+                    const data = Array.isArray(payload) ? payload[0] : payload;
+                    setTimeout(() => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: data.title ?? 'No se pudo eliminar',
+                            html: data.html ?
+                                `<p style="font-size:0.92em; color:#555; line-height:1.6;">${data.html}</p>` :
+                                (data.text ?? ''),
+                            confirmButtonText: 'Entendido',
+                            confirmButtonColor: '#ef4444',
+                        });
+                    }, 350);
+                });
+            });
+        </script>
+    @endpush
 
 </div>

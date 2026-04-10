@@ -6,7 +6,8 @@
       "Bash(xargs grep:*)",
       "Bash(grep -r \"Livewire\\\\\\\\\\\\\\\\Attributes\" app/Livewire/)",
       "Bash(grep -E \"^[0-9]+-[[:space:]]*\\(#\\\\[|public|protected|private|//\\).*$|^[0-9]+-[[:space:]]*wire:model|Updated|function\")",
-      "Bash(php -r ':*)"
+      "Bash(php -r ':*)",
+      "Bash(grep -r \"Presupuestos\\\\\\\\\\\\\\\\Index\\\\|presupuestos.index\\\\|presupuestos'\" c:/xampp/htdocs/finanzas-livewire/routes/ --include=\"*.php\")"
     ]
   }
 }

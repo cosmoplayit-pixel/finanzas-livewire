@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Admin;
 
+use App\Exports\HerramientasExport;
 use App\Models\Empresa;
 use App\Models\Herramienta;
 use Illuminate\Support\Facades\Storage;
@@ -9,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use Maatwebsite\Excel\Facades\Excel;
 
 class Herramientas extends Component
 {
@@ -34,6 +36,20 @@ class Herramientas extends Component
     // Modal Crear
     // =========================
     public bool $openModal = false;
+
+    // =========================
+    // Modal Editar
+    // =========================
+    public bool $editModal = false;
+    public ?int $editingId = null;
+    public ?string $editImagenActual = null;
+    public bool $editDeleteImagen = false;
+
+    // =========================
+    // Modal Detalle
+    // =========================
+    public bool $detailModal = false;
+    public array $detail = [];
 
     // =========================
     // Modal Agregar Stock
@@ -306,6 +322,195 @@ class Herramientas extends Component
     {
         $this->resetForm();
         $this->openModal = false;
+    }
+
+    // =========================
+    // Editar herramienta
+    // =========================
+    public function openEdit(int $id): void
+    {
+        $h = Herramienta::findOrFail($id);
+
+        if (! $this->isAdmin() && (int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+            abort(403);
+        }
+
+        $this->editingId          = $h->id;
+        $this->empresa_id         = $h->empresa_id;
+        $this->codigo             = $h->codigo ?? '';
+        $this->nombre             = $h->nombre;
+        $this->marca              = $h->marca ?? '';
+        $this->modelo             = $h->modelo ?? '';
+        $this->descripcion        = $h->descripcion ?? '';
+        $this->estado_fisico      = $h->estado_fisico;
+        $this->unidad             = $h->unidad ?? '';
+        $this->precio_unitario    = (string) $h->precio_unitario;
+        $this->stock_total        = $h->stock_total;
+        $this->stock_disponible   = $h->stock_disponible;
+        $this->stock_prestado     = $h->stock_prestado;
+        $this->editImagenActual   = $h->imagen;
+        $this->editDeleteImagen   = false;
+        $this->imagen             = null;
+        $this->calculateTotal();
+        $this->resetErrorBag();
+        $this->editModal = true;
+    }
+
+    public function update(): void
+    {
+        $rules = [
+            'empresa_id'      => $this->isAdmin() ? ['required', 'exists:empresas,id'] : ['nullable'],
+            'codigo'          => ['nullable', 'string', 'max:50', 'regex:/^[a-zA-Z0-9\-\.\/]+$/'],
+            'nombre'          => ['required', 'string', 'min:2', 'max:200'],
+            'marca'           => ['nullable', 'string', 'max:100'],
+            'modelo'          => ['nullable', 'string', 'max:100'],
+            'descripcion'     => ['nullable', 'string', 'max:1000'],
+            'estado_fisico'   => ['required', Rule::in(['bueno', 'regular', 'malo', 'baja'])],
+            'unidad'          => ['nullable', 'string', 'max:50'],
+            'precio_unitario' => ['required', 'numeric', 'min:0'],
+            'imagen'          => ['nullable', 'image', 'max:2048'],
+        ];
+
+        $data = $this->validate($rules);
+
+        $h = Herramienta::findOrFail($this->editingId);
+
+        if (! $this->isAdmin() && (int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+            abort(403);
+        }
+
+        $imagenPath = $h->imagen;
+
+        if ($this->editDeleteImagen && ! $this->imagen) {
+            if ($h->imagen && Storage::disk('public')->exists($h->imagen)) {
+                Storage::disk('public')->delete($h->imagen);
+            }
+            $imagenPath = null;
+        }
+
+        if ($this->imagen) {
+            if ($h->imagen && Storage::disk('public')->exists($h->imagen)) {
+                Storage::disk('public')->delete($h->imagen);
+            }
+            $imagenPath = $this->imagen->store('herramientas', 'public');
+        }
+
+        $h->update([
+            'codigo'          => strtoupper(trim($data['codigo'] ?? '')),
+            'nombre'          => strtoupper(trim($data['nombre'])),
+            'marca'           => strtoupper(trim($data['marca'] ?? '')),
+            'modelo'          => strtoupper(trim($data['modelo'] ?? '')),
+            'descripcion'     => strtoupper(trim($data['descripcion'] ?? '')),
+            'estado_fisico'   => $data['estado_fisico'],
+            'unidad'          => strtoupper(trim($data['unidad'] ?? '')),
+            'precio_unitario' => (float) $data['precio_unitario'],
+            'precio_total'    => $h->stock_total * (float) $data['precio_unitario'],
+            'imagen'          => $imagenPath,
+        ]);
+
+        $this->dispatch('toast', type: 'success', message: 'Herramienta actualizada');
+        $this->closeEditModal();
+    }
+
+    public function closeEditModal(): void
+    {
+        $this->editModal          = false;
+        $this->editingId          = null;
+        $this->editImagenActual   = null;
+        $this->editDeleteImagen   = false;
+        $this->imagen             = null;
+        $this->resetForm();
+        $this->resetErrorBag();
+    }
+
+    // =========================
+    // Ver detalle
+    // =========================
+    public function openDetail(int $id): void
+    {
+        $h = Herramienta::with('empresa')->findOrFail($id);
+
+        if (! $this->isAdmin() && (int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+            abort(403);
+        }
+
+        $this->detail = [
+            'id'                  => $h->id,
+            'codigo'              => $h->codigo,
+            'nombre'              => $h->nombre,
+            'empresa'             => $h->empresa?->nombre,
+            'marca'               => $h->marca,
+            'modelo'              => $h->modelo,
+            'descripcion'         => $h->descripcion,
+            'estado_fisico'       => $h->estado_fisico,
+            'estado_fisico_label' => $h->estado_fisico_label,
+            'unidad'              => $h->unidad,
+            'stock_total'         => $h->stock_total,
+            'stock_disponible'    => $h->stock_disponible,
+            'stock_prestado'      => $h->stock_prestado,
+            'precio_unitario'     => number_format((float) $h->precio_unitario, 2, ',', '.'),
+            'precio_total'        => number_format((float) $h->precio_total, 2, ',', '.'),
+            'active'              => $h->active,
+            'imagen'              => $h->imagen,
+            'created_at'          => $h->created_at?->format('d/m/Y H:i'),
+            'updated_at'          => $h->updated_at?->format('d/m/Y H:i'),
+        ];
+
+        $this->detailModal = true;
+    }
+
+    public function closeDetail(): void
+    {
+        $this->detailModal = false;
+        $this->detail      = [];
+    }
+
+    public function openEditFromDetail(int $id): void
+    {
+        $this->detailModal = false;
+        $this->detail      = [];
+        $this->openEdit($id);
+    }
+
+    // =========================
+    // Exportar
+    // =========================
+    public function export()
+    {
+        $query = Herramienta::with('empresa');
+
+        if (! $this->isAdmin()) {
+            $query->where('empresa_id', $this->userEmpresaId());
+        } else {
+            $query->when(
+                $this->empresaFilter !== 'all',
+                fn ($q) => $q->where('empresa_id', $this->empresaFilter),
+            );
+        }
+
+        $query
+            ->when($this->search, function ($q) {
+                $s = trim($this->search);
+                $q->where(function ($qq) use ($s) {
+                    $qq->where('nombre', 'like', "%{$s}%")
+                        ->orWhere('codigo', 'like', "%{$s}%")
+                        ->orWhere('marca', 'like', "%{$s}%")
+                        ->orWhere('modelo', 'like', "%{$s}%");
+                });
+            })
+            ->when(
+                $this->status !== 'all',
+                fn ($q) => $q->where('active', $this->status === 'active'),
+            )
+            ->when(
+                $this->estadoFisicoFilter !== 'all',
+                fn ($q) => $q->where('estado_fisico', $this->estadoFisicoFilter),
+            )
+            ->orderBy($this->sortField, $this->sortDirection);
+
+        $filename = 'herramientas-' . now()->format('Y-m-d') . '.xlsx';
+
+        return Excel::download(new HerramientasExport($query), $filename);
     }
 
     // =========================

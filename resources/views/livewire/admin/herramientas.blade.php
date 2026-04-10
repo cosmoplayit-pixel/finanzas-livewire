@@ -19,16 +19,31 @@
             </p>
         </div>
 
-        @can('herramientas.create')
-            <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+        <div class="flex items-center gap-2">
+            <button wire:click="export" wire:loading.attr="disabled" wire:target="export"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-neutral-800 border border-gray-300 dark:border-neutral-700 text-gray-700 dark:text-neutral-200 hover:bg-gray-50 dark:hover:bg-neutral-700 text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer disabled:opacity-50">
+                <svg wire:loading.remove wire:target="export" class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                 </svg>
-                <span wire:loading.remove wire:target="openCreate">Nueva Herramienta</span>
-                <span wire:loading wire:target="openCreate">Abriendo…</span>
+                <svg wire:loading wire:target="export" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                </svg>
+                <span wire:loading.remove wire:target="export">Excel</span>
+                <span wire:loading wire:target="export">Exportando…</span>
             </button>
-        @endcan
+
+            @can('herramientas.create')
+                <button wire:click="openCreate" wire:loading.attr="disabled" wire:target="openCreate"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span wire:loading.remove wire:target="openCreate">Nueva Herramienta</span>
+                    <span wire:loading wire:target="openCreate">Abriendo…</span>
+                </button>
+            @endcan
+        </div>
     </div>
 
     {{-- ALERTAS --}}
@@ -220,7 +235,26 @@
                 {{-- Acciones --}}
                 @canany(['herramientas.update', 'herramientas.toggle', 'herramientas.delete'])
                     <div class="mt-3 flex gap-2">
+                        {{-- Ver detalle --}}
+                        <button wire:click="openDetail({{ $h->id }})"
+                            class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-neutral-700 text-gray-500 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 text-xs cursor-pointer transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+
                         @can('herramientas.update')
+                            <button wire:click="openEdit({{ $h->id }})"
+                                class="px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300 text-xs cursor-pointer transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </button>
+
                             <button wire:click="openAddStock({{ $h->id }})" wire:loading.attr="disabled"
                                 wire:target="openAddStock({{ $h->id }})"
                                 class="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:border-indigo-800 dark:bg-indigo-900/20 dark:text-indigo-300 dark:hover:bg-indigo-900/40 text-xs font-medium cursor-pointer disabled:opacity-50 transition">
@@ -462,7 +496,30 @@
                             <td class="p-2 whitespace-nowrap text-center">
                                 <div class="flex items-center justify-center gap-1.5">
 
+                                    {{-- Ver detalle --}}
+                                    <button wire:click="openDetail({{ $h->id }})" wire:loading.attr="disabled"
+                                        wire:target="openDetail({{ $h->id }})" title="Ver detalle"
+                                        class="cursor-pointer size-7 inline-flex items-center justify-center rounded border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 dark:text-neutral-500 dark:hover:text-indigo-400 transition disabled:opacity-50">
+                                        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </button>
+
                                     @can('herramientas.update')
+                                        {{-- Editar --}}
+                                        <button wire:click="openEdit({{ $h->id }})" wire:loading.attr="disabled"
+                                            wire:target="openEdit({{ $h->id }})" title="Editar"
+                                            class="cursor-pointer size-7 inline-flex items-center justify-center rounded border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 dark:text-neutral-500 dark:hover:text-amber-400 transition disabled:opacity-50">
+                                            <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+
+                                        {{-- Agregar stock --}}
                                         <button wire:click="openAddStock({{ $h->id }})" wire:loading.attr="disabled"
                                             wire:target="openAddStock({{ $h->id }})" title="Agregar stock"
                                             class="cursor-pointer inline-flex items-center gap-1.5 px-2 py-1 rounded border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-600 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800 text-[11px] font-semibold transition shadow-sm disabled:opacity-50">
@@ -584,7 +641,7 @@
                     get suggestions() {
                         if (!this.query.trim()) return [];
                         const q = this.query.toUpperCase();
-                        return this.codigos.filter(c => c.codigo.includes(q) || (c.nombre && c.nombre.toUpperCase().includes(q))).slice(0, 8);
+                        return this.codigos.filter(c => c.codigo.includes(q)).slice(0, 8);
                     }
                 }">
                     <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Código</label>
@@ -608,28 +665,53 @@
                     </div>
                 </div>
 
+                {{-- Nombre --}}
+                <div class="col-span-2 lg:col-span-2" x-data="{
+                    query: @entangle('nombre'),
+                    open: false,
+                    items: @js($codigos->map(fn($c) => ['codigo' => $c->codigo, 'nombre' => $c->nombre])->values()),
+                    get suggestions() {
+                        if (!this.query || this.query.length < 2) return [];
+                        const q = this.query.toUpperCase();
+                        return this.items.filter(c => c.nombre.toUpperCase().includes(q)).slice(0, 8);
+                    }
+                }">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Nombre del Equipo
+                        <span class="text-red-500">*</span></label>
+                    <div class="relative">
+                        <input type="text" x-model="query" @input="open = true"
+                            @blur="setTimeout(() => open = false, 200)"
+                            placeholder="Ej: Taladro de Banco 12 Vel." autocomplete="off"
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
+
+                        {{-- Sugerencias por nombre --}}
+                        <div x-show="open && suggestions.length > 0" x-cloak
+                            class="absolute z-50 left-0 right-0 top-full mt-1 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-700 rounded-lg shadow-xl max-h-48 overflow-y-auto overflow-x-hidden">
+                            <template x-for="item in suggestions" :key="item.codigo + item.nombre">
+                                <div @mousedown="$wire.call('buscarPorCodigo', item.codigo); open = false"
+                                    class="px-3 py-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-neutral-800 transition text-[11px] border-b dark:border-neutral-800 last:border-0">
+                                    <span class="font-semibold text-gray-900 dark:text-white" x-text="item.nombre"></span>
+                                    <span class="text-gray-500 dark:text-neutral-500" x-text="' — ' + item.codigo"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    @error('nombre')
+                        <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 {{-- Estado Físico --}}
                 <div class="col-span-1 lg:col-span-1">
                     <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Estado Físico
                         <span class="text-red-500">*</span></label>
                     <select wire:model="estado_fisico"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm cursor-pointer">
-                        <option value="bueno">✅ Bueno</option>
-                        <option value="regular">⚠️ Regular</option>
-                        <option value="malo">❌ Malo</option>
-                        <option value="baja">📉 Baja / Descarte</option>
+                        <option value="bueno">Bueno</option>
+                        <option value="regular">Regular</option>
+                        <option value="malo">Malo</option>
+                        <option value="baja">Baja / Descarte</option>
                     </select>
-                </div>
-
-                {{-- Nombre --}}
-                <div class="col-span-2 lg:col-span-2">
-                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Nombre del Equipo
-                        <span class="text-red-500">*</span></label>
-                    <input type="text" wire:model="nombre" placeholder="Ej: Taladro de Banco 12 Vel."
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
-                    @error('nombre')
-                        <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
-                    @enderror
                 </div>
 
                 {{-- Marca --}}
@@ -638,6 +720,9 @@
                     <input type="text" wire:model="marca" placeholder="Ej: DeWalt"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
                 </div>
+
+
+
 
                 {{-- Modelo --}}
                 <div class="col-span-1 lg:col-span-1">
@@ -775,6 +860,272 @@
         @endslot
     </x-ui.modal>
 
+
+    {{-- ===================== MODAL EDITAR HERRAMIENTA ===================== --}}
+    <x-ui.modal wire:key="edit-herramienta-modal" model="editModal" title="Editar Herramienta"
+        maxWidth="sm:max-w-xl md:max-w-3xl" onClose="closeEditModal">
+
+        <div class="space-y-4">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+
+                @if (auth()->user()?->hasRole('Administrador'))
+                    <div class="col-span-2 lg:col-span-1">
+                        <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Empresa <span class="text-red-500">*</span></label>
+                        <select wire:model="empresa_id"
+                            class="cursor-pointer w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
+                            <option value="">Seleccione empresa...</option>
+                            @foreach ($empresas as $e)
+                                <option value="{{ $e->id }}">{{ $e->nombre }}</option>
+                            @endforeach
+                        </select>
+                        @error('empresa_id') <p class="text-red-500 text-[10px] mt-1 italic">{{ $message }}</p> @enderror
+                    </div>
+                @endif
+
+                <div class="col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Código</label>
+                    <input type="text" wire:model="codigo" placeholder="Ej: TAL-001" autocomplete="off"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 uppercase text-sm font-mono tracking-wider">
+                    @error('codigo') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="col-span-2 lg:col-span-{{ auth()->user()?->hasRole('Administrador') ? '1' : '2' }}">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Nombre del Equipo <span class="text-red-500">*</span></label>
+                    <input type="text" wire:model="nombre" placeholder="Ej: Taladro de Banco"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
+                    @error('nombre') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div class="col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Estado Físico <span class="text-red-500">*</span></label>
+                    <select wire:model="estado_fisico"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm cursor-pointer">
+                        <option value="bueno">Bueno</option>
+                        <option value="regular">Regular</option>
+                        <option value="malo">Malo</option>
+                        <option value="baja">Baja / Descarte</option>
+                    </select>
+                </div>
+
+                <div class="col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Marca</label>
+                    <input type="text" wire:model="marca" placeholder="Ej: DeWalt"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
+                </div>
+
+                <div class="col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Modelo / Ref.</label>
+                    <input type="text" wire:model="modelo" placeholder="DCD771..."
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
+                </div>
+
+                <div class="col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Unidad Medida</label>
+                    <input type="text" wire:model="unidad" placeholder="Pza, Jgo, Mt..."
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
+                </div>
+
+                <div class="col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">P. Unitario (Bs) <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" wire:model.live="precio_unitario" min="0"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 text-right font-medium text-sm">
+                    @error('precio_unitario') <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                {{-- Resumen stock (solo lectura) --}}
+                <div class="col-span-2 lg:col-span-3">
+                    <div class="grid grid-cols-3 gap-2 text-center">
+                        <div class="rounded-lg bg-gray-50 dark:bg-neutral-800 p-2 border border-gray-200 dark:border-neutral-700">
+                            <div class="text-[10px] text-gray-400 uppercase font-bold mb-0.5">Stock Total</div>
+                            <div class="font-bold text-gray-700 dark:text-neutral-300">{{ $stock_total }}</div>
+                        </div>
+                        <div class="rounded-lg bg-emerald-50 dark:bg-emerald-900/10 p-2 border border-emerald-100 dark:border-emerald-800">
+                            <div class="text-[10px] text-emerald-600 dark:text-emerald-400 uppercase font-bold mb-0.5">Disponible</div>
+                            <div class="font-bold text-emerald-700 dark:text-emerald-400">{{ $stock_disponible }}</div>
+                        </div>
+                        <div class="rounded-lg bg-amber-50 dark:bg-amber-900/10 p-2 border border-amber-100 dark:border-amber-800">
+                            <div class="text-[10px] text-amber-600 dark:text-amber-400 uppercase font-bold mb-0.5">Prestado</div>
+                            <div class="font-bold text-amber-700 dark:text-amber-400">{{ $stock_prestado }}</div>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-gray-400 mt-1.5 text-center">El stock se gestiona desde el botón "Stock". Inversión actualizada: <span class="font-semibold">Bs. {{ number_format($stock_total * (float)$precio_unitario, 2, ',', '.') }}</span></p>
+                </div>
+
+                {{-- Imagen actual --}}
+                <div class="col-span-2 lg:col-span-3" x-data="{ deleteImg: $wire.entangle('editDeleteImagen') }">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Fotografía / Ficha Técnica</label>
+
+                    @if ($editImagenActual && ! $editDeleteImagen)
+                        <div class="flex items-center gap-3 mb-2 p-2 rounded-lg bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700">
+                            <img src="{{ Storage::url($editImagenActual) }}" alt="Imagen actual"
+                                class="w-14 h-14 object-cover rounded-lg border border-gray-200 dark:border-neutral-700 cursor-pointer hover:opacity-80 transition"
+                                onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ Storage::url($editImagenActual) }}' }))">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-xs text-gray-600 dark:text-neutral-400 truncate">Imagen actual</p>
+                                <p class="text-[10px] text-gray-400 truncate">{{ basename($editImagenActual) }}</p>
+                            </div>
+                            <button type="button" wire:click="$set('editDeleteImagen', true)"
+                                class="text-red-500 hover:text-red-700 cursor-pointer transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                            </button>
+                        </div>
+                    @elseif ($editDeleteImagen)
+                        <div class="flex items-center gap-2 mb-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800">
+                            <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <p class="text-xs text-red-600 dark:text-red-400 flex-1">La imagen se eliminará al guardar.</p>
+                            <button type="button" wire:click="$set('editDeleteImagen', false)"
+                                class="text-xs text-gray-500 hover:text-gray-700 cursor-pointer underline">Cancelar</button>
+                        </div>
+                    @endif
+
+                    <x-ui.scanner model="imagen" label="Subir nueva imagen" :file="$imagen" />
+                </div>
+
+                <div class="col-span-2 lg:col-span-3">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Descripción / Detalles Adicionales</label>
+                    <textarea wire:model="descripcion" rows="2" placeholder="Accesorios incluidos, historial de service..."
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm resize-none"></textarea>
+                </div>
+            </div>
+        </div>
+
+        @slot('footer')
+            <div class="w-full grid grid-cols-2 gap-2 sm:flex sm:justify-end sm:gap-3">
+                <button type="button" wire:click="closeEditModal"
+                    class="w-full sm:w-auto px-5 py-2 rounded-lg border cursor-pointer border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 text-sm font-bold transition">
+                    Cancelar
+                </button>
+                <button type="button" wire:click="update" wire:loading.attr="disabled"
+                    class="w-full sm:w-auto px-6 py-2 rounded-lg cursor-pointer bg-amber-600 text-white hover:bg-amber-700 transition text-sm font-black shadow-lg shadow-amber-600/20">
+                    <span wire:loading.remove wire:target="update">Guardar Cambios</span>
+                    <span wire:loading wire:target="update">Procesando...</span>
+                </button>
+            </div>
+        @endslot
+    </x-ui.modal>
+
+    {{-- ===================== MODAL VER DETALLE ===================== --}}
+    <x-ui.modal wire:key="detail-herramienta-modal" model="detailModal" title="Ficha de Herramienta"
+        maxWidth="sm:max-w-lg" onClose="closeDetail">
+
+        @if (!empty($detail))
+            @php
+                $efColors = match($detail['estado_fisico']) {
+                    'bueno'   => 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-700',
+                    'regular' => 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-700',
+                    'malo'    => 'bg-red-100 text-red-700 border-red-200 dark:bg-red-500/20 dark:text-red-300 dark:border-red-700',
+                    default   => 'bg-gray-100 text-gray-600 border-gray-200 dark:bg-neutral-700 dark:text-neutral-400 dark:border-neutral-600',
+                };
+            @endphp
+
+            <div class="space-y-4">
+                {{-- Cabecera --}}
+                <div class="flex gap-4 items-start">
+                    @if ($detail['imagen'])
+                        <img src="{{ Storage::url($detail['imagen']) }}" alt="{{ $detail['nombre'] }}"
+                            class="w-20 h-20 rounded-xl object-cover border border-gray-200 dark:border-neutral-700 shrink-0 cursor-pointer hover:opacity-80 transition"
+                            onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ Storage::url($detail['imagen']) }}' }))">
+                    @else
+                        <div class="w-20 h-20 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center border border-indigo-100 dark:border-indigo-800 shrink-0">
+                            <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                    @endif
+                    <div class="min-w-0 flex-1">
+                        @if ($detail['codigo'])
+                            <span class="font-mono text-xs text-indigo-600 dark:text-indigo-400 font-semibold">{{ $detail['codigo'] }}</span>
+                        @endif
+                        <h3 class="font-bold text-gray-900 dark:text-neutral-100 text-base leading-tight mt-0.5">{{ $detail['nombre'] }}</h3>
+                        @if ($detail['marca'] || $detail['modelo'])
+                            <p class="text-xs text-gray-500 dark:text-neutral-400 mt-0.5">{{ implode(' — ', array_filter([$detail['marca'], $detail['modelo']])) }}</p>
+                        @endif
+                        <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded border text-xs font-medium {{ $efColors }}">
+                                {{ $detail['estado_fisico_label'] }}
+                            </span>
+                            @if ($detail['active'])
+                                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-gray-50 text-gray-500 dark:bg-neutral-800 dark:text-neutral-400 border border-gray-200 dark:border-neutral-700">Activo</span>
+                            @else
+                                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400 border border-red-100 dark:border-red-500/20">Inactivo</span>
+                            @endif
+                            @if ($detail['empresa'])
+                                <span class="px-2 py-0.5 rounded text-[11px] font-medium bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20">{{ $detail['empresa'] }}</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Stocks --}}
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="rounded-xl bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800 p-3">
+                        <div class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 mb-0.5">Disponible</div>
+                        <div class="text-2xl font-black text-emerald-700 dark:text-emerald-300">{{ $detail['stock_disponible'] }}</div>
+                    </div>
+                    <div class="rounded-xl bg-gray-50 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 p-3">
+                        <div class="text-[10px] uppercase font-bold text-gray-500 dark:text-neutral-400 mb-0.5">Total</div>
+                        <div class="text-2xl font-black text-gray-700 dark:text-neutral-300">{{ $detail['stock_total'] }}</div>
+                    </div>
+                    <div class="rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-800 p-3">
+                        <div class="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 mb-0.5">Prestado</div>
+                        <div class="text-2xl font-black text-amber-700 dark:text-amber-300">{{ $detail['stock_prestado'] }}</div>
+                    </div>
+                </div>
+
+                {{-- Datos adicionales --}}
+                <div class="rounded-xl border border-gray-100 dark:border-neutral-800 divide-y divide-gray-100 dark:divide-neutral-800 overflow-hidden text-sm">
+                    @if ($detail['unidad'])
+                        <div class="flex px-3 py-2">
+                            <span class="w-36 text-xs text-gray-400 dark:text-neutral-500 font-medium shrink-0">Unidad</span>
+                            <span class="text-gray-800 dark:text-neutral-200 font-medium">{{ $detail['unidad'] }}</span>
+                        </div>
+                    @endif
+                    <div class="flex px-3 py-2">
+                        <span class="w-36 text-xs text-gray-400 dark:text-neutral-500 font-medium shrink-0">P. Unitario</span>
+                        <span class="text-gray-800 dark:text-neutral-200 font-semibold tabular-nums">Bs. {{ $detail['precio_unitario'] }}</span>
+                    </div>
+                    <div class="flex px-3 py-2">
+                        <span class="w-36 text-xs text-gray-400 dark:text-neutral-500 font-medium shrink-0">Inversión Total</span>
+                        <span class="text-gray-800 dark:text-neutral-200 font-semibold tabular-nums">Bs. {{ $detail['precio_total'] }}</span>
+                    </div>
+                    @if ($detail['descripcion'])
+                        <div class="px-3 py-2">
+                            <span class="block text-xs text-gray-400 dark:text-neutral-500 font-medium mb-1">Descripción</span>
+                            <p class="text-gray-700 dark:text-neutral-300 text-xs leading-relaxed">{{ $detail['descripcion'] }}</p>
+                        </div>
+                    @endif
+                    <div class="flex px-3 py-2 bg-gray-50/50 dark:bg-neutral-900/20">
+                        <span class="w-36 text-xs text-gray-400 dark:text-neutral-500 font-medium shrink-0">Registro</span>
+                        <span class="text-gray-500 dark:text-neutral-500 text-xs">{{ $detail['created_at'] }}</span>
+                    </div>
+                    <div class="flex px-3 py-2 bg-gray-50/50 dark:bg-neutral-900/20">
+                        <span class="w-36 text-xs text-gray-400 dark:text-neutral-500 font-medium shrink-0">Últ. modificación</span>
+                        <span class="text-gray-500 dark:text-neutral-500 text-xs">{{ $detail['updated_at'] }}</span>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        @slot('footer')
+            <div class="flex justify-end gap-2">
+                @can('herramientas.update')
+                    <button type="button" wire:click="openEditFromDetail({{ $detail['id'] ?? 0 }})"
+                        class="px-4 py-2 rounded-lg cursor-pointer bg-amber-600 text-white hover:bg-amber-700 transition text-sm font-bold">
+                        Editar
+                    </button>
+                @endcan
+                <button type="button" wire:click="closeDetail"
+                    class="px-5 py-2 rounded-lg border cursor-pointer border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 text-sm font-bold transition">
+                    Cerrar
+                </button>
+            </div>
+        @endslot
+    </x-ui.modal>
 
     {{-- MODAL ZOOM IMAGEN --}}
     <div x-data="{ imgUrl: null, open: false }" @open-image-modal.window="imgUrl = $event.detail; open = true">

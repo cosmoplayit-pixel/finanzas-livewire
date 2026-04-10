@@ -188,7 +188,7 @@
             @endcanany
 
 
-            {{-- GESTIÓN HERRAMIENTAS 
+            {{-- GESTIÓN HERRAMIENTAS  --}}
             @canany(['herramientas.view'])
                 <flux:sidebar.group heading="{{ __('Gestión Herramientas') }}" class="grid">
                     <flux:sidebar.item icon="wrench" href="{{ route('herramientas') }}" wire:navigate>
@@ -200,7 +200,7 @@
                     </flux:sidebar.item>
 
                 </flux:sidebar.group>
-            @endcanany --}}
+            @endcanany
 
 
 

@@ -680,12 +680,14 @@ trait RendicionEditorModal
                     foto: $this->mov_foto,
                     removeFoto: $this->mov_remove_foto,
                 );
-                if ($this->mov_modal_tipo === 'DEVOLUCION') {
-                    $this->highlight_devolucion_id = $updatedMov->id;
-                } else {
-                    $this->highlight_movimiento_id = $updatedMov->id;
-                }
                 $this->dispatch('toast', type: 'success', message: 'Movimiento actualizado');
+
+                $params = ['presupuesto_id' => $r->id];
+                if ($this->mov_modal_tipo === 'DEVOLUCION') {
+                    $params['devolucion_id'] = $updatedMov->id;
+                } else {
+                    $params['movimiento_id'] = $updatedMov->id;
+                }
             } else {
                 $newMov = $service->registrarMovimiento(
                     rendicion: $r,
@@ -694,16 +696,17 @@ trait RendicionEditorModal
                     user: auth()->user(),
                     foto: $this->mov_foto,
                 );
-                if ($this->mov_modal_tipo === 'DEVOLUCION') {
-                    $this->highlight_devolucion_id = $newMov->id;
-                } else {
-                    $this->highlight_movimiento_id = $newMov->id;
-                }
                 $this->dispatch('toast', type: 'success', message: 'Movimiento registrado');
+
+                $params = ['presupuesto_id' => $r->id];
+                if ($this->mov_modal_tipo === 'DEVOLUCION') {
+                    $params['devolucion_id'] = $newMov->id;
+                } else {
+                    $params['movimiento_id'] = $newMov->id;
+                }
             }
 
-            $this->closeMovimientoModal();
-            $this->openRendicionEditor((int) $r->id);
+            $this->redirect(route('agente_presupuestos', $params), navigate: true);
         } catch (DomainException $e) {
             $this->addError('mov_monto', $e->getMessage());
         }
@@ -725,8 +728,11 @@ trait RendicionEditorModal
         try {
             $service->eliminarMovimiento($r, $movId, auth()->user());
 
-            $this->openRendicionEditor((int) $r->id);
             $this->dispatch('toast', type: 'success', message: 'Movimiento eliminado');
+            $this->redirect(
+                route('agente_presupuestos', ['presupuesto_id' => $r->id, 'open_editor' => 1]),
+                navigate: true,
+            );
         } catch (DomainException $e) {
             $bancoNombre = $mov?->banco?->nombre ?? null;
             $moneda = $mov?->moneda ?? '';

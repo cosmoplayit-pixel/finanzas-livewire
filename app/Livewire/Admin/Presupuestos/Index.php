@@ -80,6 +80,7 @@ class Index extends Component
         if ($presupuestoId > 0) {
             $movimientoId = (int) request('movimiento_id', 0);
             $devolucionId = (int) request('devolucion_id', 0);
+            $openEditor = (bool) request('open_editor', false);
 
             $this->highlight_presupuesto_id = $presupuestoId;
 
@@ -112,8 +113,8 @@ class Index extends Component
                 $this->panelsOpen = [$rowKey => true];
                 $this->loadPanel($agenteId, $moneda);
 
-                // Si viene del clic en movimiento o devolución, abrir el modal de rendición
-                if ($movimientoId > 0 || $devolucionId > 0) {
+                // Abrir el modal de rendición si viene de un movimiento, devolución o flag explícito
+                if ($movimientoId > 0 || $devolucionId > 0 || $openEditor) {
                     $this->openRendicionEditor($presupuestoId);
                 }
             }

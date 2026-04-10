@@ -88,7 +88,7 @@
                         <label class="block text-sm mb-1">
                             Proyecto: <span class="text-red-500">*</span>
                         </label>
-                        <select wire:model.live="mov_proyecto_id" @disabled(empty($mov_entidad_id))
+                        <select wire:model="mov_proyecto_id" @disabled(empty($mov_entidad_id))
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -133,7 +133,7 @@
                         <label class="block text-sm mb-1">
                             Tipo comprobante: <span class="text-red-500">*</span>
                         </label>
-                        <select wire:model.live="mov_tipo_comprobante"
+                        <select wire:model="mov_tipo_comprobante"
                             class="w-full cursor-pointer rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -152,7 +152,7 @@
                     {{-- NRO COMPROBANTE --}}
                     <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Nro comprobante:</label>
-                        <input type="text" wire:model.live="mov_nro_comprobante"
+                        <input type="text" wire:model="mov_nro_comprobante"
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -166,7 +166,7 @@
                     {{-- DETALLE --}}
                     <div class="col-span-1 lg:col-span-1">
                         <label class="block text-sm mb-1">Detalle:</label>
-                        <input type="text" wire:model.live="mov_observacion" placeholder="Ej: Compra de materiales…"
+                        <input type="text" wire:model="mov_observacion" placeholder="Ej: Compra de materiales…"
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -198,7 +198,18 @@
                         <label class="block text-sm mb-1">
                             Fecha Pago: <span class="text-red-500">*</span>
                         </label>
-                        <input type="datetime-local" wire:model.live="mov_fecha"
+                        <input type="datetime-local" wire:model.blur="mov_fecha" x-data="{ _lv: '' }"
+                            x-init="_lv = $el.value" x-on:input="if ($el.value) _lv = $el.value"
+                            x-on:blur="
+                                if (!$el.value) {
+                                    if (_lv) {
+                                        $el.value = _lv;
+                                    } else {
+                                        const n = new Date(), p = v => String(v).padStart(2,'0');
+                                        $el.value = n.getFullYear()+'-'+p(n.getMonth()+1)+'-'+p(n.getDate())+'T'+p(n.getHours())+':'+p(n.getMinutes());
+                                    }
+                                }
+                            "
                             class="cursor-pointer w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -412,7 +423,7 @@
                         <label class="block text-sm mb-1">
                             Nro transacción: <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" wire:model.live="mov_nro_transaccion"
+                        <input type="text" wire:model.blur="mov_nro_transaccion"
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -428,7 +439,18 @@
                         <label class="block text-sm mb-1">
                             Fecha Pago: <span class="text-red-500">*</span>
                         </label>
-                        <input type="datetime-local" wire:model.live="mov_fecha"
+                        <input type="datetime-local" wire:model.blur="mov_fecha" x-data="{ _lv: '' }"
+                            x-init="_lv = $el.value" x-on:input="if ($el.value) _lv = $el.value"
+                            x-on:blur="
+                                if (!$el.value) {
+                                    if (_lv) {
+                                        $el.value = _lv;
+                                    } else {
+                                        const n = new Date(), p = v => String(v).padStart(2,'0');
+                                        $el.value = n.getFullYear()+'-'+p(n.getMonth()+1)+'-'+p(n.getDate())+'T'+p(n.getHours())+':'+p(n.getMinutes());
+                                    }
+                                }
+                            "
                             class="cursor-pointer w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900
                                    border-gray-300/60 dark:border-neutral-700/60
@@ -442,7 +464,7 @@
                     {{-- DETALLE --}}
                     <div class="col-span-2 lg:col-span-1">
                         <label class="block text-sm mb-1">Detalle:</label>
-                        <input type="text" wire:model.live="mov_observacion"
+                        <input type="text" wire:model.blur="mov_observacion"
                             placeholder="Ej: Devolución de saldo..."
                             class="w-full rounded-lg border px-3 py-2
                                    bg-white dark:bg-neutral-900

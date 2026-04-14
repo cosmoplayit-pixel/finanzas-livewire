@@ -126,14 +126,14 @@ class ViewServiceProvider extends ServiceProvider
                     ->count();
             }
 
-            // HERRAMIENTAS
-            if ($user->can('herramientas.view')) {
-                $navCounts['herramientas'] = Herramienta::where('active', true)
-                    ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
-                        $q->where('empresa_id', $empresaId);
-                    })
-                    ->count();
-            }
+            /* HERRAMIENTAS
+             if ($user->can('herramientas.view')) {
+                 $navCounts['herramientas'] = Herramienta::where('active', true)
+                     ->when(! $user->hasRole('Administrador'), function ($q) use ($empresaId) {
+                         $q->where('empresa_id', $empresaId);
+                     })
+                     ->count();
+             }*/
 
             // AGENTE PRESUPUESTOS / RENDICIONES (tabla unificada)
             if ($user->can('agente_presupuestos.view')) {

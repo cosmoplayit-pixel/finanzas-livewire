@@ -140,6 +140,40 @@ class Index extends Component
         $this->totales['total_general_usd'] = $this->totales['banco_usd'] + $this->totales['privado_usd'] + $this->totales['pendiente_usd'];
     }
 
+    // ── Modal editar titular ─────────────────────────────────────────────────
+    public bool $openModalEditTitular = false;
+
+    public ?int $editTitularId = null;
+
+    public string $editTitularNombre = '';
+
+    public function openEditTitular(int $id): void
+    {
+        $inv = \App\Models\Inversion::where('empresa_id', auth()->user()->empresa_id)->findOrFail($id);
+        $this->editTitularId = $id;
+        $this->editTitularNombre = $inv->nombre_completo;
+        $this->resetValidation('editTitularNombre');
+        $this->openModalEditTitular = true;
+    }
+
+    public function saveEditTitular(): void
+    {
+        $this->validate(
+            ['editTitularNombre' => 'required|string|max:150'],
+            [
+                'editTitularNombre.required' => 'El nombre del titular es obligatorio.',
+                'editTitularNombre.max'      => 'El nombre no puede superar los 150 caracteres.',
+            ]
+        );
+
+        \App\Models\Inversion::where('empresa_id', auth()->user()->empresa_id)
+            ->findOrFail($this->editTitularId)
+            ->update(['nombre_completo' => trim($this->editTitularNombre)]);
+
+        $this->openModalEditTitular = false;
+        $this->dispatch('toast', type: 'success', message: 'Titular actualizado correctamente.');
+    }
+
     // Limpia filtros
     public function resetFilters(): void
     {
@@ -203,7 +237,7 @@ class Index extends Component
         // =========================
 
         /** @var LengthAwarePaginator $paginator */
-        $paginator = $q->orderByDesc('id')->paginate(10);
+        $paginator = $q->orderBy('nombre_completo')->paginate(10);
 
         $items = collect($paginator->items())->map(function (Inversion $inv) {
             $inv->resumen = $this->buildResumen($inv);

@@ -1,4 +1,4 @@
-@section('title', 'Inversiones')
+@section('title', 'Creditos e Inversiones')
 <div>
     @include('livewire.admin.inversiones.sections._header')
     @include('livewire.admin.inversiones.sections._alerts')
@@ -15,5 +15,7 @@
     <livewire:admin.inversiones.listeners.delete-movimiento-listener />
 
     <livewire:admin.inversiones.modals.agregar-comprobante-modal />
+
+    @include('livewire.admin.inversiones.modals._modal_edit_titular')
 
 </div>

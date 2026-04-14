@@ -1,0 +1,166 @@
+<?php
+
+namespace App\Livewire\Admin\Herramientas\Traits;
+
+use App\Models\Herramienta;
+
+trait WithStock
+{
+        // Agregar stock
+	    // =========================
+	    public function openAddStock(int $id): void
+	    {
+	        $h = Herramienta::findOrFail($id);
+	
+	        if ((int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+	            abort(403);
+	        }
+	
+	        $this->addStockId = $h->id;
+	        $this->addStockNombre = $h->nombre;
+	        $this->addStockCodigo = $h->codigo ?? '';
+	        $this->addStockActual = $h->stock_disponible;
+	        $this->addStockCantidad = 1;
+	        $this->addStockImagen = $h->imagen;
+	        $this->resetErrorBag();
+	
+	        $this->openAddStockModal = true;
+	    }
+	
+	    public function saveAddStock(): void
+	    {
+	        $this->validateOnly('addStockCantidad', [
+	            'addStockCantidad' => ['required', 'integer', 'min:1', 'max:9999'],
+	        ], [
+	            'addStockCantidad.required' => 'Ingrese una cantidad.',
+	            'addStockCantidad.integer' => 'La cantidad debe ser un número entero.',
+	            'addStockCantidad.min' => 'La cantidad mínima es 1.',
+	            'addStockCantidad.max' => 'La cantidad máxima es 9999.',
+	        ]);
+	
+	        $h = Herramienta::findOrFail($this->addStockId);
+	
+	        if ((int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+	            abort(403);
+	        }
+	
+	        $cantidad = (int) $this->addStockCantidad;
+	        $h->stock_total += $cantidad;
+	        $h->stock_disponible += $cantidad;
+	        $h->precio_total = $h->stock_total * (float) $h->precio_unitario;
+	        $h->save();
+	
+	        $this->dispatch('toast', type: 'success', message: "Se agregaron {$cantidad} unidades");
+	        $this->closeAddStockModal();
+	    }
+	
+	    public function incrementAddStock(): void
+	    {
+	        $this->addStockCantidad = min(9999, (int) $this->addStockCantidad + 1);
+	    }
+	
+	    public function decrementAddStock(): void
+	    {
+	        $this->addStockCantidad = max(1, (int) $this->addStockCantidad - 1);
+	    }
+	
+	    public function closeAddStockModal(): void
+	    {
+	        $this->openAddStockModal = false;
+	        $this->addStockId = null;
+	        $this->addStockNombre = '';
+	        $this->addStockCodigo = '';
+	        $this->addStockActual = 0;
+	        $this->addStockCantidad = 1;
+	        $this->addStockImagen = null;
+	        $this->resetErrorBag();
+	    }
+	
+	    // =========================
+	    // Baja de stock
+	    // =========================
+	    public function openBajaStock(int $id): void
+	    {
+	        $h = Herramienta::findOrFail($id);
+	
+	        if ((int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+	            abort(403);
+	        }
+	
+	        $this->bajaStockId = $h->id;
+	        $this->bajaStockNombre = $h->nombre;
+	        $this->bajaStockCodigo = $h->codigo ?? '';
+	        $this->bajaStockActual = $h->stock_disponible;
+	        $this->bajaStockCantidad = 1;
+	        $this->bajaStockObservaciones = '';
+	        $this->bajaStockImagen = $h->imagen;
+	        $this->resetErrorBag();
+	
+	        $this->openBajaStockModal = true;
+	    }
+	
+	    public function saveBajaStock(): void
+	    {
+	        $this->validate([
+	            'bajaStockCantidad' => ['required', 'integer', 'min:1', 'max:'.$this->bajaStockActual],
+	            'bajaStockObservaciones' => ['required', 'string', 'min:5', 'max:500'],
+	        ], [
+	            'bajaStockCantidad.max' => 'No puede dar de baja más del stock disponible.',
+	            'bajaStockObservaciones.required' => 'Debe ingresar el motivo de la baja.',
+	        ]);
+	
+	        $h = Herramienta::findOrFail($this->bajaStockId);
+	
+	        if ((int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+	            abort(403);
+	        }
+	
+	        $cantidad = (int) $this->bajaStockCantidad;
+	        $h->stock_total -= $cantidad;
+	        $h->stock_disponible -= $cantidad;
+	        $h->precio_total = $h->stock_total * (float) $h->precio_unitario;
+	
+	        $evidenciaPath = null;
+	        if ($this->bajaStockEvidencia) {
+	            $evidenciaPath = $this->bajaStockEvidencia->store('bajas', 'public');
+	        }
+	
+	        \App\Models\BajaHerramienta::create([
+	            'herramienta_id' => $h->id,
+	            'user_id' => auth()->id(),
+	            'cantidad' => $cantidad,
+	            'observaciones' => $this->bajaStockObservaciones,
+	            'imagen' => $evidenciaPath,
+	        ]);
+	
+	        $h->save();
+	
+	        $this->dispatch('toast', type: 'warning', message: "Se dieron de baja {$cantidad} unidades");
+	        $this->closeBajaStockModal();
+	    }
+	
+	    public function incrementBajaStock(): void
+	    {
+	        $this->bajaStockCantidad = min($this->bajaStockActual, (int) $this->bajaStockCantidad + 1);
+	    }
+	
+	    public function decrementBajaStock(): void
+	    {
+	        $this->bajaStockCantidad = max(1, (int) $this->bajaStockCantidad - 1);
+	    }
+	
+	    public function closeBajaStockModal(): void
+	    {
+	        $this->openBajaStockModal = false;
+	        $this->bajaStockId = null;
+	        $this->bajaStockNombre = '';
+	        $this->bajaStockCodigo = '';
+	        $this->bajaStockActual = 0;
+	        $this->bajaStockCantidad = 1;
+	        $this->bajaStockObservaciones = '';
+	        $this->bajaStockImagen = null;
+	        $this->bajaStockEvidencia = null;
+	        $this->resetErrorBag();
+	    }
+	
+}

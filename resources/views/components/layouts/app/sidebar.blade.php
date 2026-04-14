@@ -162,7 +162,7 @@
             @can('inversiones.view')
                 <flux:sidebar.item icon="currency-dollar" :href="route('inversiones')"
                     :current="request()->routeIs('inversiones')" :badge="$navCounts['inversiones'] ?? null" wire:navigate>
-                    {{ __('Inversión Externa') }}
+                    {{ __('Credito e Inversión') }}
                 </flux:sidebar.item>
             @endcan
 
@@ -188,19 +188,20 @@
             @endcanany
 
 
-            {{-- GESTIÓN HERRAMIENTAS  --}}
+            {{-- GESTIÓN HERRAMIENTAS  
             @canany(['herramientas.view'])
-                <flux:sidebar.group heading="{{ __('Gestión Herramientas') }}" class="grid">
-                    <flux:sidebar.item icon="wrench" href="{{ route('herramientas') }}" wire:navigate>
-                        {{ __('Herramientas') }}
-                    </flux:sidebar.item>
-                    <flux:sidebar.item icon="clipboard-document-list" href="{{ route('prestamos_herramientas') }}"
-                        wire:navigate>
-                        {{ __('Préstamos y Devoluciones') }}
-                    </flux:sidebar.item>
-
-                </flux:sidebar.group>
-            @endcanany
+                @if (!auth()->user()->hasRole('Administrador'))
+                    <flux:sidebar.group heading="{{ __('Gestión Herramientas') }}" class="grid">
+                        <flux:sidebar.item icon="wrench" href="{{ route('herramientas') }}" wire:navigate>
+                            {{ __('Herramientas') }}
+                        </flux:sidebar.item>
+                        <flux:sidebar.item icon="clipboard-document-list" href="{{ route('prestamos_herramientas') }}"
+                            wire:navigate>
+                            {{ __('Préstamos y Devoluciones') }}
+                        </flux:sidebar.item>
+                    </flux:sidebar.group>
+                @endif
+            @endcanany --}}
 
 
 

@@ -1,4 +1,4 @@
-@props(['model', 'label' => 'Comprobante', 'file' => null, 'accept' => '.jpg,.jpeg,.png,.pdf'])
+@props(['model', 'label' => 'Comprobante', 'file' => null, 'accept' => '.jpg,.jpeg,.png,.pdf', 'existingUrl' => null, 'existingName' => null, 'deleteModel' => null])
 
 <script>
     if (!window.documentScannerRegistered) {
@@ -771,6 +771,8 @@
                 <div class="text-xs text-gray-500 dark:text-neutral-400 truncate">
                     @if ($file)
                         {{ method_exists($file, 'getClientOriginalName') ? $file->getClientOriginalName() : 'Archivo seleccionado' }}
+                    @elseif ($existingUrl)
+                        {{ $existingName ?? basename($existingUrl) }}
                     @else
                         JPG, PNG o PDF (máx. 5 MB)
                     @endif
@@ -791,6 +793,53 @@
     @error($model)
         <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
     @enderror
+    @if (!$file && $existingUrl)
+        <div class="mt-1 text-xs flex items-center justify-end gap-3">
+            <div x-data="{ open: false }">
+                <button type="button" @click="open = true"
+                    class="cursor-pointer inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                    </svg>
+                    Ver imagen
+                </button>
+                <template x-if="open">
+                    <div x-data="{
+                            zoom: 1,
+                            setOrigin(e) {
+                                const r = e.target.getBoundingClientRect();
+                                e.target.style.transformOrigin = ((e.clientX-r.left)/r.width*100)+'% '+((e.clientY-r.top)/r.height*100)+'%';
+                            },
+                            wheelZoom(e) { this.zoom = Math.max(1,Math.min(5,this.zoom+(e.deltaY<0?.2:-.2))); this.setOrigin(e); }
+                        }"
+                        @keydown.escape.window="open = false"
+                        class="fixed inset-0 z-[10002] flex items-center justify-center p-4">
+                        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" @click="open = false"></div>
+                        <button type="button" @click="open = false"
+                            class="absolute top-4 right-4 z-[10003] p-3 text-white/40 hover:text-white">
+                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                        <div class="relative z-[10002] flex items-center justify-center overflow-hidden">
+                            <img src="{{ $existingUrl }}" alt="Vista previa"
+                                class="max-w-full max-h-[90vh] rounded shadow-2xl transition-transform duration-200 ease-out cursor-zoom-in"
+                                :style="'transform:scale('+zoom+')'"
+                                @mousemove="setOrigin($event)" @wheel.prevent="wheelZoom($event)" draggable="false" />
+                        </div>
+                    </div>
+                </template>
+            </div>
+            @if ($deleteModel)
+                <button type="button" wire:click="$set('{{ $deleteModel }}', true)"
+                    class="cursor-pointer text-red-500 hover:text-red-600 font-medium">
+                    Quitar archivo
+                </button>
+            @endif
+        </div>
+    @endif
     @if ($file)
         @php
             $isPdf = method_exists($file, 'getClientOriginalExtension')

@@ -148,7 +148,7 @@
             class="w-full
                 h-[100dvh] sm:h-auto
                 {{ $maxHeight }}
-                sm:max-w-xl {{ $maxWidth }}
+                {{ $maxWidth }}
                 bg-white dark:bg-neutral-900
                 text-gray-700 dark:text-neutral-200
                 border border-gray-200 dark:border-neutral-800

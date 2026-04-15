@@ -58,7 +58,8 @@
                 <div class="px-4 h-11 flex items-center justify-between">
                     <div class="text-[13px] font-semibold text-gray-700 dark:text-neutral-200 flex items-center gap-2">
                         Filtros
-                        <span class="text-[11px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400">
+                        <span
+                            class="text-[11px] px-1.5 py-0.5 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-gray-400">
                             {{ $activeFiltersCount }}
                         </span>
                     </div>
@@ -141,7 +142,8 @@
                                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                             </svg>
                             Opciones
-                            <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
+                            <span
+                                class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-blue-500 text-white text-[10px] font-bold leading-none">
                                 {{ $activeFiltersCount }}
                             </span>
                         </button>
@@ -452,10 +454,10 @@
                             @endif
                         </th>
 
-                        <th class="w-[15%] p-2 cursor-pointer select-none whitespace-nowrap"
-                            wire:click="sortBy('entidad_id')">
-                            Cliente
-                            @if ($sortField === 'entidad_id')
+                        <th class="w-[20%] p-2 cursor-pointer select-none whitespace-nowrap"
+                            wire:click="sortBy('nombre')">
+                            Nombre
+                            @if ($sortField === 'nombre')
                                 @if ($sortDirection === 'asc')
                                     <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -472,10 +474,10 @@
                             @endif
                         </th>
 
-                        <th class="w-[20%] p-2 cursor-pointer select-none whitespace-nowrap"
-                            wire:click="sortBy('nombre')">
-                            Nombre
-                            @if ($sortField === 'nombre')
+                        <th class="w-[15%] p-2 cursor-pointer select-none whitespace-nowrap"
+                            wire:click="sortBy('entidad_id')">
+                            Cliente
+                            @if ($sortField === 'entidad_id')
                                 @if ($sortDirection === 'asc')
                                     <svg class="inline-block w-3.5 h-3.5 text-gray-400 dark:text-neutral-500 mb-0.5"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -647,41 +649,6 @@
 
                             <td class="p-2 min-w-0">
                                 @php
-                                    $nombreEn = $p->entidad?->nombre ?? '—';
-                                    $isLongEn = mb_strlen($nombreEn) > 25; // Cliente column is narrower
-                                @endphp
-
-                                @if ($isLongEn)
-                                    <div x-show="!showFullEntidad" class="min-w-0 flex items-center gap-2">
-                                        <span class="block truncate max-w-full" title="{{ $nombreEn }}">
-                                            {{ $nombreEn }}
-                                        </span>
-                                        <button type="button"
-                                            class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                                            @click.stop="showFullEntidad = true">
-                                            Ver más
-                                        </button>
-                                    </div>
-
-                                    <div x-show="showFullEntidad" x-cloak class="min-w-0 leading-snug">
-                                        <span class="break-words">
-                                            {{ $nombreEn }}
-                                        </span>
-                                        <button type="button"
-                                            class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
-                                            @click.stop="showFullEntidad = false">
-                                            Ver menos
-                                        </button>
-                                    </div>
-                                @else
-                                    <span class="block truncate max-w-full" title="{{ $nombreEn }}">
-                                        {{ $nombreEn }}
-                                    </span>
-                                @endif
-                            </td>
-
-                            <td class="p-2 min-w-0">
-                                @php
                                     $nombreProyecto = $p->nombre ?? '—';
                                     $isLong = mb_strlen($nombreProyecto) > 45;
                                 @endphp
@@ -715,6 +682,41 @@
                                     <div class="min-w-0">
                                         <span>{{ $nombreProyecto }}</span>
                                     </div>
+                                @endif
+                            </td>
+
+                            <td class="p-2 min-w-0">
+                                @php
+                                    $nombreEn = $p->entidad?->nombre ?? '—';
+                                    $isLongEn = mb_strlen($nombreEn) > 25; // Cliente column is narrower
+                                @endphp
+
+                                @if ($isLongEn)
+                                    <div x-show="!showFullEntidad" class="min-w-0 flex items-center gap-2">
+                                        <span class="block truncate max-w-full" title="{{ $nombreEn }}">
+                                            {{ $nombreEn }}
+                                        </span>
+                                        <button type="button"
+                                            class="shrink-0 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                            @click.stop="showFullEntidad = true">
+                                            Ver más
+                                        </button>
+                                    </div>
+
+                                    <div x-show="showFullEntidad" x-cloak class="min-w-0 leading-snug">
+                                        <span class="break-words">
+                                            {{ $nombreEn }}
+                                        </span>
+                                        <button type="button"
+                                            class="inline-flex align-baseline ml-2 text-xs font-medium text-blue-600 hover:underline dark:text-blue-400 cursor-pointer"
+                                            @click.stop="showFullEntidad = false">
+                                            Ver menos
+                                        </button>
+                                    </div>
+                                @else
+                                    <span class="block truncate max-w-full" title="{{ $nombreEn }}">
+                                        {{ $nombreEn }}
+                                    </span>
                                 @endif
                             </td>
 

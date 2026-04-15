@@ -225,14 +225,14 @@
                          <input type="checkbox" wire:key="chk-cerr-abierta" @checked(in_array('abierta', $f_cerrada ?? [], true))
                              wire:click="toggleFilter('cerrada','abierta')"
                              class="rounded border-gray-300 dark:border-neutral-700" />
-                         Abiertas
+                         Por cobrar
                      </label>
 
                      <label class="flex items-center gap-2 text-sm text-gray-800 dark:text-neutral-200">
                          <input type="checkbox" wire:key="chk-cerr-cerrada" @checked(in_array('cerrada', $f_cerrada ?? [], true))
                              wire:click="toggleFilter('cerrada','cerrada')"
                              class="rounded border-gray-300 dark:border-neutral-700" />
-                         Cerradas
+                         Pagadas
                      </label>
 
 

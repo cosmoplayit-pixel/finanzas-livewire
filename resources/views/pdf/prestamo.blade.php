@@ -259,6 +259,52 @@
             }
         @endphp
 
+        @if (!empty($bajas) && $bajas->isNotEmpty())
+            <div style="margin-top: 30px;">
+                <div class="sect-title" style="color: #b91c1c; border-color: #fca5a5;">
+                    Equipos Dados de Baja en este Préstamo
+                </div>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%">Herramienta</th>
+                            <th class="text-center" style="width: 5%">Código</th>
+                            <th class="text-center" style="width: 10%">Cantidad</th>
+                            <th style="width: 30%">Motivo / Observaciones</th>
+                            <th class="text-center" style="width: 20%">Registrado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($bajas as $baja)
+                            <tr style="background: #fff5f5;">
+                                <td>
+                                    <strong style="color: #b91c1c;">
+                                        {{ $baja->herramienta->nombre ?? 'N/A' }}
+                                    </strong>
+                                </td>
+                                <td class="text-center" style="font-size: 10px; font-family: monospace;">
+                                    {{ $baja->herramienta->codigo ?? '-' }}
+                                </td>
+                                <td class="text-center" style="font-weight: bold; color: #b91c1c;">
+                                    {{ $baja->cantidad }}
+                                </td>
+                                <td style="font-size: 10px; color: #374151;">
+                                    {{ $baja->observaciones ?? '-' }}
+                                </td>
+                                <td class="text-center" style="font-size: 9px; color: #6b7280;">
+                                    {{ $baja->created_at->format('d/m/Y') }}<br>
+                                    <span style="color: #9ca3af;">{{ $baja->user->name ?? 'Sistema' }}</span>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                <p style="font-size: 9px; color: #9ca3af; margin-top: 6px; font-style: italic;">
+                    * Los equipos dados de baja han sido descontados permanentemente del inventario.
+                </p>
+            </div>
+        @endif
+
         @if (count($evidenciasSalida) > 0)
             <div style="page-break-before: always;">
                 <div class="sect-title">Evidencia Fotográfica de Salida</div>
@@ -292,7 +338,8 @@
                             <div class="photo-item">
                                 <img src="{{ $file }}">
                                 <div class="photo-caption">Retorno
-                                    ({{ \Carbon\Carbon::parse($ev['fecha'])->format('d/m/Y') }})</div>
+                                    ({{ \Carbon\Carbon::parse($ev['fecha'])->format('d/m/Y') }})
+                                </div>
                             </div>
                         @endif
                     @endforeach
@@ -300,51 +347,7 @@
             </div>
         @endif
 
-        @if (!empty($bajas) && $bajas->isNotEmpty())
-            <div style="margin-top: 30px;">
-                <div class="sect-title" style="color: #b91c1c; border-color: #fca5a5;">
-                    ⚠ Equipos Dados de Baja en este Préstamo
-                </div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th style="width: 35%">Herramienta</th>
-                            <th class="text-center" style="width: 12%">Código</th>
-                            <th class="text-center" style="width: 10%">Cantidad</th>
-                            <th style="width: 30%">Motivo / Observaciones</th>
-                            <th class="text-center" style="width: 13%">Registrado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($bajas as $baja)
-                            <tr style="background: #fff5f5;">
-                                <td>
-                                    <strong style="color: #b91c1c;">
-                                        {{ $baja->herramienta->nombre ?? 'N/A' }}
-                                    </strong>
-                                </td>
-                                <td class="text-center" style="font-size: 10px; font-family: monospace;">
-                                    {{ $baja->herramienta->codigo ?? '-' }}
-                                </td>
-                                <td class="text-center" style="font-weight: bold; color: #b91c1c;">
-                                    {{ $baja->cantidad }}
-                                </td>
-                                <td style="font-size: 10px; color: #374151;">
-                                    {{ $baja->observaciones ?? '-' }}
-                                </td>
-                                <td class="text-center" style="font-size: 9px; color: #6b7280;">
-                                    {{ $baja->created_at->format('d/m/Y') }}<br>
-                                    <span style="color: #9ca3af;">{{ $baja->user->name ?? 'Sistema' }}</span>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-                <p style="font-size: 9px; color: #9ca3af; margin-top: 6px; font-style: italic;">
-                    * Los equipos dados de baja han sido descontados permanentemente del inventario.
-                </p>
-            </div>
-        @endif
+
     </main>
 
 </body>

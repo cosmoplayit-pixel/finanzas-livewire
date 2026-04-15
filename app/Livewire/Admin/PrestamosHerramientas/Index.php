@@ -17,8 +17,7 @@ use Livewire\WithPagination;
 
 class Index extends Component
 {
-    use WithBajas, WithDevoluciones, WithPrestamos;
-    use WithFileUploads, WithPagination;
+    use WithBajas, WithDevoluciones, WithPrestamos, WithFileUploads, WithPagination;
 
     // â”€â”€ Filtros BÃ¡sicos â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public string $search = '';
@@ -68,6 +67,7 @@ class Index extends Component
 
     // Fotos de salida (multiple)
     public array $fotos_salida = [];
+    public array $temp_fotos_salida = [];
 
     // â”€â”€ Modal DevoluciÃ³n â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     public bool $openModalDevolucion = false;
@@ -81,6 +81,7 @@ class Index extends Component
     public $observaciones_devolucion = '';
 
     public array $fotos_entrada = [];
+    public array $temp_fotos_entrada = [];
 
     // ── Modal Dar de Baja ────────────────────────────────────────────────────
     public bool $openModalBaja = false;
@@ -88,6 +89,14 @@ class Index extends Component
     public string $prestamoNroParaBaja = '';
 
     public array $items_baja = [];
+    public array $fotos_baja = [];
+
+    // ── Modal Ver Detalle ─────────────────────────────────────────────────────
+    public bool $openModalVer = false;
+
+    public string $verNroPrestamo = '';
+
+    public int $verDestacadoHerramientaId = 0;
 
     // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -101,6 +110,13 @@ class Index extends Component
         $this->fecha_devolucion = date('Y-m-d');
         $this->f_estado = ['activo'];
         $this->empresaFilter = (string) $this->userEmpresaId();
+
+        // Auto-abrir ver-modal si viene enlazado desde historial de bajas
+        if ($ver = request('ver')) {
+            $this->verNroPrestamo             = $ver;
+            $this->openModalVer               = true;
+            $this->verDestacadoHerramientaId  = (int) request('destacar', 0);
+        }
     }
 
     // â”€â”€ Computed: proyectos filtrados por entidad seleccionada â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -176,6 +192,7 @@ class Index extends Component
     public function render()
     {
         $this->sanitizeItems();
+        $this->sanitizeDevolucionItems();
 
         $query = PrestamoHerramienta::with(['herramienta' => fn($q) => $q->withTrashed(), 'entidad', 'proyecto', 'empresa']);
 
@@ -244,6 +261,23 @@ class Index extends Component
             ->orderBy('nombre')
             ->get();
 
+        // Datos para modal Ver Detalle
+        $verPrestamos = collect();
+        $verBajas     = collect();
+        if ($this->openModalVer && $this->verNroPrestamo) {
+            $verPrestamos = PrestamoHerramienta::with([
+                'herramienta' => fn ($q) => $q->withTrashed(),
+                'entidad', 'proyecto', 'devoluciones', 'agente',
+            ])
+                ->where('nro_prestamo', $this->verNroPrestamo)
+                ->where('empresa_id', $this->userEmpresaId())
+                ->get();
+
+            $verBajas = \App\Models\BajaHerramienta::whereIn('prestamo_id', $verPrestamos->pluck('id'))
+                ->with(['herramienta' => fn ($q) => $q->withTrashed(), 'user'])
+                ->get();
+        }
+
         return view('livewire.admin.prestamos-herramientas.index', [
             'paginatedNros' => $paginatedNros,
             'prestamosAgrupados' => $prestamosAgrupados,
@@ -256,6 +290,8 @@ class Index extends Component
             'proyectosFiltroByEntidad' => $this->proyectosFiltroByEntidad,
             'empresas' => Empresa::where('id', $this->userEmpresaId())->get(),
             'countVencidos' => $countVencidos,
+            'verPrestamos' => $verPrestamos,
+            'verBajas'     => $verBajas,
         ]);
     }
 

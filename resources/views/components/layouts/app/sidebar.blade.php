@@ -188,7 +188,7 @@
             @endcanany
 
 
-            {{-- GESTIÓN HERRAMIENTAS  
+            {{-- GESTIÓN HERRAMIENTAS 
             @canany(['herramientas.view'])
                 @if (!auth()->user()->hasRole('Administrador'))
                     <flux:sidebar.group heading="{{ __('Gestión Herramientas') }}" class="grid">

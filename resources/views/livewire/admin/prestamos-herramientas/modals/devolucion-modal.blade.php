@@ -18,12 +18,12 @@
             {{-- Filas --}}
             <div class="max-h-[46vh] overflow-y-auto divide-y divide-gray-100 dark:divide-neutral-800">
                 @foreach ($items_devolucion as $id => $item)
-                    <div x-data="{ qty: @entangle('items_devolucion.' . $id . '.cantidad_a_devolver').live }"
+                    <div wire:key="item-dev-{{ $id }}" x-data="{ qty: @entangle('items_devolucion.' . $id . '.cantidad_a_devolver').live }"
                         class="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_64px_80px] gap-x-3 items-center px-3 py-2.5">
 
                         {{-- Herramienta: thumbnail + nombre + código --}}
                         <div class="flex items-center gap-2.5 min-w-0">
-                            @if (!empty($item['imagen']))
+                            @if (!empty($item['imagen'] ?? null))
                                 <img src="{{ asset('storage/' . $item['imagen']) }}"
                                     class="size-9 rounded-lg object-cover border border-gray-200 dark:border-neutral-700 shrink-0 shadow-sm">
                             @else
@@ -38,7 +38,8 @@
                             @endif
                             <div class="min-w-0">
                                 <div class="text-xs font-bold text-gray-900 dark:text-white truncate leading-tight"
-                                    title="{{ $item['herramienta_nombre'] }}">{{ $item['herramienta_nombre'] }}</div>
+                                    title="{{ $item['herramienta_nombre'] ?? '—' }}">
+                                    {{ $item['herramienta_nombre'] ?? '—' }}</div>
                                 <div
                                     class="text-[9px] font-mono text-gray-400 dark:text-neutral-500 leading-none mt-0.5">
                                     {{ $item['codigo'] ?? '—' }}
@@ -93,33 +94,48 @@
             </div>
             <div class="sm:col-span-2">
                 <label class="block text-[11px] font-bold uppercase text-gray-500 mb-1">Evidencia fotográfica
-                    (fotos/PDF)</label>
-                <input type="file" wire:model="fotos_entrada" multiple accept=".jpg,.jpeg,.png,.pdf"
+                    (fotos/PDF) <span class="text-red-500">*</span></label>
+                <input type="file" wire:model.live="temp_fotos_entrada" multiple accept=".jpg,.jpeg,.png,.pdf"
                     class="block w-full text-sm text-gray-500
                         file:mr-4 file:py-2 file:px-4 file:cursor-pointer
                         file:rounded-lg file:border-0 file:text-sm file:font-semibold
                         file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100
                         border border-gray-200 dark:border-neutral-700 rounded-lg p-1 bg-white dark:bg-neutral-900" />
-                <div wire:loading wire:target="fotos_entrada" class="text-xs text-emerald-500 mt-1 font-bold">
+                <div wire:loading wire:target="temp_fotos_entrada" class="text-xs text-emerald-500 mt-1 font-bold">
                     Subiendo archivos...</div>
+                @error('fotos_entrada')
+                    <p class="text-red-500 text-xs mt-1 italic">{{ $message }}</p>
+                @enderror
                 @if ($fotos_entrada && is_array($fotos_entrada) && count($fotos_entrada) > 0)
                     <div class="mt-2 flex gap-2 flex-wrap">
-                        @foreach ($fotos_entrada as $f)
+                        @foreach ($fotos_entrada as $idx => $f)
                             @if ($f)
-                                @php $isPdf = strtolower($f->getClientOriginalExtension()) === 'pdf'; @endphp
-                                @if ($isPdf)
-                                    <div class="size-16 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 flex flex-col items-center justify-center text-red-500"
-                                        title="{{ $f->getClientOriginalName() }}">
-                                        <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                <div class="relative group">
+                                    @php $isPdf = strtolower($f->getClientOriginalExtension()) === 'pdf'; @endphp
+                                    @if ($isPdf)
+                                        <div class="size-16 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 flex flex-col items-center justify-center text-red-500"
+                                            title="{{ $f->getClientOriginalName() }}">
+                                            <svg class="size-6" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                            </svg>
+                                            <span class="text-[8px] font-bold mt-1 uppercase">PDF</span>
+                                        </div>
+                                    @else
+                                        <img src="{{ $f->temporaryUrl() }}"
+                                            class="size-16 rounded-lg object-cover border border-gray-200 shadow-sm">
+                                    @endif
+
+                                    {{-- Botón Eliminar Foto --}}
+                                    <button type="button" wire:click="removeFotoEntrada({{ $idx }})"
+                                        class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition shadow-md z-10 cursor-pointer">
+                                        <svg class="size-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M6 18L18 6M6 6l12 12" />
                                         </svg>
-                                        <span class="text-[8px] font-bold mt-1 uppercase">PDF</span>
-                                    </div>
-                                @else
-                                    <img src="{{ $f->temporaryUrl() }}"
-                                        class="size-16 rounded-lg object-cover border border-gray-200 shadow-sm">
-                                @endif
+                                    </button>
+                                </div>
                             @endif
                         @endforeach
                     </div>
@@ -135,7 +151,7 @@
                 class="px-5 py-2 rounded-lg border cursor-pointer border-gray-300 dark:border-neutral-700 text-gray-500 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 text-sm font-bold transition">
                 Cerrar
             </button>
-            <button type="button" wire:click="saveDevolucion" wire:loading.attr="disabled" @disabled(!$fecha_devolucion)
+            <button type="button" wire:click="saveDevolucion" wire:loading.attr="disabled" @disabled(!$fecha_devolucion || empty($fotos_entrada))
                 class="px-8 py-2 rounded-lg cursor-pointer bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-black transition shadow-lg shadow-emerald-600/10 uppercase tracking-wide">
                 <span wire:loading.remove wire:target="saveDevolucion">Devolver</span>
                 <span wire:loading wire:target="saveDevolucion">Procesando...</span>

@@ -19,6 +19,7 @@ trait WithBajas
             ->get();
 
         $this->items_baja = [];
+        $this->fotos_baja = [];
         foreach ($prestamos as $p) {
             $pendiente = $p->cantidad_prestada - $p->cantidad_devuelta;
             $this->items_baja[$p->id] = [
@@ -29,6 +30,7 @@ trait WithBajas
                 'cantidad_baja'      => 0,
                 'motivo_baja'        => '',
             ];
+            $this->fotos_baja[$p->id] = null;
         }
 
         $this->openModalBaja = true;
@@ -39,11 +41,16 @@ trait WithBajas
         $reglas    = [];
         $hayBaja   = false;
 
+        $reglas_base = [
+            'fotos_baja.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:10240',
+        ];
+
         foreach ($this->items_baja as $id => $data) {
             if ((int) ($data['cantidad_baja'] ?? 0) > 0) {
                 $hayBaja = true;
                 $reglas["items_baja.{$id}.cantidad_baja"] = "required|integer|min:1|max:{$data['cantidad_pendiente']}";
                 $reglas["items_baja.{$id}.motivo_baja"]   = 'required|string|min:5|max:500';
+                $reglas["fotos_baja.{$id}"]               = 'required|file|mimes:jpg,jpeg,png,pdf|max:10240';
             }
         }
 
@@ -52,10 +59,11 @@ trait WithBajas
             return;
         }
 
-        $this->validate($reglas, [
+        $this->validate(array_merge($reglas_base, $reglas), [
             'items_baja.*.cantidad_baja.max'     => 'Supera la cantidad pendiente.',
             'items_baja.*.motivo_baja.required'  => 'El motivo es obligatorio.',
             'items_baja.*.motivo_baja.min'        => 'Mínimo 5 caracteres.',
+            'fotos_baja.*.required'              => 'La foto de evidencia es obligatoria.',
         ]);
 
         DB::transaction(function () {
@@ -68,12 +76,18 @@ trait WithBajas
                 $prestamo    = PrestamoHerramienta::findOrFail($id);
                 $herramienta = $prestamo->herramienta;
 
+                $rutaFoto = null;
+                if (isset($this->fotos_baja[$id]) && $this->fotos_baja[$id]) {
+                    $rutaFoto = $this->fotos_baja[$id]->store('prestamos/bajas', 'public');
+                }
+
                 BajaHerramienta::create([
                     'herramienta_id' => $herramienta->id,
                     'prestamo_id'    => $prestamo->id,
                     'user_id'        => auth()->id(),
                     'cantidad'       => $cantBaja,
                     'observaciones'  => $data['motivo_baja'],
+                    'imagen'         => $rutaFoto,
                 ]);
 
                 // La herramienta dado de baja NO regresa al stock disponible

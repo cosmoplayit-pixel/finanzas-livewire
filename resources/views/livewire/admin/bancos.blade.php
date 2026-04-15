@@ -276,6 +276,20 @@
                         <span class="truncate">{{ number_format((float) ($b->monto ?? 0), 2, ',', '.') }}</span>
                     </div>
 
+                    <div class="flex justify-between gap-3 border-t pt-1 mt-1 dark:border-neutral-800">
+                        <span class="font-medium">Últ. Mov:</span>
+                        @php $lastMov = $b->lastMovement(); @endphp
+                        @if ($lastMov)
+                            <span class="text-right text-xs">
+                                <span
+                                    class="block font-semibold">{{ \Carbon\Carbon::parse($lastMov->fecha)->format('d/m/Y') }}</span>
+                                <span class="block text-[10px] text-indigo-500">{{ $lastMov->tipo }}</span>
+                            </span>
+                        @else
+                            <span class="text-gray-400 italic text-xs">Ninguno</span>
+                        @endif
+                    </div>
+
                     <div class="flex justify-between gap-3">
                         <span class="font-medium">Moneda:</span>
                         <span class="truncate">{{ $b->moneda ?? '—' }}</span>
@@ -472,6 +486,10 @@
                         @endif
                     </th>
 
+                    <th class="text-center p-2 whitespace-nowrap hidden lg:table-cell">
+                        Último Movimiento
+                    </th>
+
                     <th class="w-[90px] p-2 cursor-pointer select-none whitespace-nowrap hidden xl:table-cell"
                         wire:click="sortBy('moneda')">
                         Moneda
@@ -576,6 +594,31 @@
                         {{-- Monto Actual --}}
                         <td class="p-2 whitespace-nowrap text-right tabular-nums font-semibold">
                             {{ number_format((float) ($b->monto ?? 0), 2, ',', '.') }}
+                        </td>
+
+                        {{-- Último Movimiento --}}
+                        <td
+                            class="text-center  p-2 whitespace-nowrap hidden lg:table-cell italic text-gray-500 dark:text-neutral-400">
+                            @php
+                                $lastMov = $b->lastMovement();
+                            @endphp
+                            @if ($lastMov)
+                                <div class="flex flex-col leading-tight">
+                                    <span class="text-gray-900 dark:text-neutral-100 font-medium">
+                                        {{ \Carbon\Carbon::parse($lastMov->fecha)->format('d/m/Y H:i') }}
+                                    </span>
+                                    <span
+                                        class="text-[10px] uppercase tracking-wider text-indigo-600 dark:text-indigo-400 font-bold">
+                                        {{ $lastMov->tipo }}
+                                    </span>
+                                    <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                                        {{ number_format((float) $lastMov->monto, 2, ',', '.') }} <small
+                                            class="font-normal">{{ $b->moneda }}</small>
+                                    </span>
+                                </div>
+                            @else
+                                <span class="text-xs text-gray-400 dark:text-neutral-500">Sin movimientos</span>
+                            @endif
                         </td>
 
                         {{-- Moneda --}}
@@ -692,10 +735,10 @@
 
                     {{-- Detalle expandible SOLO cuando NO es xl --}}
                     @php
-                        // En md (<xl): ID, Banco, Nro. Cuenta, Monto Actual, Estado = 5
+                        // En md (<xl): ID, Banco, Nro. Cuenta, Monto Actual, Ult. Mov, Estado = 6
                         // + Acciones si tiene permisos
                         $colspan =
-                            5 + (auth()->user()->can('bancos.update') || auth()->user()->can('bancos.toggle') ? 1 : 0);
+                            6 + (auth()->user()->can('bancos.update') || auth()->user()->can('bancos.toggle') ? 1 : 0);
                     @endphp
 
                     <tr x-show="open" x-cloak
@@ -720,6 +763,19 @@
                                     <span
                                         class="block text-gray-900 dark:text-neutral-200">{{ $b->moneda ?? '—' }}</span>
                                 </div>
+                                <div class="space-y-1 lg:hidden">
+                                    <span class="block text-xs font-medium text-gray-500 dark:text-neutral-400">Último
+                                        Movimiento</span>
+                                    @php $lastMov = $b->lastMovement(); @endphp
+                                    @if ($lastMov)
+                                        <span class="block text-gray-900 dark:text-neutral-200">
+                                            {{ \Carbon\Carbon::parse($lastMov->fecha)->format('d/m/Y') }} -
+                                            {{ $lastMov->tipo }}
+                                        </span>
+                                    @else
+                                        <span class="block text-gray-400 italic">Sin movimientos</span>
+                                    @endif
+                                </div>
                             </div>
                         </td>
                     </tr>
@@ -730,7 +786,7 @@
                 <tbody class="divide-y divide-gray-200 dark:divide-neutral-200">
                     @php
                         $colspan =
-                            8 + (auth()->user()->can('bancos.update') || auth()->user()->can('bancos.toggle') ? 1 : 0);
+                            9 + (auth()->user()->can('bancos.update') || auth()->user()->can('bancos.toggle') ? 1 : 0);
                     @endphp
                     <tr>
                         <td class="p-4 text-center text-gray-500 dark:text-neutral-400"

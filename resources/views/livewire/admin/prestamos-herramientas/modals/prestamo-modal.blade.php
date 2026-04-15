@@ -391,8 +391,9 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="col-span-1 sm:col-span-2">
                         <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Evidencia
-                            (Fotos o PDF) del estado al salir</label>
-                        <input type="file" wire:model="fotos_salida" multiple accept=".jpg,.jpeg,.png,.pdf"
+                            (Fotos o PDF) del estado al salir <span class="text-red-500">*</span></label>
+                        <input type="file" wire:model.live="temp_fotos_salida" multiple
+                            accept=".jpg,.jpeg,.png,.pdf"
                             class="block w-full text-sm text-gray-500
                                 file:mr-4 file:py-2 file:px-4 file:cursor-pointer
                                 file:rounded-lg file:border-0
@@ -400,32 +401,45 @@
                                 file:bg-indigo-50 file:text-indigo-700
                                 hover:file:bg-indigo-100 dark:file:bg-indigo-900/40 dark:file:text-indigo-400
                                 border border-gray-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 p-1" />
-                        <div wire:loading wire:target="fotos_salida" class="text-xs text-indigo-500 mt-1">Subiendo
+                        <div wire:loading wire:target="temp_fotos_salida" class="text-xs text-indigo-500 mt-1">
+                            Subiendo
                             archivos...</div>
                         @if ($fotos_salida && is_array($fotos_salida) && count($fotos_salida) > 0)
                             <div class="mt-2 flex gap-2 flex-wrap">
-                                @foreach ($fotos_salida as $f)
+                                @foreach ($fotos_salida as $idx => $f)
                                     @if ($f)
-                                        @php
-                                            $isPdf = strtolower($f->getClientOriginalExtension()) === 'pdf';
-                                        @endphp
-                                        @if ($isPdf)
-                                            <div class="size-16 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 flex flex-col items-center justify-center text-red-500 relative group"
-                                                title="{{ $f->getClientOriginalName() }}">
-                                                <svg class="size-6" fill="none" viewBox="0 0 24 24"
+                                        <div class="relative group">
+                                            @php
+                                                $isPdf = strtolower($f->getClientOriginalExtension()) === 'pdf';
+                                            @endphp
+                                            @if ($isPdf)
+                                                <div class="size-16 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 flex flex-col items-center justify-center text-red-500"
+                                                    title="{{ $f->getClientOriginalName() }}">
+                                                    <svg class="size-6" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
+                                                        </path>
+                                                    </svg>
+                                                    <span class="text-[8px] font-bold mt-1 uppercase">PDF</span>
+                                                </div>
+                                            @else
+                                                <img src="{{ $f->temporaryUrl() }}"
+                                                    class="size-16 rounded-lg object-cover border border-gray-200 shadow-sm shadow-gray-200/50"
+                                                    title="{{ $f->getClientOriginalName() }}">
+                                            @endif
+
+                                            {{-- Botón Eliminar Foto --}}
+                                            <button type="button" wire:click="removeFotoSalida({{ $idx }})"
+                                                class="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition shadow-md z-10 cursor-pointer">
+                                                <svg class="size-3" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z">
-                                                    </path>
+                                                        stroke-width="3" d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
-                                                <span class="text-[8px] font-bold mt-1 uppercase">PDF</span>
-                                            </div>
-                                        @else
-                                            <img src="{{ $f->temporaryUrl() }}"
-                                                class="size-16 rounded-lg object-cover border border-gray-200 shadow-sm shadow-gray-200/50"
-                                                title="{{ $f->getClientOriginalName() }}">
-                                        @endif
+                                            </button>
+                                        </div>
                                     @endif
                                 @endforeach
                             </div>
@@ -433,6 +447,9 @@
                                 <span class="text-xs text-red-500 mt-1 block italic">{{ $message }}</span>
                             @enderror
                         @endif
+                        @error('fotos_salida')
+                            <p class="text-red-500 text-xs mt-1 italic">{{ $message }}</p>
+                        @enderror
                     </div>
                 </div>
             </div>
@@ -445,7 +462,7 @@
                     Cancelar
                 </button>
                 <button type="button" wire:click="savePrestamo" wire:loading.attr="disabled"
-                    @disabled(!$entidad_id || !$proyecto_id || !$fecha_prestamo || empty($items))
+                    @disabled(!$entidad_id || !$proyecto_id || !$fecha_prestamo || empty($items) || empty($fotos_salida))
                     class="px-8 py-2 rounded-lg cursor-pointer bg-black text-white hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-black transition shadow-lg shadow-neutral-900/10 tracking-wide flex items-center justify-center gap-2">
                     <span wire:loading.remove wire:target="savePrestamo">Confirmar Salida
                         ({{ count($items) ?? 0 }})</span>

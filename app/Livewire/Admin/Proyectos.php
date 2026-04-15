@@ -28,9 +28,9 @@ class Proyectos extends Component
     public string $tipoFilter = 'all'; // all | Propuesta | Adjudicado | Ejecucion | Finalizado
 
     // Ordenamiento
-    public string $sortField = 'id';
+    public string $sortField = 'nombre';
 
-    public string $sortDirection = 'desc';
+    public string $sortDirection = 'asc';
 
     // Modal
     public bool $openModal = false;

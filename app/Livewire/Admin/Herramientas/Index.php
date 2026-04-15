@@ -312,7 +312,7 @@ class Index extends Component
             ->toArray();
 
         $historialBajas = $this->bajasModal
-            ? \App\Models\BajaHerramienta::with(['herramienta' => fn ($q) => $q->withTrashed(), 'user'])
+            ? \App\Models\BajaHerramienta::with(['herramienta' => fn ($q) => $q->withTrashed(), 'user', 'prestamo'])
                 ->whereHas('herramienta', function ($q2) {
                     $q2->withTrashed()->where('empresa_id', $this->userEmpresaId());
                 })

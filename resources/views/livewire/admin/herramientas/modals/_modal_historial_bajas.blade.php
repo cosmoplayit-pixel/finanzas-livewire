@@ -14,12 +14,14 @@
                                     <th
                                         class="px-4 py-3 border-b dark:border-neutral-700 w-16 text-center text-red-500">
                                         Baja</th>
-                                    <th class="px-4 py-3 border-b dark:border-neutral-700 w-1/3">Herramienta</th>
+                                    <th class="px-4 py-3 border-b dark:border-neutral-700 w-1/4">Herramienta</th>
                                     <th class="px-4 py-3 border-b dark:border-neutral-700 text-center w-20">Cantidad
                                     </th>
-                                    <th class="px-4 py-3 border-b dark:border-neutral-700 w-1/3">Motivo / Observación
+                                    <th class="px-4 py-3 border-b dark:border-neutral-700 w-1/4">Motivo / Observación
                                     </th>
+                                    <th class="px-4 py-3 border-b dark:border-neutral-700 text-center">Origen</th>
                                     <th class="px-4 py-3 border-b dark:border-neutral-700">Responsable</th>
+                                    <th class="px-4 py-3 border-b dark:border-neutral-700 text-center w-12"></th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
@@ -75,11 +77,58 @@
                                             <p class="text-xs text-gray-700 dark:text-neutral-300">
                                                 {{ $bh->observaciones ?? '-' }}</p>
                                         </td>
+                                        {{-- Origen --}}
+                                        <td class="px-4 py-1.5 text-center">
+                                            @if ($bh->prestamo_id && $bh->prestamo)
+                                                <div class="inline-flex flex-col items-center gap-0.5">
+                                                    <span
+                                                        class="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 text-[9px] font-black uppercase ring-1 ring-indigo-200 dark:ring-indigo-800/50">
+                                                        Préstamo
+                                                    </span>
+                                                    <span
+                                                        class="font-mono text-[9px] text-indigo-500 dark:text-indigo-400 font-bold">{{ $bh->prestamo->nro_prestamo }}</span>
+                                                </div>
+                                            @else
+                                                <span
+                                                    class="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-100 dark:bg-neutral-800 text-gray-500 dark:text-neutral-400 text-[9px] font-black uppercase ring-1 ring-gray-200 dark:ring-neutral-700">
+                                                    Herramientas
+                                                </span>
+                                            @endif
+                                        </td>
+
                                         <td class="px-4 py-1.5">
                                             <div class="text-xs text-gray-800 dark:text-neutral-200 font-bold">
                                                 {{ $bh->user?->name ?? 'Sistema' }}</div>
                                             <div class="text-[10px] text-gray-500">
                                                 {{ $bh->created_at->format('d/m/Y H:i') }}</div>
+                                        </td>
+
+                                        {{-- Acción: ver préstamo asociado --}}
+                                        <td class="px-2 py-1.5 text-center">
+                                            @if ($bh->prestamo_id && $bh->prestamo)
+                                                <a href="{{ route('prestamos_herramientas') . '?ver=' . $bh->prestamo->nro_prestamo . '&destacar=' . $bh->herramienta_id }}"
+                                                    target="_blank"
+                                                    title="Ver préstamo {{ $bh->prestamo->nro_prestamo }}"
+                                                    class="inline-flex items-center justify-center size-7 rounded-lg border border-indigo-200 dark:border-indigo-800/50 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition cursor-pointer">
+                                                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                    </svg>
+                                                </a>
+                                            @else
+                                                <span
+                                                    title="Baja directa desde Herramientas — no aplica"
+                                                    class="inline-flex items-center justify-center size-7 rounded-lg border border-gray-100 dark:border-neutral-800 bg-gray-50 dark:bg-neutral-900 text-gray-300 dark:text-neutral-700 cursor-not-allowed">
+                                                    <svg class="size-3.5" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                    </svg>
+                                                </span>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforeach

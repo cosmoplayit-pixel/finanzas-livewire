@@ -14,7 +14,6 @@ return new class extends Migration
             $table->string('nro_prestamo', 50)->nullable();
             $table->foreignId('herramienta_id')->constrained('herramientas')->cascadeOnDelete();
 
-
             // Receptor: puede ser un agente o un nombre manual
             $table->foreignId('agente_id')->nullable()->constrained('agentes_servicio')->nullOnDelete();
             $table->string('receptor_manual', 200)->nullable();

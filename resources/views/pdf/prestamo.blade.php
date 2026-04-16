@@ -3,353 +3,821 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Reporte de Préstamo {{ $nro_prestamo }}</title>
+    <title>Préstamo {{ $nro_prestamo }}</title>
     <style>
+        /* ── Base ────────────────────────────────────────────────── */
         @page {
             size: letter;
-            margin: 100px 40px 80px 40px;
+            margin: 115px 40px 70px 40px;
         }
 
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 11px;
-            color: #333;
-            margin: 0;
-            padding: 0;
+            font-family: 'DejaVu Sans', Helvetica, Arial, sans-serif;
+            font-size: 10px;
+            color: #1e293b;
+            background: #ffffff;
         }
 
-        /* Footer fijo en cada página */
+        /* ── Fixed Header ─────────────────────────────────────────── */
+        header {
+            position: fixed;
+            top: -100px;
+            left: 0;
+            right: 0;
+            height: 95px;
+        }
+
+        .hdr-main {
+            background: #4a5568;
+            width: 100%;
+            border-collapse: collapse;
+            height: 58px;
+        }
+
+        .hdr-main td {
+            padding: 0 16px;
+            vertical-align: middle;
+        }
+
+        .hdr-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .hdr-sub {
+            font-size: 7.5px;
+            color: #cbd5e0;
+            margin-top: 2px;
+        }
+
+        .hdr-nro {
+            font-size: 22px;
+            font-weight: bold;
+            color: #bee3f8;
+            text-align: right;
+        }
+
+        .hdr-strip {
+            background: #edf2f7;
+            border-bottom: 2px solid #e2e8f0;
+            width: 100%;
+            border-collapse: collapse;
+            height: 28px;
+        }
+
+        .hdr-strip td {
+            padding: 0 16px;
+            vertical-align: middle;
+            font-size: 8px;
+            color: #718096;
+        }
+
+        /* ── Fixed Footer ─────────────────────────────────────────── */
         footer {
             position: fixed;
-            bottom: -60px;
+            bottom: -52px;
             left: 0;
             right: 0;
-            height: 50px;
-            text-align: center;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 10px;
-            font-size: 9px;
-            color: #9ca3af;
+            height: 44px;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
         }
 
-        footer .page-number:after {
-            content: "Página " counter(page);
+        .ftr {
+            width: 100%;
+            border-collapse: collapse;
+            height: 44px;
         }
 
-        .header-top {
-            position: fixed;
-            top: -85px;
-            left: 0;
-            right: 0;
-            height: 60px;
-            border-bottom: 2px solid #4f46e5;
-            padding-bottom: 10px;
+        .ftr td {
+            padding: 0 16px;
+            vertical-align: middle;
+            font-size: 8px;
+            color: #a0aec0;
         }
 
-        .header-top h1 {
-            margin: 0;
-            font-size: 20px;
-            color: #1e1b4b;
+        .page-number::after {
+            content: "Pág. " counter(page) " de " counter(pages);
+        }
+
+        /* ── Badges ───────────────────────────────────────────────── */
+        .badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 7.5px;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
         }
 
-        .header-top .status {
-            position: absolute;
-            right: 0;
-            top: 0;
-            padding: 4px 10px;
-            background: #eef2ff;
-            color: #4f46e5;
+        .badge-activo {
+            background: #bee3f8;
+            color: #2b6cb0;
+        }
+
+        .badge-finalizado {
+            background: #c6f6d5;
+            color: #276749;
+        }
+
+        .badge-vencido {
+            background: #fed7d7;
+            color: #9b2c2c;
+        }
+
+        /* ── Info Cards ───────────────────────────────────────────── */
+        .cards {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 5px;
+            margin-bottom: 14px;
+        }
+
+        .card-td {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            padding: 10px 12px;
+            vertical-align: top;
+            width: 33%;
+        }
+
+        .clabel {
+            font-size: 7.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: #a0aec0;
+            font-weight: bold;
+        }
+
+        .cval {
+            font-size: 11px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-top: 2px;
+        }
+
+        .cval-sm {
+            font-size: 10px;
+            font-weight: bold;
+            color: #4a5568;
+            margin-top: 2px;
+        }
+
+        /* ── Summary Strip ────────────────────────────────────────── */
+        .summary {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #e2e8f0;
+            background: #f7fafc;
+            margin-bottom: 16px;
+        }
+
+        .summary td {
+            text-align: center;
+            padding: 8px 6px;
+            border-right: 1px solid #e2e8f0;
+            vertical-align: middle;
+        }
+
+        .summary td:last-child {
+            border-right: none;
+        }
+
+        .sval {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2d3748;
+            line-height: 1;
+        }
+
+        .slbl {
+            font-size: 7px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+
+        /* ── Section Title ────────────────────────────────────────── */
+        .sect-title {
+            font-size: 8px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: #5a7fa8;
+            padding: 6px 0 6px 10px;
+            border-left: 3px solid #7fb3d3;
+            margin-bottom: 8px;
+            margin-top: 18px;
+        }
+
+        .sect-title-red {
+            border-left-color: #fc8181;
+            color: #c53030;
+        }
+
+        .sect-title-green {
+            border-left-color: #68d391;
+            color: #276749;
+        }
+
+        /* ── Main Table ───────────────────────────────────────────── */
+        .tbl {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 4px;
+        }
+
+        .tbl thead tr {
+            background: #4a5568;
+        }
+
+        .tbl thead th {
+            padding: 7px 10px;
+            font-size: 7.5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: #e2e8f0;
+            text-align: left;
+        }
+
+        .tbl thead th.tc {
+            text-align: center;
+        }
+
+        .tbl thead th.tr {
+            text-align: right;
+        }
+
+        .tbl tbody tr {
+            border-bottom: 1px solid #edf2f7;
+        }
+
+        .tbl tbody tr.even {
+            background: #f7fafc;
+        }
+
+        .tbl tbody td {
+            padding: 7px 10px;
+            font-size: 10px;
+            color: #4a5568;
+            vertical-align: middle;
+        }
+
+        .tbl tbody td.tc {
+            text-align: center;
+        }
+
+        .tbl tbody td.tr {
+            text-align: right;
+        }
+
+        .tbl tfoot td {
+            padding: 8px 10px;
+            background: #edf2f7;
+            font-size: 10px;
+            font-weight: bold;
+            color: #2d3748;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .tbl tfoot td.tc {
+            text-align: center;
+        }
+
+        /* ── Qty Badges ───────────────────────────────────────────── */
+        .qty {
+            padding: 2px 7px;
             border-radius: 4px;
             font-weight: bold;
             font-size: 10px;
-            text-transform: uppercase;
         }
 
-        .info-grid {
+        .qty-n {
+            background: #f1f5f9;
+            color: #334155;
+        }
+
+        .qty-g {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .qty-r {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .qty-a {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        /* ── Progress bar ─────────────────────────────────────────── */
+        .prog-wrap {
+            background: #e2e8f0;
+            border-radius: 3px;
+            height: 4px;
+            width: 70px;
+        }
+
+        .prog-fill {
+            height: 4px;
+            border-radius: 3px;
+        }
+
+        /* Progress as table cell */
+        .prog-tbl {
+            border-collapse: collapse;
+            min-width: 90px;
+        }
+
+        .prog-tbl td {
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        /* ── Bajas table ──────────────────────────────────────────── */
+        .tbl-baja thead tr {
+            background: #9b2c2c;
+        }
+
+        /* ── Recepciones ──────────────────────────────────────────── */
+        .recep-row {
+            padding: 7px 10px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            margin-bottom: 5px;
+        }
+
+        .recep-tbl {
             width: 100%;
-            margin-bottom: 25px;
             border-collapse: collapse;
         }
 
-        .info-grid td {
-            padding: 10px;
-            border: 1px solid #e5e7eb;
+        .recep-tbl td {
+            padding: 1px 3px;
+            vertical-align: middle;
+        }
+
+        /* ── Photo Pages ──────────────────────────────────────────── */
+        .photo-sect {
+            page-break-before: always;
+            padding-top: 4px;
+        }
+
+        .photo-tbl {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 8px;
+        }
+
+        .photo-tbl td {
             vertical-align: top;
             width: 50%;
         }
 
-        .info-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            color: #9ca3af;
-            font-weight: bold;
-            display: block;
-            margin-bottom: 4px;
-            letter-spacing: 0.5px;
+        .photo-frame {
+            border: 1px solid #e2e8f0;
         }
 
-        .info-val {
-            font-size: 11px;
-            font-weight: bold;
-            color: #1f2937;
-            margin: 0;
-        }
-
-        .table {
+        .photo-frame img {
             width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 30px;
-        }
-
-        .table th,
-        .table td {
-            padding: 10px;
-            border-bottom: 1px solid #e5e7eb;
-            text-align: left;
-        }
-
-        .table th {
-            background: #f9fafb;
-            font-size: 9px;
-            text-transform: uppercase;
-            color: #6b7280;
-        }
-
-        .table tr:nth-child(even) {
-            background: #fdfdfd;
-        }
-
-        .sect-title {
-            font-size: 13px;
-            font-weight: bold;
-            border-bottom: 1px solid #e5e7eb;
-            padding-bottom: 8px;
-            margin-bottom: 20px;
-            color: #111827;
-            text-transform: uppercase;
-            display: block;
-            width: 100%;
-        }
-
-        .photo-grid {
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .photo-item {
-            display: inline-block;
-            width: 48%;
-            margin: 0.5%;
-            box-sizing: border-box;
-            text-align: center;
-            vertical-align: top;
-            margin-bottom: 15px;
-        }
-
-        .photo-item img {
-            width: 100%;
-            height: 200px;
+            height: 185px;
             object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid #d1d5db;
+            display: block;
         }
 
-        .photo-caption {
-            font-size: 8px;
-            color: #6b7280;
-            margin-top: 4px;
-            text-transform: uppercase;
+        .photo-cap {
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 4px 7px;
+            font-size: 7.5px;
+            color: #718096;
+            text-align: center;
         }
 
-        .text-right {
-            text-align: right !important;
+        .photo-cap-red {
+            background: #fff5f5;
+            border-top-color: #feb2b2;
+            color: #c53030;
         }
 
-        .text-center {
-            text-align: center !important;
+        /* ── Disclaimer ───────────────────────────────────────────── */
+        .disclaimer {
+            font-size: 7.5px;
+            color: #a0aec0;
+            font-style: italic;
+            margin-top: 6px;
+            border-top: 1px dashed #e2e8f0;
+            padding-top: 5px;
+        }
+
+        .mono {
+            font-family: 'DejaVu Sans Mono', monospace;
+            font-size: 9px;
         }
     </style>
 </head>
 
 <body>
 
-    <header class="header-top">
-        <h1>Constancia de Préstamo</h1>
-        <div style="font-size: 9px; color: #6b7280; margin-top: 4px;">{{ $first->empresa->nombre ?? '' }} &bull;
-            Documento de Control Interno</div>
-        <div class="status">{{ $first->estado }}</div>
-    </header>
+    @php
+        $totalPrestadas = $prestamos->sum('cantidad_prestada');
+        $totalDevueltas = $prestamos->sum('cantidad_devuelta');
+        $totalPendientes = $totalPrestadas - $totalDevueltas;
+        $progresoGlobal = $totalPrestadas > 0 ? round(($totalDevueltas / $totalPrestadas) * 100) : 0;
+        $isVencido = $prestamos->contains(
+            fn($i) => $i->estado !== 'finalizado' && $i->fecha_vencimiento && $i->fecha_vencimiento->isPast(),
+        );
+        $estadoGlobal = $totalPendientes == 0 ? 'finalizado' : ($isVencido ? 'vencido' : 'activo');
 
-    <footer>
-        <div style="margin-bottom: 4px;">
-            <strong>{{ $nro_prestamo }}</strong> &bull; Generado el {{ now()->format('d/m/Y H:i') }} &bull;
-            <span class="page-number"></span>
-        </div>
-        <div>Control de Activos y Finanzas - Empresa Andina SRL</div>
-    </footer>
+        $evidenciasSalida = $first->fotos_salida ?? [];
+        $evidenciasDevueltas = [];
+        foreach ($prestamos as $item) {
+            foreach ($item->devoluciones as $dev) {
+                if (!empty($dev->fotos_entrada)) {
+                    foreach ($dev->fotos_entrada as $fe) {
+                        $evidenciasDevueltas[] = ['fecha' => $dev->fecha_devolucion, 'foto' => $fe];
+                    }
+                }
+            }
+        }
 
-    <main>
-        <table class="info-grid">
+        $evidenciasBajas = [];
+        if (!empty($bajas) && $bajas->isNotEmpty()) {
+            foreach ($bajas as $baja) {
+                if (!empty($baja->imagen)) {
+                    $evidenciasBajas[] = [
+                        'fecha' => $baja->created_at,
+                        'foto' => $baja->imagen,
+                        'nombre' => $baja->herramienta->nombre ?? 'Herramienta Eliminada',
+                    ];
+                }
+            }
+        }
+
+        $badgeClass =
+            $estadoGlobal === 'finalizado'
+                ? 'badge-finalizado'
+                : ($estadoGlobal === 'vencido'
+                    ? 'badge-vencido'
+                    : 'badge-activo');
+        $estadoLabel = strtoupper($estadoGlobal);
+    @endphp
+
+    {{-- ═══════════════════ HEADER FIJO ══════════════════════════════════ --}}
+    <header>
+        <table class="hdr-main">
             <tr>
                 <td>
-                    <span class="info-label">Nro. de Préstamo</span>
-                    <p class="info-val" style="color: #4f46e5;">{{ $nro_prestamo }}</p>
-                    <div style="margin-top:10px;">
-                        <span class="info-label">Fecha de Salida</span>
-                        <p class="info-val">{{ \Carbon\Carbon::parse($first->fecha_prestamo)->format('d/m/Y') }}</p>
-                    </div>
-                    <div style="margin-top:10px;">
-                        <span class="info-label">Responsable / Agente de Servicio</span>
-                        <p class="info-val" style="color: #4f46e5;">
-                            {{ $first->agente?->nombre ?? ($first->receptor_manual ?: 'No especificado') }}</p>
+                    <div class="hdr-title">Constancia de Préstamo</div>
+                    <div class="hdr-sub">{{ $first->empresa->nombre ?? 'Control de Activos' }} &bull; Documento de
+                        Control Interno</div>
+                </td>
+                <td style="text-align:right; padding-right:20px;">
+                    <div class="hdr-nro">{{ $nro_prestamo }}</div>
+                </td>
+            </tr>
+        </table>
+        <table class="hdr-strip">
+            <tr>
+                <td>Generado el {{ now()->format('d/m/Y \a\s H:i') }} &bull; {{ $first->empresa->nombre ?? '' }}</td>
+                <td style="text-align:right;"><span class="badge {{ $badgeClass }}">{{ $estadoLabel }}</span></td>
+            </tr>
+        </table>
+    </header>
+
+    {{-- ═══════════════════ FOOTER FIJO ══════════════════════════════════ --}}
+    <footer>
+        <table class="ftr">
+            <tr>
+                <td>Control de Activos &bull; {{ $nro_prestamo }}</td>
+                <td style="text-align:right;"><span class="page-number"></span></td>
+            </tr>
+        </table>
+    </footer>
+
+    {{-- ═══════════════════ MAIN ══════════════════════════════════════════ --}}
+    <main>
+
+        {{-- 1. Tarjetas de Info ──────────────────────────────────────────── --}}
+        <table class="cards">
+            <tr>
+                <td class="card-td">
+                    <div class="clabel">Cliente / Entidad</div>
+                    <div class="cval">{{ $first->entidad->nombre ?? 'N/A' }}</div>
+                    <div style="margin-top:8px;">
+                        <div class="clabel">Ubicación / Obra</div>
+                        <div class="cval-sm">{{ $first->proyecto->nombre ?? 'N/A' }}</div>
                     </div>
                 </td>
-                <td>
-                    <span class="info-label">Entidad / Proyecto</span>
-                    <p class="info-val">{{ $first->entidad->nombre ?? 'N/A' }}</p>
-                    <div style="margin-top:10px;">
-                        <span class="info-label">Ubicación / Obra</span>
-                        <p class="info-val">{{ $first->proyecto->nombre ?? 'N/A' }}</p>
+                <td class="card-td">
+                    <div class="clabel">Responsable / Agente</div>
+                    <div class="cval">{{ $first->agente?->nombre ?? ($first->receptor_manual ?: 'No especificado') }}
+                    </div>
+                    <div style="margin-top:8px;">
+                        <div class="clabel">Fecha de Salida</div>
+                        <div class="cval-sm">{{ \Carbon\Carbon::parse($first->fecha_prestamo)->format('d/m/Y') }}</div>
+                    </div>
+                </td>
+                <td class="card-td">
+                    <div class="clabel">Retorno Estimado</div>
+                    <div class="cval" style="{{ $isVencido ? 'color:#c53030;' : '' }}">
+                        {{ $first->fecha_vencimiento ? $first->fecha_vencimiento->format('d/m/Y') : 'Abierto / Sin Límite' }}
+                    </div>
+                    <div style="margin-top:8px;">
+                        <div class="clabel">Estado</div>
+                        <span class="badge {{ $badgeClass }}">{{ $estadoLabel }}</span>
                     </div>
                 </td>
             </tr>
         </table>
 
-        <div class="sect-title">Detalle de Equipos</div>
-        <table class="table">
+        {{-- 2. Resumen de Métricas ───────────────────────────────────────── --}}
+        <table class="summary">
+            <tr>
+                <td>
+                    <div class="sval" style="color:#5a7fa8;">{{ $totalPrestadas }}</div>
+                    <div class="slbl">Ítems Prestados</div>
+                </td>
+                <td>
+                    <div class="sval" style="color:#276749;">{{ $totalDevueltas }}</div>
+                    <div class="slbl">Devueltos</div>
+                </td>
+                <td>
+                    <div class="sval" style="{{ $totalPendientes > 0 ? 'color:#b7791f;' : 'color:#a0aec0;' }}">
+                        {{ $totalPendientes }}</div>
+                    <div class="slbl">Pendientes</div>
+                </td>
+                <td>
+                    <div class="sval"
+                        style="{{ $bajas && $bajas->isNotEmpty() ? 'color:#c53030;' : 'color:#a0aec0;' }}">
+                        {{ $bajas ? $bajas->count() : 0 }}</div>
+                    <div class="slbl">Bajas / Pérdidas</div>
+                </td>
+                <td>
+                    <div class="sval"
+                        style="{{ $estadoGlobal === 'finalizado' ? 'color:#276749;' : ($isVencido ? 'color:#c53030;' : 'color:#5a7fa8;') }}">
+                        {{ $progresoGlobal }}%</div>
+                    <div class="slbl">Completado</div>
+                </td>
+            </tr>
+        </table>
+
+        {{-- 3. Detalle de Equipos ────────────────────────────────────────── --}}
+        <div class="sect-title">Detalle de Equipos Prestados</div>
+
+        <table class="tbl">
             <thead>
                 <tr>
-                    <th style="width: 50%">Herramienta</th>
-                    <th class="text-center" style="width: 15%">Código</th>
-                    <th class="text-center" style="width: 15%">Cant. Orig.</th>
-                    <th class="text-center" style="width: 10%">Devuelto</th>
-                    <th class="text-right" style="width: 10%">Pendiente</th>
+                    <th style="width:44%;">Herramienta</th>
+                    <th class="tc" style="width:16%;">Código</th>
+                    <th class="tc" style="width:12%;">Prestado</th>
+                    <th class="tc" style="width:12%;">Devuelto</th>
+                    <th class="tc" style="width:16%;">Pendiente</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($prestamos as $item)
-                    <tr>
-                        <td><strong>{{ $item->herramienta->nombre }}</strong></td>
-                        <td class="text-center font-mono" style="font-size: 10px;">
-                            {{ $item->herramienta->codigo ?? '-' }}</td>
-                        <td class="text-center">{{ $item->cantidad_prestada }}</td>
-                        <td class="text-center">{{ $item->cantidad_devuelta }}</td>
-                        <td class="text-right font-bold" style="color:#e11d48;">{{ $item->cantidad_pendiente }}</td>
+                @foreach ($prestamos as $idx => $item)
+                    @php
+                        $pendiente = $item->cantidad_prestada - $item->cantidad_devuelta;
+                        $pct =
+                            $item->cantidad_prestada > 0
+                                ? round(($item->cantidad_devuelta / $item->cantidad_prestada) * 100)
+                                : 0;
+                        $fillColor = $pendiente == 0 ? '#68d391' : ($isVencido ? '#fc8181' : '#7fb3d3');
+                    @endphp
+                    <tr class="{{ $idx % 2 == 1 ? 'even' : '' }}">
+                        <td>
+                            <strong>{{ $item->herramienta->nombre ?? 'N/A' }}</strong>
+                            <br>
+                            <table class="prog-tbl" style="margin-top:4px;">
+                                <tr>
+                                    <td>
+                                        <div class="prog-wrap">
+                                            <div class="prog-fill"
+                                                style="width:{{ $pct }}%; background:{{ $fillColor }};">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding-left:4px; font-size:8px; color:#94a3b8;">{{ $pct }}%
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td class="tc mono" style="color:#6366f1;">{{ $item->herramienta->codigo ?? '—' }}</td>
+                        <td class="tc"><span class="qty qty-n">{{ $item->cantidad_prestada }}</span></td>
+                        <td class="tc"><span
+                                class="qty {{ $item->cantidad_devuelta > 0 ? 'qty-g' : 'qty-n' }}">{{ $item->cantidad_devuelta }}</span>
+                        </td>
+                        <td class="tc">
+                            @if ($pendiente > 0)
+                                <span class="qty {{ $isVencido ? 'qty-r' : 'qty-a' }}">{{ $pendiente }}</span>
+                            @else
+                                <span style="color:#22c55e; font-size:14px; font-weight:bold;">&#10003;</span>
+                            @endif
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="2" style="font-size:8.5px; color:#64748b; font-style:italic;">Totales acumulados del
+                        préstamo</td>
+                    <td class="tc">{{ $totalPrestadas }}</td>
+                    <td class="tc" style="color:#15803d;">{{ $totalDevueltas }}</td>
+                    <td class="tc" style="{{ $totalPendientes > 0 ? 'color:#92400e;' : 'color:#15803d;' }}">
+                        {{ $totalPendientes }}</td>
+                </tr>
+            </tfoot>
         </table>
 
-        @php
-            $evidenciasSalida = $first->fotos_salida ?? [];
-            $evidenciasDevueltas = [];
-            foreach ($prestamos as $item) {
-                foreach ($item->devoluciones as $dev) {
-                    if (!empty($dev->fotos_entrada)) {
-                        foreach ($dev->fotos_entrada as $fe) {
-                            $evidenciasDevueltas[] = [
-                                'fecha' => $dev->fecha_devolucion,
-                                'foto' => $fe,
-                            ];
-                        }
-                    }
-                }
-            }
-        @endphp
-
+        {{-- 4. Bajas / Pérdidas ─────────────────────────────────────────── --}}
         @if (!empty($bajas) && $bajas->isNotEmpty())
-            <div style="margin-top: 30px;">
-                <div class="sect-title" style="color: #b91c1c; border-color: #fca5a5;">
-                    Equipos Dados de Baja en este Préstamo
-                </div>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th style="width: 35%">Herramienta</th>
-                            <th class="text-center" style="width: 5%">Código</th>
-                            <th class="text-center" style="width: 10%">Cantidad</th>
-                            <th style="width: 30%">Motivo / Observaciones</th>
-                            <th class="text-center" style="width: 20%">Registrado</th>
+            <div class="sect-title sect-title-red">Equipos Dados de Baja / Pérdidas</div>
+
+            <table class="tbl tbl-baja">
+                <thead>
+                    <tr>
+                        <th style="width:36%;">Herramienta</th>
+                        <th class="tc" style="width:13%;">Código</th>
+                        <th class="tc" style="width:8%;">Cant.</th>
+                        <th style="width:30%;">Motivo / Observaciones</th>
+                        <th class="tc" style="width:13%;">Fecha / Usuario</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($bajas as $idx => $baja)
+                        <tr style="background:#fff5f5;" class="{{ $idx % 2 == 1 ? '' : '' }}">
+                            <td><strong
+                                    style="color:#b91c1c;">{{ $baja->herramienta->nombre ?? 'Herramienta Eliminada' }}</strong>
+                            </td>
+                            <td class="tc mono" style="color:#b91c1c;">{{ $baja->herramienta->codigo ?? '—' }}</td>
+                            <td class="tc"><span class="qty qty-r">{{ $baja->cantidad }}</span></td>
+                            <td style="font-size:9px; color:#374151;">{{ $baja->observaciones ?? '—' }}</td>
+                            <td class="tc" style="font-size:8px; color:#6b7280;">
+                                {{ $baja->created_at->format('d/m/Y') }}<br>
+                                <span style="color:#9ca3af;">{{ $baja->user->name ?? 'Sistema' }}</span>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($bajas as $baja)
-                            <tr style="background: #fff5f5;">
-                                <td>
-                                    <strong style="color: #b91c1c;">
-                                        {{ $baja->herramienta->nombre ?? 'N/A' }}
-                                    </strong>
-                                </td>
-                                <td class="text-center" style="font-size: 10px; font-family: monospace;">
-                                    {{ $baja->herramienta->codigo ?? '-' }}
-                                </td>
-                                <td class="text-center" style="font-weight: bold; color: #b91c1c;">
-                                    {{ $baja->cantidad }}
-                                </td>
-                                <td style="font-size: 10px; color: #374151;">
-                                    {{ $baja->observaciones ?? '-' }}
-                                </td>
-                                <td class="text-center" style="font-size: 9px; color: #6b7280;">
-                                    {{ $baja->created_at->format('d/m/Y') }}<br>
-                                    <span style="color: #9ca3af;">{{ $baja->user->name ?? 'Sistema' }}</span>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-                <p style="font-size: 9px; color: #9ca3af; margin-top: 6px; font-style: italic;">
-                    * Los equipos dados de baja han sido descontados permanentemente del inventario.
-                </p>
-            </div>
+                    @endforeach
+                </tbody>
+            </table>
+            <div class="disclaimer">* Los equipos dados de baja han sido descontados permanentemente del inventario.
+                Este registro es de carácter legal y contable.</div>
         @endif
 
-        @if (count($evidenciasSalida) > 0)
-            <div style="page-break-before: always;">
-                <div class="sect-title">Evidencia Fotográfica de Salida</div>
-                <div class="photo-grid">
-                    @foreach ($evidenciasSalida as $foto)
-                        @php
-                            $ext = strtolower(pathinfo($foto, PATHINFO_EXTENSION));
-                            $file = public_path('storage/' . $foto);
-                        @endphp
-                        @if ($ext !== 'pdf' && file_exists($file))
-                            <div class="photo-item">
-                                <img src="{{ $file }}">
-                                <div class="photo-caption">Estado inicial - Salida</div>
-                            </div>
+        {{-- 5. Historial de Recepciones ─────────────────────────────────── --}}
+        @php
+            $devSessions = [];
+            $tmp = null;
+            $sidx = 1;
+            $allDevs = collect();
+            foreach ($prestamos as $item) {
+                foreach ($item->devoluciones as $dev) {
+                    $allDevs->push($dev);
+                }
+            }
+            $allDevs = $allDevs->sortBy('id');
+            foreach ($allDevs as $dev) {
+                if (!$tmp || !empty($dev->fotos_entrada)) {
+                    if ($tmp) {
+                        $devSessions[] = $tmp;
+                    }
+                    $tmp = [
+                        'nro' => $sidx++,
+                        'fecha' => $dev->fecha_devolucion,
+                        'obs' => $dev->observaciones,
+                        'items' => collect([]),
+                    ];
+                }
+                $tmp['items']->push($dev);
+            }
+            if ($tmp) {
+                $devSessions[] = $tmp;
+            }
+            $devSessions = array_reverse($devSessions);
+        @endphp
+
+        @if (!empty($devSessions))
+            <div class="sect-title sect-title-green">Historial de Recepciones ({{ count($devSessions) }} sesion(es))
+            </div>
+            @foreach ($devSessions as $ses)
+                <table
+                    style="width:100%; border-collapse:collapse; margin-bottom:5px; background:#f0fdf4; border:1px solid #bbf7d0;">
+                    <tr>
+                        <td style="padding:6px 10px; font-size:9px; font-weight:bold; color:#166534;">
+                            Retorno {{ $ses['nro'] }} &bull;
+                            {{ \Carbon\Carbon::parse($ses['fecha'])->format('d/m/Y') }}
+                        </td>
+                        @if ($ses['obs'])
+                            <td
+                                style="padding:6px 10px; font-size:9px; color:#6b7280; font-style:italic; text-align:right;">
+                                "{{ $ses['obs'] }}"</td>
                         @endif
+                    </tr>
+                </table>
+            @endforeach
+        @endif
+
+        {{-- ══════════════ PÁGINAS DE FOTOS ══════════════════════════════ --}}
+
+        @if (count($evidenciasSalida) > 0)
+            <div class="photo-sect">
+                <div class="sect-title">Evidencia Fotográfica — Estado de Salida</div>
+                <table class="photo-tbl">
+                    @foreach (array_chunk($evidenciasSalida, 2) as $pair)
+                        <tr>
+                            @foreach ($pair as $foto)
+                                @php
+                                    $ext = strtolower(pathinfo($foto, PATHINFO_EXTENSION));
+                                    $file = public_path('storage/' . $foto);
+                                @endphp
+                                <td>
+                                    @if ($ext !== 'pdf' && file_exists($file))
+                                        <div class="photo-frame">
+                                            <img src="{{ $file }}" alt="Salida">
+                                            <div class="photo-cap">Estado inicial — Salida</div>
+                                        </div>
+                                    @endif
+                                </td>
+                            @endforeach
+                            @if (count($pair) === 1)
+                                <td></td>
+                            @endif
+                        </tr>
                     @endforeach
-                </div>
+                </table>
             </div>
         @endif
 
         @if (count($evidenciasDevueltas) > 0)
-            <div style="page-break-before: always;">
-                <div class="sect-title">Evidencia Fotográfica de Retorno</div>
-                <div class="photo-grid">
-                    @foreach ($evidenciasDevueltas as $ev)
-                        @php
-                            $ext = strtolower(pathinfo($ev['foto'], PATHINFO_EXTENSION));
-                            $file = public_path('storage/' . $ev['foto']);
-                        @endphp
-                        @if ($ext !== 'pdf' && file_exists($file))
-                            <div class="photo-item">
-                                <img src="{{ $file }}">
-                                <div class="photo-caption">Retorno
-                                    ({{ \Carbon\Carbon::parse($ev['fecha'])->format('d/m/Y') }})
-                                </div>
-                            </div>
-                        @endif
+            <div class="photo-sect">
+                <div class="sect-title sect-title-green">Evidencia Fotográfica — Retorno de Equipos</div>
+                <table class="photo-tbl">
+                    @foreach (array_chunk($evidenciasDevueltas, 2) as $pair)
+                        <tr>
+                            @foreach ($pair as $ev)
+                                @php
+                                    $ext = strtolower(pathinfo($ev['foto'], PATHINFO_EXTENSION));
+                                    $file = public_path('storage/' . $ev['foto']);
+                                @endphp
+                                <td>
+                                    @if ($ext !== 'pdf' && file_exists($file))
+                                        <div class="photo-frame">
+                                            <img src="{{ $file }}" alt="Retorno">
+                                            <div class="photo-cap">Retorno —
+                                                {{ \Carbon\Carbon::parse($ev['fecha'])->format('d/m/Y') }}</div>
+                                        </div>
+                                    @endif
+                                </td>
+                            @endforeach
+                            @if (count($pair) === 1)
+                                <td></td>
+                            @endif
+                        </tr>
                     @endforeach
-                </div>
+                </table>
             </div>
         @endif
 
+        @if (count($evidenciasBajas) > 0)
+            <div class="photo-sect">
+                <div class="sect-title sect-title-red">Evidencia Fotográfica — Equipos Dados de Baja</div>
+                <table class="photo-tbl">
+                    @foreach (array_chunk($evidenciasBajas, 2) as $pair)
+                        <tr>
+                            @foreach ($pair as $ev)
+                                @php
+                                    $ext = strtolower(pathinfo($ev['foto'], PATHINFO_EXTENSION));
+                                    $file = public_path('storage/' . $ev['foto']);
+                                @endphp
+                                <td>
+                                    @if ($ext !== 'pdf' && file_exists($file))
+                                        <div class="photo-frame" style="border-color:#fca5a5;">
+                                            <img src="{{ $file }}" alt="Baja">
+                                            <div class="photo-cap photo-cap-red">
+                                                Baja: {{ $ev['nombre'] }}<br>
+                                                {{ \Carbon\Carbon::parse($ev['fecha'])->format('d/m/Y') }}
+                                            </div>
+                                        </div>
+                                    @endif
+                                </td>
+                            @endforeach
+                            @if (count($pair) === 1)
+                                <td></td>
+                            @endif
+                        </tr>
+                    @endforeach
+                </table>
+            </div>
+        @endif
 
     </main>
-
 </body>
 
 </html>

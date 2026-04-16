@@ -7,11 +7,14 @@
             document.getElementById(`boleta-mob-row-target-${this.boletaId}`);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
-}" x-init="
-    const clearBG = () => { $wire.set('highlight_boleta_id', null); $wire.set('highlight_devolucion_id', null); };
-    if (boletaId || devolucionId) { setTimeout(() => scroll(), 600); setTimeout(clearBG, 4000); }
-    $watch('boletaId',     val => { if (val) { setTimeout(() => scroll(), 300); setTimeout(clearBG, 4000); } });
-    $watch('devolucionId', val => { if (val) { setTimeout(() => scroll(), 300); setTimeout(clearBG, 4000); } });"
+}" x-init="const clearBG = () => { $wire.set('highlight_boleta_id', null);
+    $wire.set('highlight_devolucion_id', null); };
+if (boletaId || devolucionId) { setTimeout(() => scroll(), 600);
+    setTimeout(clearBG, 4000); }
+$watch('boletaId', val => { if (val) { setTimeout(() => scroll(), 300);
+        setTimeout(clearBG, 4000); } });
+$watch('devolucionId', val => { if (val) { setTimeout(() => scroll(), 300);
+        setTimeout(clearBG, 4000); } });"
     @bg:start-removal-timer.window="setTimeout(() => $wire.clearPendingRemoval($event.detail.boletaId), 3500)">
 
     @forelse($boletas as $bg)
@@ -337,7 +340,7 @@
                     @endif
 
                     {{-- Action bar --}}
-                    @canany(['boletas_garantia.register_return', 'boletas_garantia.delete'])
+                    @canany(['boletas_garantia.register_return', 'boletas_garantia.delete', 'boletas_garantia.view'])
                         <div class="px-3 pb-3 grid grid-cols-3 gap-1.5">
                             @can('boletas_garantia.register_return')
                                 <button type="button" @click.stop wire:click="openDevolucion({{ $bg->id }})"

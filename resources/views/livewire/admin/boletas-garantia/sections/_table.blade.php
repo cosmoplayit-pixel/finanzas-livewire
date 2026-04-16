@@ -11,14 +11,26 @@
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
-    }" x-init="
-    const clearBG = () => { $wire.set('highlight_boleta_id', null); $wire.set('highlight_devolucion_id', null); };
+    }" x-init="const clearBG = () => {
+        $wire.set('highlight_boleta_id', null);
+        $wire.set('highlight_devolucion_id', null);
+    };
     if (boletaId || devolucionId) {
         setTimeout(() => scroll(), 600);
         setTimeout(clearBG, 4000);
     }
-    $watch('boletaId',     val => { if (val) { setTimeout(() => scroll(), 300); setTimeout(clearBG, 4000); } });
-    $watch('devolucionId', val => { if (val) { setTimeout(() => scroll(), 300); setTimeout(clearBG, 4000); } });"
+    $watch('boletaId', val => {
+        if (val) {
+            setTimeout(() => scroll(), 300);
+            setTimeout(clearBG, 4000);
+        }
+    });
+    $watch('devolucionId', val => {
+        if (val) {
+            setTimeout(() => scroll(), 300);
+            setTimeout(clearBG, 4000);
+        }
+    });"
     @bg:start-removal-timer.window="setTimeout(() => $wire.clearPendingRemoval($event.detail.boletaId), 3500)">
 
     <div class="overflow-x-auto">
@@ -57,7 +69,7 @@
                     <th class="w-[20%] p-2 select-none whitespace-nowrap">Boleta</th>
                     <th class="w-[7%]  p-2 select-none whitespace-nowrap text-center">Estado</th>
                     <th class="w-[10%]  p-2 select-none whitespace-nowrap text-center">Devuelto</th>
-                    @canany(['boletas_garantia.register_return', 'boletas_garantia.delete'])
+                    @canany(['boletas_garantia.register_return', 'boletas_garantia.delete', 'boletas_garantia.view'])
                         <th class="w-[10%]  p-2 whitespace-nowrap text-center">Acciones</th>
                     @endcanany
                 </tr>
@@ -480,7 +492,8 @@
                         </td>
 
                         {{-- ACCIONES --}}
-                        @canany(['boletas_garantia.register_return', 'boletas_garantia.delete'])
+                        @canany(['boletas_garantia.register_return', 'boletas_garantia.delete',
+                            'boletas_garantia.view'])
                             <td class="p-2 whitespace-nowrap align-middle" @click.stop>
                                 <div class="flex items-center justify-center gap-2">
 

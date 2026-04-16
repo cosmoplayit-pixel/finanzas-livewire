@@ -38,6 +38,7 @@ return new class extends Migration
             $table->string('imagen', 500)->nullable();
 
             $table->boolean('active')->default(true);
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index(['empresa_id', 'active', 'nombre']);

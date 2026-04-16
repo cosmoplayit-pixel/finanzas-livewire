@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('baja_herramientas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('herramienta_id')->constrained('herramientas')->onDelete('cascade');
+            $table->foreignId('prestamo_id')->nullable()->constrained('prestamos_herramientas')->onDelete('set null');
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('set null');
             $table->integer('cantidad');
             $table->text('observaciones')->nullable();

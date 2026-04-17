@@ -168,7 +168,7 @@
                 Solo los ítems con cantidad de baja serán procesados.
             </p>
             <div class="flex gap-3">
-                <button type="button" @click="openModalBaja = false"
+                <button type="button" @click="close()"
                     class="px-5 py-2 rounded-xl border border-gray-200 dark:border-neutral-700 text-gray-600 dark:text-neutral-400 hover:bg-gray-100 dark:hover:bg-neutral-800 text-[13px] font-bold transition">
                     Cancelar
                 </button>

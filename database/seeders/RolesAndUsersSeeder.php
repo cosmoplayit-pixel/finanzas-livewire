@@ -88,13 +88,6 @@ class RolesAndUsersSeeder extends Seeder
             'agentes_servicio.update',
             'agentes_servicio.toggle',
 
-            // Herramientas
-            'herramientas.view',
-            'herramientas.create',
-            'herramientas.update',
-            'herramientas.toggle',
-            'herramientas.delete',
-
             // FACTURAS
             'facturas.view',
             'facturas.create',
@@ -129,6 +122,24 @@ class RolesAndUsersSeeder extends Seeder
             'transacciones.view',
             'transacciones.excel',
             'transacciones.origin',
+
+            // Herramientas
+            'herramientas.view',
+            'herramientas.create',
+            'herramientas.update',
+            'herramientas.toggle',
+            'herramientas.delete',
+            'herramientas.export',
+            'herramientas.historial_bajas',
+            'herramientas.stock_add',
+            'herramientas.stock_baja',
+
+            // Préstamos y Devoluciones
+            'prestamos.view',
+            'prestamos.create',
+            'prestamos.export_pdf',
+            'prestamos.devolucion',
+            'prestamos.baja',
         ];
 
         foreach ($permissions as $p) {
@@ -170,6 +181,15 @@ class RolesAndUsersSeeder extends Seeder
             ],
         );
 
+        $storeRole = Role::firstOrCreate(
+            ['name' => 'Empresa_Store', 'guard_name' => 'web'],
+            [
+                'description' => 'Gestiona Herramientas de su empresa.',
+                'is_system' => true,
+                'active' => true,
+            ],
+        );
+
         /*
         |--------------------------------------------------------------------------
         | ASIGNACIÓN DE PERMISOS POR ROL
@@ -196,11 +216,6 @@ class RolesAndUsersSeeder extends Seeder
             'roles.toggle',
             'roles.assign_permissions',
 
-            'herramientas.view',
-            'herramientas.create',
-            'herramientas.update',
-            'herramientas.toggle',
-            'herramientas.delete',
         ]);
 
         // Empresa_Manager
@@ -226,12 +241,6 @@ class RolesAndUsersSeeder extends Seeder
             'agentes_servicio.create',
             'agentes_servicio.update',
             'agentes_servicio.toggle',
-
-            'herramientas.view',
-            'herramientas.create',
-            'herramientas.update',
-            'herramientas.toggle',
-            'herramientas.delete',
 
             'facturas.view',
             'facturas.create',
@@ -262,6 +271,22 @@ class RolesAndUsersSeeder extends Seeder
             'transacciones.excel',
             'transacciones.origin',
 
+            'herramientas.view',
+            'herramientas.create',
+            'herramientas.update',
+            'herramientas.toggle',
+            'herramientas.delete',
+            'herramientas.export',
+            'herramientas.historial_bajas',
+            'herramientas.stock_add',
+            'herramientas.stock_baja',
+
+            'prestamos.view',
+            'prestamos.create',
+            'prestamos.export_pdf',
+            'prestamos.devolucion',
+            'prestamos.baja',
+
         ]);
 
         // Empresa_Visualizador
@@ -273,12 +298,31 @@ class RolesAndUsersSeeder extends Seeder
             'bancos.view',
             'facturas.view',
             'agentes_servicio.view',
-            'herramientas.view',
             'agente_presupuestos.view',
             'boletas_garantia.view',
             'proyectos.resumen',
             'inversiones.view',
             'transacciones.view',
+        ]);
+
+        // Empresa_Store
+        $storeRole->syncPermissions([
+
+            'herramientas.view',
+            'herramientas.create',
+            'herramientas.update',
+            'herramientas.toggle',
+            'herramientas.delete',
+            'herramientas.export',
+            'herramientas.historial_bajas',
+            'herramientas.stock_add',
+            'herramientas.stock_baja',
+
+            'prestamos.view',
+            'prestamos.create',
+            'prestamos.export_pdf',
+            'prestamos.devolucion',
+            'prestamos.baja',
         ]);
 
         /*
@@ -331,6 +375,22 @@ class RolesAndUsersSeeder extends Seeder
             );
 
             $u->syncRoles(['Empresa_Visualizador']);
+        }
+
+        // Store por empresa
+        foreach (Empresa::orderBy('id')->get() as $emp) {
+            $u = User::firstOrCreate(
+                ['email' => "store{$emp->id}@finanzas.com"],
+                [
+                    'name' => "Store {$emp->nombre}",
+                    'password' => Hash::make('Password123!'),
+                    'empresa_id' => $emp->id,
+                    'active' => true,
+                    'is_root' => false,
+                ],
+            );
+
+            $u->syncRoles(['Empresa_Store']);
         }
     }
 }

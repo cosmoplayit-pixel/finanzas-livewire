@@ -147,7 +147,7 @@
 
     @slot('footer')
         <div class="w-full flex justify-end gap-3">
-            <button type="button" @click="openModalDevolucion = false"
+            <button type="button" @click="close()"
                 class="px-5 py-2 rounded-lg border cursor-pointer border-gray-300 dark:border-neutral-700 text-gray-500 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 text-sm font-bold transition">
                 Cerrar
             </button>

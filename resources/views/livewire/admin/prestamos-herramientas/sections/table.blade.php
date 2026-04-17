@@ -1,5 +1,5 @@
     {{-- TABLA --}}
-    <div <div
+    <div
         class="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-neutral-700 shadow-sm overflow-hidden ">
 
         {{-- ===================== CARDS MOBILE ===================== --}}

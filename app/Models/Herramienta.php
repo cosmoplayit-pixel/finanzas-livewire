@@ -93,4 +93,14 @@ class Herramienta extends Model
             default   => 'bg-gray-400',
         };
     }
+
+    public function getPctDispAttribute(): int
+    {
+        return $this->stock_total > 0 ? (int) min(100, round(($this->stock_disponible / $this->stock_total) * 100)) : 0;
+    }
+
+    public function getPctPrestAttribute(): int
+    {
+        return $this->stock_total > 0 ? (int) min(100, round(($this->stock_prestado / $this->stock_total) * 100)) : 0;
+    }
 }

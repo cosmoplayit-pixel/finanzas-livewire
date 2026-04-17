@@ -196,6 +196,13 @@ class Dashboard extends Component
             return;
         }
 
+        // Si es Empresa_Store, redirigir a herramientas
+        if ($user?->hasRole('Empresa_Store')) {
+            $this->redirectRoute('herramientas');
+
+            return;
+        }
+
         $this->isAdmin = false;
         $this->empresaId = $user?->empresa_id ? (int) $user->empresa_id : null;
         $this->empresaNombre = $user?->empresa?->nombre ?? '';

@@ -278,9 +278,45 @@ class Index extends Component
                 ->get();
         }
 
+        // PRE-CÁLCULO PARA LA VISTA BLADE (Cards y Tabla sin @php)
+        $prestamosCalculados = [];
+        foreach ($paginatedNros as $nroModel) {
+            $nro = $nroModel->nro_prestamo;
+            $items = $prestamosAgrupados[$nro] ?? collect();
+            if ($items->isEmpty()) { continue; }
+
+            $first = $items->first();
+            $isVencido = $items->contains(fn($i) => $i->estado !== 'finalizado' && $i->fecha_vencimiento && $i->fecha_vencimiento->isPast());
+            $totalPrestadas = $items->sum('cantidad_prestada');
+            $totalPendientes = $items->sum('cantidad_pendiente');
+            $totalDevueltas = $totalPrestadas - $totalPendientes;
+            $estadoGlobal = $totalPendientes == 0 ? 'finalizado' : ($isVencido ? 'vencido' : 'activo');
+            $pctDevuelto = $totalPrestadas > 0 ? (int) min(100, round(($totalDevueltas / $totalPrestadas) * 100)) : 0;
+            $pctPendiente = $totalPrestadas > 0 ? (int) min(100, round(($totalPendientes / $totalPrestadas) * 100)) : 0;
+
+            $fotosRetorno = $items->flatMap(function ($item) {
+                return $item->devoluciones->flatMap(fn($d) => $d->fotos_entrada ?? []);
+            })->filter()->values()->all();
+
+            $prestamosCalculados[$nro] = (object) [
+                'nro' => $nro,
+                'count' => $items->count(),
+                'first' => $first,
+                'totalPrestadas' => $totalPrestadas,
+                'totalPendientes' => $totalPendientes,
+                'totalDevueltas' => $totalDevueltas,
+                'estadoGlobal' => $estadoGlobal,
+                'pctDevuelto' => $pctDevuelto,
+                'pctPendiente' => $pctPendiente,
+                'fotosRetorno' => $fotosRetorno,
+            ];
+        }
+
         return view('livewire.admin.prestamos-herramientas.index', [
             'paginatedNros' => $paginatedNros,
             'prestamosAgrupados' => $prestamosAgrupados,
+            'prestamosCalculados' => $prestamosCalculados,
+
             'herramientas' => $herramientas,
             'entidades' => $entidades,
             'agentes' => \App\Models\AgenteServicio::where('active', true)

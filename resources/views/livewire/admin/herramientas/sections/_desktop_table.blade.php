@@ -50,9 +50,9 @@
                         wire:click="sortBy('precio_unitario')">
                         P. Unit.
                     </th>
-                    <th class="p-2 w-[6 %] text-center cursor-pointer select-none" wire:click="sortBy('active')">
+                    <th class="p-2 w-[6%] text-center cursor-pointer select-none" wire:click="sortBy('active')">
                         Sistema</th>
-                    <th class="p-2 w-[16%] whitespace-nowrap text-center">Acciones</th>
+                    <th class="p-2 w-[18%] whitespace-nowrap text-center">Acciones</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
@@ -179,7 +179,8 @@
 
 
                         {{-- Acciones --}}
-                        @canany(['herramientas.update', 'herramientas.toggle', 'herramientas.delete'])
+                        @canany(['herramientas.update', 'herramientas.toggle', 'herramientas.delete',
+                            'herramientas.stock_add', 'herramientas.stock_baja'])
                             <td class="p-2 whitespace-nowrap text-center">
                                 <div class="flex items-center justify-center gap-1.5">
 
@@ -205,10 +206,12 @@
                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
                                         </button>
+                                    @endcan
 
-                                        {{-- Stock Controls --}}
-                                        <div class="flex items-center gap-1.5">
-                                            {{-- Agregar stock --}}
+                                    {{-- Stock Controls --}}
+                                    <div class="flex items-center gap-1.5">
+                                        {{-- Agregar stock --}}
+                                        @can('herramientas.stock_add')
                                             <button wire:click="openAddStock({{ $h->id }})"
                                                 wire:loading.attr="disabled" wire:target="openAddStock({{ $h->id }})"
                                                 title="Agregar stock"
@@ -226,7 +229,9 @@
                                                         d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                                 </svg>
                                             </button>
-                                            {{-- Baja stock --}}
+                                        @endcan
+                                        {{-- Baja stock --}}
+                                        @can('herramientas.stock_baja')
                                             <button wire:click="openBajaStock({{ $h->id }})"
                                                 wire:loading.attr="disabled" wire:target="openBajaStock({{ $h->id }})"
                                                 title="Dar de baja stock"
@@ -244,8 +249,8 @@
                                                         d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                                 </svg>
                                             </button>
-                                        </div>
-                                    @endcan
+                                        @endcan
+                                    </div>
 
 
                                     @can('herramientas.toggle')

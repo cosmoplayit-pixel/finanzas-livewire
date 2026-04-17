@@ -43,7 +43,7 @@
 
         <flux:sidebar.header>
             <flux:sidebar.brand
-                :href="auth()->user()->hasRole('Administrador') ? route('usuarios') : route('dashboard')"
+                :href="auth()->user()->hasRole('Administrador') ? route('usuarios') : (auth()->user()->hasRole('Empresa_Store') ? route('herramientas') : route('dashboard'))"
                 logo="https://cdn.jsdelivr.net/npm/lucide-static@0.479.0/icons/circle-dollar-sign.svg"
                 logo:dark="https://cdn.jsdelivr.net/npm/lucide-static@0.479.0/icons/circle-dollar-sign.svg"
                 name="{{ config('app.name') }}" />
@@ -57,17 +57,19 @@
 
             {{-- DASHBOARD --}}
 
-            @can('dashboard.view')
-                <flux:sidebar.group heading="{{ __('Dashboard') }}" class="grid"> </flux:sidebar.group>
-            @endcan
+            @if (!auth()->user()->hasRole('Empresa_Store'))
+                @can('dashboard.view')
+                    <flux:sidebar.group heading="{{ __('Dashboard') }}" class="grid"> </flux:sidebar.group>
+                @endcan
 
-            @can('dashboard.view')
-                <flux:sidebar.item icon="home"
-                    :href="auth()->user()->hasRole('Administrador') ? route('usuarios') : route('dashboard')"
-                    :current="request()->routeIs('dashboard')" wire:navigate>
-                    {{ __('Panel de Control') }}
-                </flux:sidebar.item>
-            @endcan
+                @can('dashboard.view')
+                    <flux:sidebar.item icon="home"
+                        :href="auth()->user()->hasRole('Administrador') ? route('usuarios') : route('dashboard')"
+                        :current="request()->routeIs('dashboard')" wire:navigate>
+                        {{ __('Panel de Control') }}
+                    </flux:sidebar.item>
+                @endcan
+            @endif
 
             {{-- PLATAFORMA --}}
             @canany(['users.view', 'roles.view', 'empresas.view'])
@@ -188,7 +190,7 @@
             @endcanany
 
 
-            {{-- GESTIÓN HERRAMIENTAS 
+            {{-- GESTIÓN HERRAMIENTAS --}}
             @canany(['herramientas.view'])
                 @if (!auth()->user()->hasRole('Administrador'))
                     <flux:sidebar.group heading="{{ __('Gestión Herramientas') }}" class="grid">
@@ -201,7 +203,7 @@
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif
-            @endcanany --}}
+            @endcanany
 
 
 

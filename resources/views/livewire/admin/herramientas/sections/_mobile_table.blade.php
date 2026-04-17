@@ -48,48 +48,74 @@
                                     {{ $h->estado_fisico_label }}
                                 </span>
                                 @if (!$h->active)
-                                    <span
-                                        class="text-[10px] font-medium text-red-500 dark:text-red-400">Inactivo</span>
+                                    <span class="text-[10px] font-medium text-red-500 dark:text-red-400">Inactivo</span>
                                 @endif
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- Stock bar --}}
-                <div class="px-3 pb-2">
-                    <div class="grid grid-cols-3 gap-2">
-                        <div
-                            class="rounded-xl bg-emerald-50 dark:bg-emerald-900/15 border border-emerald-100 dark:border-emerald-800/40 p-2 text-center">
-                            <div
-                                class="text-[9px] uppercase font-bold text-emerald-500 dark:text-emerald-400 tracking-wide">
-                                Disp.</div>
-                            <div
-                                class="text-base font-black {{ $h->stock_disponible > 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-600 dark:text-red-400' }}">
-                                {{ $h->stock_disponible }}</div>
+                {{-- Stock bar (Skill bars) --}}
+                <div class="px-3 pb-3">
+                    <div
+                        class="rounded-xl border border-gray-100 dark:border-neutral-800 overflow-hidden mt-1 shadow-sm">
+                        {{-- Totalizador --}}
+                        <div class="flex items-center justify-between px-3 py-1.5 bg-gray-50 dark:bg-neutral-800/60">
+                            <span
+                                class="text-[10px] uppercase font-bold tracking-widest text-gray-400 dark:text-neutral-500">Stock
+                                Total</span>
+                            <span
+                                class="text-sm font-black text-gray-800 dark:text-neutral-100">{{ $h->stock_total }}</span>
                         </div>
-                        <div
-                            class="rounded-xl bg-gray-50 dark:bg-neutral-800 border border-gray-100 dark:border-neutral-700 p-2 text-center">
-                            <div
-                                class="text-[9px] uppercase font-bold text-gray-400 dark:text-neutral-500 tracking-wide">
-                                Total</div>
-                            <div class="text-base font-black text-gray-700 dark:text-neutral-200">
-                                {{ $h->stock_total }}</div>
-                        </div>
-                        <div
-                            class="rounded-xl bg-amber-50 dark:bg-amber-900/15 border border-amber-100 dark:border-amber-800/40 p-2 text-center">
-                            <div
-                                class="text-[9px] uppercase font-bold text-amber-500 dark:text-amber-400 tracking-wide">
-                                Prest.</div>
-                            <div
-                                class="text-base font-black {{ $h->stock_prestado > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-gray-400 dark:text-neutral-600' }}">
-                                {{ $h->stock_prestado }}</div>
+                        <div class="px-3 py-2.5 space-y-2.5">
+                            {{-- Disponible --}}
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <div class="flex items-center gap-1.5">
+                                        <span
+                                            class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shadow-sm"></span>
+                                        <span
+                                            class="text-[10px] font-bold tracking-wide text-gray-600 dark:text-neutral-300 uppercase">Disponible</span>
+                                    </div>
+                                    <span
+                                        class="text-xs font-black text-emerald-600 dark:text-emerald-400">{{ $h->stock_disponible }}
+                                        <span class="text-[9px] font-normal text-gray-400">/
+                                            {{ $h->pct_disp }}%</span></span>
+                                </div>
+                                <div
+                                    class="h-1.5 rounded-full bg-gray-100 dark:bg-neutral-800 overflow-hidden shadow-inner">
+                                    <div class="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
+                                        style="width: {{ $h->pct_disp }}%"></div>
+                                </div>
+                            </div>
+                            {{-- Prestado --}}
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <div class="flex items-center gap-1.5">
+                                        <span
+                                            class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block shadow-sm"></span>
+                                        <span
+                                            class="text-[10px] font-bold tracking-wide text-gray-600 dark:text-neutral-300 uppercase">En
+                                            Préstamo</span>
+                                    </div>
+                                    <span
+                                        class="text-xs font-black text-amber-600 dark:text-amber-400">{{ $h->stock_prestado }}
+                                        <span class="text-[9px] font-normal text-gray-400">/
+                                            {{ $h->pct_prest }}%</span></span>
+                                </div>
+                                <div
+                                    class="h-1.5 rounded-full bg-gray-100 dark:bg-neutral-800 overflow-hidden shadow-inner">
+                                    <div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-500"
+                                        style="width: {{ $h->pct_prest }}%"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 {{-- Acciones (solo íconos) --}}
-                @canany(['herramientas.update', 'herramientas.toggle', 'herramientas.delete'])
+                @canany(['herramientas.update', 'herramientas.toggle', 'herramientas.delete', 'herramientas.stock_add',
+                    'herramientas.stock_baja'])
                     <div
                         class="flex items-center gap-1.5 px-3 py-2.5 border-t border-gray-100 dark:border-neutral-800 bg-gray-50/50 dark:bg-neutral-900/30">
 
@@ -113,43 +139,43 @@
                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </button>
+                        @endcan
 
-                            {{-- Stock Controls --}}
-                            <div class="flex-1 flex gap-1">
-                                {{-- Agregar stock --}}
-                                <button wire:click="openAddStock({{ $h->id }})" wire:loading.attr="disabled"
-                                    wire:target="openAddStock({{ $h->id }})" title="Agregar stock"
-                                    class="flex-1 inline-flex items-center justify-center h-9 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition cursor-pointer disabled:opacity-50">
-                                    <svg wire:loading.remove wire:target="openAddStock({{ $h->id }})" class="w-4 h-4"
-                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    <svg wire:loading wire:target="openAddStock({{ $h->id }})"
-                                        class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10"
-                                            stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
-                                        </path>
-                                    </svg>
-                                </button>
-                                {{-- Baja stock --}}
-                                <button wire:click="openBajaStock({{ $h->id }})" wire:loading.attr="disabled"
-                                    wire:target="openBajaStock({{ $h->id }})" title="Dar de baja stock"
-                                    class="flex-1 inline-flex items-center justify-center h-9 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition cursor-pointer disabled:opacity-50">
-                                    <svg wire:loading.remove wire:target="openBajaStock({{ $h->id }})" class="w-4 h-4"
-                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                                    </svg>
-                                    <svg wire:loading wire:target="openBajaStock({{ $h->id }})"
-                                        class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10"
-                                            stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
-                                        </path>
-                                    </svg>
-                                </button>
-                            </div>
+                        {{-- Agregar stock --}}
+                        @can('herramientas.stock_add')
+                            <button wire:click="openAddStock({{ $h->id }})" wire:loading.attr="disabled"
+                                wire:target="openAddStock({{ $h->id }})" title="Agregar stock"
+                                class="flex-1 inline-flex items-center justify-center h-9 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition cursor-pointer disabled:opacity-50">
+                                <svg wire:loading.remove wire:target="openAddStock({{ $h->id }})" class="w-4 h-4"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                <svg wire:loading wire:target="openAddStock({{ $h->id }})" class="w-4 h-4 animate-spin"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                                    </path>
+                                </svg>
+                            </button>
+                        @endcan
+                        {{-- Baja stock --}}
+                        @can('herramientas.stock_baja')
+                            <button wire:click="openBajaStock({{ $h->id }})" wire:loading.attr="disabled"
+                                wire:target="openBajaStock({{ $h->id }})" title="Dar de baja stock"
+                                class="flex-1 inline-flex items-center justify-center h-9 rounded-xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition cursor-pointer disabled:opacity-50">
+                                <svg wire:loading.remove wire:target="openBajaStock({{ $h->id }})" class="w-4 h-4"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                                </svg>
+                                <svg wire:loading wire:target="openBajaStock({{ $h->id }})"
+                                    class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                                    </path>
+                                </svg>
+                            </button>
                         @endcan
 
                         @can('herramientas.toggle')

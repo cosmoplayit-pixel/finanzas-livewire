@@ -3,23 +3,40 @@
         open: false,
         photos: [],
         currentIndex: 0,
-        title: ''
+        title: '',
+        getPdfUrl(url) {
+            if (url && url.startsWith('data:application/pdf;base64,')) {
+                try {
+                    const b64 = url.split(',')[1];
+                    const binary = atob(b64);
+                    const array = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) {
+                        array[i] = binary.charCodeAt(i);
+                    }
+                    const blob = new Blob([array], { type: 'application/pdf' });
+                    return URL.createObjectURL(blob);
+                } catch (e) {
+                    console.error('Error generating PDF blob URL', e);
+                }
+            }
+            return url;
+        }
     }"
         @open-viewer.window="photos = $event.detail.photos; title = $event.detail.title; currentIndex = 0; open = true"
         @keydown.escape.window="open = false" @keydown.arrow-left.window="if(open && currentIndex > 0) currentIndex--"
-        @keydown.arrow-right.window="if(open && currentIndex < photos.length - 1) currentIndex++"
-        class="relative z-[100]" x-cloak>
+        @keydown.arrow-right.window="if(open && currentIndex < photos.length - 1) currentIndex++" class="relative z-[100]"
+        x-cloak>
 
         <div x-show="open" class="fixed inset-0 bg-neutral-900/90 backdrop-blur-sm transition-opacity"></div>
 
-        <div x-show="open" class="fixed inset-0 z-10 overflow-y-auto">
-            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+        <div x-show="open" class="fixed inset-0 z-10 overflow-hidden">
+            <div class="flex h-screen items-center justify-center p-2 sm:p-4 text-center">
                 <div @click.away="open = false"
-                    class="relative transform overflow-hidden rounded-xl w-full max-w-4xl text-left shadow-2xl transition-all">
+                    class="relative transform overflow-hidden rounded-xl w-full max-w-6xl h-full sm:h-[96vh] text-left shadow-2xl transition-all flex flex-col">
 
                     {{-- Toolbar --}}
                     <div
-                        class="absolute top-0 right-0 left-0 bg-gradient-to-b from-black/60 to-transparent p-4 flex justify-between items-center z-20">
+                        class="flex-shrink-0 relative bg-neutral-900 p-4 flex justify-between items-center z-20 border-b border-neutral-800">
                         <span class="text-white font-bold tracking-wide"
                             x-text="title + ' (' + (currentIndex + 1) + '/' + photos.length + ')'"></span>
                         <button @click="open = false"
@@ -54,16 +71,15 @@
                     </template>
 
                     {{-- Contenido (Imagen o PDF) --}}
-                    <div
-                        class="bg-black flex items-center justify-center min-h-[50vh] max-h-[85vh] w-full rounded-b-xl overflow-hidden">
+                    <div class="bg-black flex-1 flex items-center justify-center w-full overflow-hidden">
                         <template
-                            x-if="photos[currentIndex] && (photos[currentIndex].toLowerCase().endsWith('.pdf') || photos[currentIndex].toLowerCase().includes('.pdf?'))">
-                            <iframe :src="photos[currentIndex]" class="w-full h-[85vh] bg-white border-0"
+                            x-if="photos[currentIndex] && (photos[currentIndex].toLowerCase().endsWith('.pdf') || photos[currentIndex].toLowerCase().includes('.pdf?') || photos[currentIndex].startsWith('data:application/pdf'))">
+                            <iframe :src="getPdfUrl(photos[currentIndex])" class="w-full h-full bg-white border-0"
                                 title="PDF Viewer"></iframe>
                         </template>
                         <template
-                            x-if="photos[currentIndex] && !photos[currentIndex].toLowerCase().endsWith('.pdf') && !photos[currentIndex].toLowerCase().includes('.pdf?')">
-                            <img :src="photos[currentIndex]" class="max-w-full max-h-[85vh] object-contain">
+                            x-if="photos[currentIndex] && !photos[currentIndex].toLowerCase().endsWith('.pdf') && !photos[currentIndex].toLowerCase().includes('.pdf?') && !photos[currentIndex].startsWith('data:application/pdf')">
+                            <img :src="photos[currentIndex]" class="max-w-full max-h-full object-contain">
                         </template>
                     </div>
                 </div>

@@ -83,9 +83,12 @@ trait WithDevoluciones
             'bajas'        => $bajas,
         ]);
 
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->output();
-        }, "Prestamo_{$nro_prestamo}.pdf");
+        $base64 = base64_encode($pdf->output());
+
+        $this->dispatch('open-viewer', 
+            photos: ['data:application/pdf;base64,' . $base64],
+            title: 'Reporte PDF - ' . $nro_prestamo
+        );
     }
 
     public function saveDevolucion(): void

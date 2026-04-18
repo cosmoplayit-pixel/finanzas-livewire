@@ -10,7 +10,7 @@
             {{-- Cabecera de columnas --}}
             <div
                 class="hidden sm:grid grid-cols-[1fr_64px_80px] gap-x-3 items-center px-3 py-2 bg-gray-50 dark:bg-neutral-800/60 border-b border-gray-200 dark:border-neutral-700">
-                <span class="text-[9px] font-black uppercase text-gray-400 tracking-wider">Herramienta</span>
+                <span class="text-[9px] font-black uppercase text-gray-400 tracking-wider">Herramienta · Estado físico</span>
                 <span class="text-[9px] font-black uppercase text-gray-400 tracking-wider text-center">Pend.</span>
                 <span class="text-[9px] font-black uppercase text-emerald-600 tracking-wider">Devolver</span>
             </div>
@@ -19,16 +19,16 @@
             <div class="max-h-[46vh] overflow-y-auto divide-y divide-gray-100 dark:divide-neutral-800">
                 @foreach ($items_devolucion as $id => $item)
                     <div wire:key="item-dev-{{ $id }}" x-data="{ qty: @entangle('items_devolucion.' . $id . '.cantidad_a_devolver').live }"
-                        class="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_64px_80px] gap-x-3 items-center px-3 py-2.5">
+                        class="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_64px_80px] gap-x-3 items-start px-3 py-2.5">
 
-                        {{-- Herramienta: thumbnail + nombre + código --}}
-                        <div class="flex items-center gap-2.5 min-w-0">
+                        {{-- Herramienta: thumbnail + nombre + código + estado físico --}}
+                        <div class="flex items-start gap-2.5 min-w-0">
                             @if (!empty($item['imagen'] ?? null))
                                 <img src="{{ asset('storage/' . $item['imagen']) }}"
-                                    class="size-9 rounded-lg object-cover border border-gray-200 dark:border-neutral-700 shrink-0 shadow-sm">
+                                    class="size-9 rounded-lg object-cover border border-gray-200 dark:border-neutral-700 shrink-0 shadow-sm mt-0.5">
                             @else
                                 <div
-                                    class="size-9 rounded-lg bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 flex items-center justify-center shrink-0">
+                                    class="size-9 rounded-lg bg-gray-100 dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 flex items-center justify-center shrink-0 mt-0.5">
                                     <svg class="size-4 text-gray-400" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -43,6 +43,24 @@
                                 <div
                                     class="text-[9px] font-mono text-gray-400 dark:text-neutral-500 leading-none mt-0.5">
                                     {{ $item['codigo'] ?? '—' }}
+                                </div>
+                                {{-- Selector de estado físico al retornar --}}
+                                <div class="flex gap-1 mt-1.5 flex-wrap">
+                                    @php
+                                        $efActual = $item['estado_fisico'] ?? 'bueno';
+                                        $efOpciones = [
+                                            'bueno'   => ['Bueno',   'bg-emerald-500 text-white border-emerald-500', 'border-gray-200 dark:border-neutral-700 text-gray-500 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800'],
+                                            'regular' => ['Regular', 'bg-amber-500 text-white border-amber-500',   'border-gray-200 dark:border-neutral-700 text-gray-500 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800'],
+                                            'malo'    => ['Malo',    'bg-red-500 text-white border-red-500',       'border-gray-200 dark:border-neutral-700 text-gray-500 dark:text-neutral-400 hover:bg-gray-50 dark:hover:bg-neutral-800'],
+                                        ];
+                                    @endphp
+                                    @foreach ($efOpciones as $ef => [$efLabel, $activeClass, $inactiveClass])
+                                        <button type="button"
+                                            wire:click="$set('items_devolucion.{{ $id }}.estado_fisico', '{{ $ef }}')"
+                                            class="text-[9px] font-black px-2 py-0.5 rounded-full border transition {{ $efActual === $ef ? $activeClass : $inactiveClass }}">
+                                            {{ $efLabel }}
+                                        </button>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>

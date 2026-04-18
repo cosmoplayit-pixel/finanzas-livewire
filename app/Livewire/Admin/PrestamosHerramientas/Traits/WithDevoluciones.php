@@ -28,6 +28,7 @@ trait WithDevoluciones
                 'imagen'              => $p->herramienta->imagen,
                 'cantidad_pendiente'  => $pendiente,
                 'cantidad_a_devolver' => $pendiente,
+                'estado_fisico'       => 'bueno',
             ];
         }
 
@@ -149,6 +150,7 @@ trait WithDevoluciones
                     'prestamo_id'       => $prestamo->id,
                     'cantidad_devuelta' => $cantRetorno,
                     'fecha_devolucion'  => $this->fecha_devolucion,
+                    'estado_fisico'     => $data['estado_fisico'] ?? 'bueno',
                     'fotos_entrada'     => ! $fotosAsignadas && ! empty($rutasFotos) ? $rutasFotos : [],
                     'firma_entrada'     => ! $fotosAsignadas ? $this->firma_entrada : null,
                     'observaciones'     => $this->observaciones_devolucion,
@@ -204,6 +206,7 @@ trait WithDevoluciones
                         'imagen'              => $p->herramienta->imagen,
                         'cantidad_pendiente'  => ($p->cantidad_prestada - $p->cantidad_devuelta),
                         'cantidad_a_devolver' => $item['cantidad_a_devolver'] ?? 0,
+                        'estado_fisico'       => $item['estado_fisico'] ?? 'bueno',
                     ];
                 } else {
                     unset($this->items_devolucion[$id]);

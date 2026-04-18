@@ -471,9 +471,25 @@
                                                 <div class="text-[13px] font-bold text-gray-900 dark:text-neutral-100">
                                                     {{ $dev->_herramienta_nombre }}
                                                 </div>
-                                                <div class="text-[10px] text-gray-400 dark:text-neutral-500">
-                                                    Stock actualizado automáticamente
-                                                </div>
+                                                @if ($dev->estado_fisico)
+                                                    @php
+                                                        $efBadge = match($dev->estado_fisico) {
+                                                            'bueno'   => 'bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20',
+                                                            'regular' => 'bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20',
+                                                            'malo'    => 'bg-red-50 text-red-700 border-red-100 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20',
+                                                            default   => 'bg-gray-50 text-gray-500 border-gray-200',
+                                                        };
+                                                        $efLabel = match($dev->estado_fisico) {
+                                                            'bueno'   => 'Bueno',
+                                                            'regular' => 'Regular',
+                                                            'malo'    => 'Malo',
+                                                            default   => ucfirst($dev->estado_fisico),
+                                                        };
+                                                    @endphp
+                                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded border text-[9px] font-black uppercase {{ $efBadge }} mt-0.5">
+                                                        {{ $efLabel }}
+                                                    </span>
+                                                @endif
                                             </div>
 
                                             <div

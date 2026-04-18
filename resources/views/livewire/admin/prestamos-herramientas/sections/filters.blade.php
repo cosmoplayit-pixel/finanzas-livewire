@@ -92,15 +92,18 @@
                 {{-- Estado del Préstamo --}}
                 <div class="space-y-1">
                     <p class="text-[9px] font-bold uppercase tracking-widest text-gray-400">Estado</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        @foreach (['activo' => 'En Obra', 'finalizado' => 'Devuelto'] as $val => $label)
+                    <div class="grid grid-cols-3 gap-2">
+                        @foreach ([
+                            'activo'    => ['label' => 'En Obra',  'active' => 'border-blue-400 bg-blue-50 dark:bg-blue-500/10 dark:border-blue-500'],
+                            'vencido'   => ['label' => 'Vencido',  'active' => 'border-red-400 bg-red-50 dark:bg-red-500/10 dark:border-red-500'],
+                            'finalizado'=> ['label' => 'Devuelto', 'active' => 'border-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 dark:border-emerald-500'],
+                        ] as $val => $cfg)
                             <label
                                 class="flex items-center gap-2 p-2 rounded-xl border cursor-pointer transition
-                                {{ in_array($val, $f_estado) ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 dark:border-indigo-500' : 'border-gray-200 dark:border-neutral-700 hover:bg-gray-50' }}">
+                                {{ in_array($val, $f_estado) ? $cfg['active'] : 'border-gray-200 dark:border-neutral-700 hover:bg-gray-50 dark:hover:bg-neutral-800' }}">
                                 <input type="checkbox" wire:model.live="f_estado" value="{{ $val }}"
                                     class="rounded text-indigo-600 focus:ring-0 border-gray-300">
-                                <span
-                                    class="text-[12px] font-bold text-gray-700 dark:text-neutral-200 truncate">{{ $label }}</span>
+                                <span class="text-[11px] font-bold text-gray-700 dark:text-neutral-200 truncate">{{ $cfg['label'] }}</span>
                             </label>
                         @endforeach
                     </div>

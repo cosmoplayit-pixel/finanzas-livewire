@@ -3,6 +3,7 @@
 
     @include('livewire.admin.herramientas.sections._header')
     @include('livewire.admin.herramientas.sections._alerts')
+    @include('livewire.admin.herramientas.sections._stats')
     @include('livewire.admin.herramientas.sections._filters')
     @include('livewire.admin.herramientas.sections._mobile_table')
     @include('livewire.admin.herramientas.sections._desktop_table')

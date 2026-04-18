@@ -344,11 +344,17 @@ class Index extends Component
                 ->paginate(5, ['*'], 'bajasPage')
             : null;
 
+        $stats = Herramienta::where('empresa_id', $this->userEmpresaId())
+            ->where('active', true)
+            ->selectRaw('COUNT(*) as activas, COALESCE(SUM(stock_disponible),0) as disponibles, COALESCE(SUM(stock_prestado),0) as prestadas, COALESCE(SUM(precio_total),0) as valor')
+            ->first();
+
         return view('livewire.admin.herramientas.index', [
             'herramientas' => $herramientas,
             'empresas' => Empresa::where('id', $this->userEmpresaId())->get(),
             'codigos' => $codigos,
             'historialBajas' => $historialBajas,
+            'stats' => $stats,
         ]);
     }
 

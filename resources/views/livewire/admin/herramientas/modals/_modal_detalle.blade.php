@@ -1,6 +1,6 @@
     {{-- ===================== MODAL VER DETALLE ===================== --}}
     <x-ui.modal wire:key="detail-herramienta-modal" model="detailModal" title="Ficha de Herramienta"
-        maxWidth="sm:max-w-lg" onClose="closeDetail">
+        maxWidth="sm:max-w-xl" onClose="closeDetail">
 
         @if (!empty($detail))
             <div class="space-y-4">
@@ -152,6 +152,45 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Historial de Préstamos Recientes --}}
+            @if (isset($detail['prestamos_recientes']) && count($detail['prestamos_recientes']) > 0)
+                <div class="mt-4">
+                    <div class="text-[10px] uppercase font-bold text-gray-500 dark:text-neutral-400 mb-2 px-1">
+                        Últimos Préstamos ({{ count($detail['prestamos_recientes']) }})
+                    </div>
+                    <div class="rounded-xl border border-gray-100 dark:border-neutral-800 overflow-hidden divide-y divide-gray-50 dark:divide-neutral-800">
+                        @foreach ($detail['prestamos_recientes'] as $p)
+                            @php
+                                $estadoBadge = match($p['estado']) {
+                                    'finalizado' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
+                                    'vencido'    => 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400',
+                                    default      => 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
+                                };
+                                $estadoLabel = match($p['estado']) {
+                                    'finalizado' => 'Devuelto',
+                                    'vencido'    => 'Vencido',
+                                    default      => 'En obra',
+                                };
+                            @endphp
+                            <div class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50/50 dark:hover:bg-neutral-800/20 transition">
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-mono text-[10px] font-black text-indigo-600 dark:text-indigo-400">{{ $p['nro'] }}</span>
+                                        <span class="text-[10px] px-1.5 py-0.5 rounded font-black uppercase {{ $estadoBadge }}">{{ $estadoLabel }}</span>
+                                    </div>
+                                    <div class="text-[11px] text-gray-600 dark:text-neutral-300 truncate mt-0.5">{{ $p['entidad'] }}</div>
+                                    <div class="text-[10px] text-gray-400 dark:text-neutral-500 truncate">{{ $p['proyecto'] }}</div>
+                                </div>
+                                <div class="text-right shrink-0">
+                                    <div class="text-xs font-black text-gray-700 dark:text-neutral-300">{{ $p['cantidad'] }} u.</div>
+                                    <div class="text-[10px] text-gray-400 dark:text-neutral-500">{{ $p['fecha'] }}</div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
 
             {{-- Historial de Bajas --}}
             @if (isset($detail['bajas']) && count($detail['bajas']) > 0)

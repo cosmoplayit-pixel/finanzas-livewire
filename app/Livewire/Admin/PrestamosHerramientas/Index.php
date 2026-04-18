@@ -108,7 +108,7 @@ class Index extends Component
 
         $this->fecha_prestamo = date('Y-m-d');
         $this->fecha_devolucion = date('Y-m-d');
-        $this->f_estado = ['activo'];
+        $this->f_estado = ['activo', 'vencido'];
         $this->empresaFilter = (string) $this->userEmpresaId();
 
         // Auto-abrir ver-modal si viene enlazado desde historial de bajas
@@ -193,6 +193,13 @@ class Index extends Component
     {
         $this->sanitizeItems();
         $this->sanitizeDevolucionItems();
+
+        // Auto-marcar préstamos activos vencidos
+        PrestamoHerramienta::where('estado', 'activo')
+            ->whereNotNull('fecha_vencimiento')
+            ->whereDate('fecha_vencimiento', '<', Carbon::today())
+            ->where('empresa_id', $this->userEmpresaId())
+            ->update(['estado' => 'vencido']);
 
         $query = PrestamoHerramienta::with(['herramienta' => fn($q) => $q->withTrashed(), 'entidad', 'proyecto', 'empresa']);
 

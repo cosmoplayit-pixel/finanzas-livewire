@@ -23,6 +23,7 @@ class PrestamoHerramienta extends Model
         'fecha_vencimiento',
         'estado',
         'fotos_salida',
+        'firma_salida',
         'observaciones',
     ];
 

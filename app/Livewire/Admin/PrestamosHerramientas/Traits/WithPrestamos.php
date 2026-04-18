@@ -98,6 +98,9 @@ trait WithPrestamos
         array_splice($this->items, $index, 1);
     }
 
+    public $firma_salida = null;
+
+
     // ── Confirmar préstamo ───────────────────────────────────────────────
     public function savePrestamo(): void
     {
@@ -112,9 +115,11 @@ trait WithPrestamos
             'fecha_vencimiento' => 'nullable|date|after_or_equal:fecha_prestamo',
             'fotos_salida' => 'required|array|min:1',
             'fotos_salida.*' => 'file|mimes:jpg,jpeg,png,pdf|max:10240',
+            'firma_salida' => 'required|string',
         ], [
             'fotos_salida.required' => 'Debe adjuntar al menos una foto o PDF de evidencia de salida.',
             'fotos_salida.min' => 'Debe adjuntar al menos una foto o PDF de evidencia de salida.',
+            'firma_salida.required' => 'La firma digital es obligatoria para confirmar la salida.',
         ]);
 
         if (empty($this->items)) {
@@ -163,6 +168,7 @@ trait WithPrestamos
                     'fecha_prestamo' => $this->fecha_prestamo,
                     'fecha_vencimiento' => $this->fecha_vencimiento,
                     'fotos_salida' => ! empty($rutasFotos) ? $rutasFotos : null,
+                    'firma_salida' => $this->firma_salida,
                     'estado' => 'activo',
                 ]);
 
@@ -187,6 +193,7 @@ trait WithPrestamos
         $this->items = [];
         $this->fotos_salida = [];
         $this->temp_fotos_salida = [];
+        $this->firma_salida = null;
         $this->fecha_prestamo = date('Y-m-d');
         $this->openModalPrestamo = true;
     }

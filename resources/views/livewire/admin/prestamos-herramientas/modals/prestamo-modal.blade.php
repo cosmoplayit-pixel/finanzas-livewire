@@ -453,16 +453,28 @@
                     </div>
                 </div>
             </div>
+            {{-- SECCIÓN 4: FIRMA DIGITAL --}}
+            <div class="border-t border-gray-100 dark:border-neutral-800 pt-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <div
+                        class="size-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-black">
+                        4</div>
+                    <span class="text-sm font-bold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Firma
+                        de Conformidad</span>
+                </div>
+
+                <x-ui.signature-pad model="firma_salida" label="Firma de quien recibe" />
+            </div>
         </div>
 
         @slot('footer')
             <div class="w-full grid grid-cols-2 gap-2 sm:flex sm:justify-end sm:gap-3">
-                <button type="button" @click="close()"
+                <button type="button" @click="$set('openModalPrestamo', false)"
                     class="w-full sm:w-auto px-5 py-2 rounded-lg border cursor-pointer border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 text-sm font-bold transition">
                     Cancelar
                 </button>
                 <button type="button" wire:click="savePrestamo" wire:loading.attr="disabled"
-                    @disabled(!$entidad_id || !$proyecto_id || !$fecha_prestamo || empty($items) || empty($fotos_salida))
+                    @disabled(!$entidad_id || !$proyecto_id || !$fecha_prestamo || empty($items) || empty($fotos_salida) || !$firma_salida)
                     class="px-8 py-2 rounded-lg cursor-pointer bg-black text-white hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-black transition shadow-lg shadow-neutral-900/10 tracking-wide flex items-center justify-center gap-2">
                     <span wire:loading.remove wire:target="savePrestamo">Confirmar Salida
                         ({{ count($items) ?? 0 }})</span>

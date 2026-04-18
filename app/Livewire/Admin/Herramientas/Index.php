@@ -46,6 +46,10 @@ class Index extends Component
     // =========================
     public array $codigosData = [];
 
+    public array $categoriasData = [];
+
+    public array $unidadesData = [];
+
     // =========================
     // Modal Crear
     // =========================
@@ -124,13 +128,13 @@ class Index extends Component
 
     public string $estado_fisico = 'bueno';
 
-    public string $unidad = '';
+    public $unidad = '';
 
-    public int $stock_total = 0;
+    public $stock_total = 0;
 
-    public int $stock_disponible = 0;
+    public $stock_disponible = 0;
 
-    public int $stock_prestado = 0;
+    public $stock_prestado = 0;
 
     public string $precio_unitario = '0';
 
@@ -138,7 +142,7 @@ class Index extends Component
 
     public $imagen = null;
 
-    public bool $isExistingCode = false;    // true cuando el cÃ³digo ya existe â†’ modo editar
+    public $isExistingCode = false; // true cuando el código ya existe -> modo editar
 
     public ?int $foundHerramientaId = null; // ID de la herramienta encontrada por el buscador
 
@@ -203,7 +207,7 @@ class Index extends Component
     {
         return [
             'empresa_id' => ['nullable'],
-            'codigo' => ['nullable', 'string', 'max:50', 'regex:/^[a-zA-Z0-9\-\.\/]+$/'],
+            'codigo' => ['nullable', 'string', 'max:100', 'regex:/^[a-zA-Z0-9\-\.\/\s]+$/'],
             'nombre' => ['required', 'string', 'min:2', 'max:200'],
             'marca' => ['nullable', 'string', 'max:100'],
             'modelo' => ['nullable', 'string', 'max:100'],
@@ -220,7 +224,7 @@ class Index extends Component
     protected function messages(): array
     {
         return [
-            'codigo.regex' => 'Solo letras, nÃºmeros y - . / sin espacios.',
+            'codigo.regex' => 'Solo letras, números, espacios y - . /',
         ];
     }
 
@@ -308,6 +312,26 @@ class Index extends Component
                 'nombre' => $c->nombre,
                 'imagen' => $c->imagen ? asset('storage/'.$c->imagen) : null,
             ])
+            ->values()
+            ->toArray();
+
+        $this->categoriasData = Herramienta::where('empresa_id', $this->userEmpresaId())
+            ->whereNotNull('codigo')
+            ->where('codigo', '!=', '')
+            ->distinct()
+            ->pluck('codigo')
+            ->map(fn($c) => strtoupper(trim($c)))
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $this->unidadesData = Herramienta::where('empresa_id', $this->userEmpresaId())
+            ->whereNotNull('unidad')
+            ->where('unidad', '!=', '')
+            ->distinct()
+            ->pluck('unidad')
+            ->map(fn($u) => strtoupper(trim($u)))
+            ->unique()
             ->values()
             ->toArray();
 

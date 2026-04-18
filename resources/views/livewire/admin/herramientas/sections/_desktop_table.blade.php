@@ -5,9 +5,9 @@
             <thead
                 class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-700">
                 <tr class="text-left text-xs uppercase tracking-wider">
-                    <th class="p-2 w-[5%] text-center">Img</th>
-                    <th class="p-2 w-[5%] cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('codigo')">
-                        Código
+                    <th class="p-2 w-[5%] text-center">Foto</th>
+                    <th class="p-2 w-[10%] cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('codigo')">
+                        Categoría
                         @if ($sortField === 'codigo')
                             <span class="text-gray-900 dark:text-white">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                         @endif

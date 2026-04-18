@@ -14,6 +14,7 @@ class DevolucionHerramienta extends Model
         'fecha_devolucion',
         'estado_fisico',
         'fotos_entrada',
+        'firma_entrada',
         'observaciones',
     ];
 

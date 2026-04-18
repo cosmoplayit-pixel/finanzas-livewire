@@ -125,7 +125,7 @@ trait WithCreateEdit
 	    {
 	        $rules = [
 	            'empresa_id' => ['nullable'],
-	            'codigo' => ['nullable', 'string', 'max:50', 'regex:/^[a-zA-Z0-9\-\.\/]+$/'],
+	            'codigo' => ['nullable', 'string', 'max:100', 'regex:/^[a-zA-Z0-9\-\.\/\s]+$/'],
 	            'nombre' => ['required', 'string', 'min:2', 'max:200'],
 	            'marca' => ['nullable', 'string', 'max:100'],
 	            'modelo' => ['nullable', 'string', 'max:100'],
@@ -224,7 +224,7 @@ trait WithCreateEdit
 	    {
 	        $rules = [
 	            'empresa_id' => ['nullable'],
-	            'codigo' => ['nullable', 'string', 'max:50', 'regex:/^[a-zA-Z0-9\-\.\/]+$/'],
+	            'codigo' => ['nullable', 'string', 'max:100', 'regex:/^[a-zA-Z0-9\-\.\/\s]+$/'],
 	            'nombre' => ['required', 'string', 'min:2', 'max:200'],
 	            'marca' => ['nullable', 'string', 'max:100'],
 	            'modelo' => ['nullable', 'string', 'max:100'],

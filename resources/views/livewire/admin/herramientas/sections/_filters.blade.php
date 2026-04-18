@@ -7,7 +7,7 @@
                     <div class="md:col-span-12 lg:col-span-8">
                         <label class="block text-xs mb-1 text-gray-600 dark:text-neutral-300">Búsqueda</label>
                         <input type="search" wire:model.live.debounce.300ms="search"
-                            placeholder="Buscar por nombre, código, marca o modelo…" autocomplete="off"
+                            placeholder="Buscar por nombre, categoría, marca o modelo…" autocomplete="off"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40" />
                     </div>
 

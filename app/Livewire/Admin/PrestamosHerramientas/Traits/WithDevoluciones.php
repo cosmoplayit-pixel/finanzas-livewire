@@ -11,6 +11,7 @@ trait WithDevoluciones
     public function openDevolucion(string $nro_prestamo): void
     {
         $this->resetValidation();
+        $this->firma_entrada = null;
         $this->prestamoNroParaDevolver = $nro_prestamo;
 
         $prestamos = PrestamoHerramienta::with('herramienta')
@@ -62,6 +63,9 @@ trait WithDevoluciones
         }
     }
 
+    public $firma_entrada = null;
+
+
     public function exportPdf(string $nro_prestamo)
     {
         $prestamos = PrestamoHerramienta::with(['herramienta', 'entidad', 'proyecto', 'empresa', 'devoluciones'])
@@ -93,7 +97,12 @@ trait WithDevoluciones
 
     public function saveDevolucion(): void
     {
-        $reglas    = ['fecha_devolucion' => 'required|date', 'fotos_entrada' => 'required|array|min:1', 'fotos_entrada.*' => 'file|mimes:jpg,jpeg,png,pdf|max:10240'];
+        $reglas    = [
+            'fecha_devolucion' => 'required|date', 
+            'fotos_entrada' => 'required|array|min:1', 
+            'fotos_entrada.*' => 'file|mimes:jpg,jpeg,png,pdf|max:10240',
+            'firma_entrada' => 'required|string'
+        ];
         $hayAccion = false;
 
         foreach ($this->items_devolucion as $id => $data) {
@@ -112,6 +121,7 @@ trait WithDevoluciones
             'items_devolucion.*.cantidad_a_devolver.max' => 'Supera la cantidad pendiente.',
             'fotos_entrada.required' => 'Debe adjuntar al menos una foto o PDF de evidencia de retorno.',
             'fotos_entrada.min'      => 'Debe adjuntar al menos una foto o PDF de evidencia de retorno.',
+            'firma_entrada.required' => 'La firma digital es obligatoria para confirmar el retorno.',
         ]);
 
         DB::transaction(function () {
@@ -140,6 +150,7 @@ trait WithDevoluciones
                     'cantidad_devuelta' => $cantRetorno,
                     'fecha_devolucion'  => $this->fecha_devolucion,
                     'fotos_entrada'     => ! $fotosAsignadas && ! empty($rutasFotos) ? $rutasFotos : [],
+                    'firma_entrada'     => ! $fotosAsignadas ? $this->firma_entrada : null,
                     'observaciones'     => $this->observaciones_devolucion,
                 ]);
 

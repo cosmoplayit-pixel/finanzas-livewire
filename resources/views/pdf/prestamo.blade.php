@@ -420,6 +420,49 @@
             font-family: 'DejaVu Sans Mono', monospace;
             font-size: 9px;
         }
+
+        /* ── Firma ────────────────────────────────────────────────── */
+        .sig-container {
+            width: 100%;
+            margin-top: 15px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 10px;
+        }
+
+        .sig-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .sig-box {
+            width: 50%;
+            padding: 5px;
+            vertical-align: top;
+        }
+
+        .sig-frame {
+            background: #ffffff;
+            border: 1px solid #edf2f7;
+            padding: 5px;
+            text-align: center;
+        }
+
+        .sig-img {
+            height: 60px;
+            max-width: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .sig-label {
+            font-size: 7px;
+            font-weight: bold;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-top: 4px;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 3px;
+        }
     </style>
 </head>
 
@@ -692,6 +735,7 @@
                         'nro' => $sidx++,
                         'fecha' => $dev->fecha_devolucion,
                         'obs' => $dev->observaciones,
+                        'firma' => $dev->firma_entrada,
                         'items' => collect([]),
                     ];
                 }
@@ -722,6 +766,96 @@
                     </tr>
                 </table>
             @endforeach
+        @endif
+
+        {{-- ══ SECCIÓN UNIFICADA DE FIRMAS ══════════════════════════════════ --}}
+        @php
+            $firmasSalida = $first->firma_salida ?? null;
+            $firmasRecep = collect($devSessions ?? [])
+                ->filter(fn($s) => !empty($s['firma']))
+                ->values();
+            $hayFirmas = $firmasSalida || $firmasRecep->isNotEmpty();
+        @endphp
+
+        @if ($hayFirmas)
+            <div class="sect-title" style="margin-top: 20px; border-left-color: #6366f1; color: #4338ca;">
+                Firmas Digitales de Conformidad
+            </div>
+
+            <table style="width:100%; border-collapse:separate; border-spacing: 6px;">
+                <tr>
+                    {{-- Firma de Salida --}}
+                    @if ($firmasSalida)
+                        <td style="width: 50%; vertical-align: top;">
+                            <div style="border: 1px solid #e2e8f0; border-radius: 4px; overflow: hidden;">
+                                <div
+                                    style="background: #eef2ff; padding: 5px 10px; font-size: 7.5px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #4338ca;">
+                                    &#9998; Firma de Salida
+                                </div>
+                                <div style="background: #ffffff; padding: 8px; text-align: center;">
+                                    <img src="{{ $firmasSalida }}"
+                                        style="height: 70px; max-width: 100%; display: block; margin: 0 auto;"
+                                        alt="Firma Salida">
+                                </div>
+                                <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 4px 10px;">
+                                    <div style="font-size: 7px; color: #64748b;">Responsable:
+                                        <strong>{{ $first->agente?->nombre ?? ($first->receptor_manual ?: 'N/A') }}</strong>
+                                    </div>
+                                    <div style="font-size: 7px; color: #94a3b8;">Fecha salida:
+                                        {{ \Carbon\Carbon::parse($first->fecha_prestamo)->format('d/m/Y') }}</div>
+                                </div>
+                            </div>
+                        </td>
+                    @endif
+
+                    {{-- Firmas de Recepción (la más reciente) --}}
+                    @if ($firmasRecep->isNotEmpty())
+                        <td style="width: 50%; vertical-align: top;">
+                            @foreach ($firmasRecep as $fr)
+                                <div
+                                    style="border: 1px solid #bbf7d0; border-radius: 4px; overflow: hidden; {{ !$loop->first ? 'margin-top: 6px;' : '' }}">
+                                    <div
+                                        style="background: #dcfce7; padding: 5px 10px; font-size: 7.5px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.8px; color: #166534;">
+                                        &#10003; Firma Recepción {{ $fr['nro'] }}
+                                    </div>
+                                    <div style="background: #ffffff; padding: 8px; text-align: center;">
+                                        <img src="{{ $fr['firma'] }}"
+                                            style="height: 70px; max-width: 100%; display: block; margin: 0 auto;"
+                                            alt="Firma Recepción">
+                                    </div>
+                                    <div
+                                        style="background: #f0fdf4; border-top: 1px solid #bbf7d0; padding: 4px 10px;">
+                                        <div style="font-size: 7px; color: #166534;">Fecha:
+                                            <strong>{{ \Carbon\Carbon::parse($fr['fecha'])->format('d/m/Y') }}</strong>
+                                        </div>
+                                        @if (!empty($fr['obs']))
+                                            <div style="font-size: 7px; color: #6b7280; font-style: italic;">
+                                                "{{ $fr['obs'] }}"</div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </td>
+                    @endif
+
+                    {{-- Columna vacía si solo hay firma de salida y no hubo recepciones --}}
+                    @if ($firmasSalida && $firmasRecep->isEmpty())
+                        <td style="width: 50%; vertical-align: bottom; padding-left: 10px;">
+                            <div
+                                style="border: 1px dashed #e2e8f0; border-radius: 4px; padding: 18px 10px; text-align: center;">
+                                <div style="font-size: 8px; color: #cbd5e1; font-style: italic;">Pendiente firma de
+                                    recepción</div>
+                            </div>
+                        </td>
+                    @endif
+                </tr>
+            </table>
+
+            <div
+                style="font-size: 7px; color: #a0aec0; font-style: italic; margin-top: 6px; padding-top: 4px; border-top: 1px dashed #e2e8f0;">
+                * Firmas digitales capturadas al momento de la transacci&oacute;n. V&aacute;lidas para control interno
+                de activos.
+            </div>
         @endif
 
         {{-- ══════════════ PÁGINAS DE FOTOS ══════════════════════════════ --}}

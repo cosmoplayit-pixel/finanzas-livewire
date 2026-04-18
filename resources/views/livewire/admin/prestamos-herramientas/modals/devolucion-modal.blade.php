@@ -143,15 +143,19 @@
             </div>
         </div>
 
+        <div class="border-t border-gray-100 dark:border-neutral-800 pt-4">
+            <x-ui.signature-pad model="firma_entrada" label="Firma de quien devuelve" />
+        </div>
+
     </div>
 
     @slot('footer')
         <div class="w-full flex justify-end gap-3">
-            <button type="button" @click="close()"
+            <button type="button" @click="$set('openModalDevolucion', false)"
                 class="px-5 py-2 rounded-lg border cursor-pointer border-gray-300 dark:border-neutral-700 text-gray-500 dark:text-neutral-300 hover:bg-gray-100 dark:hover:bg-neutral-800 text-sm font-bold transition">
                 Cerrar
             </button>
-            <button type="button" wire:click="saveDevolucion" wire:loading.attr="disabled" @disabled(!$fecha_devolucion || empty($fotos_entrada))
+            <button type="button" wire:click="saveDevolucion" wire:loading.attr="disabled" @disabled(!$fecha_devolucion || empty($fotos_entrada) || !$firma_entrada)
                 class="px-8 py-2 rounded-lg cursor-pointer bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-black transition shadow-lg shadow-emerald-600/10 uppercase tracking-wide">
                 <span wire:loading.remove wire:target="saveDevolucion">Devolver</span>
                 <span wire:loading wire:target="saveDevolucion">Procesando...</span>

@@ -45,6 +45,7 @@
                             'fecha_devolucion' => $dev->fecha_devolucion,
                             'observaciones' => $dev->observaciones,
                             'fotos' => $dev->fotos_entrada ?? [],
+                            'firma' => $dev->firma_entrada,
                             'items' => collect([]),
                             'created_at' => $dev->created_at,
                         ];
@@ -201,6 +202,21 @@
                                                 @click="$dispatch('open-viewer', { title: '{{ $verNroPrestamo }} — Salida', photos: {{ json_encode($fotosSalidaUrls) }} })">
                                         @endif
                                     @endforeach
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Firma de Salida --}}
+                        @if ($verFirst->firma_salida)
+                            <div class="px-4 py-2 col-span-2 sm:col-span-1">
+                                <div
+                                    class="text-[9px] uppercase font-black text-gray-400 dark:text-neutral-500 tracking-wider mb-1">
+                                    Firma de Salida
+                                </div>
+                                <div
+                                    class="bg-white dark:bg-neutral-900 rounded-lg border border-gray-100 dark:border-neutral-700/50 p-1 w-fit">
+                                    <img src="{{ $verFirst->firma_salida }}"
+                                        class="h-12 object-contain dark:invert transition-all" alt="Firma Salida">
                                 </div>
                             </div>
                         @endif
@@ -416,139 +432,146 @@
                                                         +{{ $fotosCount - 3 }}
                                                     </div>
                                                 @endif
-                                            </div>
                                         @endif
                                     </div>
 
-                                    {{-- Items del Retorno --}}
-                                    <div class="divide-y divide-gray-50 dark:divide-neutral-700/30">
-                                        @foreach ($recepcion['items'] as $dev)
-                                            <div
-                                                class="flex items-center gap-3 px-4 py-1.5 transition hover:bg-gray-50/30 dark:hover:bg-neutral-800/10">
-                                                {{-- Imagen Herramienta --}}
-                                                @if ($dev->_herramienta_imagen)
-                                                    <img src="{{ Storage::url($dev->_herramienta_imagen) }}"
-                                                        class="size-10 rounded-xl border border-gray-100 object-cover dark:border-neutral-700">
-                                                @else
-                                                    <div
-                                                        class="flex size-10 items-center justify-center rounded-xl bg-gray-50 dark:bg-neutral-800">
-                                                        <svg class="size-4 text-gray-300" fill="none"
-                                                            viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
-                                                        </svg>
-                                                    </div>
-                                                @endif
+                                    {{-- Firma de la Recepción --}}
+                                    @if (!empty($recepcion['firma']))
+                                        <div
+                                            class="shrink-0 bg-white dark:bg-neutral-900 rounded-lg border border-gray-100 dark:border-neutral-700/50 p-1 ml-auto mr-2">
+                                            <img src="{{ $recepcion['firma'] }}"
+                                                class="h-8 object-contain dark:invert transition-all"
+                                                alt="Firma Recepción">
+                                        </div>
+                                    @endif
+                                </div>
 
-                                                <div class="flex-1 min-w-0">
-                                                    <div
-                                                        class="text-[13px] font-bold text-gray-900 dark:text-neutral-100">
-                                                        {{ $dev->_herramienta_nombre }}
-                                                    </div>
-                                                    <div class="text-[10px] text-gray-400 dark:text-neutral-500">
-                                                        Stock actualizado automáticamente
-                                                    </div>
-                                                </div>
-
+                                {{-- Items del Retorno --}}
+                                <div class="divide-y divide-gray-50 dark:divide-neutral-700/30">
+                                    @foreach ($recepcion['items'] as $dev)
+                                        <div
+                                            class="flex items-center gap-3 px-4 py-1.5 transition hover:bg-gray-50/30 dark:hover:bg-neutral-800/10">
+                                            {{-- Imagen Herramienta --}}
+                                            @if ($dev->_herramienta_imagen)
+                                                <img src="{{ Storage::url($dev->_herramienta_imagen) }}"
+                                                    class="size-10 rounded-xl border border-gray-100 object-cover dark:border-neutral-700">
+                                            @else
                                                 <div
-                                                    class="flex h-7 items-center rounded-lg bg-emerald-50 px-2.5 text-[11px] font-black text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
-                                                    +{{ $dev->cantidad_devuelta }} u.
+                                                    class="flex size-10 items-center justify-center rounded-xl bg-gray-50 dark:bg-neutral-800">
+                                                    <svg class="size-4 text-gray-300" fill="none"
+                                                        viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10" />
+                                                    </svg>
+                                                </div>
+                                            @endif
+
+                                            <div class="flex-1 min-w-0">
+                                                <div class="text-[13px] font-bold text-gray-900 dark:text-neutral-100">
+                                                    {{ $dev->_herramienta_nombre }}
+                                                </div>
+                                                <div class="text-[10px] text-gray-400 dark:text-neutral-500">
+                                                    Stock actualizado automáticamente
                                                 </div>
                                             </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
 
-                {{-- ══════════════════════════════════════════════════ --}}
-                {{-- SECCIÓN 4 — BAJAS / PÉRDIDAS                      --}}
-                {{-- ══════════════════════════════════════════════════ --}}
-                @if ($verBajas && $verBajas->isNotEmpty())
-                    <div>
-                        {{-- Encabezado de sección --}}
-                        <div class="flex items-center gap-2 mb-2">
+                                            <div
+                                                class="flex h-7 items-center rounded-lg bg-emerald-50 px-2.5 text-[11px] font-black text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
+                                                +{{ $dev->cantidad_devuelta }} u.
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                        </div>
+                @endforeach
+            </div>
+            </div>
+        @endif
+
+        {{-- ══════════════════════════════════════════════════ --}}
+        {{-- SECCIÓN 4 — BAJAS / PÉRDIDAS                      --}}
+        {{-- ══════════════════════════════════════════════════ --}}
+        @if ($verBajas && $verBajas->isNotEmpty())
+            <div>
+                {{-- Encabezado de sección --}}
+                <div class="flex items-center gap-2 mb-2">
+                    <div
+                        class="size-5 rounded-md bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+                        <svg class="size-3 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <span class="text-[11px] uppercase font-black text-red-500 dark:text-red-400 tracking-wider">Bajas
+                        / Pérdidas</span>
+                    <span class="text-[10px] text-gray-400 dark:text-neutral-600">{{ $verBajas->count() }}
+                        registro(s)</span>
+                </div>
+
+                <div class="space-y-2">
+                    @foreach ($verBajas as $baja)
+                        <div
+                            class="flex items-start gap-3 rounded-xl border border-red-100 dark:border-red-900/30 bg-red-50/40 dark:bg-red-900/10 px-4 py-2">
+                            {{-- Icono baja --}}
                             <div
-                                class="size-5 rounded-md bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
-                                <svg class="size-3 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24"
+                                class="size-9 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50 flex items-center justify-center shrink-0 mt-0.5">
+                                <svg class="size-4 text-red-500 dark:text-red-400" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </div>
-                            <span
-                                class="text-[11px] uppercase font-black text-red-500 dark:text-red-400 tracking-wider">Bajas
-                                / Pérdidas</span>
-                            <span class="text-[10px] text-gray-400 dark:text-neutral-600">{{ $verBajas->count() }}
-                                registro(s)</span>
-                        </div>
 
-                        <div class="space-y-2">
-                            @foreach ($verBajas as $baja)
-                                <div
-                                    class="flex items-start gap-3 rounded-xl border border-red-100 dark:border-red-900/30 bg-red-50/40 dark:bg-red-900/10 px-4 py-2">
-                                    {{-- Icono baja --}}
-                                    <div
-                                        class="size-9 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800/50 flex items-center justify-center shrink-0 mt-0.5">
-                                        <svg class="size-4 text-red-500 dark:text-red-400" fill="none"
-                                            viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </div>
-
-                                    {{-- Datos --}}
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex items-center gap-2 flex-wrap">
-                                            <span class="font-bold text-gray-900 dark:text-neutral-100 text-[13px]">
-                                                {{ $baja->herramienta?->nombre ?? 'Herramienta Eliminada' }}
-                                            </span>
-                                            <span
-                                                class="inline-flex items-center px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 text-[10px] font-black">
-                                                -{{ $baja->cantidad }} u.
-                                            </span>
-                                        </div>
-                                        @if ($baja->observaciones)
-                                            <div class="text-[11px] text-gray-600 dark:text-neutral-400 mt-0.5">
-                                                {{ $baja->observaciones }}
-                                            </div>
-                                        @endif
-                                        <div class="text-[10px] text-gray-400 dark:text-neutral-600 mt-0.5">
-                                            {{ $baja->created_at->format('d/m/Y H:i') }} ·
-                                            {{ $baja->user?->name ?? 'Sistema' }}
-                                        </div>
-                                    </div>
-
-                                    {{-- Evidencia foto --}}
-                                    @if ($baja->imagen)
-                                        <img src="{{ Storage::url($baja->imagen) }}" alt="Evidencia baja"
-                                            class="size-12 rounded-lg object-cover border-2 border-red-200 dark:border-red-800 cursor-pointer hover:opacity-80 transition shrink-0"
-                                            @click="$dispatch('open-viewer', { title: 'Evidencia de Baja', photos: ['{{ Storage::url($baja->imagen) }}'] })">
-                                    @endif
+                            {{-- Datos --}}
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="font-bold text-gray-900 dark:text-neutral-100 text-[13px]">
+                                        {{ $baja->herramienta?->nombre ?? 'Herramienta Eliminada' }}
+                                    </span>
+                                    <span
+                                        class="inline-flex items-center px-1.5 py-0.5 rounded bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 text-[10px] font-black">
+                                        -{{ $baja->cantidad }} u.
+                                    </span>
                                 </div>
-                            @endforeach
+                                @if ($baja->observaciones)
+                                    <div class="text-[11px] text-gray-600 dark:text-neutral-400 mt-0.5">
+                                        {{ $baja->observaciones }}
+                                    </div>
+                                @endif
+                                <div class="text-[10px] text-gray-400 dark:text-neutral-600 mt-0.5">
+                                    {{ $baja->created_at->format('d/m/Y H:i') }} ·
+                                    {{ $baja->user?->name ?? 'Sistema' }}
+                                </div>
+                            </div>
+
+                            {{-- Evidencia foto --}}
+                            @if ($baja->imagen)
+                                <img src="{{ Storage::url($baja->imagen) }}" alt="Evidencia baja"
+                                    class="size-12 rounded-lg object-cover border-2 border-red-200 dark:border-red-800 cursor-pointer hover:opacity-80 transition shrink-0"
+                                    @click="$dispatch('open-viewer', { title: 'Evidencia de Baja', photos: ['{{ Storage::url($baja->imagen) }}'] })">
+                            @endif
                         </div>
-                    </div>
-                @endif
-
-                {{-- Espaciado inferior --}}
-                <div class="h-1"></div>
-
-            </div>
-        @else
-            <div class="flex flex-col items-center justify-center py-12 text-center">
-                <div
-                    class="w-14 h-14 bg-gray-50 dark:bg-neutral-800 rounded-full flex items-center justify-center mb-3">
-                    <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                    </svg>
+                    @endforeach
                 </div>
-                <p class="text-sm text-gray-400">No se encontraron datos para este préstamo.</p>
             </div>
+        @endif
+
+        {{-- Espaciado inferior --}}
+        <div class="h-1"></div>
+
+        </div>
+    @else
+        <div class="flex flex-col items-center justify-center py-12 text-center">
+            <div class="w-14 h-14 bg-gray-50 dark:bg-neutral-800 rounded-full flex items-center justify-center mb-3">
+                <svg class="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+            </div>
+            <p class="text-sm text-gray-400">No se encontraron datos para este préstamo.</p>
+        </div>
         @endif
 
         @slot('footer')

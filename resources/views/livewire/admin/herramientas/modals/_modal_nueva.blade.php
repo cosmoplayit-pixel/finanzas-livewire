@@ -29,10 +29,8 @@
                             const q = this.query.toUpperCase();
                             return this.items.filter(c => c.nombre.toUpperCase().includes(q)).slice(0, 8);
                         }
-                
-                        <
-                        label class ="block text-sm mb-1 font-medium
-                    text-gray-700 dark:text-neutral-300">Nombre del Equipo
+                }">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Nombre del Equipo
                     <span class="text-red-500">*</span></label>
                     <div class="relative">
                         <input type="text" x-model="query" @input="open = true"
@@ -97,10 +95,8 @@
                         this.query = val;
                         this.open = false;
                     }
-                
-                    <
-                    label class ="block text-sm mb-1 font-medium
-                    text-gray-700 dark:text-neutral-300">Categoría</label>
+                }">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Categoría</label>
                     <div class="relative">
                         <input type="text" x-model="query" @focus="open = true"
                             @input="open = true; query = query.toUpperCase()"

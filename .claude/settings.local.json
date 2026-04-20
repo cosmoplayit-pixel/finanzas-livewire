@@ -10,7 +10,8 @@
       "Bash(grep -r \"Presupuestos\\\\\\\\\\\\\\\\Index\\\\|presupuestos.index\\\\|presupuestos'\" c:/xampp/htdocs/finanzas-livewire/routes/ --include=\"*.php\")",
       "Bash(php -l app/Livewire/Admin/Herramientas.php)",
       "Bash(php -l app/Exports/HerramientasExport.php)",
-      "Bash(php -l app/Livewire/Admin/PrestamosHerramientas/Traits/WithDevoluciones.php)"
+      "Bash(php -l app/Livewire/Admin/PrestamosHerramientas/Traits/WithDevoluciones.php)",
+      "Bash(python3 -)"
     ]
   }
 }

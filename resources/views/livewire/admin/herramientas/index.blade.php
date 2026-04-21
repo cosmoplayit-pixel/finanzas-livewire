@@ -1,4 +1,4 @@
-@section('title', 'Herramientas')
+@section('title', 'Inventario General de Recursos')
 <div>
 
     @include('livewire.admin.herramientas.sections._header')

@@ -63,10 +63,23 @@
                         {{-- Imagen --}}
                         <td class="p-2 text-center">
                             @if ($h->imagen)
-                                <img src="{{ Storage::url($h->imagen) }}"
-                                    class="w-10 h-10 object-cover rounded-lg shadow-sm border border-gray-200 dark:border-neutral-700 inline-block cursor-pointer hover:opacity-80 transition"
-                                    alt="Img"
-                                    onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ Storage::url($h->imagen) }}' }))">
+                                @if ($h->is_pdf)
+                                    <div class="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-500/10 inline-flex items-center justify-center text-red-500 border border-red-200 dark:border-red-500/20 cursor-pointer hover:bg-red-100 transition relative group mx-auto"
+                                        title="Ver Ficha Técnica (PDF)"
+                                        onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ Storage::url($h->imagen) }}' }))">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                        </svg>
+                                        <span
+                                            class="absolute -bottom-1 -right-1 bg-red-600 text-[8px] font-black text-white px-1 rounded-sm shadow-sm scale-75 group-hover:scale-100 transition-transform">PDF</span>
+                                    </div>
+                                @else
+                                    <img src="{{ Storage::url($h->imagen) }}"
+                                        class="w-10 h-10 object-cover rounded-lg shadow-sm border border-gray-200 dark:border-neutral-700 inline-block cursor-pointer hover:opacity-80 transition"
+                                        alt="Img"
+                                        onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ Storage::url($h->imagen) }}' }))">
+                                @endif
                             @else
                                 <div
                                     class="w-10 h-10 rounded-lg bg-gray-50 dark:bg-neutral-800 inline-flex items-center justify-center text-gray-400 dark:text-neutral-600 border border-gray-200 dark:border-neutral-700">
@@ -181,29 +194,57 @@
                         {{-- Acciones --}}
                         @canany(['herramientas.update', 'herramientas.toggle', 'herramientas.delete',
                             'herramientas.stock_add', 'herramientas.stock_baja'])
+                            @php
+                                $anyModalOpen =
+                                    $openModal ||
+                                    $editModal ||
+                                    $detailModal ||
+                                    $openAddStockModal ||
+                                    $openBajaStockModal ||
+                                    ($bajasModal ?? false);
+                            @endphp
                             <td class="p-2 whitespace-nowrap text-center">
-                                <div class="flex items-center justify-center gap-1.5">
+                                <div wire:loading.class="opacity-50 grayscale pointer-events-none"
+                                    class="flex items-center justify-center gap-1.5 {{ $anyModalOpen ? 'opacity-50 grayscale pointer-events-none' : '' }}">
 
                                     {{-- Ver detalle --}}
                                     <button wire:click="openDetail({{ $h->id }})" wire:loading.attr="disabled"
-                                        wire:target="openDetail({{ $h->id }})" title="Ver detalle"
-                                        class="cursor-pointer w-7 h-7 flex-none inline-flex items-center justify-center rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 dark:text-neutral-500 dark:hover:text-indigo-400 transition disabled:opacity-50">
-                                        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        @disabled($anyModalOpen) title="Ver detalle"
+                                        class="cursor-pointer size-7 flex-none inline-flex items-center justify-center rounded-lg border border-indigo-200 dark:border-indigo-800/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition disabled:!bg-gray-100 disabled:!text-gray-400 disabled:!border-gray-200 dark:disabled:!bg-neutral-800 dark:disabled:!text-neutral-600">
+                                        <svg wire:loading.remove wire:target="openDetail({{ $h->id }})"
+                                            class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                        <svg wire:loading wire:target="openDetail({{ $h->id }})"
+                                            class="size-4 animate-spin text-indigo-600" fill="none"
+                                            viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                         </svg>
                                     </button>
 
                                     @can('herramientas.update')
                                         {{-- Editar --}}
                                         <button wire:click="openEdit({{ $h->id }})" wire:loading.attr="disabled"
-                                            wire:target="openEdit({{ $h->id }})" title="Editar"
-                                            class="cursor-pointer w-7 h-7 flex-none inline-flex items-center justify-center rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 dark:text-neutral-500 dark:hover:text-amber-400 transition disabled:opacity-50">
-                                            <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            @disabled($anyModalOpen) title="Editar"
+                                            class="cursor-pointer size-7 flex-none inline-flex items-center justify-center rounded-lg border border-amber-200 dark:border-amber-800/30 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition disabled:!bg-gray-100 disabled:!text-gray-400 disabled:!border-gray-200 dark:disabled:!bg-neutral-800 dark:disabled:!text-neutral-600">
+                                            <svg wire:loading.remove wire:target="openEdit({{ $h->id }})"
+                                                class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            <svg wire:loading wire:target="openEdit({{ $h->id }})"
+                                                class="size-4 animate-spin text-amber-600" fill="none"
+                                                viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                    stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                             </svg>
                                         </button>
                                     @endcan
@@ -213,9 +254,9 @@
                                         {{-- Agregar stock --}}
                                         @can('herramientas.stock_add')
                                             <button wire:click="openAddStock({{ $h->id }})"
-                                                wire:loading.attr="disabled" wire:target="openAddStock({{ $h->id }})"
+                                                wire:loading.attr="disabled" @disabled($anyModalOpen)
                                                 title="Agregar stock"
-                                                class="cursor-pointer w-7 h-7 flex-none inline-flex items-center justify-center rounded-lg border border-indigo-200 dark:border-indigo-800 bg-white dark:bg-neutral-900 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition disabled:opacity-50">
+                                                class="cursor-pointer size-7 flex-none inline-flex items-center justify-center rounded-lg border border-emerald-200 dark:border-emerald-800/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition disabled:!bg-gray-100 disabled:!text-gray-400 disabled:!border-gray-200 dark:disabled:!bg-neutral-800 dark:disabled:!text-neutral-600">
                                                 <svg wire:loading.remove wire:target="openAddStock({{ $h->id }})"
                                                     class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
@@ -233,9 +274,9 @@
                                         {{-- Baja stock --}}
                                         @can('herramientas.stock_baja')
                                             <button wire:click="openBajaStock({{ $h->id }})"
-                                                wire:loading.attr="disabled" wire:target="openBajaStock({{ $h->id }})"
+                                                wire:loading.attr="disabled" @disabled($anyModalOpen)
                                                 title="Dar de baja stock"
-                                                class="cursor-pointer w-7 h-7 flex-none inline-flex items-center justify-center rounded-lg border border-red-200 dark:border-red-800 bg-white dark:bg-neutral-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/40 transition disabled:opacity-50">
+                                                class="cursor-pointer size-7 flex-none inline-flex items-center justify-center rounded-lg border border-rose-200 dark:border-rose-800/30 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 transition disabled:!bg-gray-100 disabled:!text-gray-400 disabled:!border-gray-200 dark:disabled:!bg-neutral-800 dark:disabled:!text-neutral-600">
                                                 <svg wire:loading.remove wire:target="openBajaStock({{ $h->id }})"
                                                     class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
@@ -254,13 +295,12 @@
 
 
                                     @can('herramientas.toggle')
-                                        <button type="button" x-data="{ loading: false }"
-                                            x-on:click="loading = true; $dispatch('swal:toggle-active-herramienta', { id: {{ $h->id }}, active: @js($h->active), name: @js($h->nombre) })"
-                                            x-on:swal:done.window="loading = false" x-bind:disabled="loading"
+                                        <button type="button" wire:loading.attr="disabled" @disabled($anyModalOpen)
+                                            x-on:click="$dispatch('swal:toggle-active-herramienta', { id: {{ $h->id }}, active: @js($h->active), name: @js($h->nombre) })"
                                             title="{{ $h->active ? 'Desactivar' : 'Activar' }}"
-                                            class="cursor-pointer w-7 h-7 flex-none inline-flex items-center justify-center rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 transition disabled:opacity-50 {{ $h->active ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10' : 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10' }}">
+                                            class="cursor-pointer size-7 flex-none inline-flex items-center justify-center rounded-lg border transition disabled:!bg-gray-100 disabled:!text-gray-400 disabled:!border-gray-200 dark:disabled:!bg-neutral-800 dark:disabled:!text-neutral-600 {{ $h->active ? 'border-red-200 bg-red-50 text-red-500 hover:bg-red-100 dark:border-red-800/30 dark:bg-red-500/10' : 'border-emerald-200 bg-emerald-50 text-emerald-500 hover:bg-emerald-100 dark:border-emerald-800/30 dark:bg-emerald-500/10' }}">
 
-                                            <span x-show="!loading">
+                                            <div wire:loading.remove wire:target="toggleActive({{ $h->id }})">
                                                 @if ($h->active)
                                                     <svg class="size-4" fill="none" viewBox="0 0 24 24"
                                                         stroke="currentColor">
@@ -274,23 +314,24 @@
                                                             d="M5 13l4 4L19 7" />
                                                     </svg>
                                                 @endif
-                                            </span>
-                                            <span x-show="loading" x-cloak>
+                                            </div>
+                                            <div wire:loading wire:target="toggleActive({{ $h->id }})">
                                                 <svg class="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                                     <circle class="opacity-25" cx="12" cy="12" r="10"
                                                         stroke="currentColor" stroke-width="4"></circle>
                                                     <path class="opacity-75" fill="currentColor"
                                                         d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                                 </svg>
-                                            </span>
+                                            </div>
                                         </button>
                                     @endcan
 
                                     @can('herramientas.delete')
-                                        <button type="button" x-data
+                                        <button type="button" x-data wire:loading.attr="disabled"
+                                            @disabled($anyModalOpen)
                                             x-on:click="$dispatch('swal:delete-herramienta', { id: {{ $h->id }}, name: @js($h->nombre) })"
                                             title="Eliminar"
-                                            class="cursor-pointer w-7 h-7 flex-none inline-flex items-center justify-center rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-500/20 dark:text-neutral-500 dark:hover:text-red-400 transition">
+                                            class="cursor-pointer size-7 flex-none inline-flex items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-400 hover:text-red-600 hover:bg-red-50 transition disabled:!bg-gray-100 disabled:!text-gray-400 disabled:!border-gray-200 dark:border-neutral-800 dark:bg-neutral-900 dark:disabled:!bg-neutral-800">
                                             <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

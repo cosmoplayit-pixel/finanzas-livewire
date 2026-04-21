@@ -1,4 +1,4 @@
-@section('title', 'Préstamos y Devoluciones')
+@section('title', 'Salidas y Retornos')
 <div>
 
     @include('livewire.admin.prestamos-herramientas.sections.header')

@@ -74,6 +74,18 @@
                         <option value="baja">Baja</option>
                     </select>
                 </div>
+                @if (!empty($categoriasData))
+                    <div>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-neutral-300 mb-1">Categoría</label>
+                        <select wire:model.live="categoriaFilter"
+                            class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 text-[13px] cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500/40">
+                            <option value="all">Todas</option>
+                            @foreach ($categoriasData as $cat)
+                                <option value="{{ $cat }}">{{ $cat }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

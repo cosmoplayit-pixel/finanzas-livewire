@@ -37,6 +37,18 @@
                     @enderror
                 </div>
 
+                {{-- Tipo de Recurso --}}
+                <div class="col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Tipo de Recurso
+                        <span class="text-red-500">*</span></label>
+                    <select wire:model="tipo"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm cursor-pointer">
+                        <option value="herramienta">Herramienta (Retornable)</option>
+                        <option value="activo">Activo Fijo (Serializado)</option>
+                        <option value="material">Material (Consumible)</option>
+                    </select>
+                </div>
+
                 {{-- Estado Físico --}}
                 <div class="col-span-1">
                     <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Estado Físico
@@ -156,11 +168,12 @@
 
                 {{-- Fotografía / Ficha Técnica --}}
                 <div class="col-span-2 lg:col-span-3">
-                    <x-ui.scanner model="imagen" label="Fotografía / Ficha Técnica" :file="$imagen" :existingUrl="$editImagenActual && !$editDeleteImagen ? Storage::url($editImagenActual) : null"
-                        :existingName="$editImagenActual ? basename($editImagenActual) : null" deleteModel="editDeleteImagen" />
+                    <x-ui.scanner model="imagen" label="Fotografía / Ficha Técnica" :file="$imagen"
+                        :existingUrl="$editImagenActual && !$editDeleteImagen ? Storage::url($editImagenActual) : null" :existingName="$editImagenActual ? basename($editImagenActual) : null" deleteModel="editDeleteImagen" />
                     @if ($editDeleteImagen && !$imagen)
                         <div class="mt-1.5 flex items-center gap-1.5 text-xs text-red-600 dark:text-red-400">
-                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>

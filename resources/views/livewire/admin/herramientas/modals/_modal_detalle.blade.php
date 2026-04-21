@@ -1,15 +1,31 @@
     {{-- ===================== MODAL VER DETALLE ===================== --}}
-    <x-ui.modal wire:key="detail-herramienta-modal" model="detailModal" title="Ficha de Herramienta"
-        maxWidth="sm:max-w-xl" onClose="closeDetail">
+    <x-ui.modal wire:key="detail-herramienta-modal" model="detailModal" title="Ficha de Herramienta" maxWidth="sm:max-w-xl"
+        onClose="closeDetail">
 
         @if (!empty($detail))
             <div class="space-y-4">
                 {{-- Cabecera --}}
                 <div class="flex gap-4 items-start">
                     @if ($detail['imagen'])
-                        <img src="{{ Storage::url($detail['imagen']) }}" alt="{{ $detail['nombre'] }}"
-                            class="w-20 h-20 rounded-xl object-cover border border-gray-200 dark:border-neutral-700 shrink-0 cursor-pointer hover:opacity-80 transition"
-                            onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ Storage::url($detail['imagen']) }}' }))">
+                        @php
+                            $imageUrl = Storage::url($detail['imagen']);
+                            $isPdf = \Illuminate\Support\Str::contains(strtolower($imageUrl), '.pdf');
+                        @endphp
+                        @if ($isPdf)
+                            <div class="w-20 h-20 rounded-xl bg-red-50 dark:bg-red-900/20 flex flex-col items-center justify-center border border-red-100 dark:border-red-800 shrink-0 cursor-pointer hover:opacity-80 transition"
+                                onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ $imageUrl }}' }))">
+                                <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                <span class="text-[10px] font-bold text-red-600 mt-1 uppercase leading-none">PDF</span>
+                            </div>
+                        @else
+                            <img src="{{ $imageUrl }}" alt="{{ $detail['nombre'] }}"
+                                class="w-20 h-20 rounded-xl object-cover border border-gray-200 dark:border-neutral-700 shrink-0 cursor-pointer hover:opacity-80 transition"
+                                onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ $imageUrl }}' }))">
+                        @endif
                     @else
                         <div
                             class="w-20 h-20 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center border border-indigo-100 dark:border-indigo-800 shrink-0">
@@ -159,32 +175,41 @@
                     <div class="text-[10px] uppercase font-bold text-gray-500 dark:text-neutral-400 mb-2 px-1">
                         Últimos Préstamos ({{ count($detail['prestamos_recientes']) }})
                     </div>
-                    <div class="rounded-xl border border-gray-100 dark:border-neutral-800 overflow-hidden divide-y divide-gray-50 dark:divide-neutral-800">
+                    <div
+                        class="rounded-xl border border-gray-100 dark:border-neutral-800 overflow-hidden divide-y divide-gray-50 dark:divide-neutral-800">
                         @foreach ($detail['prestamos_recientes'] as $p)
                             @php
-                                $estadoBadge = match($p['estado']) {
-                                    'finalizado' => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
-                                    'vencido'    => 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400',
-                                    default      => 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
+                                $estadoBadge = match ($p['estado']) {
+                                    'finalizado'
+                                        => 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
+                                    'vencido' => 'bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400',
+                                    default => 'bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
                                 };
-                                $estadoLabel = match($p['estado']) {
+                                $estadoLabel = match ($p['estado']) {
                                     'finalizado' => 'Devuelto',
-                                    'vencido'    => 'Vencido',
-                                    default      => 'En obra',
+                                    'vencido' => 'Vencido',
+                                    default => 'En obra',
                                 };
                             @endphp
-                            <div class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50/50 dark:hover:bg-neutral-800/20 transition">
+                            <div
+                                class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50/50 dark:hover:bg-neutral-800/20 transition">
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center gap-2 flex-wrap">
-                                        <span class="font-mono text-[10px] font-black text-indigo-600 dark:text-indigo-400">{{ $p['nro'] }}</span>
-                                        <span class="text-[10px] px-1.5 py-0.5 rounded font-black uppercase {{ $estadoBadge }}">{{ $estadoLabel }}</span>
+                                        <span
+                                            class="font-mono text-[10px] font-black text-indigo-600 dark:text-indigo-400">{{ $p['nro'] }}</span>
+                                        <span
+                                            class="text-[10px] px-1.5 py-0.5 rounded font-black uppercase {{ $estadoBadge }}">{{ $estadoLabel }}</span>
                                     </div>
-                                    <div class="text-[11px] text-gray-600 dark:text-neutral-300 truncate mt-0.5">{{ $p['entidad'] }}</div>
-                                    <div class="text-[10px] text-gray-400 dark:text-neutral-500 truncate">{{ $p['proyecto'] }}</div>
+                                    <div class="text-[11px] text-gray-600 dark:text-neutral-300 truncate mt-0.5">
+                                        {{ $p['entidad'] }}</div>
+                                    <div class="text-[10px] text-gray-400 dark:text-neutral-500 truncate">
+                                        {{ $p['proyecto'] }}</div>
                                 </div>
                                 <div class="text-right shrink-0">
-                                    <div class="text-xs font-black text-gray-700 dark:text-neutral-300">{{ $p['cantidad'] }} u.</div>
-                                    <div class="text-[10px] text-gray-400 dark:text-neutral-500">{{ $p['fecha'] }}</div>
+                                    <div class="text-xs font-black text-gray-700 dark:text-neutral-300">
+                                        {{ $p['cantidad'] }} u.</div>
+                                    <div class="text-[10px] text-gray-400 dark:text-neutral-500">{{ $p['fecha'] }}
+                                    </div>
                                 </div>
                             </div>
                         @endforeach
@@ -210,10 +235,29 @@
                                     <span class="text-[10px] text-gray-400">{{ $baja['fecha'] }}</span>
                                 </div>
                                 @if (isset($baja['evidencia']) && $baja['evidencia'])
+                                    @php
+                                        $evidenciaUrl = Storage::url($baja['evidencia']);
+                                        $isEvidenciaPdf = \Illuminate\Support\Str::contains(
+                                            strtolower($evidenciaUrl),
+                                            '.pdf',
+                                        );
+                                    @endphp
                                     <div class="mb-2 pl-3.5">
-                                        <img src="{{ Storage::url($baja['evidencia']) }}"
-                                            class="w-16 h-12 object-cover rounded shadow-sm border border-red-200 dark:border-red-800 cursor-pointer"
-                                            onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ Storage::url($baja['evidencia']) }}' }))">
+                                        @if ($isEvidenciaPdf)
+                                            <div class="w-16 h-12 rounded bg-red-50 dark:bg-red-900/20 flex flex-col items-center justify-center border border-red-100 dark:border-red-800 cursor-pointer hover:opacity-80 transition"
+                                                onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ $evidenciaUrl }}' }))">
+                                                <svg class="w-5 h-5 text-red-500" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                                </svg>
+                                            </div>
+                                        @else
+                                            <img src="{{ $evidenciaUrl }}"
+                                                class="w-16 h-12 object-cover rounded shadow-sm border border-red-200 dark:border-red-800 cursor-pointer"
+                                                onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ $evidenciaUrl }}' }))">
+                                        @endif
                                     </div>
                                 @endif
                                 @if ($baja['observaciones'])
@@ -245,4 +289,3 @@
             </div>
         @endslot
     </x-ui.modal>
-

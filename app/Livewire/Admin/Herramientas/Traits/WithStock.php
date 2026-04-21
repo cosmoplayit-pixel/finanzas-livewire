@@ -6,21 +6,23 @@ use App\Models\Herramienta;
 
 trait WithStock
 {
-        // Agregar stock
-	    // =========================
-	    public function openAddStock(int $id): void
-	    {
-	        $h = Herramienta::findOrFail($id);
-	
-	        if ((int) $h->empresa_id !== (int) $this->userEmpresaId()) {
-	            abort(403);
-	        }
+    // Agregar stock
+    // =========================
+    public function openAddStock(int $id): void
+    {
+        $h = Herramienta::findOrFail($id);
+
+        if ((int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+            abort(403);
+        }
 	
 	        $this->addStockId = $h->id;
 	        $this->addStockNombre = $h->nombre;
 	        $this->addStockCodigo = $h->codigo ?? '';
 	        $this->addStockActual = $h->stock_disponible;
 	        $this->addStockCantidad = 1;
+	        $this->addStockTipo = $h->tipo;
+	        $this->addStockSeries = $h->tipo === 'activo' ? [''] : [];
 	        $this->addStockImagen = $h->imagen;
 	        $this->resetErrorBag();
 	
@@ -38,6 +40,16 @@ trait WithStock
 	            'addStockCantidad.max' => 'La cantidad máxima es 9999.',
 	        ]);
 	
+	        if ($this->addStockTipo === 'activo') {
+	            $this->validate([
+	                'addStockSeries.*' => 'required|string|distinct|unique:herramienta_series,serie',
+	            ], [
+	                'addStockSeries.*.required' => 'El número de serie es obligatorio.',
+	                'addStockSeries.*.distinct' => 'Hay números de serie duplicados en la lista actual.',
+	                'addStockSeries.*.unique' => 'Este número de serie ya existe en el sistema.',
+	            ]);
+	        }
+	        
 	        $h = Herramienta::findOrFail($this->addStockId);
 	
 	        if ((int) $h->empresa_id !== (int) $this->userEmpresaId()) {
@@ -49,33 +61,68 @@ trait WithStock
 	        $h->stock_disponible += $cantidad;
 	        $h->precio_total = $h->stock_total * (float) $h->precio_unitario;
 	        $h->save();
-	
-	        $this->dispatch('toast', type: 'success', message: "Se agregaron {$cantidad} unidades");
-	        $this->closeAddStockModal();
-	    }
-	
-	    public function incrementAddStock(): void
-	    {
-	        $this->addStockCantidad = min(9999, (int) $this->addStockCantidad + 1);
-	    }
-	
-	    public function decrementAddStock(): void
-	    {
-	        $this->addStockCantidad = max(1, (int) $this->addStockCantidad - 1);
-	    }
-	
-	    public function closeAddStockModal(): void
-	    {
-	        $this->openAddStockModal = false;
-	        $this->addStockId = null;
-	        $this->addStockNombre = '';
-	        $this->addStockCodigo = '';
-	        $this->addStockActual = 0;
-	        $this->addStockCantidad = 1;
-	        $this->addStockImagen = null;
-	        $this->resetErrorBag();
-	    }
-	
+	        
+	        if ($this->addStockTipo === 'activo') {
+	            foreach ($this->addStockSeries as $serie) {
+	                \App\Models\HerramientaSerie::create([
+	                    'herramienta_id' => $h->id,
+	                    'serie' => trim($serie),
+	                    'estado' => 'disponible',
+	                ]);
+	            }
+	        }
+
+            $this->dispatch('toast', type: 'success', message: "Se agregaron {$cantidad} unidades");
+            $this->closeAddStockModal();
+        }
+
+        public function incrementAddStock(): void
+        {
+            $this->addStockCantidad = min(9999, (int) $this->addStockCantidad + 1);
+            $this->syncAddStockSeries();
+        }
+
+        public function decrementAddStock(): void
+        {
+            $this->addStockCantidad = max(1, (int) $this->addStockCantidad - 1);
+            $this->syncAddStockSeries();
+        }
+
+        public function updatedAddStockCantidad(): void
+        {
+            $this->syncAddStockSeries();
+        }
+
+        private function syncAddStockSeries(): void
+        {
+            if ($this->addStockTipo !== 'activo') return;
+
+            $cantidad = (int) $this->addStockCantidad ?: 1;
+            $currentCount = count($this->addStockSeries);
+
+            if ($currentCount < $cantidad) {
+                for ($i = $currentCount; $i < $cantidad; $i++) {
+                    $this->addStockSeries[] = '';
+                }
+            } elseif ($currentCount > $cantidad) {
+                $this->addStockSeries = array_slice($this->addStockSeries, 0, $cantidad);
+            }
+        }
+
+        public function closeAddStockModal(): void
+        {
+            $this->openAddStockModal = false;
+            $this->addStockId = null;
+            $this->addStockNombre = '';
+            $this->addStockCodigo = '';
+            $this->addStockActual = 0;
+            $this->addStockCantidad = 1;
+            $this->addStockTipo = 'herramienta';
+            $this->addStockSeries = [];
+            $this->addStockImagen = null;
+            $this->resetErrorBag();
+        }
+
 	    // =========================
 	    // Baja de stock
 	    // =========================

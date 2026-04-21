@@ -190,16 +190,16 @@
             @endcanany
 
 
-            {{-- GESTIÓN HERRAMIENTAS --}}
+            {{-- GESTIÓN ALMACÉN --}}
             @canany(['herramientas.view'])
                 @if (!auth()->user()->hasRole('Administrador'))
-                    <flux:sidebar.group heading="{{ __('Gestión Herramientas') }}" class="grid">
+                    <flux:sidebar.group heading="{{ __('Gestión de Almacén') }}" class="grid">
                         <flux:sidebar.item icon="wrench" href="{{ route('herramientas') }}" wire:navigate>
-                            {{ __('Herramientas') }}
+                            {{ __('Inventario General') }}
                         </flux:sidebar.item>
                         <flux:sidebar.item icon="clipboard-document-list" href="{{ route('prestamos_herramientas') }}"
                             wire:navigate>
-                            {{ __('Préstamos y Devoluciones') }}
+                            {{ __('Salidas y Retornos') }}
                         </flux:sidebar.item>
                     </flux:sidebar.group>
                 @endif

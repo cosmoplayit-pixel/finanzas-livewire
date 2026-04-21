@@ -165,6 +165,13 @@ trait WithDevoluciones
 
                 if ($prestamo->fresh()->cantidad_devuelta >= $prestamo->cantidad_prestada) {
                     $prestamo->update(['estado' => 'finalizado']);
+                    
+                    if ($prestamo->serie_id) {
+                        $hs = \App\Models\HerramientaSerie::find($prestamo->serie_id);
+                        if ($hs) {
+                            $hs->update(['estado' => 'disponible']);
+                        }
+                    }
                 }
             }
         });

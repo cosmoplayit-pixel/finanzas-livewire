@@ -17,7 +17,7 @@
                 </div>
             @endif
 
-            <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <div class="grid grid-cols-2 lg:grid-cols-3 gap-x-3 gap-y-2">
 
                 {{-- Nombre --}}
                 <div class="col-span-2 lg:col-span-2" x-data="{
@@ -25,13 +25,13 @@
                     open: false,
                     get items() { return $wire.codigosData; },
                     get suggestions() {
-                            if (!this.query || this.query.length < 2) return [];
-                            const q = this.query.toUpperCase();
-                            return this.items.filter(c => c.nombre.toUpperCase().includes(q)).slice(0, 8);
-                        }
+                        if (!this.query || this.query.length < 2) return [];
+                        const q = this.query.toUpperCase();
+                        return this.items.filter(c => c.nombre.toUpperCase().includes(q)).slice(0, 8);
+                    }
                 }">
                     <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Nombre del Equipo
-                    <span class="text-red-500">*</span></label>
+                        <span class="text-red-500">*</span></label>
                     <div class="relative">
                         <input type="text" x-model="query" @input="open = true"
                             @blur="setTimeout(() => open = false, 200)"
@@ -119,17 +119,90 @@
                     @enderror
                 </div>
 
+                {{-- Tipo de Recurso --}}
+                <div class="col-span-1 lg:col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Tipo de Recurso
+                        <span class="text-red-500">*</span></label>
+                    <select wire:model.blur="tipo"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm cursor-pointer">
+                        <option value="herramienta">Herramienta (Retornable)</option>
+                        <option value="activo">Activo Fijo (Serializado)</option>
+                        <option value="material">Material (Consumible)</option>
+                    </select>
+                </div>
+
                 {{-- Estado Físico --}}
                 <div class="col-span-1 lg:col-span-1">
                     <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Estado Físico
                         <span class="text-red-500">*</span></label>
-                    <select wire:model="estado_fisico"
+                    <select wire:model.blur="estado_fisico"
                         class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm cursor-pointer">
                         <option value="bueno">Bueno</option>
                         <option value="regular">Regular</option>
                         <option value="malo">Malo</option>
                         <option value="baja">Baja / Descarte</option>
                     </select>
+                </div>
+
+                {{-- Stock: modo crear = Total / modo editar = Disponible --}}
+                @if ($isExistingCode)
+                    <div class="col-span-1 lg:col-span-1" wire:key="stock-field-edit">
+                        <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">
+                            Stock Disponible <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" wire:model.live="stock_disponible" min="0" disabled
+                            class="w-full rounded-lg border px-3 py-2 bg-gray-100 dark:bg-neutral-800 border-gray-300 dark:border-neutral-700 text-gray-500 dark:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-gray-500/40 font-bold text-center opacity-75 text-sm">
+                        <p class="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
+                            Prestado: <strong>{{ $stock_prestado }}</strong> &mdash; Total:
+                            <strong>{{ $stock_disponible + $stock_prestado }}</strong>
+                        </p>
+                        @error('stock_disponible')
+                            <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                @else
+                    <div class="col-span-1 lg:col-span-1" wire:key="stock-field-create">
+                        <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">
+                            Stock Total @if ($tipo === 'activo')
+                                <span class="text-red-500">(Máx. 20)</span>
+                            @endif <span class="text-red-500">*</span>
+                        </label>
+                        <input type="number" wire:model.blur="stock_total" min="0"
+                            :max="$tipo === 'activo' ? 20 : 999999"
+                            class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm font-medium text-center">
+                        @error('stock_total')
+                            <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
+                        @enderror
+                    </div>
+                @endif
+
+                {{-- Números de Serie Dinámicos (solo si tipo es Activo / al crear) --}}
+                @if (!$isExistingCode && $tipo === 'activo' && $stock_total > 0)
+                    <div class="col-span-2 lg:col-span-3">
+                        <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">
+                            Ingresar Números de Serie <span class="text-red-500">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                            @foreach ($series_nueva as $idx => $serie)
+                                <div wire:key="serie-input-{{ $idx }}">
+                                    <input type="text" wire:model.blur="series_nueva.{{ $idx }}"
+                                        placeholder="Serie #{{ $idx + 1 }}"
+                                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm ">
+                                    @error("series_nueva.{$idx}")
+                                        <p class="text-red-500 text-[9px] mt-1">{{ $message }}</p>
+                                    @enderror
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Precio Unitario --}}
+                <div class="col-span-2 lg:col-span-1">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">P. Unitario (Bs)
+                        <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" wire:model.live="precio_unitario" min="0"
+                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-right font-medium text-sm">
                 </div>
 
                 {{-- Marca --}}
@@ -216,57 +289,20 @@
                     </div>
                 </div>
 
-                {{-- Stock: modo crear = Total / modo editar = Disponible --}}
-                @if ($isExistingCode)
-                    <div class="col-span-1 lg:col-span-1" wire:key="stock-field-edit">
-                        <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">
-                            Stock Disponible <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" wire:model.live="stock_disponible" min="0" disabled
-                            class="w-full rounded-lg border px-3 py-2 bg-gray-100 dark:bg-neutral-800 border-gray-300 dark:border-neutral-700 text-gray-500 dark:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-bold text-center opacity-75">
-                        <p class="text-[10px] text-gray-400 dark:text-neutral-500 mt-1">
-                            Prestado: <strong>{{ $stock_prestado }}</strong> &mdash; Total:
-                            <strong>{{ $stock_disponible + $stock_prestado }}</strong>
-                        </p>
-                        @error('stock_disponible')
-                            <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                @else
-                    <div class="col-span-1 lg:col-span-1" wire:key="stock-field-create">
-                        <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">
-                            Stock Total <span class="text-red-500">*</span>
-                        </label>
-                        <input type="number" wire:model.live="stock_total" min="0"
-                            class="w-full rounded-lg border px-3 py-2 bg-gray-50 dark:bg-neutral-800 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 font-bold text-center">
-                        @error('stock_total')
-                            <p class="text-red-500 text-[10px] mt-1">{{ $message }}</p>
-                        @enderror
-                    </div>
-                @endif
-
-                {{-- Precio Unitario --}}
+                {{-- Descripción --}}
                 <div class="col-span-2 lg:col-span-1">
-                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">P. Unitario (Bs)
-                        <span class="text-red-500">*</span></label>
-                    <input type="number" step="0.01" wire:model.live="precio_unitario" min="0"
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 text-right font-medium">
+                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Descripción /
+                        Detalles Adicionales</label>
+                    <input type="text" wire:model="descripcion" placeholder="Accesorios incluidos"
+                        class="w-full rounded-lg border px-3 py-2.5 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm resize-none"></input>
                 </div>
 
                 {{-- Fotografía --}}
-                <div class="col-span-2 lg:col-span-3">
+                <div class="col-span-2 lg:col-span-1">
                     <x-ui.scanner model="imagen" label="Fotografía o Ficha Técnica" :file="$imagen"
                         :existingUrl="$isExistingCode && $foundImagenPath && !$deleteFoundImagen
                             ? asset('storage/' . $foundImagenPath)
                             : null" :existingName="$foundImagenPath ? basename($foundImagenPath) : null" deleteModel="deleteFoundImagen" />
-                </div>
-
-                {{-- Descripción --}}
-                <div class="col-span-2 lg:col-span-3">
-                    <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Descripción /
-                        Detalles Adicionales</label>
-                    <textarea wire:model="descripcion" rows="2" placeholder="Accesorios incluidos, historial de service..."
-                        class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm resize-none"></textarea>
                 </div>
             </div>
 

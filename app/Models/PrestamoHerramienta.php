@@ -12,6 +12,7 @@ class PrestamoHerramienta extends Model
         'empresa_id',
         'nro_prestamo',
         'herramienta_id',
+        'serie_id',
 
         'agente_id',
         'receptor_manual',
@@ -43,6 +44,11 @@ class PrestamoHerramienta extends Model
     public function herramienta()
     {
         return $this->belongsTo(Herramienta::class);
+    }
+
+    public function serie()
+    {
+        return $this->belongsTo(HerramientaSerie::class, 'serie_id')->withTrashed();
     }
 
     public function agente()

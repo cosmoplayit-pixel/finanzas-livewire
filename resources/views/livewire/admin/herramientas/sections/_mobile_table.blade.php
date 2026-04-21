@@ -8,9 +8,21 @@
                 <div class="flex items-start gap-3 p-3">
                     {{-- Imagen --}}
                     @if ($h->imagen)
-                        <img src="{{ Storage::url($h->imagen) }}" alt="{{ $h->nombre }}"
-                            class="w-16 h-16 rounded-xl object-cover border border-gray-200 dark:border-neutral-700 shrink-0 cursor-pointer hover:opacity-80 transition"
-                            onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ Storage::url($h->imagen) }}' }))">
+                        @if ($h->is_pdf)
+                            <div class="w-16 h-16 rounded-xl bg-red-50 dark:bg-red-500/10 inline-flex items-center justify-center text-red-500 border border-red-100 dark:border-red-800 shrink-0 cursor-pointer hover:bg-red-100 transition relative group"
+                                onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ Storage::url($h->imagen) }}' }))">
+                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                <span
+                                    class="absolute bottom-1 right-1 bg-red-600 text-[10px] font-black text-white px-1.5 py-0.5 rounded shadow-sm">PDF</span>
+                            </div>
+                        @else
+                            <img src="{{ Storage::url($h->imagen) }}" alt="{{ $h->nombre }}"
+                                class="w-16 h-16 rounded-xl object-cover border border-gray-200 dark:border-neutral-700 shrink-0 cursor-pointer hover:opacity-80 transition"
+                                onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ Storage::url($h->imagen) }}' }))">
+                        @endif
                     @else
                         <div
                             class="w-16 h-16 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center border border-indigo-100 dark:border-indigo-800 shrink-0">
@@ -150,8 +162,8 @@
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
-                                <svg wire:loading wire:target="openAddStock({{ $h->id }})" class="w-4 h-4 animate-spin"
-                                    fill="none" viewBox="0 0 24 24">
+                                <svg wire:loading wire:target="openAddStock({{ $h->id }})"
+                                    class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                         stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">

@@ -365,6 +365,49 @@
                                             </button>
                                         </td>
                                     </tr>
+
+                                    {{-- Selección de series para Activos Fijos --}}
+                                    @if (($it['tipo'] ?? 'herramienta') === 'activo')
+                                        <tr class="bg-indigo-50/10 dark:bg-indigo-900/10"
+                                            wire:key="series-selection-{{ $idx }}">
+                                            <td colspan="6" class="px-4 py-3 border-t-0">
+                                                <div class="flex flex-col gap-2">
+                                                    <p
+                                                        class="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 uppercase">
+                                                        Seleccione los Números de Serie</p>
+                                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                                        @for ($i = 0; $i < $it['cantidad']; $i++)
+                                                            <div>
+                                                                <select
+                                                                    wire:model="items.{{ $idx }}.series_seleccionadas.{{ $i }}"
+                                                                    class="w-full text-xs rounded-md border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-700 dark:text-neutral-300 py-1.5 focus:ring-indigo-500 focus:border-indigo-500">
+                                                                    <option value="">-- Placa/Serie
+                                                                        #{{ $i + 1 }} --</option>
+                                                                    @foreach ($it['series_disponibles'] ?? [] as $serie)
+                                                                        <option value="{{ $serie['id'] }}">
+                                                                            {{ $serie['serie'] }}</option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                        @endfor
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endif
+
+                                    {{-- Aviso de material consumible --}}
+                                    @if (($it['tipo'] ?? 'herramienta') === 'material')
+                                        <tr class="bg-amber-50/10 dark:bg-amber-900/10"
+                                            wire:key="material-notice-{{ $idx }}">
+                                            <td colspan="6" class="px-4 py-2 border-t-0">
+                                                <p class="text-[11px] font-bold text-amber-600 dark:text-amber-500">
+                                                    <span class="mr-1">ℹ</span> Se entregará como MATERIAL CONSUMIBLE
+                                                    (no requiere devolución).
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    @endif
                                 @endforeach
                             </tbody>
                         </table>

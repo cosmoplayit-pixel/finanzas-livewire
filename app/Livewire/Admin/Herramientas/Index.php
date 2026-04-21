@@ -8,7 +8,6 @@ use App\Livewire\Admin\Herramientas\Traits\WithDetail;
 use App\Livewire\Admin\Herramientas\Traits\WithStock;
 use App\Models\Empresa;
 use App\Models\Herramienta;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -31,6 +30,8 @@ class Index extends Component
     public string $status = 'active';
 
     public string $estadoFisicoFilter = 'all';
+
+    public string $categoriaFilter = 'all';
 
     public string $empresaFilter = 'all';
 
@@ -86,7 +87,11 @@ class Index extends Component
 
     public int $addStockActual = 0;
 
-    public int $addStockCantidad = 1;
+    public $addStockCantidad = 1;
+
+    public string $addStockTipo = 'herramienta';
+
+    public array $addStockSeries = [];
 
     public ?string $addStockImagen = null;
 
@@ -103,7 +108,7 @@ class Index extends Component
 
     public int $bajaStockActual = 0;
 
-    public int $bajaStockCantidad = 1;
+    public $bajaStockCantidad = 1;
 
     public string $bajaStockObservaciones = '';
 
@@ -118,6 +123,8 @@ class Index extends Component
 
     public string $codigo = '';
 
+    public string $tipo = 'herramienta';
+
     public string $nombre = '';
 
     public string $marca = '';
@@ -131,6 +138,8 @@ class Index extends Component
     public $unidad = '';
 
     public $stock_total = 0;
+
+    public array $series_nueva = [];
 
     public $stock_disponible = 0;
 
@@ -154,6 +163,9 @@ class Index extends Component
     {
         $this->calculateStock();
         $this->calculateTotal();
+        if (method_exists($this, 'syncSeriesNueva')) {
+            $this->syncSeriesNueva();
+        }
     }
 
     public function updatedStockPrestado(): void
@@ -207,6 +219,7 @@ class Index extends Component
     {
         return [
             'empresa_id' => ['nullable'],
+            'tipo' => ['required', Rule::in(['herramienta', 'activo', 'material'])],
             'codigo' => ['nullable', 'string', 'max:100', 'regex:/^[a-zA-Z0-9\-\.\/\s]+$/'],
             'nombre' => ['required', 'string', 'min:2', 'max:200'],
             'marca' => ['nullable', 'string', 'max:100'],
@@ -217,7 +230,7 @@ class Index extends Component
             'stock_total' => ['required', 'integer', 'min:0'],
             'stock_prestado' => ['required', 'integer', 'min:0'],
             'precio_unitario' => ['required', 'numeric', 'min:0'],
-            'imagen' => ['nullable', 'image', 'max:2048'],
+            'imagen' => ['nullable', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ];
     }
 
@@ -252,6 +265,11 @@ class Index extends Component
     }
 
     public function updatedEstadoFisicoFilter(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedCategoriaFilter(): void
     {
         $this->resetPage();
     }
@@ -294,6 +312,10 @@ class Index extends Component
                 $this->estadoFisicoFilter !== 'all',
                 fn ($q) => $q->where('estado_fisico', $this->estadoFisicoFilter),
             )
+            ->when(
+                $this->categoriaFilter !== 'all',
+                fn ($q) => $q->where('codigo', $this->categoriaFilter),
+            )
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
@@ -320,7 +342,7 @@ class Index extends Component
             ->where('codigo', '!=', '')
             ->distinct()
             ->pluck('codigo')
-            ->map(fn($c) => strtoupper(trim($c)))
+            ->map(fn ($c) => strtoupper(trim($c)))
             ->unique()
             ->values()
             ->toArray();
@@ -330,7 +352,7 @@ class Index extends Component
             ->where('unidad', '!=', '')
             ->distinct()
             ->pluck('unidad')
-            ->map(fn($u) => strtoupper(trim($u)))
+            ->map(fn ($u) => strtoupper(trim($u)))
             ->unique()
             ->values()
             ->toArray();
@@ -345,7 +367,19 @@ class Index extends Component
             : null;
 
         $stats = Herramienta::where('empresa_id', $this->userEmpresaId())
-            ->where('active', true)
+            ->when($this->search, function ($q) {
+                $s = trim($this->search);
+                $q->where(function ($qq) use ($s) {
+                    $qq->where('nombre', 'like', "%{$s}%")
+                        ->orWhere('codigo', 'like', "%{$s}%")
+                        ->orWhere('marca', 'like', "%{$s}%")
+                        ->orWhere('modelo', 'like', "%{$s}%");
+                });
+            })
+            ->when($this->status !== 'all', fn ($q) => $q->where('active', $this->status === 'active'))
+            ->when($this->status === 'all', fn ($q) => $q->where('active', true))
+            ->when($this->estadoFisicoFilter !== 'all', fn ($q) => $q->where('estado_fisico', $this->estadoFisicoFilter))
+            ->when($this->categoriaFilter !== 'all', fn ($q) => $q->where('codigo', $this->categoriaFilter))
             ->selectRaw('COUNT(*) as activas, COALESCE(SUM(stock_disponible),0) as disponibles, COALESCE(SUM(stock_prestado),0) as prestadas, COALESCE(SUM(precio_total),0) as valor')
             ->first();
 
@@ -385,6 +419,10 @@ class Index extends Component
             ->when(
                 $this->estadoFisicoFilter !== 'all',
                 fn ($q) => $q->where('estado_fisico', $this->estadoFisicoFilter),
+            )
+            ->when(
+                $this->categoriaFilter !== 'all',
+                fn ($q) => $q->where('codigo', $this->categoriaFilter),
             )
             ->orderBy($this->sortField, $this->sortDirection);
 
@@ -453,9 +491,10 @@ class Index extends Component
             'empresa_id', 'codigo', 'nombre', 'marca', 'modelo',
             'descripcion', 'estado_fisico', 'unidad',
             'stock_total', 'stock_disponible', 'stock_prestado',
-            'precio_unitario', 'precio_total', 'imagen',
+            'precio_unitario', 'precio_total', 'imagen', 'tipo',
         ]);
         $this->estado_fisico = 'bueno';
+        $this->tipo = 'herramienta';
         $this->stock_total = 0;
         $this->stock_disponible = 0;
         $this->stock_prestado = 0;

@@ -1,4 +1,12 @@
-@props(['model', 'label' => 'Comprobante', 'file' => null, 'accept' => '.jpg,.jpeg,.png,.pdf', 'existingUrl' => null, 'existingName' => null, 'deleteModel' => null])
+@props([
+    'model',
+    'label' => 'Comprobante',
+    'file' => null,
+    'accept' => '.jpg,.jpeg,.png,.pdf',
+    'existingUrl' => null,
+    'existingName' => null,
+    'deleteModel' => null,
+])
 
 <script>
     if (!window.documentScannerRegistered) {
@@ -12,6 +20,8 @@
                     editorTab: 'persp', // persp | crop | adjust
                     isProcessing: false,
                     processingMsg: 'Procesando…',
+                    localPdfUrl: '',
+                    isUploading: false,
 
                     // Cámara
                     stream: null,
@@ -334,8 +344,17 @@
                     handleFileCapture(e) {
                         const file = e.target.files[0];
                         if (!file) return;
+
+                        if (file.type === 'application/pdf') {
+                            if (this.localPdfUrl) URL.revokeObjectURL(this.localPdfUrl);
+                            this.localPdfUrl = URL.createObjectURL(file);
+                        } else {
+                            this.localPdfUrl = '';
+                        }
+
                         const fr = new FileReader();
                         fr.onload = ev => {
+                            if (file.type === 'application/pdf') return;
                             const img = new Image();
                             img.onload = () => {
                                 const c = document.createElement('canvas');
@@ -395,7 +414,9 @@
                         small.width = sw;
                         small.height = sh;
                         small.getContext('2d').drawImage(src, 0, 0, sw, sh);
-                        const ctx = small.getContext('2d', { willReadFrequently: true });
+                        const ctx = small.getContext('2d', {
+                            willReadFrequently: true
+                        });
                         const data = ctx.getImageData(0, 0, sw, sh).data;
 
                         const lum = (x, y) => {
@@ -404,7 +425,8 @@
                         };
 
                         // Color de fondo: promedio de 4 esquinas
-                        const bgL = (lum(0, 0) + lum(sw - 1, 0) + lum(0, sh - 1) + lum(sw - 1, sh - 1)) / 4;
+                        const bgL = (lum(0, 0) + lum(sw - 1, 0) + lum(0, sh - 1) + lum(sw - 1, sh -
+                            1)) / 4;
                         const threshold = 28;
                         const minHits = ratio => v => v > ratio;
 
@@ -421,32 +443,62 @@
                             return hits;
                         };
 
-                        const cx0 = Math.floor(sw * 0.15), cx1 = Math.ceil(sw * 0.85);
-                        const cy0 = Math.floor(sh * 0.15), cy1 = Math.ceil(sh * 0.85);
+                        const cx0 = Math.floor(sw * 0.15),
+                            cx1 = Math.ceil(sw * 0.85);
+                        const cy0 = Math.floor(sh * 0.15),
+                            cy1 = Math.ceil(sh * 0.85);
                         const minHW = (cx1 - cx0) * 0.25;
                         const minVH = (cy1 - cy0) * 0.25;
 
-                        let top = 0, bottom = sh - 1, left = 0, right = sw - 1;
+                        let top = 0,
+                            bottom = sh - 1,
+                            left = 0,
+                            right = sw - 1;
 
                         for (let y = 0; y < sh; y++)
-                            if (scanH(y, cx0, cx1) >= minHW) { top = Math.max(0, y - 1); break; }
+                            if (scanH(y, cx0, cx1) >= minHW) {
+                                top = Math.max(0, y - 1);
+                                break;
+                            }
                         for (let y = sh - 1; y >= 0; y--)
-                            if (scanH(y, cx0, cx1) >= minHW) { bottom = Math.min(sh - 1, y + 1); break; }
+                            if (scanH(y, cx0, cx1) >= minHW) {
+                                bottom = Math.min(sh - 1, y + 1);
+                                break;
+                            }
                         for (let x = 0; x < sw; x++)
-                            if (scanV(x, cy0, cy1) >= minVH) { left = Math.max(0, x - 1); break; }
+                            if (scanV(x, cy0, cy1) >= minVH) {
+                                left = Math.max(0, x - 1);
+                                break;
+                            }
                         for (let x = sw - 1; x >= 0; x--)
-                            if (scanV(x, cy0, cy1) >= minVH) { right = Math.min(sw - 1, x + 1); break; }
+                            if (scanV(x, cy0, cy1) >= minVH) {
+                                right = Math.min(sw - 1, x + 1);
+                                break;
+                            }
 
-                        const lx = left / sw * 100, rx = right / sw * 100;
-                        const ty = top / sh * 100, by = bottom / sh * 100;
+                        const lx = left / sw * 100,
+                            rx = right / sw * 100;
+                        const ty = top / sh * 100,
+                            by = bottom / sh * 100;
 
                         // Solo aplicar si detectó algo más pequeño que el 95% de la imagen
                         if (lx > 1 || rx < 99 || ty > 1 || by < 99) {
-                            this.handles = [
-                                { x: lx, y: ty },
-                                { x: rx, y: ty },
-                                { x: rx, y: by },
-                                { x: lx, y: by },
+                            this.handles = [{
+                                    x: lx,
+                                    y: ty
+                                },
+                                {
+                                    x: rx,
+                                    y: ty
+                                },
+                                {
+                                    x: rx,
+                                    y: by
+                                },
+                                {
+                                    x: lx,
+                                    y: by
+                                },
                             ];
                             this._warpDirty = true;
                         }
@@ -700,6 +752,8 @@
                     closeAll() {
                         this.stopCamera();
                         if (this.finalURL) URL.revokeObjectURL(this.finalURL);
+                        if (this.localPdfUrl) URL.revokeObjectURL(this.localPdfUrl);
+                        this.localPdfUrl = '';
                         this.phase = 'idle';
                         this.srcCanvas = null;
                         this.srcDataURL = '';
@@ -754,7 +808,7 @@
 
     {{-- ── Input área ─────────────────────────────────────── --}}
     <label class="block text-sm mb-1">{{ $label }} <span class="text-red-500">*</span></label>
-    <div
+    <div :class="(isUploading || removing) ? 'opacity-50 pointer-events-none' : ''"
         class="group h-11 flex items-center justify-between w-full rounded-lg border border-dashed border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
         <label class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer">
             <div
@@ -778,7 +832,22 @@
                     @endif
                 </div>
             </div>
-            <input type="file" wire:model.live="{{ $model }}" accept="{{ $accept }}" class="hidden" />
+            <input type="file" accept="{{ $accept }}" class="hidden" :disabled="isUploading || removing"
+                @change="
+                    const f = $event.target.files[0];
+                    if (!f) return;
+                    removing = true;
+                    if (localPdfUrl) { URL.revokeObjectURL(localPdfUrl); }
+                    localPdfUrl = '';
+                    this.isUploading = true;
+                    $wire.set('{{ $model }}', null).then(() => {
+                        removing = false;
+                        if (f.type === 'application/pdf') {
+                            localPdfUrl = URL.createObjectURL(f);
+                        }
+                        $wire.upload('{{ $model }}', f, () => { this.isUploading = false; }, () => { this.isUploading = false; });
+                    });
+                " />
         </label>
         <button type="button" @click="startCamera()" title="Escanear con cámara"
             class="md:hidden shrink-0 p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors cursor-pointer border border-transparent hover:border-indigo-200">
@@ -794,130 +863,104 @@
         <div class="text-red-600 text-xs mt-1">{{ $message }}</div>
     @enderror
     @if (!$file && $existingUrl)
-        <div class="mt-1 text-xs flex items-center justify-end gap-3">
-            <div x-data="{ open: false }">
-                <button type="button" @click="open = true"
-                    class="cursor-pointer inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 font-medium">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                        <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    Ver imagen
-                </button>
-                <template x-if="open">
-                    <div x-data="{
-                            zoom: 1,
-                            setOrigin(e) {
-                                const r = e.target.getBoundingClientRect();
-                                e.target.style.transformOrigin = ((e.clientX-r.left)/r.width*100)+'% '+((e.clientY-r.top)/r.height*100)+'%';
-                            },
-                            wheelZoom(e) { this.zoom = Math.max(1,Math.min(5,this.zoom+(e.deltaY<0?.2:-.2))); this.setOrigin(e); }
-                        }"
-                        @keydown.escape.window="open = false"
-                        class="fixed inset-0 z-[10002] flex items-center justify-center p-4">
-                        <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" @click="open = false"></div>
-                        <button type="button" @click="open = false"
-                            class="absolute top-4 right-4 z-[10003] p-3 text-white/40 hover:text-white">
-                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        <div class="relative z-[10002] flex items-center justify-center overflow-hidden">
-                            <img src="{{ $existingUrl }}" alt="Vista previa"
-                                class="max-w-full max-h-[90vh] rounded shadow-2xl transition-transform duration-200 ease-out cursor-zoom-in"
-                                :style="'transform:scale('+zoom+')'"
-                                @mousemove="setOrigin($event)" @wheel.prevent="wheelZoom($event)" draggable="false" />
-                        </div>
-                    </div>
-                </template>
-            </div>
+        @php
+            $isExistingPdf = $existingUrl && \Illuminate\Support\Str::contains(strtolower($existingUrl), '.pdf');
+        @endphp
+        <div class="mt-1 text-xs flex items-center justify-end gap-3 h-5">
+            <button type="button"
+                onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ $existingUrl }}' }))"
+                class="cursor-pointer inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 font-medium">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                    <circle cx="12" cy="12" r="3" />
+                </svg>
+                {{ $isExistingPdf ? 'Ver PDF' : 'Ver imagen' }}
+            </button>
             @if ($deleteModel)
-                <button type="button" wire:click="$set('{{ $deleteModel }}', true)"
-                    class="cursor-pointer text-red-500 hover:text-red-600 font-medium">
-                    Quitar archivo
-                </button>
+                <div class="flex items-center">
+                    <div wire:loading wire:target="$set('{{ $deleteModel }}', true)"
+                        class="text-red-500 font-bold animate-pulse">
+                        Quitando…
+                    </div>
+                    <button type="button" wire:click="$set('{{ $deleteModel }}', true)" wire:loading.remove
+                        wire:target="$set('{{ $deleteModel }}', true)"
+                        class="cursor-pointer text-red-500 hover:text-red-600 font-medium">
+                        Quitar archivo
+                    </button>
+                </div>
             @endif
         </div>
     @endif
     @if ($file)
         @php
-            $isPdf = method_exists($file, 'getClientOriginalExtension')
-                && strtolower($file->getClientOriginalExtension()) === 'pdf';
-            $previewUrl = (!$isPdf && method_exists($file, 'temporaryUrl')) ? $file->temporaryUrl() : null;
+            $isPdf =
+                method_exists($file, 'getClientOriginalExtension') &&
+                strtolower($file->getClientOriginalExtension()) === 'pdf';
+            // Evitamos llamar a temporaryUrl() para PDFs para no causar el error de Livewire
+            $previewUrl = !$isPdf && method_exists($file, 'temporaryUrl') ? $file->temporaryUrl() : null;
         @endphp
-        <div x-data="{ removing: false }">
-        <div class="mt-1 text-xs flex items-center justify-end gap-3">
-            @if ($previewUrl && !$isPdf)
-                <div x-data="{ open: false }">
-                    <button type="button" @click="open = true"
-                        class="cursor-pointer inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 font-medium">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                        </svg>
-                        Ver imagen
-                    </button>
-                    <template x-if="open">
-                        <div x-data="{
-                                zoom: 1,
-                                setOrigin(e) {
-                                    const r = e.target.getBoundingClientRect();
-                                    e.target.style.transformOrigin = ((e.clientX-r.left)/r.width*100)+'% '+((e.clientY-r.top)/r.height*100)+'%';
-                                },
-                                wheelZoom(e) { this.zoom = Math.max(1,Math.min(5,this.zoom+(e.deltaY<0?.2:-.2))); this.setOrigin(e); }
-                            }"
-                            @keydown.escape.window="open = false"
-                            class="fixed inset-0 z-[10002] flex items-center justify-center p-4">
-                            <div class="absolute inset-0 bg-black/90 backdrop-blur-sm" @click="open = false"></div>
-                            <button type="button" @click="open = false"
-                                class="absolute top-4 right-4 z-[10003] p-3 text-white/40 hover:text-white">
-                                <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                            <div class="relative z-[10002] flex items-center justify-center overflow-hidden">
-                                <img src="{{ $previewUrl }}" alt="Vista previa"
-                                    class="max-w-full max-h-[90vh] rounded shadow-2xl transition-transform duration-200 ease-out cursor-zoom-in"
-                                    :style="'transform:scale('+zoom+')'"
-                                    @mousemove="setOrigin($event)" @wheel.prevent="wheelZoom($event)" draggable="false" />
-                            </div>
-                            <div x-show="zoom > 1"
-                                class="absolute bottom-8 left-1/2 -translate-x-1/2 z-[10003] px-4 py-2 rounded-full bg-white/10 text-white/90 text-xs font-semibold backdrop-blur-xl border border-white/20 pointer-events-none">
-                                Zoom: <span x-text="zoom.toFixed(1)+'x'"></span>
-                            </div>
-                        </div>
-                    </template>
+        <div x-data="{ removing: false }" x-init="$watch('{{ $model }}', value => { if (value) removing = false })">
+            <div class="mt-1 text-xs flex items-center justify-end gap-3 h-5">
+                {{-- Cargando --}}
+                <div wire:loading wire:target="{{ $model }}"
+                    class="text-indigo-500 font-bold animate-pulse flex items-center gap-1">
+                    <span x-show="removing">Quitando…</span>
+                    <span x-show="!removing">Subiendo…</span>
                 </div>
-            @elseif ($previewUrl && $isPdf)
-                <a href="{{ $previewUrl }}" target="_blank"
-                    class="cursor-pointer inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 font-medium">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                        <circle cx="12" cy="12" r="3" />
-                    </svg>
-                    Ver PDF
-                </a>
-            @endif
-            <button type="button"
-                @click="removing = true"
-                wire:click="$set('{{ $model }}', null)"
-                class="cursor-pointer text-red-500 hover:text-red-600 font-medium">
-                Quitar archivo
-            </button>
+
+                {{-- Acciones --}}
+                <div wire:loading.remove wire:target="{{ $model }}" x-show="!removing && !isUploading"
+                    class="flex items-center gap-3" x-data="{
+                        get isPdf() {
+                            const name = '{{ method_exists($file, 'getClientOriginalName') ? $file->getClientOriginalName() : '' }}';
+                            return name.toLowerCase().endsWith('.pdf') || !!this.localPdfUrl;
+                        }
+                    }">
+                    <template x-if="localPdfUrl">
+                        <button type="button"
+                            @click="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: localPdfUrl }))"
+                            class="cursor-pointer inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 font-medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            Ver PDF
+                        </button>
+                    </template>
+                    <template x-if="!localPdfUrl && @js($previewUrl)">
+                        <button type="button"
+                            @click="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: @js($previewUrl) }))"
+                            class="cursor-pointer inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 font-medium">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            Ver imagen
+                        </button>
+                    </template>
+                    <button type="button"
+                        @click="removing = true; if(localPdfUrl) URL.revokeObjectURL(localPdfUrl); localPdfUrl = '';"
+                        wire:click="$set('{{ $model }}', null)"
+                        class="cursor-pointer text-red-500 hover:text-red-600 font-medium">
+                        Quitar archivo
+                    </button>
+                </div>
+            </div>
         </div>
-        <div wire:loading wire:target="{{ $model }}"
-            x-show="!removing"
-            class="text-xs text-indigo-500 font-bold mt-1 animate-pulse">
-            Subiendo…
-        </div>
-        </div>{{-- x-data removing --}}
     @endif
+
+    {{-- Cargando cuando no hay archivo seleccionado aún (subida inicial) --}}
     @if (!$file)
-        <div wire:loading wire:target="{{ $model }}" class="text-xs text-indigo-500 font-bold mt-1 animate-pulse">
-            Subiendo…</div>
+        <div class="mt-1 text-xs flex justify-end">
+            <div wire:loading wire:target="{{ $model }}" class="text-indigo-500 font-bold animate-pulse">
+                Subiendo…
+            </div>
+        </div>
     @endif
 
     {{-- ── Overlay de procesamiento ────────────────────────── --}}
@@ -1108,7 +1151,8 @@
                     <div x-show="editorTab === 'adjust'" class="p-4 flex flex-col gap-5">
                         <div>
                             <div class="flex justify-between mb-2">
-                                <span class="text-[10px] text-white/50 uppercase font-black tracking-widest">Brillo</span>
+                                <span
+                                    class="text-[10px] text-white/50 uppercase font-black tracking-widest">Brillo</span>
                                 <span class="text-[10px] text-indigo-400 font-mono" x-text="adjBrightness+'%'"></span>
                             </div>
                             <input type="range" x-model="adjBrightness" min="50" max="200"
@@ -1116,7 +1160,8 @@
                         </div>
                         <div>
                             <div class="flex justify-between mb-2">
-                                <span class="text-[10px] text-white/50 uppercase font-black tracking-widest">Contraste</span>
+                                <span
+                                    class="text-[10px] text-white/50 uppercase font-black tracking-widest">Contraste</span>
                                 <span class="text-[10px] text-indigo-400 font-mono" x-text="adjContrast+'%'"></span>
                             </div>
                             <input type="range" x-model="adjContrast" min="50" max="300"
@@ -1256,7 +1301,8 @@
                         <button type="button" @click="switchTab('persp')"
                             class="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition"
                             :class="editorTab === 'persp' ? 'text-white border-b-2 border-indigo-500' : 'text-white/40'">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <path d="M21 3L3 9l7 3 3 9 8-18z" />
                             </svg>
                             Perspectiva
@@ -1264,7 +1310,8 @@
                         <button type="button" @click="switchTab('crop')"
                             class="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition"
                             :class="editorTab === 'crop' ? 'text-white border-b-2 border-indigo-500' : 'text-white/40'">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
                                 <polyline points="6 2 6 6 2 6" />
                                 <polyline points="18 2 18 6 22 6" />
                                 <polyline points="6 22 6 18 2 18" />
@@ -1275,11 +1322,16 @@
                         <button type="button" @click="switchTab('adjust')"
                             class="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-medium transition"
                             :class="editorTab === 'adjust' ? 'text-white border-b-2 border-indigo-500' : 'text-white/40'">
-                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" />
-                                <line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" />
-                                <line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" />
-                                <line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" />
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="4" y1="21" x2="4" y2="14" />
+                                <line x1="4" y1="10" x2="4" y2="3" />
+                                <line x1="12" y1="21" x2="12" y2="12" />
+                                <line x1="12" y1="8" x2="12" y2="3" />
+                                <line x1="20" y1="21" x2="20" y2="16" />
+                                <line x1="20" y1="12" x2="20" y2="3" />
+                                <line x1="1" y1="14" x2="7" y2="14" />
+                                <line x1="9" y1="8" x2="15" y2="8" />
                                 <line x1="17" y1="16" x2="23" y2="16" />
                             </svg>
                             Ajustes
@@ -1311,16 +1363,20 @@
                         {{-- Ajustes --}}
                         <div x-show="editorTab === 'adjust'" class="space-y-2.5">
                             <div class="flex items-center gap-3">
-                                <span class="text-[10px] text-white/50 uppercase font-black tracking-widest w-16 shrink-0">Brillo</span>
+                                <span
+                                    class="text-[10px] text-white/50 uppercase font-black tracking-widest w-16 shrink-0">Brillo</span>
                                 <input type="range" x-model="adjBrightness" min="50" max="200"
                                     class="flex-1 h-1.5 accent-indigo-500 bg-white/10 rounded-full appearance-none cursor-pointer">
-                                <span class="text-[10px] text-indigo-400 font-mono w-9 text-right shrink-0" x-text="adjBrightness+'%'"></span>
+                                <span class="text-[10px] text-indigo-400 font-mono w-9 text-right shrink-0"
+                                    x-text="adjBrightness+'%'"></span>
                             </div>
                             <div class="flex items-center gap-3">
-                                <span class="text-[10px] text-white/50 uppercase font-black tracking-widest w-16 shrink-0">Contraste</span>
+                                <span
+                                    class="text-[10px] text-white/50 uppercase font-black tracking-widest w-16 shrink-0">Contraste</span>
                                 <input type="range" x-model="adjContrast" min="50" max="300"
                                     class="flex-1 h-1.5 accent-indigo-500 bg-white/10 rounded-full appearance-none cursor-pointer">
-                                <span class="text-[10px] text-indigo-400 font-mono w-9 text-right shrink-0" x-text="adjContrast+'%'"></span>
+                                <span class="text-[10px] text-indigo-400 font-mono w-9 text-right shrink-0"
+                                    x-text="adjContrast+'%'"></span>
                             </div>
                             <div class="flex justify-end pt-0.5">
                                 <button type="button" @click="adjBrightness=100;adjContrast=100"

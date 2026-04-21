@@ -70,6 +70,14 @@ trait WithPrestamos
         unset($it);
 
         if (! $found) {
+            $series_disponibles = [];
+            if ($herramienta->tipo === 'activo') {
+                $series_disponibles = \App\Models\HerramientaSerie::where('herramienta_id', $herramienta->id)
+                    ->where('estado', 'disponible')
+                    ->get(['id', 'serie'])
+                    ->toArray();
+            }
+
             $this->items[] = [
                 'herramienta_id' => (int) $this->item_herramienta_id,
                 'nombre' => $herramienta->nombre,
@@ -77,12 +85,21 @@ trait WithPrestamos
                 'imagen' => $herramienta->imagen,
                 'disponible' => $herramienta->stock_disponible,
                 'cantidad' => (int) $this->item_cantidad,
+                'tipo' => $herramienta->tipo ?? 'herramienta',
+                'series_disponibles' => $series_disponibles,
+                'series_seleccionadas' => array_fill(0, (int) $this->item_cantidad, ''),
             ];
         } else {
-            // Actualizar el disponible mostrado en la fila
+            // Actualizar el disponible y tamaño del array si es activo
             foreach ($this->items as &$it) {
                 if ($it['herramienta_id'] == $this->item_herramienta_id) {
                     $it['disponible'] = $herramienta->stock_disponible;
+                    if (($it['tipo'] ?? 'herramienta') === 'activo') {
+                        // Rellenar array de series si aumentó la cantidad
+                        while (count($it['series_seleccionadas']) < $it['cantidad']) {
+                            $it['series_seleccionadas'][] = '';
+                        }
+                    }
                 }
             }
             unset($it);
@@ -128,6 +145,21 @@ trait WithPrestamos
             return;
         }
 
+        foreach ($this->items as $it) {
+            if (($it['tipo'] ?? 'herramienta') === 'activo') {
+                $selected = array_filter($it['series_seleccionadas'], fn($val) => !empty($val));
+                if (count($selected) !== $it['cantidad']) {
+                    $this->addError('items', "Debe seleccionar un número de serie para cada unidad de " . $it['nombre']);
+                    return;
+                }
+                
+                if (count(array_unique($selected)) !== count($selected)) {
+                    $this->addError('items', "Ha seleccionado números de serie duplicados en " . $it['nombre']);
+                    return;
+                }
+            }
+        }
+
         DB::transaction(function () {
             // Guardar fotos de salida
             $rutasFotos = [];
@@ -155,25 +187,77 @@ trait WithPrestamos
 
             foreach ($this->items as $it) {
                 $herramienta = Herramienta::findOrFail($it['herramienta_id']);
+                $tipo = $it['tipo'] ?? 'herramienta';
 
-                PrestamoHerramienta::create([
-                    'nro_prestamo' => $nro_prestamo,
-                    'empresa_id' => $empresaId,
-                    'herramienta_id' => $it['herramienta_id'],
-                    'agente_id' => $this->agente_id ?: null,
-                    'receptor_manual' => $this->receptor_manual ?: null,
-                    'entidad_id' => $this->entidad_id,
-                    'proyecto_id' => $this->proyecto_id,
-                    'cantidad_prestada' => $it['cantidad'],
-                    'fecha_prestamo' => $this->fecha_prestamo,
-                    'fecha_vencimiento' => $this->fecha_vencimiento,
-                    'fotos_salida' => ! empty($rutasFotos) ? $rutasFotos : null,
-                    'firma_salida' => $this->firma_salida,
-                    'estado' => 'activo',
-                ]);
+                if ($tipo === 'activo') {
+                    $selectedSeries = array_filter($it['series_seleccionadas'], fn($val) => !empty($val));
+                    foreach ($selectedSeries as $serie_id) {
+                        PrestamoHerramienta::create([
+                            'nro_prestamo' => $nro_prestamo,
+                            'empresa_id' => $empresaId,
+                            'herramienta_id' => $it['herramienta_id'],
+                            'serie_id' => $serie_id,
+                            'agente_id' => $this->agente_id ?: null,
+                            'receptor_manual' => $this->receptor_manual ?: null,
+                            'entidad_id' => $this->entidad_id,
+                            'proyecto_id' => $this->proyecto_id,
+                            'cantidad_prestada' => 1,
+                            'cantidad_devuelta' => 0,
+                            'fecha_prestamo' => $this->fecha_prestamo,
+                            'fecha_vencimiento' => $this->fecha_vencimiento,
+                            'fotos_salida' => ! empty($rutasFotos) ? $rutasFotos : null,
+                            'firma_salida' => $this->firma_salida,
+                            'estado' => 'activo',
+                        ]);
 
-                $herramienta->decrement('stock_disponible', $it['cantidad']);
-                $herramienta->increment('stock_prestado', $it['cantidad']);
+                        $hs = \App\Models\HerramientaSerie::find($serie_id);
+                        if ($hs) {
+                            $hs->update(['estado' => 'prestado']);
+                        }
+                    }
+                    $herramienta->decrement('stock_disponible', $it['cantidad']);
+                    $herramienta->increment('stock_prestado', $it['cantidad']);
+
+                } elseif ($tipo === 'material') {
+                    PrestamoHerramienta::create([
+                        'nro_prestamo' => $nro_prestamo,
+                        'empresa_id' => $empresaId,
+                        'herramienta_id' => $it['herramienta_id'],
+                        'serie_id' => null,
+                        'agente_id' => $this->agente_id ?: null,
+                        'receptor_manual' => $this->receptor_manual ?: null,
+                        'entidad_id' => $this->entidad_id,
+                        'proyecto_id' => $this->proyecto_id,
+                        'cantidad_prestada' => $it['cantidad'],
+                        'cantidad_devuelta' => $it['cantidad'], // Autocompletamos por ser material
+                        'fecha_prestamo' => $this->fecha_prestamo,
+                        'fecha_vencimiento' => $this->fecha_vencimiento,
+                        'fotos_salida' => ! empty($rutasFotos) ? $rutasFotos : null,
+                        'firma_salida' => $this->firma_salida,
+                        'estado' => 'finalizado',
+                    ]);
+                    $herramienta->decrement('stock_disponible', $it['cantidad']);
+                    $herramienta->decrement('stock_total', $it['cantidad']);
+                } else {
+                    PrestamoHerramienta::create([
+                        'nro_prestamo' => $nro_prestamo,
+                        'empresa_id' => $empresaId,
+                        'herramienta_id' => $it['herramienta_id'],
+                        'agente_id' => $this->agente_id ?: null,
+                        'receptor_manual' => $this->receptor_manual ?: null,
+                        'entidad_id' => $this->entidad_id,
+                        'proyecto_id' => $this->proyecto_id,
+                        'cantidad_prestada' => $it['cantidad'],
+                        'fecha_prestamo' => $this->fecha_prestamo,
+                        'fecha_vencimiento' => $this->fecha_vencimiento,
+                        'fotos_salida' => ! empty($rutasFotos) ? $rutasFotos : null,
+                        'firma_salida' => $this->firma_salida,
+                        'estado' => 'activo',
+                    ]);
+
+                    $herramienta->decrement('stock_disponible', $it['cantidad']);
+                    $herramienta->increment('stock_prestado', $it['cantidad']);
+                }
             }
         });
 

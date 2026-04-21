@@ -6,8 +6,24 @@
             <div
                 class="flex items-center gap-3 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-800/40 p-3">
                 @if ($bajaStockImagen)
-                    <img src="{{ Storage::url($bajaStockImagen) }}" alt="{{ $bajaStockNombre }}"
-                        class="w-11 h-11 rounded-lg object-cover border border-red-200 dark:border-red-800 shrink-0">
+                    @php
+                        $bajaStockUrl = Storage::url($bajaStockImagen);
+                        $isBajaStockPdf = \Illuminate\Support\Str::contains(strtolower($bajaStockUrl), '.pdf');
+                    @endphp
+                    @if ($isBajaStockPdf)
+                        <div class="w-11 h-11 rounded-lg bg-red-50 dark:bg-red-900/20 flex flex-col items-center justify-center border border-red-100 dark:border-red-800 shrink-0 cursor-pointer hover:opacity-80 transition"
+                            onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ $bajaStockUrl }}' }))">
+                            <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                    @else
+                        <img src="{{ $bajaStockUrl }}" alt="{{ $bajaStockNombre }}"
+                            onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ $bajaStockUrl }}' }))"
+                            class="w-11 h-11 rounded-lg object-cover border border-red-200 dark:border-red-800 shrink-0 cursor-pointer hover:opacity-80 transition shadow-sm"
+                            title="Clic para ampliar">
+                    @endif
                 @else
                     <div
                         class="w-11 h-11 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">

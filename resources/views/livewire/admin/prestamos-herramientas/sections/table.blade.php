@@ -1,4 +1,6 @@
-    {{-- TABLA --}}
+    @php
+        $anyModalOpen = $openModalPrestamo || $openModalDevolucion || $openModalBaja || $openModalVer;
+    @endphp
     <div
         class="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-neutral-700 shadow-sm overflow-hidden ">
 
@@ -143,26 +145,40 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                 </svg>
+                                <svg wire:loading wire:target="exportPdf('{{ $nro }}')"
+                                    class="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                                    </path>
+                                </svg>
                             </button>
                         @endcan
                         @if ($datos->totalPendientes > 0)
                             @can('prestamos.devolucion')
                                 <button wire:click="openDevolucion('{{ $nro }}')" title="Devolución"
-                                    class="flex-1 inline-flex items-center justify-center h-9 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition cursor-pointer shadow-sm">
-                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    wire:loading.attr="disabled" @disabled($anyModalOpen)
+                                    class="flex-1 inline-flex items-center justify-center h-9 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition cursor-pointer shadow-sm disabled:opacity-50">
+                                    <svg wire:loading.remove wire:target="openDevolucion('{{ $nro }}')"
+                                        class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                    </svg>
+                                    <svg wire:loading wire:target="openDevolucion('{{ $nro }}')"
+                                        class="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                            stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                     </svg>
                                 </button>
                             @endcan
                             @can('prestamos.baja')
-                                <button wire:click="openBaja('{{ $nro }}')" title="Baja"
-                                    class="flex-1 inline-flex items-center justify-center h-9 rounded-xl border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 hover:bg-red-600 hover:text-white transition cursor-pointer">
-                                    <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                        stroke-width="2">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
+                                <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
                                 </button>
                             @endcan
                         @endif
@@ -337,30 +353,49 @@
 
                             {{-- Acciones --}}
                             <td class="px-4 py-4 text-center">
-                                <div class="flex items-center justify-center gap-2">
+                                <div wire:loading.class="opacity-50 grayscale pointer-events-none"
+                                    class="flex items-center justify-center gap-2 {{ $anyModalOpen ? 'opacity-50 grayscale pointer-events-none' : '' }}">
                                     {{-- Ver detalle --}}
                                     @can('prestamos.view')
                                         <button title="Ver detalle del préstamo"
-                                            wire:click="openVer('{{ $nro }}')"
-                                            class="cursor-pointer size-8 rounded-lg border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition flex items-center justify-center shadow-sm">
-                                            <svg class="size-4" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
+                                            wire:click="openVer('{{ $nro }}')" wire:loading.attr="disabled"
+                                            @disabled($anyModalOpen)
+                                            class="cursor-pointer size-8 rounded-lg border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition flex items-center justify-center shadow-sm disabled:!bg-gray-100 disabled:!text-gray-400 disabled:!border-gray-200 dark:disabled:!bg-neutral-800">
+                                            <svg wire:loading.remove wire:target="openVer('{{ $nro }}')"
+                                                class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                            <svg wire:loading wire:target="openVer('{{ $nro }}')"
+                                                class="size-4 animate-spin text-indigo-600" fill="none"
+                                                viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                    stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                             </svg>
                                         </button>
                                     @endcan
 
                                     @can('prestamos.export_pdf')
                                         <button title="Exportar Movimiento a PDF"
-                                            wire:click="exportPdf('{{ $nro }}')"
-                                            class="cursor-pointer size-8 rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-500 hover:text-red-500 hover:border-red-200 transition flex items-center justify-center shadow-sm">
-                                            <svg class="size-4" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
+                                            wire:click="exportPdf('{{ $nro }}')" wire:loading.attr="disabled"
+                                            @disabled($anyModalOpen)
+                                            class="cursor-pointer size-8 rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-500 hover:text-red-500 hover:border-red-200 transition flex items-center justify-center shadow-sm disabled:!bg-gray-100 disabled:!text-gray-400 disabled:!border-gray-200">
+                                            <svg wire:loading.remove wire:target="exportPdf('{{ $nro }}')"
+                                                class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            <svg wire:loading wire:target="exportPdf('{{ $nro }}')"
+                                                class="size-4 animate-spin text-red-500" fill="none"
+                                                viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                    stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor"
+                                                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                             </svg>
                                         </button>
                                     @endcan
@@ -368,24 +403,44 @@
                                     @if ($datos->totalPendientes > 0)
                                         @can('prestamos.devolucion')
                                             <button wire:click="openDevolucion('{{ $nro }}')"
-                                                title="Registrar devolución"
-                                                class="cursor-pointer size-8 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition flex items-center justify-center shadow-md shadow-indigo-500/20">
-                                                <svg class="size-4" fill="none" viewBox="0 0 24 24"
-                                                    stroke="currentColor">
+                                                title="Registrar devolución" wire:loading.attr="disabled"
+                                                @disabled($anyModalOpen)
+                                                class="cursor-pointer size-8 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition flex items-center justify-center shadow-md shadow-indigo-500/20 disabled:!bg-gray-400 disabled:!shadow-none">
+                                                <svg wire:loading.remove
+                                                    wire:target="openDevolucion('{{ $nro }}')" class="size-4"
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                                </svg>
+                                                <svg wire:loading wire:target="openDevolucion('{{ $nro }}')"
+                                                    class="size-4 animate-spin text-white" fill="none"
+                                                    viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                                 </svg>
                                             </button>
                                         @endcan
 
                                         @can('prestamos.baja')
                                             <button wire:click="openBaja('{{ $nro }}')"
-                                                title="Dar de baja (perdido / destruido)"
-                                                class="cursor-pointer size-8 rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 hover:bg-red-600 hover:text-white hover:border-red-600 dark:hover:bg-red-600 dark:hover:border-red-600 transition flex items-center justify-center shadow-sm">
-                                                <svg class="size-4" fill="none" viewBox="0 0 24 24"
+                                                title="Dar de baja (perdido / destruido)" wire:loading.attr="disabled"
+                                                @disabled($anyModalOpen)
+                                                class="cursor-pointer size-8 rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400 hover:bg-red-600 hover:text-white hover:border-red-600 dark:hover:bg-red-600 dark:hover:border-red-600 transition flex items-center justify-center shadow-sm disabled:!bg-gray-100 disabled:!text-gray-400 disabled:!border-gray-200">
+                                                <svg wire:loading.remove wire:target="openBaja('{{ $nro }}')"
+                                                    class="size-4" fill="none" viewBox="0 0 24 24"
                                                     stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                                <svg wire:loading wire:target="openBaja('{{ $nro }}')"
+                                                    class="size-4 animate-spin text-red-600" fill="none"
+                                                    viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                                 </svg>
                                             </button>
                                         @endcan

@@ -57,7 +57,6 @@
                 @php
                     $anyModalOpen =
                         $openModal ||
-                        $editModal ||
                         $detailModal ||
                         $openAddStockModal ||
                         $openBajaStockModal ||

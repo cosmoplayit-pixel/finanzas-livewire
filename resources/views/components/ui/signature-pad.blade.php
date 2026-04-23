@@ -105,10 +105,11 @@
                         }, 50);
                     }
 
-                    this.$cleanup(() => {
-                        if (this._ro) this._ro.disconnect();
-                        if (this.pad) this.pad.off();
-                    });
+                },
+
+                destroy() {
+                    if (this._ro) this._ro.disconnect();
+                    if (this.pad) this.pad.off();
                 },
 
                 _doResize(canvas) {

@@ -20,7 +20,7 @@ class MultiEmpresaSeeder extends Seeder
                 ProyectosSeeder::class,
                 BancosSeeder::class,
                 AgenteServicioSeeder::class,
-                HerramientasSeeder::class,
+                // HerramientasSeeder::class,
             ]);
         }
     }

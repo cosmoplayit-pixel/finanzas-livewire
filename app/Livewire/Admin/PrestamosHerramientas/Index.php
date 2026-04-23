@@ -11,6 +11,7 @@ use App\Models\Herramienta;
 use App\Models\PrestamoHerramienta;
 use App\Models\Proyecto;
 use Carbon\Carbon;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
@@ -89,6 +90,8 @@ class Index extends Component
     public string $prestamoNroParaBaja = '';
 
     public array $items_baja = [];
+
+    #[Validate(['fotos_baja.*' => 'nullable|file|max:10240'])]
     public array $fotos_baja = [];
 
     // ── Modal Ver Detalle ─────────────────────────────────────────────────────
@@ -271,18 +274,95 @@ class Index extends Component
         // Datos para modal Ver Detalle
         $verPrestamos = collect();
         $verBajas     = collect();
+        $verDetalles = [
+            'verFirst' => null,
+            'totalPrestadas' => 0,
+            'totalDevueltas' => 0,
+            'totalPendientes' => 0,
+            'isVencido' => false,
+            'estadoGlobal' => 'activo',
+            'progreso' => 0,
+            'receptores' => [],
+            'fotosSalidaUrls' => [],
+        ];
+
         if ($this->openModalVer && $this->verNroPrestamo) {
-            $verPrestamos = PrestamoHerramienta::with([
-                'herramienta' => fn ($q) => $q->withTrashed(),
-                'entidad', 'proyecto', 'devoluciones', 'agente',
-            ])
+            $verPrestamos = PrestamoHerramienta::with(['herramienta', 'serie', 'devoluciones.prestamo.serie'])
                 ->where('nro_prestamo', $this->verNroPrestamo)
-                ->where('empresa_id', $this->userEmpresaId())
+                ->where('empresa_id', $empresaId)
                 ->get();
 
             $verBajas = \App\Models\BajaHerramienta::whereIn('prestamo_id', $verPrestamos->pluck('id'))
-                ->with(['herramienta' => fn ($q) => $q->withTrashed(), 'user'])
+                ->with(['herramienta' => fn($q) => $q->withTrashed(), 'user'])
                 ->get();
+
+            if ($verPrestamos->isNotEmpty()) {
+                $verFirst = $verPrestamos->first();
+                $totalPrestadas = $verPrestamos->sum('cantidad_prestada');
+                $totalDevueltas = $verPrestamos->sum('cantidad_devuelta');
+                $totalPendientes = $totalPrestadas - $totalDevueltas;
+                $isVencido = $verPrestamos->contains(
+                    fn($i) => $i->estado !== 'finalizado' && $i->fecha_vencimiento && $i->fecha_vencimiento->isPast(),
+                );
+                $estadoGlobal = $totalPendientes == 0 ? 'finalizado' : ($isVencido ? 'vencido' : 'activo');
+                $progreso = $totalPrestadas > 0 ? (int) round(($totalDevueltas / $totalPrestadas) * 100) : 0;
+
+                $allDevolutions = $verPrestamos
+                    ->flatMap(function ($vp) {
+                        return $vp->devoluciones->map(function ($d) use ($vp) {
+                            $d->_herramienta_nombre = $vp->herramienta?->nombre ?? 'Herramienta Eliminada';
+                            $d->_herramienta_imagen = $vp->herramienta?->imagen ?? null;
+                            $d->_herramienta_id = $vp->herramienta_id;
+                            $d->_nro_serie = $vp->serie?->serie ?? null;
+                            return $d;
+                        });
+                    })
+                    ->sortBy('id');
+
+                $receptores = [];
+                $sessionTemp = null;
+                $sessionIdx = 1;
+
+                foreach ($allDevolutions as $dev) {
+                    $esInicioSesion = !empty($dev->fotos_entrada);
+                    if (!$sessionTemp || $esInicioSesion) {
+                        if ($sessionTemp) {
+                            $receptores[] = $sessionTemp;
+                        }
+                        $sessionTemp = [
+                            'nro' => $sessionIdx++,
+                            'fecha_devolucion' => $dev->fecha_devolucion,
+                            'observaciones' => $dev->observaciones,
+                            'fotos' => $dev->fotos_entrada ?? [],
+                            'firma' => $dev->firma_entrada,
+                            'items' => collect([]),
+                            'created_at' => $dev->created_at,
+                        ];
+                    }
+                    $sessionTemp['items']->push($dev);
+                }
+                if ($sessionTemp) {
+                    $receptores[] = $sessionTemp;
+                }
+                $receptores = array_reverse($receptores);
+
+                $fotosSalidaUrls = collect($verFirst->fotos_salida ?? [])
+                    ->map(fn($f) => \Illuminate\Support\Facades\Storage::url($f))
+                    ->values()
+                    ->all();
+
+                $verDetalles = [
+                    'verFirst' => $verFirst,
+                    'totalPrestadas' => $totalPrestadas,
+                    'totalDevueltas' => $totalDevueltas,
+                    'totalPendientes' => $totalPendientes,
+                    'isVencido' => $isVencido,
+                    'estadoGlobal' => $estadoGlobal,
+                    'progreso' => $progreso,
+                    'receptores' => $receptores,
+                    'fotosSalidaUrls' => $fotosSalidaUrls,
+                ];
+            }
         }
 
         // PRE-CÁLCULO PARA LA VISTA BLADE (Cards y Tabla sin @php)
@@ -301,6 +381,10 @@ class Index extends Component
             $pctDevuelto = $totalPrestadas > 0 ? (int) min(100, round(($totalDevueltas / $totalPrestadas) * 100)) : 0;
             $pctPendiente = $totalPrestadas > 0 ? (int) min(100, round(($totalPendientes / $totalPrestadas) * 100)) : 0;
 
+            $tieneMaterialesPendientes = $items->contains(function ($i) {
+                return $i->cantidad_pendiente > 0 && ($i->herramienta->tipo ?? 'herramienta') === 'material';
+            });
+
             $fotosRetorno = $items->flatMap(function ($item) {
                 return $item->devoluciones->flatMap(fn($d) => $d->fotos_entrada ?? []);
             })->filter()->values()->all();
@@ -316,10 +400,12 @@ class Index extends Component
                 'pctDevuelto' => $pctDevuelto,
                 'pctPendiente' => $pctPendiente,
                 'fotosRetorno' => $fotosRetorno,
+                'tieneMaterialesPendientes' => $tieneMaterialesPendientes,
             ];
         }
 
-        return view('livewire.admin.prestamos-herramientas.index', [
+        $viewData = [
+            'anyModalOpen' => $this->openModalPrestamo || $this->openModalDevolucion || $this->openModalBaja || $this->openModalVer,
             'paginatedNros' => $paginatedNros,
             'prestamosAgrupados' => $prestamosAgrupados,
             'prestamosCalculados' => $prestamosCalculados,
@@ -335,7 +421,9 @@ class Index extends Component
             'countVencidos' => $countVencidos,
             'verPrestamos' => $verPrestamos,
             'verBajas'     => $verBajas,
-        ]);
+        ];
+
+        return view('livewire.admin.prestamos-herramientas.index', array_merge($viewData, $verDetalles));
     }
 
     // â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

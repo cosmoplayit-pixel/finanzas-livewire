@@ -4,6 +4,7 @@
         photos: [],
         currentIndex: 0,
         title: '',
+        isSignature: false,
         getPdfUrl(url) {
             if (url && url.startsWith('data:application/pdf;base64,')) {
                 try {
@@ -22,7 +23,7 @@
             return url;
         }
     }"
-        @open-viewer.window="photos = $event.detail.photos; title = $event.detail.title; currentIndex = 0; open = true"
+        @open-viewer.window="photos = $event.detail.photos; title = $event.detail.title; isSignature = $event.detail.isSignature || false; currentIndex = 0; open = true"
         @keydown.escape.window="open = false" @keydown.arrow-left.window="if(open && currentIndex > 0) currentIndex--"
         @keydown.arrow-right.window="if(open && currentIndex < photos.length - 1) currentIndex++" class="relative z-[100]"
         x-cloak>
@@ -79,7 +80,9 @@
                         </template>
                         <template
                             x-if="photos[currentIndex] && !photos[currentIndex].toLowerCase().endsWith('.pdf') && !photos[currentIndex].toLowerCase().includes('.pdf?') && !photos[currentIndex].startsWith('data:application/pdf')">
-                            <img :src="photos[currentIndex]" class="max-w-full max-h-full object-contain">
+                            <img :src="photos[currentIndex]"
+                                :class="{ 'bg-white rounded-2xl p-8 sm:p-12 shadow-2xl': isSignature }"
+                                class="max-w-full max-h-full object-contain">
                         </template>
                     </div>
                 </div>

@@ -22,6 +22,43 @@
                     processingMsg: 'Procesando…',
                     localPdfUrl: '',
                     isUploading: false,
+                    removing: false,
+                    hovered: false,
+
+                    uploadFile(f) {
+                        if (!f) return;
+                        this.removing = true;
+                        if (this.localPdfUrl) URL.revokeObjectURL(this.localPdfUrl);
+                        this.localPdfUrl = '';
+                        this.isUploading = true;
+                        this.$wire.set(model, null).then(() => {
+                            this.removing = false;
+                            if (f.type === 'application/pdf') {
+                                this.localPdfUrl = URL.createObjectURL(f);
+                            }
+                            this.$wire.upload(model, f, () => {
+                                this.isUploading = false;
+                            }, () => {
+                                this.isUploading = false;
+                            });
+                        });
+                    },
+
+                    handlePaste(e) {
+                        if (this.isUploading || this.removing) return;
+                        const items = e.clipboardData?.items;
+                        if (!items) return;
+                        for (const item of items) {
+                            if (item.type.startsWith('image/') || item.type === 'application/pdf') {
+                                const f = item.getAsFile();
+                                if (f) {
+                                    e.preventDefault();
+                                    this.uploadFile(f);
+                                    break;
+                                }
+                            }
+                        }
+                    },
 
                     // Cámara
                     stream: null,
@@ -804,11 +841,13 @@
     }
 </script>
 
-<div x-data="documentScanner('{{ $model }}')" @keydown.escape.window="closeAll()" class="relative">
+<div x-data="documentScanner('{{ $model }}')" @keydown.escape.window="closeAll()" @mouseenter="hovered = true" @mouseleave="hovered = false"
+    @paste.window="if (hovered) handlePaste($event)" class="relative">
 
     {{-- ── Input área ─────────────────────────────────────── --}}
     <label class="block text-sm mb-1">{{ $label }} <span class="text-red-500">*</span></label>
-    <div :class="(isUploading || removing) ? 'opacity-50 pointer-events-none' : ''"
+    <div :class="(isUploading || removing) ? 'opacity-50 pointer-events-none' : (hovered ?
+        'border-indigo-300 dark:border-indigo-700 bg-indigo-50/30 dark:bg-indigo-900/10' : '')"
         class="group h-11 flex items-center justify-between w-full rounded-lg border border-dashed border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-4 py-2 hover:bg-gray-50 dark:hover:bg-neutral-800 transition">
         <label class="flex items-center gap-3 min-w-0 flex-1 cursor-pointer">
             <div
@@ -833,21 +872,7 @@
                 </div>
             </div>
             <input type="file" accept="{{ $accept }}" class="hidden" :disabled="isUploading || removing"
-                @change="
-                    const f = $event.target.files[0];
-                    if (!f) return;
-                    removing = true;
-                    if (localPdfUrl) { URL.revokeObjectURL(localPdfUrl); }
-                    localPdfUrl = '';
-                    this.isUploading = true;
-                    $wire.set('{{ $model }}', null).then(() => {
-                        removing = false;
-                        if (f.type === 'application/pdf') {
-                            localPdfUrl = URL.createObjectURL(f);
-                        }
-                        $wire.upload('{{ $model }}', f, () => { this.isUploading = false; }, () => { this.isUploading = false; });
-                    });
-                " />
+                @change="uploadFile($event.target.files[0])" />
         </label>
         <button type="button" @click="startCamera()" title="Escanear con cámara"
             class="md:hidden shrink-0 p-1.5 rounded-md text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 transition-colors cursor-pointer border border-transparent hover:border-indigo-200">
@@ -900,7 +925,7 @@
             // Evitamos llamar a temporaryUrl() para PDFs para no causar el error de Livewire
             $previewUrl = !$isPdf && method_exists($file, 'temporaryUrl') ? $file->temporaryUrl() : null;
         @endphp
-        <div x-data="{ removing: false }" x-init="$watch('{{ $model }}', value => { if (value) removing = false })">
+        <div>
             <div class="mt-1 text-xs flex items-center justify-end gap-3 h-5">
                 {{-- Cargando --}}
                 <div wire:loading wire:target="{{ $model }}"

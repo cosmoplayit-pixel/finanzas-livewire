@@ -10,6 +10,7 @@ trait WithDetail
     {
         $h = Herramienta::with([
             'empresa',
+            'series' => fn ($q) => $q->orderBy('serie'),
             'bajas' => function ($q) {
                 $q->with('user')->orderBy('created_at', 'desc');
             },
@@ -42,8 +43,13 @@ trait WithDetail
             'pct_prestado' => round(($h->stock_prestado / $total) * 100),
             'precio_unitario' => number_format((float) $h->precio_unitario, 2, ',', '.'),
             'precio_total' => number_format((float) $h->precio_total, 2, ',', '.'),
+            'tipo' => $h->tipo,
             'active' => $h->active,
             'imagen' => $h->imagen,
+            'series' => $h->tipo === 'activo' ? $h->series->map(fn ($s) => [
+                'serie'  => $s->serie,
+                'estado' => $s->estado,
+            ])->toArray() : [],
             'created_at' => $h->created_at?->format('d/m/Y H:i'),
             'updated_at' => $h->updated_at?->format('d/m/Y H:i'),
             'bajas' => $h->bajas->map(function ($baja) {

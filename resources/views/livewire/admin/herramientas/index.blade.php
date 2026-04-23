@@ -12,7 +12,6 @@
     @include('livewire.admin.herramientas.modals._modal_nueva')
     @include('livewire.admin.herramientas.modals._modal_agregar_stock')
     @include('livewire.admin.herramientas.modals._modal_baja_stock')
-    @include('livewire.admin.herramientas.modals._modal_editar')
     @include('livewire.admin.herramientas.modals._modal_detalle')
     @include('livewire.admin.herramientas.modals._modal_zoom_imagen')
     @include('livewire.admin.herramientas.modals._modal_historial_bajas')

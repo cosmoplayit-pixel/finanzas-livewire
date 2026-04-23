@@ -11,6 +11,7 @@ class BajaHerramienta extends Model
         'prestamo_id',
         'user_id',
         'cantidad',
+        'series',
         'observaciones',
         'imagen',
     ];
@@ -28,5 +29,10 @@ class BajaHerramienta extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function detalles_series()
+    {
+        return $this->hasMany(HerramientaSerie::class, 'baja_id');
     }
 }

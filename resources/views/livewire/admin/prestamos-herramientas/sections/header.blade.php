@@ -18,9 +18,6 @@
         </div>
         <div class="flex items-center gap-3">
             @can('prestamos.create')
-                @php
-                    $anyModalOpen = $openModalPrestamo || $openModalDevolucion || $openModalBaja || $openModalVer;
-                @endphp
                 <button wire:click="openCreate" wire:loading.attr="disabled" @disabled($anyModalOpen)
                     class="flex-1 md:flex-none cursor-pointer inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-black text-white hover:bg-neutral-800 transition shadow-sm font-bold text-sm min-h-[46px] disabled:bg-gray-400 disabled:opacity-50 {{ $anyModalOpen ? 'grayscale' : '' }}">
                     <svg wire:loading.remove wire:target="openCreate" class="w-4 h-4" fill="none" stroke="currentColor"

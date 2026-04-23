@@ -6,7 +6,7 @@
                 class="bg-gray-50 text-gray-700 dark:bg-neutral-900 dark:text-neutral-200 border-b border-gray-200 dark:border-neutral-700">
                 <tr class="text-left text-xs uppercase tracking-wider">
                     <th class="p-2 w-[5%] text-center">Foto</th>
-                    <th class="p-2 w-[10%] cursor-pointer select-none whitespace-nowrap" wire:click="sortBy('codigo')">
+                    <th class="p-2 w-[10%] cursor-pointer select-none" wire:click="sortBy('codigo')">
                         Categoría
                         @if ($sortField === 'codigo')
                             <span class="text-gray-900 dark:text-white">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
@@ -20,7 +20,7 @@
                                 class="text-gray-900 dark:text-white">{{ $sortDirection === 'asc' ? '↑' : '↓' }}</span>
                         @endif
                     </th>
-                    <th class="p-2 w-[12%] cursor-pointer select-none whitespace-nowrap"
+                    <th class="p-2 w-[8%] cursor-pointer select-none whitespace-nowrap"
                         wire:click="sortBy('estado_fisico')">
                         Est. Físico
                         @if ($sortField === 'estado_fisico')
@@ -29,7 +29,7 @@
                         @endif
 
                     </th>
-                    <th class="p-2 w-[8%] text-center cursor-pointer select-none"
+                    <th class="p-2 w-[5%] text-center cursor-pointer select-none"
                         wire:click="sortBy('stock_disponible')">
                         Disp.
                         @if ($sortField === 'stock_disponible')
@@ -38,11 +38,11 @@
                         @endif
 
                     </th>
-                    <th class="p-2 w-[8%] text-center cursor-pointer select-none hidden xl:table-cell"
+                    <th class="p-2 w-[5%] text-center cursor-pointer select-none hidden xl:table-cell"
                         wire:click="sortBy('stock_total')">
                         Total
                     </th>
-                    <th class="p-2 w-[8%] text-center cursor-pointer select-none hidden xl:table-cell"
+                    <th class="p-2 w-[5%] text-center cursor-pointer select-none hidden xl:table-cell"
                         wire:click="sortBy('stock_prestado')">
                         Prest.
                     </th>
@@ -51,8 +51,8 @@
                         P. Unit.
                     </th>
                     <th class="p-2 w-[6%] text-center cursor-pointer select-none" wire:click="sortBy('active')">
-                        Sistema</th>
-                    <th class="p-2 w-[18%] whitespace-nowrap text-center">Acciones</th>
+                        Estado</th>
+                    <th class="p-2 w-[14%] whitespace-nowrap text-center">Acciones</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
@@ -61,7 +61,7 @@
                         wire:key="herr-{{ $h->id }}">
 
                         {{-- Imagen --}}
-                        <td class="p-2 text-center">
+                        <td class="p-1 text-center">
                             @if ($h->imagen)
                                 @if ($h->is_pdf)
                                     <div class="w-10 h-10 rounded-lg bg-red-50 dark:bg-red-500/10 inline-flex items-center justify-center text-red-500 border border-red-200 dark:border-red-500/20 cursor-pointer hover:bg-red-100 transition relative group mx-auto"
@@ -95,7 +95,7 @@
                         </td>
 
                         {{-- Código --}}
-                        <td class="p-2 whitespace-nowrap">
+                        <td class="p-1">
                             @if ($h->codigo)
                                 <span class="font-mono text-xs font-semibold text-gray-500 dark:text-neutral-400">
                                     {{ $h->codigo }}
@@ -106,7 +106,7 @@
                         </td>
 
                         {{-- Nombre + Marca/Modelo --}}
-                        <td class="p-2">
+                        <td class="p-1">
                             <div class="font-semibold text-gray-900 dark:text-neutral-100 truncate"
                                 title="{{ $h->nombre }}">
                                 {{ $h->nombre }}
@@ -127,7 +127,7 @@
                         </td>
 
                         {{-- Estado Físico --}}
-                        <td class="p-2 whitespace-nowrap">
+                        <td class="p-1 whitespace-nowrap">
                             <span
                                 class="inline-flex items-center gap-1.5 text-xs font-medium {{ $h->estado_fisico_badge }}">
                                 <span class="w-1.5 h-1.5 rounded-full {{ $h->estado_fisico_dot }}"></span>
@@ -137,7 +137,7 @@
 
 
                         {{-- Stock Disponible --}}
-                        <td class="p-2 text-center">
+                        <td class="p-1 text-center">
                             @if ($h->stock_disponible > 0)
                                 <span class="text-xs font-bold text-gray-700 dark:text-neutral-300">
                                     {{ $h->stock_disponible }}
@@ -154,15 +154,14 @@
                             @endif
                         </td>
 
-
                         {{-- Stock Total --}}
                         <td
-                            class="p-2 text-center text-gray-600 dark:text-neutral-400 font-medium hidden xl:table-cell">
+                            class="p-1 text-center text-gray-600 dark:text-neutral-400 font-medium hidden xl:table-cell">
                             {{ $h->stock_total }}
                         </td>
 
                         {{-- Stock Prestado --}}
-                        <td class="p-2 text-center hidden xl:table-cell">
+                        <td class="p-1 text-center hidden xl:table-cell">
                             @if ($h->stock_prestado > 0)
                                 <span class="text-xs font-semibold text-gray-500 dark:text-neutral-400">
                                     {{ $h->stock_prestado }}
@@ -172,15 +171,14 @@
                             @endif
                         </td>
 
-
                         {{-- Precio Unitario --}}
                         <td
-                            class="p-2 text-right tabular-nums text-gray-700 dark:text-neutral-300 hidden xl:table-cell">
+                            class="p-1 text-right tabular-nums text-gray-700 dark:text-neutral-300 hidden xl:table-cell">
                             {{ number_format($h->precio_unitario, 2, ',', '.') }}
                         </td>
 
                         {{-- Estado Sistema --}}
-                        <td class="p-2 text-center whitespace-nowrap">
+                        <td class="p-1 text-center whitespace-nowrap">
                             @if ($h->active)
                                 <span
                                     class="px-1.5 py-0.5 rounded text-[11px] font-medium bg-gray-50 text-gray-500 dark:bg-neutral-800 dark:text-neutral-400 border border-gray-200 dark:border-neutral-700">Activo</span>
@@ -190,20 +188,18 @@
                             @endif
                         </td>
 
-
                         {{-- Acciones --}}
                         @canany(['herramientas.update', 'herramientas.toggle', 'herramientas.delete',
                             'herramientas.stock_add', 'herramientas.stock_baja'])
                             @php
                                 $anyModalOpen =
                                     $openModal ||
-                                    $editModal ||
                                     $detailModal ||
                                     $openAddStockModal ||
                                     $openBajaStockModal ||
                                     ($bajasModal ?? false);
                             @endphp
-                            <td class="p-2 whitespace-nowrap text-center">
+                            <td class="p-1 whitespace-nowrap text-center">
                                 <div wire:loading.class="opacity-50 grayscale pointer-events-none"
                                     class="flex items-center justify-center gap-1.5 {{ $anyModalOpen ? 'opacity-50 grayscale pointer-events-none' : '' }}">
 
@@ -228,8 +224,9 @@
                                         </svg>
                                     </button>
 
+
+                                    {{-- Editar 
                                     @can('herramientas.update')
-                                        {{-- Editar --}}
                                         <button wire:click="openEdit({{ $h->id }})" wire:loading.attr="disabled"
                                             @disabled($anyModalOpen) title="Editar"
                                             class="cursor-pointer size-7 flex-none inline-flex items-center justify-center rounded-lg border border-amber-200 dark:border-amber-800/30 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-500/20 transition disabled:!bg-gray-100 disabled:!text-gray-400 disabled:!border-gray-200 dark:disabled:!bg-neutral-800 dark:disabled:!text-neutral-600">
@@ -247,7 +244,7 @@
                                                     d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
                                             </svg>
                                         </button>
-                                    @endcan
+                                    @endcan --}}
 
                                     {{-- Stock Controls --}}
                                     <div class="flex items-center gap-1.5">

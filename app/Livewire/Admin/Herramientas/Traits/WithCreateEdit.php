@@ -78,6 +78,42 @@ trait WithCreateEdit
         $this->resetErrorBag();
     }
 
+    public function buscarPorId(?int $id): void
+    {
+        if (! $id) {
+            return;
+        }
+
+        $empresaId = $this->userEmpresaId();
+
+        $h = Herramienta::where('id', $id)
+            ->when($empresaId, fn ($q) => $q->where('empresa_id', $empresaId))
+            ->first();
+
+        if (! $h) {
+            return;
+        }
+
+        $this->foundHerramientaId = $h->id;
+        $this->tipo = $h->tipo;
+        $this->codigo = $h->codigo;
+        $this->nombre = $h->nombre;
+        $this->marca = $h->marca ?? '';
+        $this->modelo = $h->modelo ?? '';
+        $this->estado_fisico = $h->estado_fisico;
+        $this->unidad = $h->unidad ?? '';
+        $this->descripcion = $h->descripcion ?? '';
+        $this->precio_unitario = (string) $h->precio_unitario;
+        $this->stock_total = $h->stock_total;
+        $this->stock_disponible = $h->stock_disponible;
+        $this->stock_prestado = $h->stock_prestado;
+        $this->foundImagenPath = $h->imagen;
+        $this->deleteFoundImagen = false;
+        $this->isExistingCode = true;
+
+        $this->resetErrorBag();
+    }
+
     public function save(): void
     {
         // Si se seleccionó una herramienta existente desde el buscador → actualizar
@@ -262,102 +298,34 @@ trait WithCreateEdit
             abort(403);
         }
 
-        $this->editingId = $h->id;
-        $this->empresa_id = $h->empresa_id;
+        $this->resetErrorBag();
+        $this->resetValidation();
+        
+        $this->foundHerramientaId = $h->id;
         $this->tipo = $h->tipo;
-        $this->codigo = $h->codigo ?? '';
+        $this->codigo = $h->codigo;
         $this->nombre = $h->nombre;
         $this->marca = $h->marca ?? '';
         $this->modelo = $h->modelo ?? '';
-        $this->descripcion = $h->descripcion ?? '';
         $this->estado_fisico = $h->estado_fisico;
         $this->unidad = $h->unidad ?? '';
+        $this->descripcion = $h->descripcion ?? '';
         $this->precio_unitario = (string) $h->precio_unitario;
         $this->stock_total = $h->stock_total;
         $this->stock_disponible = $h->stock_disponible;
         $this->stock_prestado = $h->stock_prestado;
-        $this->editImagenActual = $h->imagen;
-        $this->editDeleteImagen = false;
+        $this->foundImagenPath = $h->imagen;
+        $this->deleteFoundImagen = false;
         $this->imagen = null;
+        $this->isExistingCode = true;
+
         $this->calculateTotal();
-        $this->resetErrorBag();
-        $this->editModal = true;
-    }
-
-    public function update(): void
-    {
-        $rules = [
-            'empresa_id' => ['nullable'],
-            'tipo' => ['required', Rule::in(['herramienta', 'activo', 'material'])],
-            'codigo' => ['nullable', 'string', 'max:100', 'regex:/^[a-zA-Z0-9\-\.\/\s]+$/'],
-            'nombre' => ['required', 'string', 'min:2', 'max:200'],
-            'marca' => ['nullable', 'string', 'max:100'],
-            'modelo' => ['nullable', 'string', 'max:100'],
-            'descripcion' => ['nullable', 'string', 'max:1000'],
-            'estado_fisico' => ['required', Rule::in(['bueno', 'regular', 'malo', 'baja'])],
-            'unidad' => ['nullable', 'string', 'max:50'],
-            'precio_unitario' => ['required', 'numeric', 'min:0'],
-            'imagen' => ['nullable', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
-        ];
-
-        $data = $this->validate($rules);
-
-        $h = Herramienta::findOrFail($this->editingId);
-
-        if ((int) $h->empresa_id !== (int) $this->userEmpresaId()) {
-            abort(403);
-        }
-
-        $imagenPath = $h->imagen;
-
-        if ($this->editDeleteImagen && ! $this->imagen) {
-            if ($h->imagen && Storage::disk('public')->exists($h->imagen)) {
-                Storage::disk('public')->delete($h->imagen);
-            }
-            $imagenPath = null;
-        }
-
-        if ($this->imagen) {
-            if ($h->imagen && Storage::disk('public')->exists($h->imagen)) {
-                Storage::disk('public')->delete($h->imagen);
-            }
-            $imagenPath = $this->imagen->store('herramientas', 'public');
-        }
-
-        // No permitir edición de stock desde aquí
-        $stockDisponible = $h->stock_disponible;
-        $stockPrestado = (int) $h->stock_prestado;
-        $stockTotal = $stockDisponible + $stockPrestado;
-
-        $h->update([
-            'tipo' => $data['tipo'],
-            'codigo' => strtoupper(trim($data['codigo'] ?? '')),
-            'nombre' => strtoupper(trim($data['nombre'])),
-            'marca' => strtoupper(trim($data['marca'] ?? '')),
-            'modelo' => strtoupper(trim($data['modelo'] ?? '')),
-            'descripcion' => strtoupper(trim($data['descripcion'] ?? '')),
-            'estado_fisico' => $data['estado_fisico'],
-            'unidad' => strtoupper(trim($data['unidad'] ?? '')),
-            'stock_disponible' => $stockDisponible,
-            'stock_prestado' => $stockPrestado,
-            'stock_total' => $stockTotal,
-            'precio_unitario' => (float) $data['precio_unitario'],
-            'precio_total' => $stockTotal * (float) $data['precio_unitario'],
-            'imagen' => $imagenPath,
-        ]);
-
-        $this->dispatch('toast', type: 'success', message: 'Herramienta actualizada');
-        $this->closeEditModal();
+        $this->openModal = true;
     }
 
     public function closeEditModal(): void
     {
-        $this->editModal = false;
-        $this->editingId = null;
-        $this->editImagenActual = null;
-        $this->editDeleteImagen = false;
-        $this->imagen = null;
+        $this->openModal = false;
         $this->resetForm();
-        $this->resetErrorBag();
     }
 }

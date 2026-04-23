@@ -218,26 +218,6 @@ trait WithPrestamos
                     $herramienta->decrement('stock_disponible', $it['cantidad']);
                     $herramienta->increment('stock_prestado', $it['cantidad']);
 
-                } elseif ($tipo === 'material') {
-                    PrestamoHerramienta::create([
-                        'nro_prestamo' => $nro_prestamo,
-                        'empresa_id' => $empresaId,
-                        'herramienta_id' => $it['herramienta_id'],
-                        'serie_id' => null,
-                        'agente_id' => $this->agente_id ?: null,
-                        'receptor_manual' => $this->receptor_manual ?: null,
-                        'entidad_id' => $this->entidad_id,
-                        'proyecto_id' => $this->proyecto_id,
-                        'cantidad_prestada' => $it['cantidad'],
-                        'cantidad_devuelta' => $it['cantidad'], // Autocompletamos por ser material
-                        'fecha_prestamo' => $this->fecha_prestamo,
-                        'fecha_vencimiento' => $this->fecha_vencimiento,
-                        'fotos_salida' => ! empty($rutasFotos) ? $rutasFotos : null,
-                        'firma_salida' => $this->firma_salida,
-                        'estado' => 'finalizado',
-                    ]);
-                    $herramienta->decrement('stock_disponible', $it['cantidad']);
-                    $herramienta->decrement('stock_total', $it['cantidad']);
                 } else {
                     PrestamoHerramienta::create([
                         'nro_prestamo' => $nro_prestamo,

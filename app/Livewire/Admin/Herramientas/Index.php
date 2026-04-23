@@ -57,15 +57,6 @@ class Index extends Component
     public bool $openModal = false;
 
     // =========================
-    // Modal Editar
-    // =========================
-    public bool $editModal = false;
-
-    public ?int $editingId = null;
-
-    public ?string $editImagenActual = null;
-
-    public bool $editDeleteImagen = false;
 
     // =========================
     // Modal Detalle
@@ -116,6 +107,12 @@ class Index extends Component
 
     public $bajaStockEvidencia = null;
 
+    public string $bajaStockTipo = 'herramienta';
+
+    public array $bajaStockSeriesDisponibles = [];
+
+    public array $bajaStockSeriesSeleccionadas = [];
+
     // =========================
     // Form Crear
     // =========================
@@ -155,9 +152,9 @@ class Index extends Component
 
     public ?int $foundHerramientaId = null; // ID de la herramienta encontrada por el buscador
 
-    public ?string $foundImagenPath = null;  // Ruta de imagen de la herramienta encontrada
+    public ?string $foundImagenPath = null; // Ruta de imagen de la herramienta encontrada
 
-    public bool $deleteFoundImagen = false;  // true cuando el usuario quita la imagen existente en modo editar-crear
+    public bool $deleteFoundImagen = false; // true cuando el usuario quita la imagen existente en modo editar-crear
 
     public function updatedStockTotal(): void
     {
@@ -306,21 +303,33 @@ class Index extends Component
             })
             ->when(
                 $this->status !== 'all',
-                fn ($q) => $q->where('active', $this->status === 'active'),
+                fn($q) => $q->where('active', $this->status === 'active'),
             )
             ->when(
                 $this->estadoFisicoFilter !== 'all',
-                fn ($q) => $q->where('estado_fisico', $this->estadoFisicoFilter),
+                fn($q) => $q->where('estado_fisico', $this->estadoFisicoFilter),
             )
             ->when(
                 $this->categoriaFilter !== 'all',
-                fn ($q) => $q->where('codigo', $this->categoriaFilter),
+                fn($q) => $q->where('codigo', $this->categoriaFilter),
             )
             ->orderBy($this->sortField, $this->sortDirection)
             ->paginate($this->perPage);
 
         // CÃ³digos existentes para el Select2 (por empresa)
-        $codigosQuery = Herramienta::select('codigo', 'nombre', 'marca', 'modelo', 'estado_fisico', 'unidad', 'precio_unitario', 'imagen')
+        $codigosQuery = Herramienta::select(
+            'id',
+            'codigo',
+            'nombre',
+            'marca',
+            'modelo',
+            'tipo',
+            'stock_disponible',
+            'estado_fisico',
+            'unidad',
+            'precio_unitario',
+            'imagen',
+        )
             ->whereNotNull('codigo')
             ->where('codigo', '!=', '');
 
@@ -329,11 +338,17 @@ class Index extends Component
         $codigos = $codigosQuery->orderBy('codigo')->get();
 
         $this->codigosData = $codigos
-            ->map(fn ($c) => [
-                'codigo' => $c->codigo,
-                'nombre' => $c->nombre,
-                'imagen' => $c->imagen ? asset('storage/'.$c->imagen) : null,
-            ])
+            ->map(
+                fn($c) => [
+                    'id' => $c->id,
+                    'codigo' => $c->codigo,
+                    'nombre' => $c->nombre,
+                    'marca' => $c->marca ?? '',
+                    'modelo' => $c->modelo ?? '',
+                    'stock' => $c->stock_disponible ?? 0,
+                    'imagen' => $c->imagen ? asset('storage/' . $c->imagen) : null,
+                ],
+            )
             ->values()
             ->toArray();
 
@@ -342,7 +357,7 @@ class Index extends Component
             ->where('codigo', '!=', '')
             ->distinct()
             ->pluck('codigo')
-            ->map(fn ($c) => strtoupper(trim($c)))
+            ->map(fn($c) => strtoupper(trim($c)))
             ->unique()
             ->values()
             ->toArray();
@@ -352,13 +367,18 @@ class Index extends Component
             ->where('unidad', '!=', '')
             ->distinct()
             ->pluck('unidad')
-            ->map(fn ($u) => strtoupper(trim($u)))
+            ->map(fn($u) => strtoupper(trim($u)))
             ->unique()
             ->values()
             ->toArray();
 
         $historialBajas = $this->bajasModal
-            ? \App\Models\BajaHerramienta::with(['herramienta' => fn ($q) => $q->withTrashed(), 'user', 'prestamo'])
+            ? \App\Models\BajaHerramienta::with([
+                'herramienta' => fn($q) => $q->withTrashed(),
+                'user',
+                'prestamo',
+                'detalles_series',
+            ])
                 ->whereHas('herramienta', function ($q2) {
                     $q2->withTrashed()->where('empresa_id', $this->userEmpresaId());
                 })
@@ -376,11 +396,22 @@ class Index extends Component
                         ->orWhere('modelo', 'like', "%{$s}%");
                 });
             })
-            ->when($this->status !== 'all', fn ($q) => $q->where('active', $this->status === 'active'))
-            ->when($this->status === 'all', fn ($q) => $q->where('active', true))
-            ->when($this->estadoFisicoFilter !== 'all', fn ($q) => $q->where('estado_fisico', $this->estadoFisicoFilter))
-            ->when($this->categoriaFilter !== 'all', fn ($q) => $q->where('codigo', $this->categoriaFilter))
-            ->selectRaw('COUNT(*) as activas, COALESCE(SUM(stock_disponible),0) as disponibles, COALESCE(SUM(stock_prestado),0) as prestadas, COALESCE(SUM(precio_total),0) as valor')
+            ->when(
+                $this->status !== 'all',
+                fn($q) => $q->where('active', $this->status === 'active'),
+            )
+            ->when($this->status === 'all', fn($q) => $q->where('active', true))
+            ->when(
+                $this->estadoFisicoFilter !== 'all',
+                fn($q) => $q->where('estado_fisico', $this->estadoFisicoFilter),
+            )
+            ->when(
+                $this->categoriaFilter !== 'all',
+                fn($q) => $q->where('codigo', $this->categoriaFilter),
+            )
+            ->selectRaw(
+                'COUNT(*) as activas, COALESCE(SUM(stock_disponible),0) as disponibles, COALESCE(SUM(stock_prestado),0) as prestadas, COALESCE(SUM(precio_total),0) as valor',
+            )
             ->first();
 
         return view('livewire.admin.herramientas.index', [
@@ -414,19 +445,19 @@ class Index extends Component
             })
             ->when(
                 $this->status !== 'all',
-                fn ($q) => $q->where('active', $this->status === 'active'),
+                fn($q) => $q->where('active', $this->status === 'active'),
             )
             ->when(
                 $this->estadoFisicoFilter !== 'all',
-                fn ($q) => $q->where('estado_fisico', $this->estadoFisicoFilter),
+                fn($q) => $q->where('estado_fisico', $this->estadoFisicoFilter),
             )
             ->when(
                 $this->categoriaFilter !== 'all',
-                fn ($q) => $q->where('codigo', $this->categoriaFilter),
+                fn($q) => $q->where('codigo', $this->categoriaFilter),
             )
             ->orderBy($this->sortField, $this->sortDirection);
 
-        $filename = 'herramientas-'.now()->format('Y-m-d').'.xlsx';
+        $filename = 'herramientas-' . now()->format('Y-m-d') . '.xlsx';
 
         return Excel::download(new HerramientasExport($query), $filename);
     }
@@ -439,7 +470,7 @@ class Index extends Component
     {
         $h = Herramienta::findOrFail($id);
 
-        if (! $this->isAdmin() && (int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+        if (!$this->isAdmin() && (int) $h->empresa_id !== (int) $this->userEmpresaId()) {
             abort(403);
         }
 
@@ -447,22 +478,27 @@ class Index extends Component
             $this->dispatch('swal:modal', [
                 'type' => 'error',
                 'title' => 'Operación no permitida',
-                'text' => 'No se puede desactivar una herramienta que tiene préstamos activos. Registre las devoluciones primero.',
+                'text' =>
+                    'No se puede desactivar una herramienta que tiene préstamos activos. Registre las devoluciones primero.',
             ]);
 
             return;
         }
 
-        $h->update(['active' => ! $h->active]);
+        $h->update(['active' => !$h->active]);
 
-        $this->dispatch('toast', type: 'success', message: $h->active ? 'Herramienta activada' : 'Herramienta desactivada');
+        $this->dispatch(
+            'toast',
+            type: 'success',
+            message: $h->active ? 'Herramienta activada' : 'Herramienta desactivada',
+        );
     }
 
     public function delete(int $id): void
     {
         $h = Herramienta::findOrFail($id);
 
-        if (! $this->isAdmin() && (int) $h->empresa_id !== (int) $this->userEmpresaId()) {
+        if (!$this->isAdmin() && (int) $h->empresa_id !== (int) $this->userEmpresaId()) {
             abort(403);
         }
 
@@ -470,7 +506,8 @@ class Index extends Component
             $this->dispatch('swal:modal', [
                 'type' => 'error',
                 'title' => 'Operación no permitida',
-                'text' => 'No se puede eliminar una herramienta que tiene préstamos activos pendientes en obra.',
+                'text' =>
+                    'No se puede eliminar una herramienta que tiene préstamos activos pendientes en obra.',
             ]);
 
             return;
@@ -479,7 +516,11 @@ class Index extends Component
         // Ya no eliminamos la imagen físicamente para preservar el historial (SoftDeletes)
 
         $h->delete();
-        $this->dispatch('toast', type: 'success', message: 'Herramienta eliminada (Historial preservado)');
+        $this->dispatch(
+            'toast',
+            type: 'success',
+            message: 'Herramienta eliminada (Historial preservado)',
+        );
     }
 
     // =========================
@@ -488,10 +529,21 @@ class Index extends Component
     private function resetForm(): void
     {
         $this->reset([
-            'empresa_id', 'codigo', 'nombre', 'marca', 'modelo',
-            'descripcion', 'estado_fisico', 'unidad',
-            'stock_total', 'stock_disponible', 'stock_prestado',
-            'precio_unitario', 'precio_total', 'imagen', 'tipo',
+            'empresa_id',
+            'codigo',
+            'nombre',
+            'marca',
+            'modelo',
+            'descripcion',
+            'estado_fisico',
+            'unidad',
+            'stock_total',
+            'stock_disponible',
+            'stock_prestado',
+            'precio_unitario',
+            'precio_total',
+            'imagen',
+            'tipo',
         ]);
         $this->estado_fisico = 'bueno';
         $this->tipo = 'herramienta';

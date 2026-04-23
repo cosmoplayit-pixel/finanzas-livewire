@@ -15,6 +15,7 @@ class HerramientaSerie extends Model
 
     protected $fillable = [
         'herramienta_id',
+        'baja_id',
         'serie',
         'estado',
         'observaciones',
@@ -23,5 +24,10 @@ class HerramientaSerie extends Model
     public function herramienta(): BelongsTo
     {
         return $this->belongsTo(Herramienta::class, 'herramienta_id')->withTrashed();
+    }
+
+    public function baja(): BelongsTo
+    {
+        return $this->belongsTo(BajaHerramienta::class, 'baja_id');
     }
 }

@@ -9,7 +9,16 @@
 ])
 
 @php
-    $closeJs = $onClose ? "\$wire.{$onClose}()" : null;
+    if ($onClose) {
+        // Convertir sintaxis Livewire 2 ($set) a Livewire 3 ($wire.set)
+        $closeJs = str_replace('$set(', '$wire.set(', $onClose);
+        // Si es solo un nombre de método sin paréntesis, envolverlo como $wire.method()
+        if (!str_contains($closeJs, '(')) {
+            $closeJs = "\$wire.{$closeJs}()";
+        }
+    } else {
+        $closeJs = null;
+    }
 @endphp
 
 <div x-data="{

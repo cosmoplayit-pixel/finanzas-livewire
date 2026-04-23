@@ -13,7 +13,7 @@ trait WithBajas
         $this->resetValidation();
         $this->prestamoNroParaBaja = $nro_prestamo;
 
-        $prestamos = PrestamoHerramienta::with('herramienta')
+        $prestamos = PrestamoHerramienta::with(['herramienta', 'serie'])
             ->where('nro_prestamo', $nro_prestamo)
             ->whereRaw('cantidad_prestada > cantidad_devuelta')
             ->get();
@@ -25,6 +25,7 @@ trait WithBajas
             $this->items_baja[$p->id] = [
                 'herramienta_nombre' => $p->herramienta->nombre,
                 'codigo'             => $p->herramienta->codigo,
+                'nro_serie'          => $p->serie?->serie,
                 'imagen'             => $p->herramienta->imagen,
                 'cantidad_pendiente' => $pendiente,
                 'cantidad_baja'      => 0,

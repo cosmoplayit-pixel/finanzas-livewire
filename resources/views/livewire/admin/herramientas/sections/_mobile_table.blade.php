@@ -142,8 +142,9 @@
                             </svg>
                         </button>
 
+                        {{-- Editar 
                         @can('herramientas.update')
-                            {{-- Editar --}}
+                           
                             <button wire:click="openEdit({{ $h->id }})" title="Editar"
                                 class="flex-1 inline-flex items-center justify-center h-9 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -151,7 +152,7 @@
                                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                 </svg>
                             </button>
-                        @endcan
+                        @endcan --}}
 
                         {{-- Agregar stock --}}
                         @can('herramientas.stock_add')
@@ -162,8 +163,8 @@
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
-                                <svg wire:loading wire:target="openAddStock({{ $h->id }})"
-                                    class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <svg wire:loading wire:target="openAddStock({{ $h->id }})" class="w-4 h-4 animate-spin"
+                                    fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
                                         stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">

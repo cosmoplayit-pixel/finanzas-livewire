@@ -189,24 +189,28 @@
                 </flux:sidebar.group>
             @endcanany
 
-
-            {{-- GESTIÓN ALMACÉN --}}
+            {{-- GESTIÓN HERRAMIENTAS, MATERIALES Y ACTIVOS --}}
             @canany(['herramientas.view'])
-                @if (!auth()->user()->hasRole('Administrador'))
-                    <flux:sidebar.group heading="{{ __('Gestión de Almacén') }}" class="grid">
-                        <flux:sidebar.item icon="wrench" href="{{ route('herramientas') }}" wire:navigate>
-                            {{ __('Inventario General') }}
-                        </flux:sidebar.item>
-                        <flux:sidebar.item icon="clipboard-document-list" href="{{ route('prestamos_herramientas') }}"
-                            wire:navigate>
-                            {{ __('Salidas y Retornos') }}
-                        </flux:sidebar.item>
-                    </flux:sidebar.group>
-                @endif
+                <flux:sidebar.group heading="{{ __('Gestión de Herramientas') }}" class="grid"> </flux:sidebar.group>
             @endcanany
 
+            {{-- INVENTARIO GENERAL --}}
+            @can('herramientas.view')
+                <flux:sidebar.item icon="wrench" :href="route('herramientas')"
+                    :current="request()->routeIs('herramientas')" :badge="$navCounts['herramientas'] ?? null"
+                    wire:navigate>
+                    {{ __('Inventario General') }}
+                </flux:sidebar.item>
+            @endcan
 
-
+            {{-- PRESTAMOS Y DEVOLUCIONES --}}
+            @can('prestamos.view')
+                <flux:sidebar.item icon="clipboard-document-list" :href="route('prestamos_herramientas')"
+                    :current="request()->routeIs('prestamos_herramientas')" :badge="$navCounts['prestamos'] ?? null"
+                    wire:navigate>
+                    {{ __('Préstamos y Devoluciones') }}
+                </flux:sidebar.item>
+            @endcan
 
         </flux:sidebar.nav>
 

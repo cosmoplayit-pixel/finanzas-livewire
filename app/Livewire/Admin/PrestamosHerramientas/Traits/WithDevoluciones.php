@@ -14,7 +14,7 @@ trait WithDevoluciones
         $this->firma_entrada = null;
         $this->prestamoNroParaDevolver = $nro_prestamo;
 
-        $prestamos = PrestamoHerramienta::with('herramienta')
+        $prestamos = PrestamoHerramienta::with(['herramienta' => fn ($q) => $q->withTrashed(), 'serie'])
             ->where('nro_prestamo', $nro_prestamo)
             ->whereRaw('cantidad_prestada > cantidad_devuelta')
             ->get();
@@ -23,12 +23,14 @@ trait WithDevoluciones
         foreach ($prestamos as $p) {
             $pendiente = $p->cantidad_prestada - $p->cantidad_devuelta;
             $this->items_devolucion[$p->id] = [
-                'herramienta_nombre'  => $p->herramienta->nombre,
-                'codigo'              => $p->herramienta->codigo,
-                'imagen'              => $p->herramienta->imagen,
+                'herramienta_nombre'  => $p->herramienta ? $p->herramienta->nombre : 'Registro no encontrado/eliminado',
+                'codigo'              => $p->herramienta ? $p->herramienta->codigo : 'N/A',
+                'nro_serie'           => $p->serie?->serie,
+                'imagen'              => $p->herramienta ? $p->herramienta->imagen : null,
                 'cantidad_pendiente'  => $pendiente,
                 'cantidad_a_devolver' => $pendiente,
                 'estado_fisico'       => 'bueno',
+                'tipo'                => $p->herramienta ? ($p->herramienta->tipo ?? 'herramienta') : 'herramienta',
             ];
         }
 
@@ -144,7 +146,11 @@ trait WithDevoluciones
                 }
 
                 $prestamo    = PrestamoHerramienta::findOrFail($id);
-                $herramienta = $prestamo->herramienta;
+                $herramienta = $prestamo->herramienta()->withTrashed()->first();
+
+                if (!$herramienta) {
+                    continue;
+                }
 
                 DevolucionHerramienta::create([
                     'prestamo_id'       => $prestamo->id,
@@ -205,20 +211,75 @@ trait WithDevoluciones
 
         foreach ($this->items_devolucion as $id => $item) {
             if (!is_array($item) || !isset($item['herramienta_nombre'])) {
-                $p = PrestamoHerramienta::with('herramienta')->find($id);
+                $p = PrestamoHerramienta::with(['herramienta' => fn ($q) => $q->withTrashed(), 'serie'])->find($id);
                 if ($p && $p->herramienta) {
                     $this->items_devolucion[$id] = [
                         'herramienta_nombre'  => $p->herramienta->nombre,
                         'codigo'              => $p->herramienta->codigo,
+                        'nro_serie'           => $p->serie?->serie,
                         'imagen'              => $p->herramienta->imagen,
                         'cantidad_pendiente'  => ($p->cantidad_prestada - $p->cantidad_devuelta),
                         'cantidad_a_devolver' => $item['cantidad_a_devolver'] ?? 0,
                         'estado_fisico'       => $item['estado_fisico'] ?? 'bueno',
+                        'tipo'                => $p->herramienta ? ($p->herramienta->tipo ?? 'herramienta') : 'herramienta',
                     ];
                 } else {
                     unset($this->items_devolucion[$id]);
                 }
             }
+        }
+    }
+
+    public function finalizarSaldoMaterial(string $nro_prestamo)
+    {
+        $prestamos = PrestamoHerramienta::with(['herramienta' => fn ($q) => $q->withTrashed()])
+            ->where('nro_prestamo', $nro_prestamo)
+            ->whereRaw('cantidad_prestada > cantidad_devuelta')
+            ->get();
+
+        $afectados = 0;
+        DB::transaction(function () use ($prestamos, &$afectados) {
+            foreach ($prestamos as $p) {
+                if (($p->herramienta->tipo ?? 'herramienta') === 'material') {
+                    $pendiente = $p->cantidad_prestada - $p->cantidad_devuelta;
+                    
+                    // Al ser material consumido: 
+                    // No aumenta disponible, disminuye total inventario permanentemente.
+                    $p->herramienta->decrement('stock_total', $pendiente);
+                    $p->herramienta->decrement('stock_prestado', $pendiente);
+
+                    $p->update([
+                        'cantidad_devuelta' => $p->cantidad_prestada, 
+                        'estado' => 'finalizado'
+                    ]);
+
+                    // Guardamos una constancia en Baja
+                    \App\Models\BajaHerramienta::create([
+                        'herramienta_id' => $p->herramienta_id,
+                        'user_id'        => auth()->id(),
+                        'prestamo_id'    => $p->id,
+                        'motivo'         => 'extraviado_roto', // Motivo estandar del sistema
+                        'cantidad'       => $pendiente,
+                        'observaciones'  => 'Material marcado como consumido en obra.',
+                        'fecha_baja'     => now(),
+                    ]);
+
+                    $afectados++;
+                }
+            }
+        });
+
+        if ($afectados > 0) {
+            $this->dispatch('toast', type: 'success', message: 'Saldo pendiente de materiales marcado como consumido correctamente.');
+            
+            if ($this->openModalDevolucion && $this->prestamoNroParaDevolver === $nro_prestamo) {
+                $this->openDevolucion($nro_prestamo);
+                if (empty($this->items_devolucion)) {
+                    $this->openModalDevolucion = false;
+                }
+            }
+        } else {
+            $this->dispatch('toast', type: 'info', message: 'No hay saldo de materiales pendientes en este préstamo.');
         }
     }
 }

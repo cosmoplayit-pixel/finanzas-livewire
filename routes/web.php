@@ -7,9 +7,9 @@ use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\Empresas;
 use App\Livewire\Admin\Entidades;
 use App\Livewire\Admin\Facturas;
-// use App\Livewire\Admin\Herramientas; => removido
+use App\Livewire\Admin\Herramientas\Index as HerramientasIndex;
 use App\Livewire\Admin\Inversiones\Index as InversionesIndex;
-// use App\Livewire\Admin\PrestamosHerramientas; => removido
+use App\Livewire\Admin\PrestamosHerramientas\Index as PrestamosHerramientasIndex;
 use App\Livewire\Admin\Presupuestos\Index as PresupuestosIndex;
 use App\Livewire\Admin\Proyectos;
 use App\Livewire\Admin\Proyectos\Resumen;
@@ -65,12 +65,6 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->get('/proyectos/resumen', Resumen::class)
         ->name('proyectos.resumen');
 
-    // HERRAMIENTAS
-    Route::middleware(['permission:herramientas.view'])->group(function () {
-        Route::get('/herramientas', \App\Livewire\Admin\Herramientas\Index::class)->name('herramientas');
-        Route::get('/prestamos_herramientas', \App\Livewire\Admin\PrestamosHerramientas\Index::class)->name('prestamos_herramientas');
-    });
-
     // FACTURAS
     Route::middleware(['permission:facturas.view'])
         ->get('/facturas', Facturas::class)
@@ -104,5 +98,15 @@ Route::middleware(['auth', 'active'])->group(function () {
     // TRANSACCIONES
     Route::middleware(['permission:transacciones.view'])->group(function () {
         Route::get('/transacciones', Transacciones::class)->name('transacciones');
+    });
+
+    // HERRAMIENTAS
+    Route::middleware(['permission:herramientas.view'])->group(function () {
+        Route::get('/herramientas', HerramientasIndex::class)->name('herramientas');
+    });
+
+    // PRESTAMOS Y DEVOLUCIONES
+    Route::middleware(['permission:prestamos.view'])->group(function () {
+        Route::get('/prestamos_herramientas', PrestamosHerramientasIndex::class)->name('prestamos_herramientas');
     });
 });

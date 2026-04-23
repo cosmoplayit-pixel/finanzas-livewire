@@ -16,21 +16,7 @@
                 <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
 
                     {{-- Entidad con autocomplete --}}
-                    <div class="col-span-2 lg:col-span-1" x-data="{
-                        query: '',
-                        open: false,
-                        entidades: @js($entidades->map(fn($e) => ['id' => $e->id, 'nombre' => $e->nombre])->values()),
-                        get suggestions() {
-                            let valid = this.entidades.filter(e => e.nombre && e.nombre.trim() !== '');
-                            if (!this.query.trim()) return valid.slice(0, 8);
-                            const q = this.query.toUpperCase();
-                            return valid.filter(e => e.nombre.toUpperCase().includes(q)).slice(0, 8);
-                        }
-                    }" x-init="$watch('$wire.entidad_id', v => {
-                        if (!v) { query = ''; return; }
-                        const found = entidades.find(e => e.id == v);
-                        if (found && query !== found.nombre) query = found.nombre;
-                    })">
+                    <div class="col-span-2 lg:col-span-1" x-data="entidadAc(@js($entidades->map(fn($e) => ['id' => $e->id, 'nombre' => $e->nombre])->values()))">
                         <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Cliente <span
                                 class="text-red-500">*</span></label>
                         <div class="relative">
@@ -57,25 +43,7 @@
 
                     {{-- Proyecto (Select2-style Autocomplete) --}}
                     <div class="col-span-2 lg:col-span-1" wire:key="proyecto-search-{{ $entidad_id }}"
-                        x-data="{
-                            query: '',
-                            open: false,
-                            proyectos: @js($this->proyectosFiltrados->map(fn($p) => ['id' => $p->id, 'nombre' => $p->nombre])->values()),
-                            get suggestions() {
-                                let valid = this.proyectos.filter(p => p.nombre && p.nombre.trim() !== '');
-                                if (!this.query.trim()) return valid.slice(0, 8);
-                                const q = this.query.toUpperCase();
-                                return valid.filter(p => p.nombre.toUpperCase().includes(q)).slice(0, 8);
-                            }
-                        }" x-init="$watch('$wire.proyecto_id', v => {
-                            if (!v) { query = ''; return; }
-                            const found = proyectos.find(p => p.id == v);
-                            if (found && query !== found.nombre) query = found.nombre;
-                        });
-                        if ($wire.proyecto_id) {
-                            const found = proyectos.find(p => p.id == $wire.proyecto_id);
-                            if (found) query = found.nombre;
-                        }">
+                        x-data="proyectoAc(@js($this->proyectosFiltrados->map(fn($p) => ['id' => $p->id, 'nombre' => $p->nombre])->values()), '{{ $proyecto_id }}')">
                         <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Proyecto
                             Destino <span class="text-red-500">*</span></label>
                         <div class="relative">
@@ -107,22 +75,7 @@
                     </div>
 
                     {{-- Agente de Servicio (a quién se le presta) con autocomplete --}}
-                    <div class="col-span-2 lg:col-span-1" wire:key="agente-selector" x-data="{
-                        agenteQuery: '',
-                        openAgentes: false,
-                        agenteList: @js($agentes->map(fn($a) => ['id' => $a->id, 'nombre' => $a->nombre])->values()),
-                        get suggestions() {
-                            const valid = this.agenteList.filter(a => a && a.nombre && a.nombre.trim() !== '');
-                            if (!this.agenteQuery.trim()) return valid.slice(0, 8);
-                            const q = this.agenteQuery.toUpperCase();
-                            return valid.filter(a => a.nombre.toUpperCase().includes(q)).slice(0, 8);
-                        }
-                    }"
-                        x-init="$watch('$wire.agente_id', v => {
-                            if (!v) { agenteQuery = $wire.receptor_manual || ''; return; }
-                            const found = agenteList.find(a => a.id == v);
-                            if (found && agenteQuery !== found.nombre) agenteQuery = found.nombre;
-                        })">
+                    <div class="col-span-2 lg:col-span-1" wire:key="agente-selector" x-data="agenteAc(@js($agentes->map(fn($a) => ['id' => $a->id, 'nombre' => $a->nombre])->values()))">
                         <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Responsable /
                             Agente de Servicio</label>
                         <div class="relative">
@@ -186,19 +139,7 @@
 
                 {{-- Buscador de herramienta (select2-style) --}}
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end"
-                    wire:key="tool-search-box-{{ count($items) }}" x-data="{
-                        toolQuery: '',
-                        openTools: false,
-                        toolList: @js(isset($herramientas) ? $herramientas->map(fn($h) => ['id' => $h->id, 'nombre' => $h->nombre, 'codigo' => $h->codigo, 'disponible' => $h->stock_disponible, 'imagen' => $h->imagen])->values() : []),
-                        get suggestions() {
-                            const items = this.toolList.filter(h => h && h.nombre && String(h.nombre).trim() !== '' && h.disponible > 0);
-                            if (!this.toolQuery.trim()) return items.slice(0, 8);
-                            const q = this.toolQuery.toUpperCase();
-                            return items.filter(h =>
-                                String(h.nombre).toUpperCase().includes(q) || (h.codigo && String(h.codigo).toUpperCase().includes(q))
-                            ).slice(0, 10);
-                        }
-                    }" x-init="$watch('$wire.item_herramienta_id', v => { if (!v) toolQuery = ''; })">
+                    wire:key="tool-search-box-{{ count($items) }}" x-data="toolSearch(@js(isset($herramientas) ? $herramientas->map(fn($h) => ['id' => $h->id, 'nombre' => $h->nombre, 'codigo' => $h->codigo, 'disponible' => $h->stock_disponible, 'imagen' => $h->imagen])->values() : []))">
 
                     {{-- Input búsqueda herramienta --}}
                     <div class="sm:col-span-6 relative">
@@ -350,9 +291,8 @@
                                                 class="inline-flex items-center px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 font-black text-sm">{{ $it['cantidad'] }}</span>
                                         </td>
                                         <td class="px-4 py-2.5 text-center">
-                                            @php $nuevo = $it['disponible'] - $it['cantidad']; @endphp
                                             <span
-                                                class="font-black text-sm {{ $nuevo < 0 ? 'text-red-600 animate-pulse' : 'text-emerald-600 dark:text-emerald-400' }}">{{ $nuevo }}</span>
+                                                class="font-black text-sm {{ $it['disponible'] - $it['cantidad'] < 0 ? 'text-red-600 animate-pulse' : 'text-emerald-600 dark:text-emerald-400' }}">{{ $it['disponible'] - $it['cantidad'] }}</span>
                                         </td>
                                         <td class="px-2 py-2.5 text-center">
                                             <button type="button" wire:click="removeItem({{ $idx }})"
@@ -395,19 +335,6 @@
                                             </td>
                                         </tr>
                                     @endif
-
-                                    {{-- Aviso de material consumible --}}
-                                    @if (($it['tipo'] ?? 'herramienta') === 'material')
-                                        <tr class="bg-amber-50/10 dark:bg-amber-900/10"
-                                            wire:key="material-notice-{{ $idx }}">
-                                            <td colspan="6" class="px-4 py-2 border-t-0">
-                                                <p class="text-[11px] font-bold text-amber-600 dark:text-amber-500">
-                                                    <span class="mr-1">ℹ</span> Se entregará como MATERIAL CONSUMIBLE
-                                                    (no requiere devolución).
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    @endif
                                 @endforeach
                             </tbody>
                         </table>
@@ -435,15 +362,39 @@
                     <div class="col-span-1 sm:col-span-2">
                         <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Evidencia
                             (Fotos o PDF) del estado al salir <span class="text-red-500">*</span></label>
-                        <input type="file" wire:model.live="temp_fotos_salida" multiple
-                            accept=".jpg,.jpeg,.png,.pdf"
-                            class="block w-full text-sm text-gray-500
-                                file:mr-4 file:py-2 file:px-4 file:cursor-pointer
-                                file:rounded-lg file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-indigo-50 file:text-indigo-700
-                                hover:file:bg-indigo-100 dark:file:bg-indigo-900/40 dark:file:text-indigo-400
-                                border border-gray-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-900 p-1" />
+                        <div x-data="fileDropZone" @paste.window="handlePaste($event)"
+                            @dragover.prevent="dragging = true" @dragleave.prevent="dragging = false"
+                            @drop.prevent="dragging = false; handleFiles(Array.from($event.dataTransfer.files))"
+                            @click="triggerInput()"
+                            :class="dragging ? 'border-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 scale-[1.01]' :
+                                'border-gray-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:border-indigo-400 hover:bg-indigo-50/30'"
+                            class="relative flex flex-col items-center justify-center gap-2 w-full min-h-[80px] rounded-xl border-2 border-dashed cursor-pointer transition-all duration-200 px-4 py-4 select-none">
+
+                            {{-- Icono + texto guía --}}
+                            <div class="flex items-center gap-3 pointer-events-none">
+                                <svg class="w-7 h-7 text-indigo-400 shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                <div class="text-left">
+                                    <p class="text-sm font-semibold text-gray-700 dark:text-neutral-200">
+                                        Arrastrá, pegá o hacé clic
+                                    </p>
+                                    <p class="text-[11px] text-gray-400 dark:text-neutral-500 mt-0.5">
+                                        JPG, PNG, PDF · <kbd
+                                            class="px-1 py-0.5 rounded bg-gray-100 dark:bg-neutral-800 font-mono text-[10px] border border-gray-200 dark:border-neutral-700">Ctrl</kbd>+<kbd
+                                            class="px-1 py-0.5 rounded bg-gray-100 dark:bg-neutral-800 font-mono text-[10px] border border-gray-200 dark:border-neutral-700">V</kbd>
+                                        para pegar imagen
+                                    </p>
+                                </div>
+                            </div>
+
+                            {{-- Input real oculto --}}
+                            <input type="file" x-ref="fileInputSalida" wire:model.live="temp_fotos_salida"
+                                multiple accept=".jpg,.jpeg,.png,.pdf"
+                                class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" @click.stop />
+                        </div>
                         <div wire:loading wire:target="temp_fotos_salida" class="text-xs text-indigo-500 mt-1">
                             Subiendo
                             archivos...</div>
@@ -452,10 +403,7 @@
                                 @foreach ($fotos_salida as $idx => $f)
                                     @if ($f)
                                         <div class="relative group">
-                                            @php
-                                                $isPdf = strtolower($f->getClientOriginalExtension()) === 'pdf';
-                                            @endphp
-                                            @if ($isPdf)
+                                            @if (strtolower($f->getClientOriginalExtension()) === 'pdf')
                                                 <div class="size-16 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/30 flex flex-col items-center justify-center text-red-500"
                                                     title="{{ $f->getClientOriginalName() }}">
                                                     <svg class="size-6" fill="none" viewBox="0 0 24 24"
@@ -512,7 +460,7 @@
 
         @slot('footer')
             <div class="w-full grid grid-cols-2 gap-2 sm:flex sm:justify-end sm:gap-3">
-                <button type="button" @click="$set('openModalPrestamo', false)"
+                <button type="button" @click="close()"
                     class="w-full sm:w-auto px-5 py-2 rounded-lg border cursor-pointer border-gray-300 dark:border-neutral-700 text-gray-600 dark:text-neutral-200 hover:bg-gray-100 dark:hover:bg-neutral-800 text-sm font-bold transition">
                     Cancelar
                 </button>
@@ -526,3 +474,130 @@
             </div>
         @endslot
     </x-ui.modal>
+
+    @once
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('fileDropZone', () => ({
+                    dragging: false,
+                    triggerInput() {
+                        this.$refs.fileInputSalida.click();
+                    },
+                    handleFiles(files) {
+                        if (!files || files.length === 0) return;
+                        const dt = new DataTransfer();
+                        files.forEach(f => dt.items.add(f));
+                        this.$refs.fileInputSalida.files = dt.files;
+                        this.$refs.fileInputSalida.dispatchEvent(new Event('change'));
+                    },
+                    handlePaste(e) {
+                        const items = e.clipboardData?.items;
+                        if (!items) return;
+                        const files = [];
+                        for (const item of items) {
+                            if (item.kind === 'file' && item.type.startsWith('image/')) {
+                                const file = item.getAsFile();
+                                if (file) files.push(new File([file], 'pegado-' + Date.now() + '.png', {
+                                    type: 'image/png'
+                                }));
+                            }
+                        }
+                        if (files.length) this.handleFiles(files);
+                    },
+                }));
+
+                Alpine.data('entidadAc', (entidades) => ({
+                    query: '',
+                    open: false,
+                    entidades: entidades,
+                    init() {
+                        this.$watch('$wire.entidad_id', v => {
+                            if (!v) {
+                                this.query = '';
+                                return;
+                            }
+                            const found = this.entidades.find(e => e.id == v);
+                            if (found && this.query !== found.nombre) this.query = found.nombre;
+                        });
+                    },
+                    get suggestions() {
+                        const valid = this.entidades.filter(e => e.nombre && e.nombre.trim() !== '');
+                        if (!this.query.trim()) return valid.slice(0, 8);
+                        const q = this.query.toUpperCase();
+                        return valid.filter(e => e.nombre.toUpperCase().includes(q)).slice(0, 8);
+                    },
+                }));
+
+                Alpine.data('proyectoAc', (proyectos, currentId) => ({
+                    query: '',
+                    open: false,
+                    proyectos: proyectos,
+                    init() {
+                        if (currentId) {
+                            const found = this.proyectos.find(p => p.id == currentId);
+                            if (found) this.query = found.nombre;
+                        }
+                        this.$watch('$wire.proyecto_id', v => {
+                            if (!v) {
+                                this.query = '';
+                                return;
+                            }
+                            const found = this.proyectos.find(p => p.id == v);
+                            if (found && this.query !== found.nombre) this.query = found.nombre;
+                        });
+                    },
+                    get suggestions() {
+                        const valid = this.proyectos.filter(p => p.nombre && p.nombre.trim() !== '');
+                        if (!this.query.trim()) return valid.slice(0, 8);
+                        const q = this.query.toUpperCase();
+                        return valid.filter(p => p.nombre.toUpperCase().includes(q)).slice(0, 8);
+                    },
+                }));
+
+                Alpine.data('agenteAc', (agenteList) => ({
+                    agenteQuery: '',
+                    openAgentes: false,
+                    agenteList: agenteList,
+                    init() {
+                        this.$watch('$wire.agente_id', v => {
+                            if (!v) {
+                                this.agenteQuery = this.$wire.receptor_manual || '';
+                                return;
+                            }
+                            const found = this.agenteList.find(a => a.id == v);
+                            if (found && this.agenteQuery !== found.nombre) this.agenteQuery = found
+                                .nombre;
+                        });
+                    },
+                    get suggestions() {
+                        const valid = this.agenteList.filter(a => a && a.nombre && a.nombre.trim() !==
+                            '');
+                        if (!this.agenteQuery.trim()) return valid.slice(0, 8);
+                        const q = this.agenteQuery.toUpperCase();
+                        return valid.filter(a => a.nombre.toUpperCase().includes(q)).slice(0, 8);
+                    },
+                }));
+
+                Alpine.data('toolSearch', (toolList) => ({
+                    toolQuery: '',
+                    openTools: false,
+                    toolList: toolList,
+                    init() {
+                        this.$watch('$wire.item_herramienta_id', v => {
+                            if (!v) this.toolQuery = '';
+                        });
+                    },
+                    get suggestions() {
+                        const items = this.toolList.filter(h => h && h.nombre && String(h.nombre)
+                            .trim() !== '' && h.disponible > 0);
+                        if (!this.toolQuery.trim()) return items.slice(0, 8);
+                        const q = this.toolQuery.toUpperCase();
+                        return items.filter(h =>
+                            String(h.nombre).toUpperCase().includes(q) || (h.codigo && String(h
+                                .codigo).toUpperCase().includes(q))
+                        ).slice(0, 10);
+                    },
+                }));
+            });
+        </script>
+    @endonce

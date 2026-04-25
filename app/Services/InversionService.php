@@ -14,6 +14,85 @@ use Illuminate\Support\Facades\Storage;
 class InversionService
 {
     /**
+     * Edita los datos de una inversión existente.
+     * Solo permite cambiar el tipo (PRIVADO ↔ BANCO) si el campo can_edit_tipo es true
+     * (lo que significa que solo existe el movimiento CAPITAL_INICIAL).
+     */
+    public function editar(int $inversionId, array $data): Inversion
+    {
+        return DB::transaction(function () use ($inversionId, $data) {
+            $empresaId = auth()->user()->empresa_id;
+
+            /** @var Inversion $inv */
+            $inv = Inversion::query()
+                ->where('empresa_id', $empresaId)
+                ->lockForUpdate()
+                ->findOrFail($inversionId);
+
+            $canEditTipo  = (bool) ($data['can_edit_tipo'] ?? false);
+            $nuevoTipo    = strtoupper((string) ($data['tipo'] ?? $inv->tipo));
+            $tipoActual   = strtoupper((string) $inv->tipo);
+
+            // Validar: si se intenta cambiar tipo sin permiso, rechazar
+            if ($nuevoTipo !== $tipoActual && ! $canEditTipo) {
+                throw new DomainException('No se puede cambiar el tipo de inversión porque ya tiene movimientos registrados.');
+            }
+
+            // Si puede editar tipo, verificar nuevamente que solo tiene 1 movimiento (seguridad extra)
+            if ($canEditTipo && $nuevoTipo !== $tipoActual) {
+                $countMovs = InversionMovimiento::query()
+                    ->where('inversion_id', $inv->id)
+                    ->count();
+
+                if ($countMovs > 1) {
+                    throw new DomainException('No se puede cambiar el tipo: la inversión ya tiene movimientos adicionales al capital inicial.');
+                }
+            }
+
+            // Actualizar campos
+            $inv->nombre_completo  = trim((string) ($data['nombre_completo'] ?? $inv->nombre_completo));
+            $inv->tipo             = $nuevoTipo;
+            $inv->banco_id         = $data['banco_id'] ?? $inv->banco_id;
+            $inv->moneda           = strtoupper((string) ($data['moneda'] ?? $inv->moneda));
+            $inv->fecha_inicio     = $data['fecha_inicio'] ?? $inv->fecha_inicio;
+            $inv->fecha_vencimiento= $data['fecha_vencimiento'] ?? $inv->fecha_vencimiento;
+            $inv->plazo_meses      = isset($data['plazo_meses']) ? (int) $data['plazo_meses'] : $inv->plazo_meses;
+            $inv->sistema          = $data['sistema'] ?? $inv->sistema ?? 'FRANCESA';
+
+            // Campos según tipo
+            if ($nuevoTipo === 'PRIVADO') {
+                $inv->porcentaje_utilidad = (float) ($data['porcentaje_utilidad'] ?? 0);
+                $inv->tasa_anual          = 0;
+                $inv->dia_pago            = 0;
+            } else {
+                // BANCO
+                $inv->tasa_anual          = isset($data['tasa_anual']) ? (float) $data['tasa_anual'] : $inv->tasa_anual;
+                $inv->dia_pago            = isset($data['dia_pago']) ? (int) $data['dia_pago'] : $inv->dia_pago;
+                $inv->porcentaje_utilidad = 0;
+            }
+
+            $inv->save();
+
+            // Si cambió el tipo, actualizar el movimiento CAPITAL_INICIAL para reflejar el nuevo tipo de negocio
+            if ($canEditTipo && $nuevoTipo !== $tipoActual) {
+                $movInicial = InversionMovimiento::query()
+                    ->where('inversion_id', $inv->id)
+                    ->where('tipo', 'CAPITAL_INICIAL')
+                    ->first();
+
+                if ($movInicial) {
+                    $movInicial->porcentaje_utilidad = $nuevoTipo === 'PRIVADO'
+                        ? (float) ($data['porcentaje_utilidad'] ?? 0)
+                        : 0;
+                    $movInicial->save();
+                }
+            }
+
+            return $inv;
+        });
+    }
+
+    /**
      * Crea una inversión (PRIVADO o BANCO) y registra el movimiento CAPITAL_INICIAL como PAGADO.
      * Si viene banco_id, incrementa el saldo del banco por el capital inicial.
      */

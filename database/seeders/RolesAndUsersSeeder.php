@@ -166,7 +166,7 @@ class RolesAndUsersSeeder extends Seeder
         $managerRole = Role::firstOrCreate(
             ['name' => 'Empresa_Manager', 'guard_name' => 'web'],
             [
-                'description' => 'Gestiona Entidades, Proyectos, Facturas y Bancos de su empresa.',
+                'description' => 'Gestiona Entidades, Proyectos, Facturas, Bancos, Herramientas y Préstamos de su empresa.',
                 'is_system' => true,
                 'active' => true,
             ],
@@ -175,7 +175,7 @@ class RolesAndUsersSeeder extends Seeder
         $viewerRole = Role::firstOrCreate(
             ['name' => 'Empresa_Visualizador', 'guard_name' => 'web'],
             [
-                'description' => 'Solo lectura de Entidades, Proyectos, Facturas y Bancos.',
+                'description' => 'Solo lectura de Entidades, Proyectos, Facturas, Bancos, Herramientas y Préstamos.',
                 'is_system' => true,
                 'active' => true,
             ],
@@ -303,6 +303,11 @@ class RolesAndUsersSeeder extends Seeder
             'proyectos.resumen',
             'inversiones.view',
             'transacciones.view',
+            'herramientas.view',
+            'herramientas.export',
+            'herramientas.historial_bajas',
+            'prestamos.view',
+            'prestamos.export_pdf',
         ]);
 
         // Empresa_Store

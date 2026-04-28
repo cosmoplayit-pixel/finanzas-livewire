@@ -86,7 +86,7 @@
             </div>
 
             {{-- Dinámico: Números de Serie para Activos Fijos --}}
-            @if ($addStockTipo === 'activo')
+            @if (in_array($addStockTipo, ['activo', 'equipo']))
                 <div class="mt-4 border-t border-gray-100 dark:border-neutral-800 pt-4 space-y-3">
                     <p class="text-sm font-bold text-gray-800 dark:text-neutral-200">
                         Ingresar Números de Serie / Placas

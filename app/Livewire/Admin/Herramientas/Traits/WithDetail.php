@@ -46,7 +46,7 @@ trait WithDetail
             'tipo' => $h->tipo,
             'active' => $h->active,
             'imagen' => $h->imagen,
-            'series' => $h->tipo === 'activo' ? $h->series->map(fn ($s) => [
+            'series' => in_array($h->tipo, ['activo', 'equipo']) ? $h->series->map(fn ($s) => [
                 'serie'  => $s->serie,
                 'estado' => $s->estado,
             ])->toArray() : [],

@@ -13,10 +13,10 @@
                     <span class="text-sm font-bold text-gray-700 dark:text-neutral-200 uppercase tracking-wide">Destino
                         del Préstamo</span>
                 </div>
-                <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                <div class="grid grid-cols-12 gap-3">
 
                     {{-- Entidad con autocomplete --}}
-                    <div class="col-span-2 lg:col-span-1" x-data="entidadAc(@js($entidades->map(fn($e) => ['id' => $e->id, 'nombre' => $e->nombre])->values()))">
+                    <div class="col-span-12 lg:col-span-4" x-data="entidadAc(@js($entidades->map(fn($e) => ['id' => $e->id, 'nombre' => $e->nombre])->values()))">
                         <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Cliente <span
                                 class="text-red-500">*</span></label>
                         <div class="relative">
@@ -42,7 +42,7 @@
                     </div>
 
                     {{-- Proyecto (Select2-style Autocomplete) --}}
-                    <div class="col-span-2 lg:col-span-1" wire:key="proyecto-search-{{ $entidad_id }}"
+                    <div class="col-span-12 lg:col-span-4" wire:key="proyecto-search-{{ $entidad_id }}"
                         x-data="proyectoAc(@js($this->proyectosFiltrados->map(fn($p) => ['id' => $p->id, 'nombre' => $p->nombre])->values()), '{{ $proyecto_id }}')">
                         <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Proyecto
                             Destino <span class="text-red-500">*</span></label>
@@ -75,7 +75,7 @@
                     </div>
 
                     {{-- Agente de Servicio (a quién se le presta) con autocomplete --}}
-                    <div class="col-span-2 lg:col-span-1" wire:key="agente-selector" x-data="agenteAc(@js($agentes->map(fn($a) => ['id' => $a->id, 'nombre' => $a->nombre])->values()))">
+                    <div class="col-span-12 lg:col-span-4" wire:key="agente-selector" x-data="agenteAc(@js($agentes->map(fn($a) => ['id' => $a->id, 'nombre' => $a->nombre])->values()))">
                         <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Responsable /
                             Agente de Servicio</label>
                         <div class="relative">
@@ -109,7 +109,7 @@
                     </div>
 
                     {{-- Fecha Salida --}}
-                    <div class="sm:col-span-12 lg:col-span-1">
+                    <div class="col-span-6 lg:col-span-6">
                         <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Fecha de
                             Salida <span class="text-red-500">*</span></label>
                         <input type="date" wire:model.live="fecha_prestamo"
@@ -117,7 +117,7 @@
                     </div>
 
                     {{-- Retorno Estimado --}}
-                    <div class="sm:col-span-12 lg:col-span-1">
+                    <div class="col-span-6 lg:col-span-6">
                         <label class="block text-sm mb-1 font-bold text-indigo-600 dark:text-indigo-400">Retorno
                             Estimado</label>
                         <input type="date" wire:model="fecha_vencimiento"
@@ -138,17 +138,17 @@
                 </div>
 
                 {{-- Buscador de herramienta (select2-style) --}}
-                <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end"
-                    wire:key="tool-search-box-{{ count($items) }}" x-data="toolSearch(@js(isset($herramientas) ? $herramientas->map(fn($h) => ['id' => $h->id, 'nombre' => $h->nombre, 'codigo' => $h->codigo, 'disponible' => $h->stock_disponible, 'imagen' => $h->imagen])->values() : []))">
+                <div class="grid grid-cols-12 gap-3 items-end" wire:key="tool-search-box-{{ count($items) }}"
+                    x-data="toolSearch(@js(isset($herramientas) ? $herramientas->map(fn($h) => ['id' => $h->id, 'nombre' => $h->nombre, 'codigo' => $h->codigo, 'disponible' => $h->stock_disponible, 'imagen' => $h->imagen])->values() : []))">
 
                     {{-- Input búsqueda herramienta --}}
-                    <div class="sm:col-span-6 relative">
+                    <div class="col-span-8 sm:col-span-6 relative">
                         <label
                             class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Herramienta</label>
                         <input type="text" x-model="toolQuery" @focus="openTools = true"
                             @blur="setTimeout(() => openTools = false, 200)"
                             @input="openTools = true; $wire.set('item_herramienta_id', '')"
-                            placeholder="Buscar por nombre o código..."
+                            placeholder="Herramienta..."
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-sm">
 
                         {{-- Dropdown con preview --}}
@@ -195,9 +195,8 @@
                     </div>
 
                     {{-- Cantidad --}}
-                    <div class="sm:col-span-3">
-                        <label
-                            class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Cantidad</label>
+                    <div class="col-span-4 sm:col-span-3">
+                        <label class="block text-sm mb-1 font-medium text-gray-700 dark:text-neutral-300">Cant.</label>
                         <input type="number" wire:model.live="item_cantidad" min="1"
                             class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-center font-bold text-sm">
                         @error('item_cantidad')
@@ -206,15 +205,15 @@
                     </div>
 
                     {{-- Botón agregar --}}
-                    <div class="sm:col-span-3">
-                        <label class="block text-sm mb-1 opacity-0">Agregar</label>
+                    <div class="col-span-12 sm:col-span-3">
+                        <label class="block text-sm mb-1 opacity-0 hidden sm:block">Agregar</label>
                         <button type="button" wire:click="addItem" @disabled(!$item_herramienta_id)
                             class="w-full px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition text-sm font-bold cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed">
                             <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                     d="M12 4v16m8-8H4" />
                             </svg>
-                            Agregar
+                            Agregar Herramienta
                         </button>
                     </div>
                 </div>
@@ -307,7 +306,7 @@
                                     </tr>
 
                                     {{-- Selección de series para Activos Fijos --}}
-                                    @if (($it['tipo'] ?? 'herramienta') === 'activo')
+                                    @if (in_array($it['tipo'] ?? 'herramienta', ['activo', 'equipo']))
                                         <tr class="bg-indigo-50/10 dark:bg-indigo-900/10"
                                             wire:key="series-selection-{{ $idx }}">
                                             <td colspan="6" class="px-4 py-3 border-t-0">
@@ -522,9 +521,9 @@
                     },
                     get suggestions() {
                         const valid = this.entidades.filter(e => e.nombre && e.nombre.trim() !== '');
-                        if (!this.query.trim()) return valid.slice(0, 8);
+                        if (!this.query.trim()) return valid.slice(0, 50);
                         const q = this.query.toUpperCase();
-                        return valid.filter(e => e.nombre.toUpperCase().includes(q)).slice(0, 8);
+                        return valid.filter(e => e.nombre.toUpperCase().includes(q)).slice(0, 50);
                     },
                 }));
 
@@ -548,9 +547,9 @@
                     },
                     get suggestions() {
                         const valid = this.proyectos.filter(p => p.nombre && p.nombre.trim() !== '');
-                        if (!this.query.trim()) return valid.slice(0, 8);
+                        if (!this.query.trim()) return valid.slice(0, 50);
                         const q = this.query.toUpperCase();
-                        return valid.filter(p => p.nombre.toUpperCase().includes(q)).slice(0, 8);
+                        return valid.filter(p => p.nombre.toUpperCase().includes(q)).slice(0, 50);
                     },
                 }));
 
@@ -572,9 +571,9 @@
                     get suggestions() {
                         const valid = this.agenteList.filter(a => a && a.nombre && a.nombre.trim() !==
                             '');
-                        if (!this.agenteQuery.trim()) return valid.slice(0, 8);
+                        if (!this.agenteQuery.trim()) return valid.slice(0, 50);
                         const q = this.agenteQuery.toUpperCase();
-                        return valid.filter(a => a.nombre.toUpperCase().includes(q)).slice(0, 8);
+                        return valid.filter(a => a.nombre.toUpperCase().includes(q)).slice(0, 50);
                     },
                 }));
 
@@ -590,12 +589,12 @@
                     get suggestions() {
                         const items = this.toolList.filter(h => h && h.nombre && String(h.nombre)
                             .trim() !== '' && h.disponible > 0);
-                        if (!this.toolQuery.trim()) return items.slice(0, 8);
+                        if (!this.toolQuery.trim()) return items.slice(0, 50);
                         const q = this.toolQuery.toUpperCase();
                         return items.filter(h =>
                             String(h.nombre).toUpperCase().includes(q) || (h.codigo && String(h
                                 .codigo).toUpperCase().includes(q))
-                        ).slice(0, 10);
+                        ).slice(0, 50);
                     },
                 }));
             });

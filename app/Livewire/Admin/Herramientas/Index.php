@@ -216,7 +216,7 @@ class Index extends Component
     {
         return [
             'empresa_id' => ['nullable'],
-            'tipo' => ['required', Rule::in(['herramienta', 'activo', 'material'])],
+            'tipo' => ['required', Rule::in(['herramienta', 'activo', 'material', 'equipo'])],
             'codigo' => ['nullable', 'string', 'max:100', 'regex:/^[a-zA-Z0-9\-\.\/\s]+$/'],
             'nombre' => ['required', 'string', 'min:2', 'max:200'],
             'marca' => ['nullable', 'string', 'max:100'],

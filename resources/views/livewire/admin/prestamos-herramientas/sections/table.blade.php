@@ -2,131 +2,98 @@
         class="bg-white dark:bg-neutral-900 rounded-2xl border border-gray-200 dark:border-neutral-700 shadow-sm overflow-hidden ">
 
         {{-- ===================== CARDS MOBILE ===================== --}}
-        <div
-            class="md:hidden space-y-4 p-4 bg-gray-50/50 dark:bg-neutral-800/10 border-b border-gray-200 dark:border-neutral-700">
+        <div class="md:hidden space-y-3 p-3 bg-gray-50/30 dark:bg-neutral-800/10">
             @forelse($prestamosCalculados as $nro => $datos)
                 <div
-                    class="rounded-2xl border {{ $datos->estadoGlobal === 'vencido' ? 'border-red-200 dark:border-red-800/50 bg-red-50/10' : 'border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900' }} shadow-sm overflow-hidden flex flex-col">
-                    {{-- Cabecera Card --}}
+                    class="rounded-xl border {{ $datos->estadoGlobal === 'vencido' ? 'border-red-200 dark:border-red-900/40 bg-red-50/30 dark:bg-red-900/5' : 'border-gray-200 dark:border-neutral-800 bg-white dark:bg-neutral-900/60' }} shadow-sm overflow-hidden flex flex-col">
+
+                    {{-- Cabecera Card (Compacta) --}}
                     <div
-                        class="flex items-center justify-between p-3 border-b border-gray-100 dark:border-neutral-800/60 {{ $datos->estadoGlobal === 'vencido' ? 'bg-red-50/50 dark:bg-red-900/10' : 'bg-gray-50/50 dark:bg-neutral-800/20' }}">
+                        class="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-neutral-800/60">
                         <div class="flex flex-col">
                             <span
-                                class="font-black text-indigo-600 dark:text-indigo-400 leading-tight uppercase text-[13px]">{{ $nro }}</span>
-                            <span class="text-[10px] text-gray-500 mt-0.5 uppercase">{{ $datos->count }}
+                                class="font-black text-indigo-600 dark:text-indigo-400 leading-none uppercase text-[12px]">{{ $nro }}</span>
+                            <span class="text-[9px] text-gray-400 mt-0.5 uppercase font-bold">{{ $datos->count }}
                                 Equipo(s)</span>
                         </div>
                         <div>
                             @if ($datos->estadoGlobal === 'finalizado')
                                 <span
-                                    class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400 text-[10px] font-black uppercase ring-1 ring-emerald-200">Devuelto</span>
+                                    class="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-400">Devuelto</span>
                             @elseif($datos->estadoGlobal === 'vencido')
                                 <span
-                                    class="px-2.5 py-0.5 rounded-full bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-400 text-[10px] font-black uppercase ring-1 ring-red-200 animate-pulse">Vencido</span>
+                                    class="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-400 animate-pulse">Vencido</span>
                             @else
                                 <span
-                                    class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-400 text-[10px] font-black uppercase ring-1 ring-blue-200">En
+                                    class="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-400">En
                                     Obra</span>
                             @endif
                         </div>
                     </div>
 
                     {{-- Info Central --}}
-                    <div class="p-3 grow flex flex-col">
-                        <div class="mb-3">
+                    <div class="p-3">
+                        <div class="mb-2">
                             <span
-                                class="block font-semibold text-gray-900 dark:text-neutral-100 truncate text-sm">{{ $datos->first->entidad?->nombre ?? '—' }}</span>
+                                class="block font-bold text-gray-900 dark:text-neutral-100 truncate text-[13px] leading-tight">{{ $datos->first->entidad?->nombre ?? '—' }}</span>
                             <span
-                                class="text-[11px] text-gray-500 truncate block mt-0.5">{{ $datos->first->proyecto?->nombre ?? '—' }}</span>
-                            <span
-                                class="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase block mt-1.5 bg-indigo-50 dark:bg-indigo-900/20 w-max px-2 py-0.5 rounded border border-indigo-100 dark:border-indigo-800/50">
-                                Recibe:
-                                {{ $datos->first->agente?->nombre ?? ($datos->first->receptor_manual ?: 'No especificado') }}
-                            </span>
+                                class="text-[11px] text-gray-500 truncate block">{{ $datos->first->proyecto?->nombre ?? '—' }}</span>
+                            <div
+                                class="flex items-center gap-1 mt-1 text-[10px] text-indigo-600 dark:text-indigo-400 font-medium">
+                                <svg class="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                <span>{{ $datos->first->agente?->nombre ?? ($datos->first->receptor_manual ?: 'No especificado') }}</span>
+                            </div>
                         </div>
 
-                        {{-- Fechas --}}
+                        {{-- Fechas (Horizontal Compacta) --}}
                         <div
-                            class="flex items-center gap-2 text-[11px] bg-gray-50 dark:bg-neutral-800/40 p-2.5 rounded-xl mb-3 border border-gray-100 dark:border-neutral-800">
-                            <div
-                                class="flex-1 flex flex-col justify-center items-center gap-1 text-gray-600 dark:text-gray-400 border-r border-gray-200 dark:border-neutral-700">
-                                <span class="text-[9px] uppercase tracking-wider font-bold text-gray-400">Salida</span>
+                            class="flex items-center justify-between gap-2 text-[10px] py-1.5 px-2 bg-gray-50 dark:bg-neutral-800/40 rounded-lg border border-gray-100 dark:border-neutral-800 mb-3 text-gray-500">
+                            <div class="flex items-center gap-1.5">
+                                <svg class="size-3 text-gray-400" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
                                 <span class="font-semibold">{{ $datos->first->fecha_prestamo->format('d/m/Y') }}</span>
                             </div>
+                            <div class="w-px h-3 bg-gray-200 dark:bg-neutral-700"></div>
                             <div
-                                class="flex-1 flex flex-col justify-center items-center gap-1 {{ $datos->estadoGlobal === 'vencido' ? 'text-red-600 font-bold' : 'text-gray-600 dark:text-gray-400' }}">
+                                class="flex items-center gap-1.5 {{ $datos->estadoGlobal === 'vencido' ? 'text-red-600' : '' }}">
+                                <svg class="size-3 {{ $datos->estadoGlobal === 'vencido' ? 'text-red-400' : 'text-gray-400' }}"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
                                 <span
-                                    class="text-[9px] uppercase tracking-wider font-bold {{ $datos->estadoGlobal === 'vencido' ? 'text-red-400/80' : 'text-gray-400' }}">Vence</span>
-                                <span
-                                    class="font-semibold">{{ $datos->first->fecha_vencimiento ? $datos->first->fecha_vencimiento->format('d/m/Y') : 'Abierto' }}</span>
+                                    class="font-semibold">{{ $datos->first->fecha_vencimiento ? $datos->first->fecha_vencimiento->format('d/m/Y') : 'Venc. Abierto' }}</span>
                             </div>
                         </div>
 
-                        {{-- Skill Bars (Progreso de Devolución) --}}
-                        <div
-                            class="rounded-xl border border-gray-100 dark:border-neutral-800 overflow-hidden shadow-sm mt-auto">
+                        {{-- Progreso Compacto --}}
+                        <div class="space-y-1.5">
                             <div
-                                class="flex items-center justify-between px-3 py-1.5 bg-gray-50 dark:bg-neutral-800/60 border-b border-gray-100 dark:border-neutral-800">
-                                <span
-                                    class="text-[10px] uppercase font-bold tracking-widest text-gray-400 dark:text-neutral-500">Total
-                                    Herramientas</span>
-                                <span
-                                    class="text-sm font-black text-gray-800 dark:text-neutral-100">{{ $datos->totalPrestadas }}</span>
+                                class="flex items-center justify-between text-[10px] uppercase font-bold tracking-wider">
+                                <span class="text-gray-400">Progreso Devolución</span>
+                                <span class="text-gray-900 dark:text-gray-200">{{ $datos->totalDevueltas }} /
+                                    {{ $datos->totalPrestadas }}</span>
                             </div>
-                            <div class="px-3 py-2.5 space-y-2.5">
-                                {{-- Devuelto --}}
-                                <div>
-                                    <div class="flex items-center justify-between mb-1.5">
-                                        <div class="flex items-center gap-1.5">
-                                            <span
-                                                class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shadow-sm"></span>
-                                            <span
-                                                class="text-[10px] font-bold tracking-wide text-gray-600 dark:text-neutral-300 uppercase">Devuelto</span>
-                                        </div>
-                                        <span
-                                            class="text-xs font-black text-emerald-600 dark:text-emerald-400">{{ $datos->totalDevueltas }}
-                                            <span class="text-[9px] font-normal text-gray-400">/
-                                                {{ $datos->pctDevuelto }}%</span></span>
-                                    </div>
-                                    <div
-                                        class="h-1.5 rounded-full bg-gray-100 dark:bg-neutral-800 overflow-hidden shadow-inner">
-                                        <div class="h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 transition-all duration-500"
-                                            style="width: {{ $datos->pctDevuelto }}%"></div>
-                                    </div>
-                                </div>
-                                {{-- Pendiente --}}
-                                @if ($datos->totalPendientes > 0)
-                                    <div>
-                                        <div class="flex items-center justify-between mb-1.5">
-                                            <div class="flex items-center gap-1.5">
-                                                <span
-                                                    class="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block shadow-sm"></span>
-                                                <span
-                                                    class="text-[10px] font-bold tracking-wide text-gray-600 dark:text-neutral-300 uppercase">En
-                                                    Obra (Pend.)</span>
-                                            </div>
-                                            <span
-                                                class="text-xs font-black text-amber-600 dark:text-amber-400">{{ $datos->totalPendientes }}
-                                                <span class="text-[9px] font-normal text-gray-400">/
-                                                    {{ $datos->pctPendiente }}%</span></span>
-                                        </div>
-                                        <div
-                                            class="h-1.5 rounded-full bg-gray-100 dark:bg-neutral-800 overflow-hidden shadow-inner">
-                                            <div class="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-500"
-                                                style="width: {{ $datos->pctPendiente }}%"></div>
-                                        </div>
-                                    </div>
-                                @endif
+                            <div
+                                class="h-1.5 w-full bg-gray-100 dark:bg-neutral-800 rounded-full overflow-hidden flex shadow-inner">
+                                <div class="h-full bg-emerald-500 transition-all duration-500"
+                                    style="width: {{ $datos->pctDevuelto }}%"></div>
+                                <div class="h-full bg-amber-500 transition-all duration-500"
+                                    style="width: {{ $datos->pctPendiente }}%"></div>
                             </div>
                         </div>
                     </div>
 
                     {{-- Acciones Mobile --}}
-                    <div
-                        class="flex flex-wrap items-center gap-1.5 px-3 py-2.5 border-t border-gray-100 dark:border-neutral-800 bg-gray-50/50 dark:bg-neutral-900/30">
+                    <div class="grid grid-cols-4 gap-1.5 px-3 pb-3">
                         @can('prestamos.view')
-                            <button wire:click="openVer('{{ $nro }}')" title="Detalles"
-                                class="flex-1 inline-flex items-center justify-center h-9 rounded-xl border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white transition cursor-pointer">
+                            <button wire:click="openVer('{{ $nro }}')" title="Ver"
+                                class="flex items-center justify-center p-2 rounded-lg border border-indigo-200 dark:border-indigo-800/60 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 hover:bg-indigo-600 hover:text-white transition cursor-pointer">
                                 <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -137,25 +104,18 @@
                         @endcan
                         @can('prestamos.export_pdf')
                             <button wire:click="exportPdf('{{ $nro }}')" title="PDF"
-                                class="flex-1 inline-flex items-center justify-center h-9 rounded-xl border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition cursor-pointer">
+                                class="flex items-center justify-center p-2 rounded-lg border border-gray-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-gray-500 hover:text-red-500 transition cursor-pointer">
                                 <svg class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                                <svg wire:loading wire:target="exportPdf('{{ $nro }}')"
-                                    class="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                        stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
-                                    </path>
                                 </svg>
                             </button>
                         @endcan
                         @if ($datos->totalPendientes > 0)
                             @can('prestamos.devolucion')
-                                <button wire:click="openDevolucion('{{ $nro }}')" title="Devolución"
-                                    wire:loading.attr="disabled" @disabled($anyModalOpen)
-                                    class="flex-1 inline-flex items-center justify-center h-9 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition cursor-pointer shadow-sm disabled:opacity-50">
+                                <button wire:click="openDevolucion('{{ $nro }}')" title="Retorno"
+                                    wire:loading.attr="disabled"
+                                    class="flex items-center justify-center p-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition cursor-pointer shadow-sm disabled:opacity-50">
                                     <svg wire:loading.remove wire:target="openDevolucion('{{ $nro }}')"
                                         class="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -171,10 +131,9 @@
                                 </button>
                             @endcan
                             @can('prestamos.baja')
-                                <button wire:click="openBaja('{{ $nro }}')"
-                                    title="Dar de baja (perdido / destruido)" wire:loading.attr="disabled"
-                                    @disabled($anyModalOpen)
-                                    class="flex-1 inline-flex items-center justify-center h-9 rounded-xl border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white transition cursor-pointer shadow-sm">
+                                <button wire:click="openBaja('{{ $nro }}')" title="Baja"
+                                    wire:loading.attr="disabled"
+                                    class="flex items-center justify-center p-2 rounded-lg border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 text-red-500 hover:bg-red-600 hover:text-white transition cursor-pointer">
                                     <svg wire:loading.remove wire:target="openBaja('{{ $nro }}')" class="size-4"
                                         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -194,12 +153,7 @@
                 </div>
             @empty
                 <div
-                    class="rounded-2xl border border-gray-200 dark:border-neutral-800 p-8 text-center text-sm text-gray-400 dark:text-neutral-500 bg-white dark:bg-neutral-900">
-                    <svg class="size-10 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                    </svg>
+                    class="rounded-xl border border-gray-200 dark:border-neutral-800 p-8 text-center text-sm text-gray-400 bg-white dark:bg-neutral-900">
                     Sin resultados.
                 </div>
             @endforelse

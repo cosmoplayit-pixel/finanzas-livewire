@@ -1,7 +1,81 @@
     {{-- FILTROS --}}
+    @php
+        $filtrosActivosPrestamos =
+            count($f_estado) +
+            ($f_proyecto_id !== 'all' ? 1 : 0) +
+            ($f_entidad_id !== 'all' ? 1 : 0) +
+            ($f_fecha_desde ? 1 : 0) +
+            ($f_herramienta_id !== 'all' ? 1 : 0);
+    @endphp
     <div x-data="{ openFilters: false }" class="relative mb-6" wire:ignore.self>
         <div class="rounded-xl border bg-white dark:bg-neutral-900/40 dark:border-neutral-700 overflow-hidden shadow-sm">
-            <div class="py-3 px-4">
+
+            {{-- MOBILE (<= md): FILTROS COLAPSABLES --}}
+            <div class="md:hidden" x-data="{ openMobile: false }">
+                <div class="px-4 h-11 flex items-center justify-between">
+                    <div class="text-[13px] font-semibold text-gray-700 dark:text-neutral-200">Filtros</div>
+                    <button type="button" @click="openMobile = !openMobile"
+                        class="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-[13px] font-semibold border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800/60 transition cursor-pointer">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 4h-7" />
+                            <path d="M10 4H3" />
+                            <path d="M21 12h-9" />
+                            <path d="M8 12H3" />
+                            <path d="M21 20h-5" />
+                            <path d="M12 20H3" />
+                            <path d="M14 2v4" />
+                            <path d="M12 10v4" />
+                            <path d="M16 18v4" />
+                        </svg>
+                        <span x-text="openMobile ? 'Ocultar' : 'Mostrar'"></span>
+                    </button>
+                </div>
+                <div class="mt-2 space-y-3 px-4 pb-3 text-[13px]" x-show="openMobile" x-collapse x-cloak>
+                    <div>
+                        <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">Búsqueda</label>
+                        <div class="relative">
+                            <input type="search" wire:model.live.debounce.300ms="search"
+                                placeholder="Herramienta, proyecto, entidad..."
+                                class="w-full rounded-lg border px-3 py-2 pl-9 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40" />
+                            <svg class="absolute left-3 top-2.5 size-4 text-gray-400" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block mb-1 text-gray-600 dark:text-neutral-300 text-[13px]">Mostrar</label>
+                            <select wire:model.live="perPage"
+                                class="w-full rounded-lg border px-3 py-2 bg-white dark:bg-neutral-900 border-gray-300 dark:border-neutral-700 text-gray-900 dark:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-gray-500/40 cursor-pointer">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block mb-1 text-transparent select-none text-[13px]">&nbsp;</label>
+                            <button type="button" @click.stop="openFilters = !openFilters"
+                                class="w-full cursor-pointer flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 focus:outline-none focus:ring-2 focus:ring-gray-500/40 text-[13px] font-medium transition {{ $filtrosActivosPrestamos > 0 ? 'border-indigo-500 dark:border-indigo-500' : '' }}">
+                                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                </svg>
+                                Avanzados
+                                @if ($filtrosActivosPrestamos > 0)
+                                    <span
+                                        class="inline-flex items-center justify-center size-4 rounded-full bg-indigo-600 text-white text-[10px] font-black">{{ $filtrosActivosPrestamos }}</span>
+                                @endif
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- DESKTOP (>= md): Layout extendido --}}
+            <div class="hidden md:block py-3 px-4">
                 <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
                     <div class="md:col-span-6 lg:col-span-8">
                         <label
@@ -31,21 +105,16 @@
                             class="block text-[11px] font-bold uppercase mb-1 text-gray-500 dark:text-neutral-400">Más
                             Filtros</label>
                         <button type="button" @click.stop="openFilters = !openFilters"
-                            class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-200 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 transition cursor-pointer text-sm font-bold shadow-sm">
+                            class="w-full flex items-center justify-center gap-2 rounded-lg border px-3 py-2 bg-white text-gray-900 border-gray-200 hover:bg-gray-50 dark:bg-neutral-900 dark:text-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800 transition cursor-pointer text-sm font-bold shadow-sm {{ $filtrosActivosPrestamos > 0 ? 'border-indigo-500 dark:border-indigo-500' : '' }}">
                             <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                             </svg>
                             Filtros
-                            @if (count($f_estado) +
-                                    ($f_proyecto_id !== 'all' ? 1 : 0) +
-                                    ($f_entidad_id !== 'all' ? 1 : 0) +
-                                    ($f_fecha_desde ? 1 : 0) +
-                                    ($f_herramienta_id !== 'all' ? 1 : 0) >
-                                    0)
+                            @if ($filtrosActivosPrestamos > 0)
                                 <span
-                                    class="inline-flex items-center justify-center size-5 rounded-full bg-indigo-600 text-white text-[10px] font-black">{{ count($f_estado) + ($f_proyecto_id !== 'all' ? 1 : 0) + ($f_entidad_id !== 'all' ? 1 : 0) + ($f_fecha_desde ? 1 : 0) + ($f_herramienta_id !== 'all' ? 1 : 0) }}</span>
+                                    class="inline-flex items-center justify-center size-5 rounded-full bg-indigo-600 text-white text-[10px] font-black">{{ $filtrosActivosPrestamos }}</span>
                             @endif
                         </button>
                     </div>
@@ -239,9 +308,9 @@
                     list: list,
                     get suggestions() {
                         let valid = this.list.filter(e => e.nombre && e.nombre.trim() !== '');
-                        if (!this.query.trim()) return valid.slice(0, 8);
+                        if (!this.query.trim()) return valid.slice(0, 50);
                         const q = this.query.toUpperCase();
-                        return valid.filter(e => e.nombre.toUpperCase().includes(q)).slice(0, 8);
+                        return valid.filter(e => e.nombre.toUpperCase().includes(q)).slice(0, 50);
                     },
                     init() {
                         this.$watch('$wire.f_entidad_id', v => {
@@ -265,9 +334,9 @@
                     list: list,
                     get suggestions() {
                         let valid = this.list.filter(p => p.nombre && p.nombre.trim() !== '');
-                        if (!this.query.trim()) return valid.slice(0, 8);
+                        if (!this.query.trim()) return valid.slice(0, 50);
                         const q = this.query.toUpperCase();
-                        return valid.filter(p => p.nombre.toUpperCase().includes(q)).slice(0, 8);
+                        return valid.filter(p => p.nombre.toUpperCase().includes(q)).slice(0, 50);
                     },
                     init() {
                         this.$watch('$wire.f_proyecto_id', v => {
@@ -297,7 +366,7 @@
                         if (!this.hQuery.trim()) return [];
                         const q = this.hQuery.toUpperCase();
                         return this.allTools.filter(h => h.nombre.toUpperCase().includes(q) || (h
-                            .codigo && h.codigo.toUpperCase().includes(q))).slice(0, 8);
+                            .codigo && h.codigo.toUpperCase().includes(q))).slice(0, 50);
                     },
                     init() {
                         this.$watch('$wire.f_herramienta_id', v => {

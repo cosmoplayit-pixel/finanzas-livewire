@@ -135,7 +135,7 @@ trait WithCreateEdit
         $stockTotal = (int) $data['stock_total'];
         $stockPrestado = (int) ($data['stock_prestado'] ?? 0);
 
-        if ($data['tipo'] === 'activo') {
+        if (in_array($data['tipo'], ['activo', 'equipo'])) {
             $this->validate([
                 'series_nueva.*' => 'required|string|distinct|unique:herramienta_series,serie',
             ], [
@@ -164,7 +164,7 @@ trait WithCreateEdit
             'active' => true,
         ]);
 
-        if ($data['tipo'] === 'activo') {
+        if (in_array($data['tipo'], ['activo', 'equipo'])) {
             foreach ($this->series_nueva as $serieVal) {
                 \App\Models\HerramientaSerie::create([
                     'herramienta_id' => $h->id,
@@ -182,7 +182,7 @@ trait WithCreateEdit
     {
         $rules = [
             'empresa_id' => ['nullable'],
-            'tipo' => ['required', Rule::in(['herramienta', 'activo', 'material'])],
+            'tipo' => ['required', Rule::in(['herramienta', 'activo', 'material', 'equipo'])],
             'codigo' => ['nullable', 'string', 'max:100', 'regex:/^[a-zA-Z0-9\-\.\/\s]+$/'],
             'nombre' => ['required', 'string', 'min:2', 'max:200'],
             'marca' => ['nullable', 'string', 'max:100'],
@@ -260,7 +260,7 @@ trait WithCreateEdit
 
     private function syncSeriesNueva(): void
     {
-        if ($this->tipo !== 'activo') {
+        if (!in_array($this->tipo, ['activo', 'equipo'])) {
             $this->series_nueva = [];
 
             return;

@@ -71,7 +71,7 @@ trait WithPrestamos
 
         if (! $found) {
             $series_disponibles = [];
-            if ($herramienta->tipo === 'activo') {
+            if (in_array($herramienta->tipo, ['activo', 'equipo'])) {
                 $series_disponibles = \App\Models\HerramientaSerie::where('herramienta_id', $herramienta->id)
                     ->where('estado', 'disponible')
                     ->get(['id', 'serie'])
@@ -94,7 +94,7 @@ trait WithPrestamos
             foreach ($this->items as &$it) {
                 if ($it['herramienta_id'] == $this->item_herramienta_id) {
                     $it['disponible'] = $herramienta->stock_disponible;
-                    if (($it['tipo'] ?? 'herramienta') === 'activo') {
+                    if (in_array($it['tipo'] ?? 'herramienta', ['activo', 'equipo'])) {
                         // Rellenar array de series si aumentó la cantidad
                         while (count($it['series_seleccionadas']) < $it['cantidad']) {
                             $it['series_seleccionadas'][] = '';
@@ -146,7 +146,7 @@ trait WithPrestamos
         }
 
         foreach ($this->items as $it) {
-            if (($it['tipo'] ?? 'herramienta') === 'activo') {
+            if (in_array($it['tipo'] ?? 'herramienta', ['activo', 'equipo'])) {
                 $selected = array_filter($it['series_seleccionadas'], fn($val) => !empty($val));
                 if (count($selected) !== $it['cantidad']) {
                     $this->addError('items', "Debe seleccionar un número de serie para cada unidad de " . $it['nombre']);
@@ -189,7 +189,7 @@ trait WithPrestamos
                 $herramienta = Herramienta::findOrFail($it['herramienta_id']);
                 $tipo = $it['tipo'] ?? 'herramienta';
 
-                if ($tipo === 'activo') {
+                if (in_array($tipo, ['activo', 'equipo'])) {
                     $selectedSeries = array_filter($it['series_seleccionadas'], fn($val) => !empty($val));
                     foreach ($selectedSeries as $serie_id) {
                         PrestamoHerramienta::create([

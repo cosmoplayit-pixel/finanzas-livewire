@@ -72,7 +72,8 @@
                 $seriesActivas = collect($detail['series'] ?? [])
                     ->filter(fn($s) => ($s['estado'] ?? '') !== 'baja')
                     ->values();
-                $tieneSeriesActivas = ($detail['tipo'] ?? '') === 'activo' && $seriesActivas->isNotEmpty();
+                $tieneSeriesActivas =
+                    in_array($detail['tipo'] ?? '', ['activo', 'equipo']) && $seriesActivas->isNotEmpty();
             @endphp
 
             {{-- ══ STOCK — Ancho completo ══ --}}

@@ -22,7 +22,7 @@ trait WithStock
         $this->addStockActual = $h->stock_disponible;
         $this->addStockCantidad = 1;
         $this->addStockTipo = $h->tipo;
-        $this->addStockSeries = $h->tipo === 'activo' ? [''] : [];
+        $this->addStockSeries = in_array($h->tipo, ['activo', 'equipo']) ? [''] : [];
         $this->addStockImagen = $h->imagen;
         $this->resetErrorBag();
 
@@ -40,7 +40,7 @@ trait WithStock
             'addStockCantidad.max' => 'La cantidad máxima es 9999.',
         ]);
 
-        if ($this->addStockTipo === 'activo') {
+        if (in_array($this->addStockTipo, ['activo', 'equipo'])) {
             $this->validate([
                 'addStockSeries.*' => 'required|string|distinct|unique:herramienta_series,serie',
             ], [
@@ -62,7 +62,7 @@ trait WithStock
         $h->precio_total = $h->stock_total * (float) $h->precio_unitario;
         $h->save();
 
-        if ($this->addStockTipo === 'activo') {
+        if (in_array($this->addStockTipo, ['activo', 'equipo'])) {
             foreach ($this->addStockSeries as $serie) {
                 \App\Models\HerramientaSerie::create([
                     'herramienta_id' => $h->id,
@@ -95,7 +95,9 @@ trait WithStock
 
     private function syncAddStockSeries(): void
     {
-        if ($this->addStockTipo !== 'activo') return;
+        if (! in_array($this->addStockTipo, ['activo', 'equipo'])) {
+            return;
+        }
 
         $cantidad = (int) $this->addStockCantidad ?: 1;
         $currentCount = count($this->addStockSeries);
@@ -143,7 +145,7 @@ trait WithStock
         $this->bajaStockImagen = $h->imagen;
         $this->bajaStockTipo = $h->tipo;
         $this->bajaStockSeriesSeleccionadas = [];
-        $this->bajaStockSeriesDisponibles = $h->tipo === 'activo'
+        $this->bajaStockSeriesDisponibles = in_array($h->tipo, ['activo', 'equipo'])
             ? $h->series->where('estado', 'disponible')->values()
                 ->map(fn ($s) => ['id' => $s->id, 'serie' => $s->serie])
                 ->toArray()
@@ -161,15 +163,16 @@ trait WithStock
             'bajaStockObservaciones.required' => 'Debe ingresar el motivo de la baja.',
         ]);
 
-        if ($this->bajaStockTipo === 'activo') {
+        if (in_array($this->bajaStockTipo, ['activo', 'equipo'])) {
             if (empty($this->bajaStockSeriesSeleccionadas)) {
                 $this->addError('bajaStockSeriesSeleccionadas', 'Seleccioná al menos un número de serie.');
+
                 return;
             }
             $cantidad = count($this->bajaStockSeriesSeleccionadas);
         } else {
             $this->validate([
-                'bajaStockCantidad' => ['required', 'integer', 'min:1', 'max:' . $this->bajaStockActual],
+                'bajaStockCantidad' => ['required', 'integer', 'min:1', 'max:'.$this->bajaStockActual],
             ], [
                 'bajaStockCantidad.max' => 'No puede dar de baja más del stock disponible.',
             ]);
@@ -193,7 +196,7 @@ trait WithStock
             $h->precio_total = $h->stock_total * (float) $h->precio_unitario;
 
             $seriesStr = null;
-            if ($this->bajaStockTipo === 'activo') {
+            if (in_array($this->bajaStockTipo, ['activo', 'equipo'])) {
                 $seriesStr = \App\Models\HerramientaSerie::whereIn('id', $this->bajaStockSeriesSeleccionadas)
                     ->pluck('serie')
                     ->join(', ');
@@ -208,7 +211,7 @@ trait WithStock
                 'imagen' => $evidenciaPath,
             ]);
 
-            if ($this->bajaStockTipo === 'activo') {
+            if (in_array($this->bajaStockTipo, ['activo', 'equipo'])) {
                 \App\Models\HerramientaSerie::whereIn('id', $this->bajaStockSeriesSeleccionadas)
                     ->update([
                         'estado' => 'baja',
@@ -249,5 +252,4 @@ trait WithStock
         $this->bajaStockSeriesSeleccionadas = [];
         $this->resetErrorBag();
     }
-
 }

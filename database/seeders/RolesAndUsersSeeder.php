@@ -140,6 +140,9 @@ class RolesAndUsersSeeder extends Seeder
             'prestamos.export_pdf',
             'prestamos.devolucion',
             'prestamos.baja',
+
+            // Auditoría
+            'auditoria.view',
         ];
 
         foreach ($permissions as $p) {
@@ -215,6 +218,9 @@ class RolesAndUsersSeeder extends Seeder
             'roles.update',
             'roles.toggle',
             'roles.assign_permissions',
+
+            // ✅ El Administrador puede ver el log de auditoría
+            'auditoria.view',
 
         ]);
 

@@ -212,6 +212,15 @@
                 </flux:sidebar.item>
             @endcan
 
+            {{-- AUDITORÍA --}}
+            @can('auditoria.view')
+                <flux:sidebar.group heading="{{ __('Seguridad') }}" class="grid"> </flux:sidebar.group>
+                <flux:sidebar.item icon="shield-exclamation" :href="route('auditoria')"
+                    :current="request()->routeIs('auditoria')" wire:navigate>
+                    {{ __('Registro de Auditoría') }}
+                </flux:sidebar.item>
+            @endcan
+
         </flux:sidebar.nav>
 
         <flux:sidebar.spacer />

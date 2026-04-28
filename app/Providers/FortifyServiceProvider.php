@@ -60,6 +60,7 @@ class FortifyServiceProvider extends ServiceProvider
      * Configure Fortify authentication.
      * - Valida credenciales
      * - Bloquea usuarios con active = false
+     * - Registra logins exitosos en el activity log
      */
     private function configureAuthentication(): void
     {
@@ -78,12 +79,20 @@ class FortifyServiceProvider extends ServiceProvider
                 ]);
             }
 
+            // ✅ Registrar login exitoso en activity log
+            activity()
+                ->causedBy($user)
+                ->withProperties(['ip' => $request->ip(), 'user_agent' => $request->userAgent()])
+                ->log('Inicio de sesión exitoso');
+
             return $user;
         });
     }
 
     /**
      * Configure rate limiting.
+     * - 5 intentos por minuto por email+IP
+     * - Bloqueo de 15 minutos tras superar el límite
      */
     private function configureRateLimiting(): void
     {
@@ -96,7 +105,9 @@ class FortifyServiceProvider extends ServiceProvider
                 Str::lower($request->input(Fortify::username())).'|'.$request->ip(),
             );
 
-            return Limit::perMinute(5)->by($throttleKey);
+            // Bloquea por 15 minutos tras 5 intentos fallidos
+            return Limit::perMinutes(15, 5)->by($throttleKey);
         });
     }
 }
+

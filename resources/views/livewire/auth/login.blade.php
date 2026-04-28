@@ -48,7 +48,8 @@
                 <x-auth-session-status class="mt-5 text-center" :status="session('status')" />
 
                 {{-- Card --}}
-                <div class="mt-5 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg shadow-black/10 dark:shadow-black/40">
+                <div
+                    class="mt-5 rounded-2xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-lg shadow-black/10 dark:shadow-black/40">
                     <div class="p-6">
                         <form method="POST" action="{{ route('login.store') }}" class="space-y-5">
                             @csrf
@@ -65,6 +66,19 @@
                             <div class="flex items-center justify-between gap-3">
                                 <flux:checkbox name="remember" :label="__('Recordarme')" :checked="old('remember')" />
                             </div>
+
+                            {{-- Cloudflare Turnstile CAPTCHA --}}
+                            <div class="flex justify-center">
+                                <div class="cf-turnstile" data-sitekey="{{ config('turnstile.site_key') }}"
+                                    data-theme="light" data-language="es">
+                                </div>
+                            </div>
+
+                            @error('cf-turnstile-response')
+                                <p class="text-xs text-red-500 text-center -mt-2">
+                                    ⚠ {{ $message }}
+                                </p>
+                            @enderror
 
                             {{-- Submit --}}
                             <flux:button variant="primary" type="submit" class="w-full cursor-pointer justify-center"
@@ -89,6 +103,9 @@
 
             </div>
         </div>
+
+        {{-- Cloudflare Turnstile Script --}}
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
         {{-- ===================== NODOS 3D CANVAS (AUTO AJUSTA EN MOBILE) ===================== --}}
         <script>

@@ -31,12 +31,6 @@
             <div class="flex flex-col gap-6">
                 {{ $slot }}
             </div>
-            <flux:menu.item icon="sun" x-show="$flux.appearance === 'dark'" @click="$flux.appearance = 'light'">
-                {{ __('Modo Claro') }}
-            </flux:menu.item>
-            <flux:menu.item icon="moon" x-show="$flux.appearance === 'light'" @click="$flux.appearance = 'dark'">
-                {{ __('Modo Oscuro') }}
-            </flux:menu.item>
         </div>
     </div>
     {{-- ===================== FONDO NODOS (LOGIN) ===================== --}}

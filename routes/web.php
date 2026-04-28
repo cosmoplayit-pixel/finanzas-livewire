@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Admin\AgentesServicio;
+use App\Livewire\Admin\Auditoria;
 use App\Livewire\Admin\Bancos;
 use App\Livewire\Admin\BoletasGarantia\Index as BoletasGarantiaIndex;
 use App\Livewire\Admin\Dashboard;
@@ -16,6 +17,7 @@ use App\Livewire\Admin\Proyectos\Resumen;
 use App\Livewire\Admin\Roles;
 use App\Livewire\Admin\Transacciones;
 use App\Livewire\Admin\Usuarios;
+use App\Livewire\Settings\TwoFactor;
 use Illuminate\Support\Facades\Route;
 use Livewire\Volt\Volt;
 
@@ -36,6 +38,9 @@ Route::middleware(['auth', 'active'])->group(function () {
     Volt::route('ajustes/contrasena', 'settings.password')->name('user-password.edit');
 
     Volt::route('ajustes/apariencia', 'settings.appearance')->name('appearance.edit');
+
+    Route::get('ajustes/seguridad-2fa', TwoFactor::class)->name('settings.two-factor');
+
 
     Route::middleware(['permission:users.view'])
         ->get('/usuarios', Usuarios::class)
@@ -108,5 +113,10 @@ Route::middleware(['auth', 'active'])->group(function () {
     // PRESTAMOS Y DEVOLUCIONES
     Route::middleware(['permission:prestamos.view'])->group(function () {
         Route::get('/prestamos_herramientas', PrestamosHerramientasIndex::class)->name('prestamos_herramientas');
+    });
+
+    // AUDITORÍA
+    Route::middleware(['permission:auditoria.view'])->group(function () {
+        Route::get('/auditoria', Auditoria::class)->name('auditoria');
     });
 });

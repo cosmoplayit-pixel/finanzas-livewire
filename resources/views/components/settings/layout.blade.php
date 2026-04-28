@@ -5,6 +5,7 @@
             <flux:navlist.item :href="route('user-password.edit')" wire:navigate>{{ __('Contraseña') }}
             </flux:navlist.item>
             <flux:navlist.item :href="route('appearance.edit')" wire:navigate>{{ __('Apariencia') }}</flux:navlist.item>
+            <flux:navlist.item :href="route('settings.two-factor')" wire:navigate>{{ __('Seguridad (2FA)') }}</flux:navlist.item>
         </flux:navlist>
     </div>
 

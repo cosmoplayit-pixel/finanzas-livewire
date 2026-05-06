@@ -11,15 +11,7 @@
 
     <div class="relative h-screen w-screen overflow-hidden bg-white dark:bg-zinc-950">
 
-        {{-- ===================== FONDO NODOS FULL (DESKTOP + MOBILE) ===================== --}}
-        <div class="fixed inset-0 z-0 bg-white dark:bg-zinc-950">
-            {{-- Canvas SIEMPRE visible (mobile incluido) --}}
-            <canvas id="nodes-bg" class="absolute inset-0 w-full h-full"></canvas>
-
-            {{-- Overlay MUY sutil --}}
-            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.03)_0%,transparent_55%)]">
-            </div>
-        </div>
+        @include('partials.nodes-background')
 
         {{-- ===================== CONTENIDO CENTRADO (SIN SCROLL) ===================== --}}
         <div class="fixed inset-0 z-10 flex items-center justify-center px-4">
@@ -64,7 +56,11 @@
                                 autocomplete="current-password" :placeholder="__('Ingresa tu contraseña')" viewable />
 
                             <div class="flex items-center justify-between gap-3">
-                                <flux:checkbox name="remember" :label="__('Recordarme')" :checked="old('remember')" />
+                                <flux:checkbox name="remember" :label="__('Recordarme')" :checked="old('remember', true)" />
+                                <a href="{{ route('password.request') }}"
+                                   class="text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors">
+                                    ¿Olvidaste tu contraseña?
+                                </a>
                             </div>
 
                             {{-- Cloudflare Turnstile CAPTCHA --}}
@@ -98,7 +94,7 @@
 
                 {{-- Micro footer --}}
                 <p class="mt-6 text-center text-xs text-gray-400">
-                    {{ __('© ') }}{{ date('Y') }} — {{ __('Gestión Financiera') }}
+                    © {{ date('Y') }} — Gestión Financiera
                 </p>
 
             </div>
@@ -107,221 +103,9 @@
         {{-- Cloudflare Turnstile Script --}}
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 
-        {{-- ===================== NODOS 3D CANVAS (AUTO AJUSTA EN MOBILE) ===================== --}}
-        <script>
-            (function() {
-                const canvas = document.getElementById('nodes-bg');
-                if (!canvas) return;
-
-                const ctx = canvas.getContext('2d', {
-                    alpha: true
-                });
-
-                const prefersReduced = window.matchMedia &&
-                    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-                // Detect mobile/tablet
-                const mqMobile = window.matchMedia('(max-width: 767px)');
-
-                // Mouse parallax (en mobile lo reducimos)
-                const mouse = {
-                    x: 0,
-                    y: 0,
-                    tx: 0,
-                    ty: 0
-                };
-
-                function onMove(e) {
-                    const w = window.innerWidth || 1;
-                    const h = window.innerHeight || 1;
-                    mouse.tx = (e.clientX / w - 0.5) * 2;
-                    mouse.ty = (e.clientY / h - 0.5) * 2;
-                }
-
-                // Solo escuchar mouse si no es mobile
-                if (!mqMobile.matches) {
-                    window.addEventListener('mousemove', onMove, {
-                        passive: true
-                    });
-                }
-
-                // DPI aware - FULL viewport
-                function resize() {
-                    const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-                    canvas.width = Math.floor(window.innerWidth * dpr);
-                    canvas.height = Math.floor(window.innerHeight * dpr);
-                    canvas.style.width = window.innerWidth + 'px';
-                    canvas.style.height = window.innerHeight + 'px';
-                    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-                }
-                resize();
-                window.addEventListener('resize', resize, {
-                    passive: true
-                });
-
-                // Nodes
-                const nodes = [];
-                const rand = (min, max) => min + Math.random() * (max - min);
-
-                function init() {
-                    nodes.length = 0;
-
-                    const w = window.innerWidth;
-                    const h = window.innerHeight;
-                    const area = w * h;
-
-                    // ✅ En mobile: menos densidad (para que NO se vea "full" y no lag)
-                    // ✅ En desktop: más densidad
-                    const divisor = mqMobile.matches ? 22000 : 14000;
-                    const minN = mqMobile.matches ? 55 : 120;
-                    const maxN = mqMobile.matches ? 120 : 240;
-
-                    const count = Math.max(minN, Math.min(maxN, Math.floor(area / divisor)));
-
-                    for (let i = 0; i < count; i++) {
-                        nodes.push({
-                            x: rand(0, w),
-                            y: rand(0, h),
-                            z: rand(0.15, 1.0),
-                            vx: rand(-0.16, 0.16),
-                            vy: rand(-0.16, 0.16),
-                            r: rand(1.0, 2.0),
-                        });
-                    }
-                }
-                init();
-
-                let resizeTimer = null;
-                window.addEventListener('resize', () => {
-                    clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(() => init(), 120);
-                }, {
-                    passive: true
-                });
-
-                // Si cambia entre mobile/desktop (rotación, resize), re-ajusta
-                mqMobile.addEventListener?.('change', () => {
-                    // activar/desactivar mouse listener
-                    window.removeEventListener('mousemove', onMove);
-                    if (!mqMobile.matches) window.addEventListener('mousemove', onMove, {
-                        passive: true
-                    });
-                    init();
-                });
-
-                function draw() {
-                    const w = window.innerWidth;
-                    const h = window.innerHeight;
-
-                    // smooth mouse (en mobile, casi fijo / muy suave)
-                    const ease = mqMobile.matches ? 0.02 : 0.06;
-                    mouse.x += (mouse.tx - mouse.x) * ease;
-                    mouse.y += (mouse.ty - mouse.y) * ease;
-
-                    ctx.clearRect(0, 0, w, h);
-
-                    const isDark = document.documentElement.classList.contains('dark');
-                    const color = isDark ? '255,255,255' : '0,0,0';
-                    const line = `rgba(${color},`;
-                    const glow = `rgba(${color},`;
-                    const core = `rgba(${color},`;
-
-                    // update
-                    for (const p of nodes) {
-                        if (!prefersReduced) {
-                            const speed = mqMobile.matches ? 0.55 : 1.00; // mobile más lento
-                            p.x += p.vx * speed * (1.10 - p.z);
-                            p.y += p.vy * speed * (1.10 - p.z);
-                        }
-                        if (p.x < -25) p.x = w + 25;
-                        if (p.x > w + 25) p.x = -25;
-                        if (p.y < -25) p.y = h + 25;
-                        if (p.y > h + 25) p.y = -25;
-                    }
-
-                    // ✅ En mobile: menos conexiones (menor maxDist)
-                    const maxDist = mqMobile.matches ?
-                        Math.min(150, Math.max(110, Math.floor(Math.min(w, h) / 6))) :
-                        Math.min(240, Math.max(170, Math.floor(Math.min(w, h) / 4)));
-
-                    // lines
-                    for (let i = 0; i < nodes.length; i++) {
-                        const a = nodes[i];
-                        for (let j = i + 1; j < nodes.length; j++) {
-                            const b = nodes[j];
-                            const dx = a.x - b.x;
-                            const dy = a.y - b.y;
-                            const d = Math.hypot(dx, dy);
-                            if (d > maxDist) continue;
-
-                            const depth = (2 - (a.z + b.z)) / 2;
-
-                            // ✅ En mobile: alpha más bajo para que no “llene”
-                            const baseAlpha = mqMobile.matches ? 0.14 : 0.22;
-                            const alpha = Math.max(0, (1 - d / maxDist)) * baseAlpha * (0.6 + depth);
-
-                            const parallax = mqMobile.matches ? 6 : 12; // mobile más suave
-                            const ax = a.x + mouse.x * (parallax * (1 - a.z));
-                            const ay = a.y + mouse.y * (parallax * (1 - a.z));
-                            const bx = b.x + mouse.x * (parallax * (1 - b.z));
-                            const by = b.y + mouse.y * (parallax * (1 - b.z));
-
-                            ctx.beginPath();
-                            ctx.moveTo(ax, ay);
-                            ctx.lineTo(bx, by);
-
-                            ctx.strokeStyle = line + alpha + ')';
-                            ctx.lineWidth = 1;
-                            ctx.stroke();
-                        }
-                    }
-
-                    // nodes
-                    for (const p of nodes) {
-                        const depth = (1 - p.z);
-
-                        const parallax = mqMobile.matches ? 9 : 16;
-                        const px = p.x + mouse.x * (parallax * (1 - p.z));
-                        const py = p.y + mouse.y * (parallax * (1 - p.z));
-                        const rr = p.r + depth * 1.4;
-
-                        // glow
-                        ctx.beginPath();
-                        ctx.arc(px, py, rr * 3.0, 0, Math.PI * 2);
-                        const glowA = mqMobile.matches ? (0.02 + depth * 0.03) : (0.03 + depth * 0.05);
-                        ctx.fillStyle = glow + glowA + ')';
-                        ctx.fill();
-
-                        // core
-                        ctx.beginPath();
-                        ctx.arc(px, py, rr, 0, Math.PI * 2);
-                        const coreA = mqMobile.matches ? (0.22 + depth * 0.14) : (0.30 + depth * 0.18);
-                        ctx.fillStyle = core + coreA + ')';
-                        ctx.fill();
-                    }
-
-                    requestAnimationFrame(draw);
-                }
-
-                document.addEventListener('visibilitychange', () => {
-                    if (!document.hidden) resize();
-                });
-
-                draw();
-            })();
-        </script>
-
-        {{-- ===================== OCULTAR HEADER/NAV DEL LAYOUT (si aplica) ===================== --}}
         <style>
-            header,
-            nav {
-                display: none !important;
-            }
-
-            .min-h-screen>.pt-6,
-            .min-h-screen>.sm\:pt-0 {
-                display: none !important;
-            }
+            header, nav { display: none !important; }
+            .min-h-screen>.pt-6, .min-h-screen>.sm\:pt-0 { display: none !important; }
         </style>
 
     </div>

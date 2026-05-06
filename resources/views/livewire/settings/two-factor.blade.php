@@ -46,7 +46,7 @@
                         </div>
                     </div>
 
-                    {{-- QR Code: se muestra al recién habilitar (showingQrCode=true) --}}
+                    {{-- QR Code: se muestra al recién habilitar --}}
                     @if($showingQrCode)
                         <div class="mb-5 rounded-xl border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/5 p-5 shadow-sm">
                             <h3 class="font-semibold text-gray-900 dark:text-white text-base">⚠️ Importante: Escanea este código QR ahora</h3>
@@ -66,51 +66,12 @@
                         </div>
                     @endif
 
-                    {{-- Códigos de recuperación --}}
-                    @if($showingRecoveryCodes)
-                        <div class="mt-2 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 p-5 shadow-sm">
-                            <div class="mt-4 flex items-center justify-between">
-                            <h3 class="font-medium text-gray-900 dark:text-white text-base">Códigos de Recuperación</h3>
-                            <flux:button size="sm" variant="subtle" icon="clipboard" 
-                                x-on:click="
-                                    let codes = [];
-                                    document.querySelectorAll('.recovery-code-item').forEach(el => codes.push(el.innerText.trim()));
-                                    navigator.clipboard.writeText(codes.join('\n'));
-                                    $dispatch('toast', { type: 'success', message: 'Códigos copiados al portapapeles' });
-                                ">
-                                Copiar todos
-                            </flux:button>
-                        </div>
-                        <p class="mt-2 text-sm text-gray-500 dark:text-zinc-400">
-                            Guarda estos códigos en un administrador de contraseñas seguro. Sirven para acceder a tu cuenta si pierdes tu teléfono.
-                        </p>
-
-                        <div class="grid grid-cols-2 gap-2 max-w-xl mt-4 p-4 font-mono text-sm bg-gray-50 dark:bg-zinc-900 border border-gray-100 dark:border-zinc-700 rounded-lg text-gray-700 dark:text-zinc-300">
-                            @foreach ((array) $this->user->recoveryCodes() as $code)
-                                <div class="recovery-code-item">{{ $code }}</div>
-                            @endforeach
-                        </div>
-
-                            <div class="mt-5 flex flex-wrap gap-3">
-                                <flux:button wire:click="regenerateRecoveryCodes" wire:loading.attr="disabled">
-                                    Regenerar Códigos
-                                </flux:button>
-                                <flux:button wire:click="$set('showingRecoveryCodes', false)">
-                                    Ocultar Códigos
-                                </flux:button>
-                            </div>
-                        </div>
-                    @else
-                        <div class="mt-2 flex flex-wrap gap-3">
-                            <flux:button wire:click="showRecoveryCodes" wire:loading.attr="disabled">
-                                Mostrar Códigos de Recuperación
-                            </flux:button>
-
-                            <flux:button variant="danger" wire:click="disableTwoFactorAuthentication" wire:loading.attr="disabled">
-                                Deshabilitar Autenticación
-                            </flux:button>
-                        </div>
-                    @endif
+                    {{-- Botón deshabilitar --}}
+                    <div class="mt-2">
+                        <flux:button variant="danger" wire:click="disableTwoFactorAuthentication" wire:loading.attr="disabled">
+                            Deshabilitar Autenticación
+                        </flux:button>
+                    </div>
 
                 @endif
 

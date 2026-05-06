@@ -198,7 +198,13 @@ class Usuarios extends Component
             if ($this->isRootUser($u)) {
                 $data['email'] = $u->email;
             }
-            $u->email = $data['email'];
+
+            // Si el correo cambia, resetear verificación y enviar notificación
+            if ($u->email !== $data['email']) {
+                $u->email = $data['email'];
+                $u->email_verified_at = null;
+                $u->sendEmailVerificationNotification();
+            }
 
             $u->empresa_id = $data['empresa_id'];
 

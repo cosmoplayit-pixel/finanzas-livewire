@@ -9,13 +9,8 @@
 ])
 
 <script>
-    if (!window.documentScannerRegistered) {
-        window.documentScannerRegistered = true;
-
-        const registerScanner = () => {
-            if (window.Alpine && !window._documentScannerDefined) {
-                window._documentScannerDefined = true;
-                Alpine.data('documentScanner', (model) => ({
+    if (!window.documentScanner) {
+        window.documentScanner = (model) => ({
 
                     phase: 'idle', // idle | camera | editor | preview
                     editorTab: 'persp', // persp | crop | adjust
@@ -829,16 +824,7 @@
                         this._warpDirty = true;
                     }
 
-                }));
-            }
-        };
-
-        if (window.Alpine) {
-            registerScanner();
-        } else {
-            document.addEventListener('alpine:init', registerScanner);
-        }
-        document.addEventListener('livewire:navigated', registerScanner);
+        });
     }
 </script>
 

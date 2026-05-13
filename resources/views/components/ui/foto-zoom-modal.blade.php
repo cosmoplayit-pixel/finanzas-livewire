@@ -37,14 +37,25 @@
             <span class="sr-only">Cerrar</span>
         </button>
 
-        {{-- Contenedor de Imagen Central --}}
-        <div class="relative z-[105] max-w-full max-h-full flex items-center justify-center overflow-hidden">
+        {{-- Contenedor de Imagen/PDF Central --}}
+        <div class="relative z-[105] w-full max-w-full h-full flex items-center justify-center overflow-hidden"
+             x-data="{
+                 get isPdf() {
+                     const u = '{{ $url }}'.toLowerCase();
+                     return u.endsWith('.pdf') || u.startsWith('blob:');
+                 }
+             }">
             @if ($url)
-                <img src="{{ $url }}" alt="Visor de comprobante"
-                    class="max-w-full max-h-[92vh] rounded shadow-2xl transition-transform duration-200 ease-out will-change-transform cursor-zoom-in"
-                    :style="hovering ? `transform: scale(${zoom});` : 'transform: scale(1); transform-origin: center center;'"
-                    @mouseenter="hovering = true" @mouseleave="hovering = false; zoom = 1"
-                    @mousemove="setOrigin($event)" @wheel.prevent="wheelZoom($event)" draggable="false" />
+                <template x-if="!isPdf">
+                    <img src="{{ $url }}" alt="Visor de comprobante"
+                        class="max-w-full max-h-[92vh] rounded shadow-2xl transition-transform duration-200 ease-out will-change-transform cursor-zoom-in"
+                        :style="hovering ? `transform: scale(${zoom});` : 'transform: scale(1); transform-origin: center center;'"
+                        @mouseenter="hovering = true" @mouseleave="hovering = false; zoom = 1"
+                        @mousemove="setOrigin($event)" @wheel.prevent="wheelZoom($event)" draggable="false" />
+                </template>
+                <template x-if="isPdf">
+                    <iframe src="{{ $url }}" class="w-full h-[90vh] max-w-5xl rounded shadow-2xl bg-white" frameborder="0"></iframe>
+                </template>
             @else
                 <div class="text-white/50 font-medium">No se encontró la imagen.</div>
             @endif

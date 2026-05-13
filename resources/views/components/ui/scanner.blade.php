@@ -61,7 +61,7 @@
         @endphp
         <div class="mt-1 text-xs flex items-center justify-end gap-3 h-5">
             <button type="button"
-                onclick="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: '{{ $existingUrl }}' }))"
+                @click="$dispatch('open-image-modal', { url: '{{ $existingUrl }}' })"
                 class="cursor-pointer inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 font-medium">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -112,7 +112,7 @@
                     }">
                     <template x-if="localPdfUrl">
                         <button type="button"
-                            @click="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: localPdfUrl }))"
+                            @click="$dispatch('open-image-modal', { url: localPdfUrl })"
                             class="cursor-pointer inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 font-medium">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -125,7 +125,7 @@
                     </template>
                     <template x-if="!localPdfUrl && @js($previewUrl)">
                         <button type="button"
-                            @click="window.dispatchEvent(new CustomEvent('open-image-modal', { detail: @js($previewUrl) }))"
+                            @click="$dispatch('open-image-modal', { url: @js($previewUrl) })"
                             class="cursor-pointer inline-flex items-center gap-1 text-indigo-500 hover:text-indigo-600 font-medium">
                             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"

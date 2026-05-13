@@ -1,6 +1,6 @@
     {{-- ===================== MODAL ZOOM IMAGEN ===================== --}}
     <div x-data="{ imgUrl: null, open: false, isPdf: false }"
-        @open-image-modal.window="imgUrl = $event.detail; isPdf = imgUrl.toLowerCase().endsWith('.pdf') || imgUrl.startsWith('blob:'); open = true">
+        @open-image-modal.window="imgUrl = $event.detail?.url || $event.detail; isPdf = imgUrl.toLowerCase().endsWith('.pdf') || imgUrl.startsWith('blob:'); open = true">
         <div x-show="open" x-cloak class="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4"
             @click="open = false" @keydown.escape.window="open = false">
             <button class="absolute top-4 right-4 text-white hover:text-gray-300 z-10" @click="open = false">

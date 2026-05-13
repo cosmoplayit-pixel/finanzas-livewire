@@ -13,7 +13,8 @@
         window.documentScannerRegistered = true;
 
         const registerScanner = () => {
-            if (window.Alpine && !Alpine.data('documentScanner')) {
+            if (window.Alpine && !window._documentScannerDefined) {
+                window._documentScannerDefined = true;
                 Alpine.data('documentScanner', (model) => ({
 
                     phase: 'idle', // idle | camera | editor | preview

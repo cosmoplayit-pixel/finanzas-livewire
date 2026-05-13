@@ -1,6 +1,9 @@
 import Swal from 'sweetalert2';
 window.Swal = Swal;
 
+import { documentScanner } from './components/scanner';
+window.documentScanner = documentScanner;
+
 // Cuando la sesión expira, Livewire recibe un 401 en lugar de redirigir a /livewire/update.
 // Hacemos reload completo para que el usuario vea el login normalmente.
 document.addEventListener('livewire:init', () => {

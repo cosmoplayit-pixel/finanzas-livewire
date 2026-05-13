@@ -137,8 +137,7 @@
                         </button>
                     </template>
                     <button type="button"
-                        @click="removing = true; if(localPdfUrl) URL.revokeObjectURL(localPdfUrl); localPdfUrl = '';"
-                        wire:click="$set('{{ $model }}', null)"
+                        @click="removing = true; if(localPdfUrl) URL.revokeObjectURL(localPdfUrl); localPdfUrl = ''; $wire.set('{{ $model }}', null).then(() => { removing = false; });"
                         class="cursor-pointer text-red-500 hover:text-red-600 font-medium">
                         Quitar archivo
                     </button>
